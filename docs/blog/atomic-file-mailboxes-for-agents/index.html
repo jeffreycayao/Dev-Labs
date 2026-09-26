@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Atomic File Mailboxes: How Agents Message Each Other — Munder Difflin Blog</title>
+<meta name="description" content="Can Claude Code agents talk to each other? Yes — the outbox-router-inbox design that lets agents message safely using plain files and atomic renames." />
+<link rel="canonical" href="https://munderdiffl.in/blog/atomic-file-mailboxes-for-agents/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Atomic File Mailboxes: How Agents Message Each Other — Munder Difflin Blog" />
+<meta property="og:description" content="Can Claude Code agents talk to each other? Yes — the outbox-router-inbox design that lets agents message safely using plain files and atomic renames." />
+<meta property="og:url" content="https://munderdiffl.in/blog/atomic-file-mailboxes-for-agents/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/atomic-file-mailboxes-for-agents/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Atomic File Mailboxes: How Agents Message Each Other" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-05-31T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Internals" />
+<meta property="article:tag" content="Messaging" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Claude Code" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Atomic File Mailboxes: How Agents Message Each Other — Munder Difflin Blog" />
+<meta name="twitter:description" content="Can Claude Code agents talk to each other? Yes — the outbox-router-inbox design that lets agents message safely using plain files and atomic renames." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/atomic-file-mailboxes-for-agents/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Atomic File Mailboxes: How Agents Message Each Other" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Atomic File Mailboxes: How Agents Message Each Other",
+  "description": "Can Claude Code agents talk to each other? Yes — the outbox-router-inbox design that lets agents message safely using plain files and atomic renames.",
+  "image": ["https://munderdiffl.in/blog/assets/media/atomic-file-mailboxes-for-agents/hero.png"],
+  "datePublished": "2026-05-31T00:00:00.000Z",
+  "dateModified": "2026-05-31T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/atomic-file-mailboxes-for-agents/" },
+  "keywords": "can claude code agents talk to each other, ai agent messaging, agent mailbox, inter-agent communication",
+  "articleSection": "Internals",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/atomic-file-mailboxes-for-agents/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Atomic File Mailboxes: How Agents Message Each Other", "item": "https://munderdiffl.in/blog/atomic-file-mailboxes-for-agents/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Can Claude Code agents talk to each other?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Each agent has an outbox it writes to and an inbox it reads from; a router process moves messages between them. The agents never write into each other's folders, so messaging is safe even with many agents running at once." } },
+    { "@type": "Question", "name": "Why use files for agent messaging instead of a message queue?", "acceptedAnswer": { "@type": "Answer", "text": "Files plus atomic renames give you durability, auditability, and crash-safety for free, with no broker to run. One JSON file per message, delivered by rename, is simpler and more robust than a shared log every agent appends to." } },
+    { "@type": "Question", "name": "What stops two agents from messaging each other forever?", "acceptedAnswer": { "@type": "Answer", "text": "Only requests, queries, and proposals obligate a reply; informational messages are terminal. Every reply increments a hop count, and past a cap the exchange is escalated to a human instead of looping." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-internals">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/internals/">Internals</a>
+    </nav>
+    <h1>Atomic File Mailboxes: How Agents Message Each Other</h1>
+    <p class="dek">Can Claude Code agents talk to each other? Yes — the outbox-router-inbox design that lets agents message safely using plain files and atomic renames.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-05-31">May 31, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Internals</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/atomic-file-mailboxes-for-agents/hero.png" alt="Illustration: Atomic File Mailboxes: How Agents Message Each Other" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Yes,
+<strong>Claude Code agents can talk to each other</strong> — and the safest way is plain files. Each
+agent writes to its own <code>outbox/</code>; a <strong>router</strong> drains it and delivers each
+message into the recipient's <code>inbox/</code> by <strong>atomic rename</strong>. One JSON file per
+message, never a shared log. The result is durable, auditable, crash-safe messaging with no broker and
+no write conflicts.</p></div>
+<p>“Can Claude Code agents talk to each other?” is one of the first questions people ask when they move
+past a single session. The answer is yes — but <em>how</em> they talk is where most designs go wrong. Let a
+shared chat file be appended by every agent and you’ve built a multi-writer conflict. The robust
+approach is a mailbox: outbox, router, inbox, with atomic file operations underneath. Here’s the whole
+design.</p>
+<h2 id="the-shape-outbox-router-inbox" tabindex="-1">The shape: outbox → router → inbox <a class="anchor" href="#the-shape-outbox-router-inbox" aria-hidden="true">#</a></h2>
+<p>Every agent gets a private workspace, and two of the folders in it are for messaging:</p>
+<pre><code>agents/&lt;agent-id&gt;/
+  inbox/         # messages delivered TO me — one JSON file each
+  inbox/.done/   # messages I've handled (kept for audit, not deleted)
+  outbox/        # messages I want to SEND — the router drains these
+  outbox/.sent/  # archived after delivery, so they're never reprocessed
+</code></pre>
+<p>The flow is one direction at a time:</p>
+<ol>
+<li>To send, an agent writes a single JSON file into its <strong>own</strong> <code>outbox/</code>.</li>
+<li>A <strong>router</strong> — one coordinating process — scans every outbox, reads each message, and delivers it
+into the recipient’s <code>inbox/</code>.</li>
+<li>After delivery, the router moves the original from <code>outbox/</code> into <code>outbox/.sent/</code> so it’s never
+sent twice.</li>
+<li>The recipient reads its <code>inbox/</code> at the start of its next turn, acts on each message, and moves the
+handled ones to <code>inbox/.done/</code>.</li>
+</ol>
+<p>The critical rule sits underneath all of it: <strong>an agent only ever writes into its own directory.</strong> It
+never reaches into another agent’s inbox. Delivery is the router’s job. That single-writer discipline
+is what makes the whole thing safe under concurrency — no two processes touch the same file. (It’s the
+same principle behind <a href="/blog/single-committer-git-pattern/">the single-committer git pattern</a>.)</p>
+<h2 id="why-atomic-renames-matter" tabindex="-1">Why atomic renames matter <a class="anchor" href="#why-atomic-renames-matter" aria-hidden="true">#</a></h2>
+<p>Here’s the subtle part. If the router wrote a message into an inbox with a normal “open, write bytes,
+close,” a reader scanning the inbox at the wrong moment could pick up a half-written file and choke on
+invalid JSON.</p>
+<p>The fix is an <strong>atomic rename</strong>: write the message to a temporary filename first, then <code>rename</code> it
+into its final place. On every mainstream filesystem, rename within a directory is atomic — the file
+either isn’t there or is there <em>complete</em>. A reader never sees a partial message. There’s no lock, no
+coordination, no window of inconsistency.</p>
+<pre><code>write  inbox/&lt;id&gt;.json.tmp-9f3a   ← may be partial mid-write
+rename inbox/&lt;id&gt;.json.tmp-9f3a → inbox/&lt;id&gt;.json   ← appears atomically, whole
+</code></pre>
+<p>This one trick is why files beat a naive shared log. A log every agent appends to is a multi-writer
+race; a directory of atomically-renamed files is conflict-free by construction.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/atomic-file-mailboxes-for-agents/note-1.png" alt="Hand-drawn sketch from “Atomic File Mailboxes: How Agents Message Each Other”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-message-itself-speech-acts-not-free-text" tabindex="-1">The message itself: speech acts, not free text <a class="anchor" href="#the-message-itself-speech-acts-not-free-text" aria-hidden="true">#</a></h2>
+<p>A message isn’t just a blob of text — it carries intent. The design borrows the one genuinely useful
+idea from decades of agent-communication research, the <strong>speech act</strong>, and drops the rest:</p>
+<pre class="language-jsonc"><code class="language-jsonc">{
+  "id":            "2026-05-30T14-03-11-123Z-a1b2",  // unique, time-sortable
+  "conversation":  "conv-7f3",                        // groups a thread
+  "in_reply_to":   "<prev message id> | null",
+  "from":          "agent.researcher",
+  "to":            "agent.coder | god | broadcast",
+  "act":           "request | inform | propose | query | agree | refuse | done",
+  "subject":       "short human-readable summary",
+  "body":          "the details",
+  "hops":          3,             // increments per reply; capped to kill loops
+  "requires_reply": true,
+  "needs_human":   false,
+  "created_at":    "ISO-8601"
+}</code></pre>
+<p>An agent writing a message only has to supply the meaningful fields — <code>to</code>, <code>act</code>, <code>subject</code>, <code>body</code>,
+and optionally a <code>conversation</code> to thread it. The harness fills in the <code>id</code>, the authoritative <code>from</code>
+(taken from the owning outbox directory, so an agent can’t spoof another’s identity), the <code>hops</code>, and
+the timestamps.</p>
+<p>The <code>act</code> field is what makes coordination tractable. It tells the recipient — and the router —
+whether a reply is even expected.</p>
+<h2 id="anti-livelock-how-the-conversation-ends" tabindex="-1">Anti-livelock: how the conversation ends <a class="anchor" href="#anti-livelock-how-the-conversation-ends" aria-hidden="true">#</a></h2>
+<p>Two agents told to “coordinate” will, without guardrails, message each other forever. Three rules stop
+that:</p>
+<ul>
+<li><strong>Only some acts obligate a reply.</strong> <code>request</code>, <code>query</code>, and <code>propose</code> expect an answer. <code>inform</code>
+and <code>done</code> are <em>terminal</em> — replying to them is exactly how a loop starts, so the protocol forbids
+it.</li>
+<li><strong>Hops are capped.</strong> Every reply increments the <code>hops</code> counter. Past a fixed cap, the message is
+flagged for a human instead of being delivered again — a livelock fuse.</li>
+<li><strong>Delivery is idempotent.</strong> Each agent keeps a cursor of the last message id it processed, so
+re-seeing a message is a no-op. Combined with moving handled messages to <code>inbox/.done/</code>, an agent
+can’t accidentally act on the same request twice.</li>
+</ul>
+<p>These are small rules with a big payoff: the messaging layer can be busy and still provably converge.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/atomic-file-mailboxes-for-agents/note-2.png" alt="Hand-drawn sketch from “Atomic File Mailboxes: How Agents Message Each Other”" loading="lazy" decoding="async" /></figure>
+<h2 id="broadcast-and-escalation" tabindex="-1">Broadcast and escalation <a class="anchor" href="#broadcast-and-escalation" aria-hidden="true">#</a></h2>
+<p>Two special addresses round out the system:</p>
+<ul>
+<li><strong><code>broadcast</code></strong> delivers a copy to every agent except the sender — useful for “I’m taking ownership
+of the auth module, don’t touch it.”</li>
+<li><strong><code>human</code></strong> (or any message flagged <code>needs_human</code>) doesn’t go to an inbox at all. The router diverts
+it to an approvals queue for a person to answer. This is how an agent reaches <em>you</em> for the genuinely
+critical calls, and it’s the same mechanism the orchestrator uses to escalate — covered in
+<a href="/blog/coordinating-ai-coding-agents/">the best way to coordinate AI coding agents</a>.</li>
+</ul>
+<h2 id="why-this-design-holds-up" tabindex="-1">Why this design holds up <a class="anchor" href="#why-this-design-holds-up" aria-hidden="true">#</a></h2>
+<p>Step back and the properties fall out for free:</p>
+<ul>
+<li><strong>Durable.</strong> Messages are files. A crash mid-run loses nothing already written; the router picks up
+where it left off.</li>
+<li><strong>Auditable.</strong> Every message and every delivery is a file, and the coordinating process commits the
+changes to git — so you can read back exactly who said what, in order.</li>
+<li><strong>Brokerless.</strong> There’s no Redis, no RabbitMQ, no daemon to keep alive. The “infrastructure” is a
+directory and the <code>rename</code> syscall.</li>
+<li><strong>Conflict-free.</strong> Single-writer-per-file plus atomic renames means concurrency is safe without
+locks.</li>
+</ul>
+<p>It’s almost boring, which is the point. The most reliable inter-agent messaging is the kind with the
+fewest moving parts.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>Does the router poll or watch the filesystem?</strong> A simple poll on a short interval is both cheaper and
+more robust than filesystem-watch APIs, which have well-known quirks across platforms. The router
+scans every outbox on a tick, delivers what it finds, and goes back to sleep.</p>
+<p><strong>Can an agent message itself?</strong> It can, but there’s rarely a reason to. The interesting traffic is
+agent-to-agent and agent-to-orchestrator.</p>
+<hr>
+<p>Munder Difflin runs exactly this mailbox system inside <a href="https://munderdiffl.in/#how">a hive the GOD orchestrator runs</a> — atomic
+delivery, speech-act messages, hop caps, and a full git audit trail, all local.
+<a href="https://munderdiffl.in/#install">Download Munder Difflin</a> to watch envelopes fly between agents on
+the office floor; it’s free and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">Can Claude Code agents talk to each other?</p>
+          <p class="a">Yes. Each agent has an outbox it writes to and an inbox it reads from; a router process moves messages between them. The agents never write into each other&#39;s folders, so messaging is safe even with many agents running at once.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why use files for agent messaging instead of a message queue?</p>
+          <p class="a">Files plus atomic renames give you durability, auditability, and crash-safety for free, with no broker to run. One JSON file per message, delivered by rename, is simpler and more robust than a shared log every agent appends to.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What stops two agents from messaging each other forever?</p>
+          <p class="a">Only requests, queries, and proposals obligate a reply; informational messages are terminal. Every reply increments a hop count, and past a cap the exchange is escalated to a human instead of looping.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/internals/">Internals</a><a class="tag" href="/blog/tags/messaging/">Messaging</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-shape-outbox-router-inbox">The shape: outbox → router → inbox</a></li><li class="lvl-2"><a href="#why-atomic-renames-matter">Why atomic renames matter</a></li><li class="lvl-2"><a href="#the-message-itself-speech-acts-not-free-text">The message itself: speech acts, not free text</a></li><li class="lvl-2"><a href="#anti-livelock-how-the-conversation-ends">Anti-livelock: how the conversation ends</a></li><li class="lvl-2"><a href="#broadcast-and-escalation">Broadcast and escalation</a></li><li class="lvl-2"><a href="#why-this-design-holds-up">Why this design holds up</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/how-the-god-orchestrator-works/"><span class="k">← Older</span><span class="t">Inside the GOD Orchestrator: Routing, Adjudication, Escalation</span></a>
+      <a class="pn next" href="/blog/how-to-run-multiple-claude-code-agents/"><span class="k">Newer →</span><span class="t">How to Run Multiple Claude Code Agents (Without Losing Track)</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Internals</h2>
+      <div class="post-grid">
+        <article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>INTERNALS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-22">Aug 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>10 min</span>
+    </div>
+    <h3><a href="/blog/the-spend-counter-that-went-back-to-zero/">The Spend Counter That Went Back to Zero</a></h3>
+    <p class="dek">Our own floor was under reporting what it cost by 59 percent. The counter was cumulative since process start, the app restarts, and the session id stayed the same. Here is how a monotonic invariant let us recover the real number from an append-only log.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-label="Read: The Spend Counter That Went Back to Zero">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-newline-that-silenced-windows-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-newline-that-silenced-windows-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/the-newline-that-silenced-windows-agents/">The Newline That Silenced Every Windows Agent</a></h3>
+    <p class="dek">A cmd.exe parsing rule from the 1980s meant Windows agents received exactly one line of their multi-line startup protocol — and nothing errored. The anatomy of our worst silent failure, and the fix.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-newline-that-silenced-windows-agents/" aria-label="Read: The Newline That Silenced Every Windows Agent">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/why-our-auto-update-never-ran/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-our-auto-update-never-ran/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-08">Aug 8, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/why-our-auto-update-never-ran/">Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace</a></h3>
+    <p class="dek">Munder Difflin shipped auto-update in v0.3.4 and it silently never worked in a single packaged build. The cause was one destructuring assignment across the CommonJS/ESM boundary — and a catch block that threw the evidence away. Here&#39;s how we found it, and what v0.3.7 changes.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/why-our-auto-update-never-ran/" aria-label="Read: Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

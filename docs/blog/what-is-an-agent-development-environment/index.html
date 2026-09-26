@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>What Is an Agent Development Environment (ADE)? — Munder Difflin Blog</title>
+<meta name="description" content="ADE means two things in 2026: a platform for building agents (Letta&#39;s sense) and a workspace for shipping code with fleets of coding agents (Orca&#39;s sense). Here&#39;s the full tooling map — chat IDEs, agent CLIs, agent IDEs, and agent harnesses — and how to pick." />
+<link rel="canonical" href="https://munderdiffl.in/blog/what-is-an-agent-development-environment/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="What Is an Agent Development Environment (ADE)? — Munder Difflin Blog" />
+<meta property="og:description" content="ADE means two things in 2026: a platform for building agents (Letta&#39;s sense) and a workspace for shipping code with fleets of coding agents (Orca&#39;s sense). Here&#39;s the full tooling map — chat IDEs, agent CLIs, agent IDEs, and agent harnesses — and how to pick." />
+<meta property="og:url" content="https://munderdiffl.in/blog/what-is-an-agent-development-environment/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/what-is-an-agent-development-environment/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: What Is an Agent Development Environment (ADE)?" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-07-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Concepts" />
+<meta property="article:tag" content="ADE" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Tooling Landscape" />
+<meta property="article:tag" content="CLI Agents" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="What Is an Agent Development Environment (ADE)? — Munder Difflin Blog" />
+<meta name="twitter:description" content="ADE means two things in 2026: a platform for building agents (Letta&#39;s sense) and a workspace for shipping code with fleets of coding agents (Orca&#39;s sense). Here&#39;s the full tooling map — chat IDEs, agent CLIs, agent IDEs, and agent harnesses — and how to pick." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/what-is-an-agent-development-environment/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: What Is an Agent Development Environment (ADE)?" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "What Is an Agent Development Environment (ADE)?",
+  "description": "ADE means two things in 2026: a platform for building agents (Letta's sense) and a workspace for shipping code with fleets of coding agents (Orca's sense). Here's the full tooling map — chat IDEs, agent CLIs, agent IDEs, and agent harnesses — and how to pick.",
+  "image": ["https://munderdiffl.in/blog/assets/media/what-is-an-agent-development-environment/hero.png"],
+  "datePublished": "2026-07-03T00:00:00.000Z",
+  "dateModified": "2026-07-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/what-is-an-agent-development-environment/" },
+  "keywords": "agent development environment, what is an ADE, agentic development environment, agent IDE vs agent CLI, multi-agent coding tools 2026, agent harness vs ADE, parallel coding agents",
+  "articleSection": "Concepts",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/what-is-an-agent-development-environment/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "What Is an Agent Development Environment (ADE)?", "item": "https://munderdiffl.in/blog/what-is-an-agent-development-environment/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is an Agent Development Environment (ADE)?", "acceptedAnswer": { "@type": "Answer", "text": "The term has two meanings in 2026. In Letta's original sense, an ADE is a platform for building and debugging AI agents themselves — inspecting context windows, memory, and reasoning. In the coding-tools sense that Orca popularized, an ADE is a desktop workspace for running multiple coding agents in parallel, each in its own isolated git worktree, with the tooling to review and ship what they produce. Most people saying ADE today mean the second sense." } },
+    { "@type": "Question", "name": "How is an ADE different from an AI IDE like Cursor?", "acceptedAnswer": { "@type": "Answer", "text": "An AI IDE is editor-first: you write and steer, and agents assist inside your editing session — Cursor's Agent mode, Composer, and background agents all orbit the file you have open. An ADE is agent-first: the primary objects on screen are agents and their tasks, not files, and you delegate whole goals rather than steering each step. The rough inflection point is when work spans many files or needs several agents running in parallel." } },
+    { "@type": "Question", "name": "Is Munder Difflin an ADE?", "acceptedAnswer": { "@type": "Answer", "text": "It's adjacent but a different category: a multi-agent harness, or an agent office. Like an ADE it runs many real CLI agents in parallel worktrees. Unlike most ADEs it adds an orchestrator agent (Michael) that routes work between agents, shared long-term memory, mailboxes so agents message each other, triggers (Slack, webhooks, schedules, voice), and guardrails like budgets, approval gates, and a circuit breaker. An ADE optimizes for you driving N agents; a harness optimizes for the agents coordinating each other while you supervise." } },
+    { "@type": "Question", "name": "Why did Munder Difflin add an IDE if it's not an ADE?", "acceptedAnswer": { "@type": "Answer", "text": "Because whatever runs your agents, you still need to read what they wrote. v0.3.3 added a built-in Monaco editor (the VS Code editor engine, self-hosted) over the office floor: a file tree, editor tabs with save, and a side-by-side git diff of every agent change against HEAD. It's a review surface inside the harness, not a pivot to being an editor — the floor, orchestrator, and hive remain the product." } },
+    { "@type": "Question", "name": "Do agent CLIs like Claude Code and Codex compete with ADEs?", "acceptedAnswer": { "@type": "Answer", "text": "No — they're the layer underneath. Claude Code and OpenAI Codex CLI are single-agent terminal programs, and they're what ADEs and harnesses actually run. Orca runs your existing CLI agents in parallel worktrees; Munder Difflin spawns them as real node-pty processes and coordinates them. Your CLI subscription is the engine; the ADE or harness is the chassis around it." } },
+    { "@type": "Question", "name": "How do I choose between a chat IDE, an agent CLI, an ADE, and a harness?", "acceptedAnswer": { "@type": "Answer", "text": "Match the tool to how much you delegate. Staying in the loop on one change: an AI IDE. Delegating one task end-to-end: an agent CLI. Personally driving several agents in parallel on one repo: an ADE. Running an always-on team that routes work among itself, shares memory, and answers triggers while you supervise: a multi-agent harness like Munder Difflin." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-concepts">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/concepts/">Concepts</a>
+    </nav>
+    <h1>What Is an Agent Development Environment (ADE)?</h1>
+    <p class="dek">ADE means two things in 2026: a platform for building agents (Letta&#39;s sense) and a workspace for shipping code with fleets of coding agents (Orca&#39;s sense). Here&#39;s the full tooling map — chat IDEs, agent CLIs, agent IDEs, and agent harnesses — and how to pick.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Concepts</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/what-is-an-agent-development-environment/hero.png" alt="Illustration: What Is an Agent Development Environment (ADE)?" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p><strong>"ADE" means two different things in 2026.</strong> Letta coined <em>Agent Development Environment</em> for a platform to <strong>build and debug agents themselves</strong>. The coding world then adopted it for something else: a workspace for <strong>shipping software with fleets of coding agents</strong> — Orca is the flagship example. The map now has four layers: <strong>AI IDEs</strong> (Cursor — editor-first, you steer), <strong>agent CLIs</strong> (Claude Code, Codex — one agent, one terminal, full delegation), <strong>agent IDEs / ADEs</strong> (Orca, JetBrains Air — you drive N parallel agents), and <strong>agent harnesses</strong> (Munder Difflin — the agents coordinate <em>each other</em> under an orchestrator, with shared memory, triggers, and guardrails). The categories are blurring from every direction — v0.3.3 even put a Monaco IDE <em>inside</em> the harness — but the question that picks your tool hasn't changed: <strong>how much are you delegating?</strong></p></div>
+<p>Every few months the agent-tooling world mints a new acronym, and 2026’s is <strong>ADE</strong>. It’s a genuinely useful term — once you notice it’s being used for two different things.</p>
+<h2 id="two-meanings-one-acronym" tabindex="-1">Two meanings, one acronym <a class="anchor" href="#two-meanings-one-acronym" aria-hidden="true">#</a></h2>
+<p>The original coinage belongs to <a href="https://www.letta.com/blog/introducing-the-agent-development-environment">Letta</a>, which uses <em>Agent Development Environment</em> for a visual platform to <strong>build and debug agents themselves</strong>: inspect an agent’s context window, edit its memory blocks, watch its reasoning, wire its tools. In that sense, an ADE is to agents what an IDE is to code — the artifact under development <em>is the agent</em>.</p>
+<p>Then the coding-tools world borrowed the acronym for something adjacent but distinct. <a href="https://github.com/stablyai/orca">Orca</a> calls itself “the ADE for working with a fleet of parallel agents,” and <a href="https://www.augmentcode.com/guides/what-is-an-agentic-development-environment">Augment Code’s guides</a> describe an <em>agentic development environment</em> as an agent-first workspace where developers delegate whole goals instead of steering an editor. In this sense the artifact under development is still <strong>your software</strong> — the ADE is where a fleet of coding agents builds it.</p>
+<p>Most people saying “ADE” in a dev-tools context mean the second sense. That’s the sense this post maps.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/what-is-an-agent-development-environment/note-1.png" alt="Hand-drawn sketch from “What Is an Agent Development Environment (ADE)?”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-2026-landscape-four-layers-of-delegation" tabindex="-1">The 2026 landscape: four layers of delegation <a class="anchor" href="#the-2026-landscape-four-layers-of-delegation" aria-hidden="true">#</a></h2>
+<p>The clean way to sort the tools is not by feature list but by <strong>how much you hand over</strong>.</p>
+<p><strong>1. AI IDEs — you steer every step.</strong> <a href="https://cursor.com/">Cursor</a> is the archetype: an editor-first workspace where agents live inside your editing session. Its Agent mode reads the codebase, edits files, runs commands, and iterates; Composer produces reviewable multi-file diffs; background and cloud agents run tasks off to the side. It’s excellent at what it optimizes for — a developer who stays in the loop, file by file, with agents as force multipliers. The center of gravity is still <em>you, in an editor</em>.</p>
+<p><strong>2. Agent CLIs — you delegate one task.</strong> <a href="https://claude.com/claude-code">Claude Code</a> and <a href="https://github.com/openai/codex">OpenAI Codex CLI</a> are single-agent terminal programs: give one a goal and it reads files, runs builds and tests, uses git, and verifies its own work by executing it. This is the layer with real terminal-level power — we wrote about <a href="/blog/why-cli-agents-are-powerful/">why CLI agents are so capable</a> — but each session is one agent, one terminal, one task.</p>
+<p><strong>3. Agent IDEs / ADEs — you drive N agents in parallel.</strong> Once you’re running four CLI sessions at once, tab-juggling breaks down, and this is the gap ADEs fill. Orca runs your existing CLI agents — Claude Code, Codex, and others, on your own subscriptions — in parallel, each task in an <strong>isolated git worktree</strong> with its own terminal and context, plus review tooling to merge the results. JetBrains is in the same lane with Air, a standalone multi-agent workspace. The defining trait: <em>you</em> are still the dispatcher. You assign every task, watch every lane, and merge every result.</p>
+<p><strong>4. Agent harnesses / offices — the agents coordinate each other.</strong> This is where <strong>Munder Difflin</strong> sits, and it’s a different bet. Like an ADE, it runs real CLI agents (seven engines as of v0.3.3, including GitHub Copilot CLI) in isolated worktrees and real pseudo-terminals. Unlike an ADE, you don’t dispatch to each agent yourself: a GOD orchestrator — Michael — routes work, agents message each other through mailboxes, share <a href="/blog/semantic-memory-for-ai-agents/">long-term semantic memory</a>, and get woken by triggers — typing, Slack, webhooks, schedules, even voice. Guardrails (approval gates, per-agent budgets, a circuit breaker, OTel observability) make it safe to leave running. The mental model isn’t “my editor got agents” or “my agents got lanes” — it’s <em>an office you supervise</em>. We’ve written a fuller definition in <a href="/blog/what-is-a-multi-agent-harness/">what is a multi-agent harness</a>.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/what-is-an-agent-development-environment/note-2.png" alt="Hand-drawn sketch from “What Is an Agent Development Environment (ADE)?”" loading="lazy" decoding="async" /></figure>
+<h2 id="where-the-categories-blur" tabindex="-1">Where the categories blur <a class="anchor" href="#where-the-categories-blur" aria-hidden="true">#</a></h2>
+<p>Nobody stays in their lane, and the direction of travel is telling.</p>
+<p>Cursor grew a CLI and cloud agents — the editor reaching toward delegation. ADEs like Orca embed browsers and diff tooling — the dispatcher growing verification surfaces. And Munder Difflin’s v0.3.3 added a <strong>built-in Monaco IDE</strong> — the VS Code editor engine, self-hosted, one click over the office floor, with a file tree, tabs, and side-by-side git diffs of every agent change against HEAD. A harness growing an editor, precisely because the bottleneck in agent-heavy work shifts from <em>writing</em> code to <em>reviewing</em> it.</p>
+<p>Everyone is converging on the same shape: <strong>many agents, isolated workspaces, and a first-class place to review what they did.</strong> The categories differ in what they treat as the primary object — the file (IDE), the task (CLI), the lane (ADE), or the <em>team</em> (harness).</p>
+<h2 id="how-to-choose" tabindex="-1">How to choose <a class="anchor" href="#how-to-choose" aria-hidden="true">#</a></h2>
+<p>Match the tool to your delegation level, not the hype cycle:</p>
+<ul>
+<li>Reviewing every edit as it happens → an <strong>AI IDE</strong>.</li>
+<li>Handing off one well-scoped task → an <strong>agent CLI</strong>.</li>
+<li>Personally running several parallel agents on one repo → an <strong>ADE</strong>.</li>
+<li>Running an always-on team that routes its own work while you supervise → a <strong>harness</strong>.</li>
+</ul>
+<p>These stack rather than compete — Orca and Munder Difflin both <em>run</em> Claude Code and Codex; your CLI subscription is the engine either way. For a decision framework with sharper questions (team size, autonomy appetite, budget controls), see <a href="/blog/how-to-choose-a-multi-agent-tool/">how to choose a multi-agent tool</a>.</p>
+<p>And if the office model sounds like your level of delegation: Munder Difflin is free, MIT-licensed, and local-first — <a href="https://github.com/chaitanyagiri/munder-difflin/releases/latest">grab the latest release</a>, and if it earns it, a <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub star</a> helps more people find it.</p>
+<p>Sources: <a href="https://www.letta.com/blog/introducing-the-agent-development-environment">Letta — Introducing the Agent Development Environment</a>;
+<a href="https://github.com/stablyai/orca">Orca (stablyai/orca)</a>; <a href="https://www.onorca.dev/">Orca — onorca.dev</a>;
+<a href="https://www.augmentcode.com/guides/what-is-an-agentic-development-environment">Augment Code — What is an agentic development environment?</a>;
+<a href="https://cursor.com/">Cursor</a>; <a href="https://github.com/openai/codex">OpenAI Codex CLI</a>.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What is an Agent Development Environment (ADE)?</p>
+          <p class="a">The term has two meanings in 2026. In Letta&#39;s original sense, an ADE is a platform for building and debugging AI agents themselves — inspecting context windows, memory, and reasoning. In the coding-tools sense that Orca popularized, an ADE is a desktop workspace for running multiple coding agents in parallel, each in its own isolated git worktree, with the tooling to review and ship what they produce. Most people saying ADE today mean the second sense.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How is an ADE different from an AI IDE like Cursor?</p>
+          <p class="a">An AI IDE is editor-first: you write and steer, and agents assist inside your editing session — Cursor&#39;s Agent mode, Composer, and background agents all orbit the file you have open. An ADE is agent-first: the primary objects on screen are agents and their tasks, not files, and you delegate whole goals rather than steering each step. The rough inflection point is when work spans many files or needs several agents running in parallel.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is Munder Difflin an ADE?</p>
+          <p class="a">It&#39;s adjacent but a different category: a multi-agent harness, or an agent office. Like an ADE it runs many real CLI agents in parallel worktrees. Unlike most ADEs it adds an orchestrator agent (Michael) that routes work between agents, shared long-term memory, mailboxes so agents message each other, triggers (Slack, webhooks, schedules, voice), and guardrails like budgets, approval gates, and a circuit breaker. An ADE optimizes for you driving N agents; a harness optimizes for the agents coordinating each other while you supervise.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why did Munder Difflin add an IDE if it&#39;s not an ADE?</p>
+          <p class="a">Because whatever runs your agents, you still need to read what they wrote. v0.3.3 added a built-in Monaco editor (the VS Code editor engine, self-hosted) over the office floor: a file tree, editor tabs with save, and a side-by-side git diff of every agent change against HEAD. It&#39;s a review surface inside the harness, not a pivot to being an editor — the floor, orchestrator, and hive remain the product.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Do agent CLIs like Claude Code and Codex compete with ADEs?</p>
+          <p class="a">No — they&#39;re the layer underneath. Claude Code and OpenAI Codex CLI are single-agent terminal programs, and they&#39;re what ADEs and harnesses actually run. Orca runs your existing CLI agents in parallel worktrees; Munder Difflin spawns them as real node-pty processes and coordinates them. Your CLI subscription is the engine; the ADE or harness is the chassis around it.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How do I choose between a chat IDE, an agent CLI, an ADE, and a harness?</p>
+          <p class="a">Match the tool to how much you delegate. Staying in the loop on one change: an AI IDE. Delegating one task end-to-end: an agent CLI. Personally driving several agents in parallel on one repo: an ADE. Running an always-on team that routes work among itself, shares memory, and answers triggers while you supervise: a multi-agent harness like Munder Difflin.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/concepts/">Concepts</a><a class="tag" href="/blog/tags/ade/">ADE</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/tooling-landscape/">Tooling Landscape</a><a class="tag" href="/blog/tags/cli-agents/">CLI Agents</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#two-meanings-one-acronym">Two meanings, one acronym</a></li><li class="lvl-2"><a href="#the-2026-landscape-four-layers-of-delegation">The 2026 landscape: four layers of delegation</a></li><li class="lvl-2"><a href="#where-the-categories-blur">Where the categories blur</a></li><li class="lvl-2"><a href="#how-to-choose">How to choose</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/what-is-harness-engineering/"><span class="k">← Older</span><span class="t">What Is Harness Engineering?</span></a>
+      <a class="pn next" href="/blog/voice-as-a-control-plane-for-agent-fleets/"><span class="k">Newer →</span><span class="t">Voice Is a Control Plane, Not a Gimmick</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Concepts</h2>
+      <div class="post-grid">
+        <article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-ollama-good-for-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-ollama-good-for-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-ollama-good-for-coding/">Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do</a></h3>
+    <p class="dek">Ollama only runs the model, so the answer depends on which one you pull and your memory. What local models do well, where Claude wins, and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-ollama-good-for-coding/" aria-label="Read: Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-max-worth-it/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-max-worth-it/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-max-worth-it/">Is It Worth Paying for Claude Code Max?</a></h3>
+    <p class="dek">Who should pay for Claude Max 5x or 20x, who should stay on Pro or an API key, and the break even math to run on your own Claude Code usage.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-max-worth-it/" aria-label="Read: Is It Worth Paying for Claude Code Max?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-open-source/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-open-source/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-open-source/">Is Claude Code Open Source?</a></h3>
+    <p class="dek">No. Claude Code is proprietary under Anthropic&#39;s terms. What its GitHub repo holds, what the 2026 leak changed, and which open tools sit around it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-open-source/" aria-label="Read: Is Claude Code Open Source?">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

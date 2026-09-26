@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story — Munder Difflin Blog</title>
+<meta name="description" content="How a single prompt to the Munder Difflin god agent reviewed all open PRs and set up a recurring hourly PR reviewer — while the repo was blowing up with 400+ stars." />
+<link rel="canonical" href="https://munderdiffl.in/blog/one-prompt-automated-pr-review/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story — Munder Difflin Blog" />
+<meta property="og:description" content="How a single prompt to the Munder Difflin god agent reviewed all open PRs and set up a recurring hourly PR reviewer — while the repo was blowing up with 400+ stars." />
+<meta property="og:url" content="https://munderdiffl.in/blog/one-prompt-automated-pr-review/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/one-prompt-automated-pr-review/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-07T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Story" />
+<meta property="article:tag" content="Automation" />
+<meta property="article:tag" content="Orchestration" />
+<meta property="article:tag" content="Open Source" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story — Munder Difflin Blog" />
+<meta name="twitter:description" content="How a single prompt to the Munder Difflin god agent reviewed all open PRs and set up a recurring hourly PR reviewer — while the repo was blowing up with 400+ stars." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/one-prompt-automated-pr-review/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story",
+  "description": "How a single prompt to the Munder Difflin god agent reviewed all open PRs and set up a recurring hourly PR reviewer — while the repo was blowing up with 400+ stars.",
+  "image": ["https://munderdiffl.in/blog/assets/media/one-prompt-automated-pr-review/hero.png"],
+  "datePublished": "2026-06-07T00:00:00.000Z",
+  "dateModified": "2026-06-07T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/one-prompt-automated-pr-review/" },
+  "keywords": "automated pr review, github pr automation, scheduled agent missions, munder difflin dogfood",
+  "articleSection": "Story",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/one-prompt-automated-pr-review/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story", "item": "https://munderdiffl.in/blog/one-prompt-automated-pr-review/" }
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-story">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/story/">Story</a>
+    </nav>
+    <h1>One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story</h1>
+    <p class="dek">How a single prompt to the Munder Difflin god agent reviewed all open PRs and set up a recurring hourly PR reviewer — while the repo was blowing up with 400+ stars.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-07">Jun 7, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>6 min read</span>
+      <span class="tag kind">Story</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/one-prompt-automated-pr-review/hero.png" alt="Illustration: One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Munder Difflin's GitHub repo hit <strong>400+ stars in three days</strong>. That came with a flood of incoming pull requests and zero time to review them. One prompt to the god orchestrator — "review the open PRs and set up an hourly automation to review any new ones" — did both: five PRs were reviewed in a single run, and a <strong>ScheduledMission</strong> now fires a PR reviewer agent every hour, hands-free. This is that story.</p></div>
+<p>Software that coordinates agents should eat its own cooking. Munder Difflin does — the hive manages its own inbox, writes its own blog posts, runs its own standups. But the test I didn’t plan for came last week when the repo started moving faster than I could keep up with.</p>
+<h2 id="the-problem-too-many-prs-not-enough-eyes" tabindex="-1">The problem: too many PRs, not enough eyes <a class="anchor" href="#the-problem-too-many-prs-not-enough-eyes" aria-hidden="true">#</a></h2>
+<p>Three days into a sudden wave of attention on GitHub, the Munder Difflin repo crossed 400 stars. That’s the kind of milestone you’re supposed to enjoy. What it actually looked like was five open pull requests stacking up from a contributor — <a href="https://github.com/Gulum">@Gulum</a> — who was fixing real bugs and adding real features faster than I had time to read diffs. A Windows usage meter broken at 0/0. A router contract enforcement bug. A per-session terminal theme toggle. A statusLine context gauge. A cursor visibility fix.</p>
+<p>Good problems. But still problems.</p>
+<p>I didn’t reach for GitHub’s notification pane or a code-review checklist. I opened Munder Difflin and typed one prompt to Michael (the god orchestrator):</p>
+<blockquote>
+<p><em>Review all the open PRs on the GitHub repo, and set up a recurring mission that checks for new PRs every hour and reviews them.</em></p>
+</blockquote>
+<p>That was the entire instruction.</p>
+<h2 id="what-happened" tabindex="-1">What happened <a class="anchor" href="#what-happened" aria-hidden="true">#</a></h2>
+<p>Within a few minutes, five pull requests had detailed automated reviews posted as comments — all from the same batch, all timestamped within seconds of each other. Not summaries. Not stubs. Real reviews with a summary of what the PR does, a ✅ section for what’s working, pointed questions about edge cases, and actionable requests where something needed follow-up.</p>
+<p>A few examples, grounded in what’s actually on GitHub:</p>
+<p><strong><a href="https://github.com/chaitanyagiri/munder-difflin/pull/39">PR #39</a></strong> — fixing an invisible text-cursor on the cream theme. The review caught that this was the correct follow-up to the earlier <code>caret-color</code> fix, analyzed the SVG structure (ink stroke layered over a cream halo for contrast), and flagged the UA fallback as appropriate. Clean, scoped, nothing missed.</p>
+<p><strong><a href="https://github.com/chaitanyagiri/munder-difflin/pull/34">PR #34</a></strong> — fixing the Windows usage meter reading 0/0. The review correctly identified that the reconciler’s POSIX path-encoding rule (<code>replace(/^\//,'').replaceAll('/','-')</code>) never matched Windows directory names, and explained why gating on <code>process.platform === 'win32'</code> with a different encoding was the right fix.</p>
+<p><strong><a href="https://github.com/chaitanyagiri/munder-difflin/pull/33">PR #33</a></strong> — enforcing the assistant’s send-only contract at the router level. The review described the bounce behavior accurately, confirmed the scope was correctly limited to <code>route()</code>'s direct-mail path (broadcast already filters assistants), and called it a surgical fix for issue #32.</p>
+<p><strong><a href="https://github.com/chaitanyagiri/munder-difflin/pull/26">PR #26</a></strong> — terminal theme toggle plus Unicode 11 emoji widths. The review caught the earlier design issue (using <code>claude config set -g</code> would restyle the user’s own external Claude sessions) and confirmed the correction — mirroring the theme into per-agent settings files at spawn — was the right scoping.</p>
+<p><strong><a href="https://github.com/chaitanyagiri/munder-difflin/pull/12">PR #12</a></strong> — the statusLine context gauge. This was the most complex PR in the batch: three follow-up commits, a ratcheting limit heuristic, and a statusLine-based push mechanism replacing transcript polling. The review identified a real gap — a <code>NaN</code> that would survive the <code>Math.min/max</code> clamp — and Gulum addressed it in a follow-up commit with a <code>Number.isFinite</code> guard.</p>
+<p>Five reviews. One prompt. The reviews were posted so close together (all within seconds, around <code>2026-06-07T01:47</code>) that they clearly came from a single agent run. The whole batch took a few minutes I spent doing something else.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/one-prompt-automated-pr-review/note-1.png" alt="Hand-drawn sketch from “One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-recurring-part" tabindex="-1">The recurring part <a class="anchor" href="#the-recurring-part" aria-hidden="true">#</a></h2>
+<p>The review run was half of what I asked for. The other half was the hourly mission.</p>
+<p>Munder Difflin’s <a href="/blog/scheduling-autonomous-agent-missions/">ScheduledMissions</a> are small persisted records in <code>src/main/config.ts</code>:</p>
+<pre class="language-ts"><code class="language-ts"><span class="token keyword">interface</span> <span class="token class-name">ScheduledMission</span> <span class="token punctuation">{</span>
+  id<span class="token operator">:</span> <span class="token builtin">string</span><span class="token punctuation">;</span>
+  label<span class="token operator">:</span> <span class="token builtin">string</span><span class="token punctuation">;</span>       <span class="token comment">// shows up as the message subject</span>
+  intervalMs<span class="token operator">:</span> <span class="token builtin">number</span><span class="token punctuation">;</span>  <span class="token comment">// the cadence</span>
+  to<span class="token operator">:</span> <span class="token builtin">string</span><span class="token punctuation">;</span>          <span class="token comment">// target agent id, or 'broadcast'</span>
+  body<span class="token operator">:</span> <span class="token builtin">string</span><span class="token punctuation">;</span>        <span class="token comment">// the instruction the agent receives</span>
+  enabled<span class="token operator">:</span> <span class="token builtin">boolean</span><span class="token punctuation">;</span>
+  lastFiredAt<span class="token operator">?</span><span class="token operator">:</span> <span class="token builtin">number</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>Each hour, the scheduler in <code>src/main/index.ts</code> fires a <code>request</code> message from <code>scheduler</code> into the target agent’s inbox — the same inbox any human or other agent would drop a message into. The target wakes up, reads the message, and acts. There’s nothing special about a scheduled request once it’s in the queue. It just works like any other task.</p>
+<p>God created a mission with a one-hour interval, targeting the pr-reviewer agent, with a body instructing it to check for open pull requests and review any it hadn’t seen. That mission is running now. A reviewer agent already spawned ~one hour after the original run: <code>pr-reviewer-mq33uu9y</code>. The cadence is self-sustaining — it survives app restarts (overdue missions fire immediately on the next launch), and new PRs from the community will be reviewed on the next tick without me touching a keyboard.</p>
+<h2 id="what-this-is-actually-demonstrating" tabindex="-1">What this is actually demonstrating <a class="anchor" href="#what-this-is-actually-demonstrating" aria-hidden="true">#</a></h2>
+<p>A few things are true at once here, and they’re worth separating.</p>
+<p><strong>First, the single-prompt routing story.</strong> What made this possible isn’t that Munder Difflin is a clever cron wrapper for GitHub API calls. It’s that the <a href="/blog/how-the-god-orchestrator-works/">god orchestrator</a> understood a compound intent — <em>do this now</em> AND <em>set up a recurring thing</em> — decomposed it into two tasks, executed the one-off, and created the ScheduledMission for the other. One sentence of plain language became two distinct workflows.</p>
+<p><strong>Second, the recursive nature of this.</strong> The agents are maintaining the open-source repo that runs the agents. The PR reviewer is a Munder Difflin agent reviewing PRs submitted to Munder Difflin. The blog post you’re reading was written by a Munder Difflin agent. The hive is genuinely part of its own development loop — not as a gimmick, but because that’s what a local-first coordination layer lets you do.</p>
+<p><strong>Third, what “automation” means here.</strong> The hourly PR reviewer isn’t a GitHub Actions workflow. It’s not a webhook. It’s a local agent that wakes up on a schedule, reads the repo state, and does the work — with the same intelligence, tone, and judgment a human reviewer would bring, because it <em>is</em> a Claude agent. The automation is just a timer that refills an agent’s inbox.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/one-prompt-automated-pr-review/note-2.png" alt="Hand-drawn sketch from “One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-limit-worth-naming" tabindex="-1">The limit worth naming <a class="anchor" href="#the-limit-worth-naming" aria-hidden="true">#</a></h2>
+<p>ScheduledMissions are local-first: the timers live in the desktop app’s process. The PR reviewer only fires while Munder Difflin is open. That’s a deliberate trade — this is a tool you run on your own machine, not a cloud cron — and <code>lastFiredAt</code> softens it by catching up on any overdue ticks at the next launch. But if you need PR reviews while the laptop is shut, that’s genuinely a cloud job’s territory.</p>
+<p>For a solo maintainer who has the app open during the day, it’s exactly the right trade.</p>
+<h2 id="the-actual-takeaway" tabindex="-1">The actual takeaway <a class="anchor" href="#the-actual-takeaway" aria-hidden="true">#</a></h2>
+<p>The story I keep coming back to isn’t “we saved time reviewing PRs.” It’s that the workflow — one-off review plus ongoing automation — emerged from the same place every other task emerges from: a plain-language request to a coordinator. No configuration file. No workflow YAML. No webhook setup. Just: <em>do this, and keep doing it.</em></p>
+<p>That’s what an orchestrator-plus-scheduler should feel like. The prompt was the whole job description. The hive figured out the rest.</p>
+<hr>
+<p>Munder Difflin is free, open source, and local-first — <a href="https://munderdiffl.in/#install">download it</a> and set your first ScheduledMission. The <a href="https://munderdiffl.in/#how">god orchestrator</a> takes plain English; what you get back is a team that runs on it.</p>
+
+
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/story/">Story</a><a class="tag" href="/blog/tags/automation/">Automation</a><a class="tag" href="/blog/tags/orchestration/">Orchestration</a><a class="tag" href="/blog/tags/open-source/">Open Source</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-problem-too-many-prs-not-enough-eyes">The problem: too many PRs, not enough eyes</a></li><li class="lvl-2"><a href="#what-happened">What happened</a></li><li class="lvl-2"><a href="#the-recurring-part">The recurring part</a></li><li class="lvl-2"><a href="#what-this-is-actually-demonstrating">What this is actually demonstrating</a></li><li class="lvl-2"><a href="#the-limit-worth-naming">The limit worth naming</a></li><li class="lvl-2"><a href="#the-actual-takeaway">The actual takeaway</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/does-the-june-2026-agent-sdk-change-affect-munder-difflin/"><span class="k">← Older</span><span class="t">Does the June 2026 Agent SDK Change Affect Munder Difflin?</span></a>
+      <a class="pn next" href="/blog/launching-munder-difflin-v0-2-0/"><span class="k">Newer →</span><span class="t">Launching Munder Difflin v0.2.0</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Story</h2>
+      <div class="post-grid">
+        <article class="card t-story">
+  <a class="thumb t-story" href="/blog/munder-difflin-0-5-3/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/munder-difflin-0-5-3/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>11 min</span>
+    </div>
+    <h3><a href="/blog/munder-difflin-0-5-3/">Munder Difflin 0.5.3: Stapler Listens, And It Listens Locally</a></h3>
+    <p class="dek">0.5.3 turns the Stapler into dictation for any app and a meeting recorder that hears both sides of a call, all on your machine. Plus the new sidebar, a Tasks tab with real ticket keys, two floors on one computer, Opus 5.5 as the default, and a long list of fixes.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/munder-difflin-0-5-3/" aria-label="Read: Munder Difflin 0.5.3: Stapler Listens, And It Listens Locally">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-5-2/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-5-2/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-10">Sep 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-5-2/">Munder Difflin 0.5.2: Pro, the Stapler and Everything Since 0.4.6</a></h3>
+    <p class="dek">Munder Difflin 0.5.2 is out: how to install it, how to start Pro, what Pro adds, what changed since 0.4.6, and the end of signed Community builds.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-5-2/" aria-label="Read: Munder Difflin 0.5.2: Pro, the Stapler and Everything Since 0.4.6">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-4-6/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-4-6/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-27">Aug 27, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>10 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-4-6/">Launching Munder Difflin v0.4.6: It Speaks Chinese and Arabic Now</a></h3>
+    <p class="dek">v0.4.6 adds Chinese and Arabic interfaces with right-to-left support, ships its fonts inside the app so nothing is fetched from Google, and makes the updater actually update itself instead of pointing at a download page.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-4-6/" aria-label="Read: Launching Munder Difflin v0.4.6: It Speaks Chinese and Arabic Now">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

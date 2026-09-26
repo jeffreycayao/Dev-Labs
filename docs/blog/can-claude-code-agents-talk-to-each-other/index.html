@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Can Claude Code Agents Talk to Each Other? — Munder Difflin Blog</title>
+<meta name="description" content="Can Claude Code agents talk to each other? By default they report to their launcher — but a small coordination layer lets them message peer-to-peer." />
+<link rel="canonical" href="https://munderdiffl.in/blog/can-claude-code-agents-talk-to-each-other/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Can Claude Code Agents Talk to Each Other? — Munder Difflin Blog" />
+<meta property="og:description" content="Can Claude Code agents talk to each other? By default they report to their launcher — but a small coordination layer lets them message peer-to-peer." />
+<meta property="og:url" content="https://munderdiffl.in/blog/can-claude-code-agents-talk-to-each-other/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/can-claude-code-agents-talk-to-each-other/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Can Claude Code Agents Talk to Each Other?" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-04T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Concepts" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Claude Code" />
+<meta property="article:tag" content="Getting Started" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Can Claude Code Agents Talk to Each Other? — Munder Difflin Blog" />
+<meta name="twitter:description" content="Can Claude Code agents talk to each other? By default they report to their launcher — but a small coordination layer lets them message peer-to-peer." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/can-claude-code-agents-talk-to-each-other/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Can Claude Code Agents Talk to Each Other?" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Can Claude Code Agents Talk to Each Other?",
+  "description": "Can Claude Code agents talk to each other? By default they report to their launcher — but a small coordination layer lets them message peer-to-peer.",
+  "image": ["https://munderdiffl.in/blog/assets/media/can-claude-code-agents-talk-to-each-other/hero.png"],
+  "datePublished": "2026-06-04T00:00:00.000Z",
+  "dateModified": "2026-06-04T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/can-claude-code-agents-talk-to-each-other/" },
+  "keywords": "can claude code agents talk to each other, inter-agent messaging, ai agent communication, claude code agents",
+  "articleSection": "Concepts",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/can-claude-code-agents-talk-to-each-other/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Can Claude Code Agents Talk to Each Other?", "item": "https://munderdiffl.in/blog/can-claude-code-agents-talk-to-each-other/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Can Claude Code agents talk to each other?", "acceptedAnswer": { "@type": "Answer", "text": "Not by default. A Claude Code agent can spawn subagents, but those subagents only report their result back to the agent that launched them — there is no built-in peer-to-peer channel. To get true agent-to-agent communication you add a thin coordination layer, usually a file-based message system that a router delivers between agents." } },
+    { "@type": "Question", "name": "How do two AI agents send messages without a server?", "acceptedAnswer": { "@type": "Answer", "text": "Each agent writes a message as a single file into its own outbox, and a coordinating process moves that file into the recipient's inbox. No broker, no socket — just files and atomic renames. It is durable, auditable, and conflict-free because every file has exactly one writer." } },
+    { "@type": "Question", "name": "What stops two agents from messaging back and forth forever?", "acceptedAnswer": { "@type": "Answer", "text": "Two things. First, only certain message types expect a reply — a request, query, or proposal — while an inform or done is terminal and must not be answered. Second, every message carries a hop count, so a thread that bounces too many times is capped before it can loop." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-concepts">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/concepts/">Concepts</a>
+    </nav>
+    <h1>Can Claude Code Agents Talk to Each Other?</h1>
+    <p class="dek">Can Claude Code agents talk to each other? By default they report to their launcher — but a small coordination layer lets them message peer-to-peer.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>6 min read</span>
+      <span class="tag kind">Concepts</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/can-claude-code-agents-talk-to-each-other/hero.png" alt="Illustration: Can Claude Code Agents Talk to Each Other?" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p><strong>Can Claude Code agents talk to
+each other?</strong> Not out of the box — a Claude Code agent can spawn <strong>subagents</strong>,
+but they only report back to whoever launched them. There is no built-in peer-to-peer channel. Add a
+thin <strong>coordination layer</strong> — file-based mailboxes plus a router that delivers messages —
+and agents can message each other directly, escalate to a human, and stay <strong>auditable</strong>.
+That is exactly how a multi-agent harness turns several lone sessions into one team.</p></div>
+<p>It’s a fair question, and the honest answer has two halves. By default, no — Claude Code agents don’t
+talk to each other. But the gap is small, and once you close it a team of agents can coordinate as
+naturally as coworkers passing notes. Here’s the plain-English version of what’s missing and how to
+add it.</p>
+<h2 id="the-default-subagents-report-up-not-across" tabindex="-1">The default: subagents report up, not across <a class="anchor" href="#the-default-subagents-report-up-not-across" aria-hidden="true">#</a></h2>
+<p>A <a href="/blog/what-are-claude-code-agents/">Claude Code agent</a> is a running session with a goal and tools.
+It can spawn <strong>subagents</strong> — short-lived helpers that fan out a piece of work in parallel. That sounds
+like agents talking to each other, but it isn’t quite. A subagent only does one thing when it
+finishes: it hands its result back to the agent that launched it. The flow is strictly <strong>parent to
+child and back again</strong>, like a manager delegating a task and reading the report.</p>
+<p>What that flow can’t do is let two <em>peer</em> agents — two top-level sessions you started independently —
+discover each other and trade messages. Agent A has no address for Agent B. There’s no shared inbox,
+no bus, no “send this to whoever owns the auth module.” Each session lives in its own world.</p>
+<p>For a single task that’s fine. The moment you want several agents working a project together — a
+researcher feeding a builder, a reviewer flagging a fix, an orchestrator handing out assignments —
+you need them to actually communicate. So you add a layer.</p>
+<h2 id="the-coordination-layer-mailboxes-and-a-router" tabindex="-1">The coordination layer: mailboxes and a router <a class="anchor" href="#the-coordination-layer-mailboxes-and-a-router" aria-hidden="true">#</a></h2>
+<p>The most reliable way to let agents talk turns out to be almost boringly simple: <strong>files</strong>. Each agent
+gets a folder with an <code>inbox/</code> and an <code>outbox/</code>. To send a message, an agent drops a single JSON file
+into its own outbox. A coordinating process — call it the router — scans every outbox on a tick, and
+moves each message into the right recipient’s inbox. The recipient reads it at the start of its next
+turn and moves it to a <code>done/</code> folder so it’s never processed twice.</p>
+<p>That’s the whole mechanism. No Redis, no RabbitMQ, no daemon to babysit. The “infrastructure” is a
+directory and the <code>rename</code> syscall. We unpack the design in
+<a href="/blog/atomic-file-mailboxes-for-agents/">atomic file mailboxes for agents</a>, but the headline
+properties are what make it hold up:</p>
+<ul>
+<li><strong>Durable.</strong> Messages are files. If a process crashes mid-run, nothing already written is lost — the
+router picks up where it left off.</li>
+<li><strong>Auditable.</strong> Every message and every delivery is a file the coordinator commits to git, so you can
+read back exactly who said what, in order. (That works because a
+<a href="/blog/single-committer-git-pattern/">single committer owns the repository</a>.)</li>
+<li><strong>Conflict-free.</strong> Each file has exactly one writer, and delivery is an atomic rename. Agents can be
+busy at the same time without locks or races.</li>
+</ul>
+<p>The one rule that keeps it clean: <strong>never write into another agent’s folder.</strong> You only ever write to
+your own outbox; the router does the routing. Single-writer-per-file is what makes the whole thing
+safe under concurrency.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/can-claude-code-agents-talk-to-each-other/note-1.png" alt="Hand-drawn sketch from “Can Claude Code Agents Talk to Each Other?”" loading="lazy" decoding="async" /></figure>
+<h2 id="whats-actually-in-a-message" tabindex="-1">What’s actually in a message <a class="anchor" href="#whats-actually-in-a-message" aria-hidden="true">#</a></h2>
+<p>A message isn’t just free text — it carries a little structure so the receiving agent knows what’s
+expected of it. In practice each message names:</p>
+<ul>
+<li><strong>who it’s for</strong> — another agent, the orchestrator, everyone (<code>broadcast</code>), or a human,</li>
+<li><strong>a speech act</strong> — is this a <code>request</code>, a <code>query</code>, a <code>proposal</code>, an <code>inform</code>, an <code>agreement</code>, a
+<code>refusal</code>, or a <code>done</code>?</li>
+<li><strong>a subject and body</strong> — the actual content, and</li>
+<li><strong>a thread id</strong> — so a back-and-forth stays grouped as one conversation.</li>
+</ul>
+<p>The speech act is the quiet hero. It encodes intent, and intent is what prevents chatter from spiralling.
+Only a <code>request</code>, a <code>query</code>, or a <code>proposal</code> expects a reply. An <code>inform</code> or a <code>done</code> is <strong>terminal</strong> —
+you do not answer it. That single convention is what stops two polite agents from “thanks!” / “you’re
+welcome!”-ing each other into an infinite loop. As a backstop, every message also carries a <strong>hop
+count</strong>, so even a misbehaving thread is capped before it can run away.</p>
+<h2 id="talking-to-the-orchestrator-and-to-you" tabindex="-1">Talking to the orchestrator — and to you <a class="anchor" href="#talking-to-the-orchestrator-and-to-you" aria-hidden="true">#</a></h2>
+<p>Peer-to-peer isn’t the only direction that matters. Two special addresses round out the system.</p>
+<p>The first is the <strong>orchestrator</strong> (in our hive, the GOD agent). Anything ambiguous, cross-cutting, or
+needing sign-off goes to it rather than getting hashed out between peers. It hands out assignments,
+owns the shared plan, and is the one process allowed to commit — which is exactly why coordination
+stays coherent instead of fragmenting into side conversations. We cover that role in
+<a href="/blog/how-the-god-orchestrator-works/">how the GOD orchestrator works</a>.</p>
+<p>The second is <strong>you</strong>. A message addressed to a human doesn’t land in an agent’s inbox at all — the
+router diverts it to an approvals queue for a person to answer, and the answer comes back as a normal
+message. That’s how an agent reaches a human for the genuinely critical calls without anyone having to
+watch a terminal, the same loop we describe in
+<a href="/blog/human-in-the-loop-ai-agents/">keeping a human in the loop</a>.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/can-claude-code-agents-talk-to-each-other/note-2.png" alt="Hand-drawn sketch from “Can Claude Code Agents Talk to Each Other?”" loading="lazy" decoding="async" /></figure>
+<h2 id="memory-is-a-slower-kind-of-talking" tabindex="-1">Memory is a slower kind of talking <a class="anchor" href="#memory-is-a-slower-kind-of-talking" aria-hidden="true">#</a></h2>
+<p>There’s one more channel that’s easy to miss: <strong>shared memory.</strong> Messages are how agents coordinate in
+the moment; memory is how they coordinate across time. When each agent writes durable facts to a notes
+file and those notes are mined into a <a href="/blog/semantic-memory-for-ai-agents/">searchable semantic memory</a>
+the whole team can query, an agent can effectively “hear” what a teammate learned an hour ago without a
+message ever being sent. Fast lane: the mailbox. Slow lane: the shared memory. A good team uses both.</p>
+<h2 id="so-can-they-talk" tabindex="-1">So — can they talk? <a class="anchor" href="#so-can-they-talk" aria-hidden="true">#</a></h2>
+<p>Yes, with a caveat worth repeating: not on their own. A single Claude Code agent and its subagents form
+a manager-and-helpers tree, not a conversation. But the missing piece is small — mailboxes, a router,
+a handful of speech-act rules, and a hop cap — and once it’s in place, independent agents coordinate
+like a real team: requesting work, reporting <code>done</code>, escalating to an orchestrator, and pinging a human
+only when it truly matters. That shift, from isolated sessions to a coordinated crew, is the entire
+point of <a href="/blog/coordinating-ai-coding-agents/">the best way to coordinate AI coding agents</a>.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>Can Claude Code agents talk to each other out of the box?</strong> No. An agent can spawn subagents, but
+they only return their result to the agent that launched them. There’s no native peer-to-peer channel
+between two independent sessions — you add a coordination layer to get one.</p>
+<p><strong>Do I need a message broker like Redis or RabbitMQ?</strong> No. The most robust approach is file-based:
+each agent writes messages to its own outbox, and a router moves them to recipients’ inboxes via atomic
+renames. It’s durable and auditable with zero extra infrastructure.</p>
+<p><strong>How do agents avoid talking in circles?</strong> Speech acts and hop counts. Only requests, queries, and
+proposals expect a reply; informs and dones are terminal. And every message carries a hop count, so a
+thread is capped before it can loop forever.</p>
+<p><strong>How does an agent reach a human?</strong> It sends a message addressed to a human (or flagged as needing a
+human). The router diverts it to an approvals queue instead of an inbox, a person answers, and the
+reply comes back to the agent as a normal message.</p>
+<hr>
+<p>Munder Difflin runs exactly this system: a hive of Claude Code agents that message each other through
+atomic file mailboxes, escalate to <a href="https://munderdiffl.in/#how">a GOD orchestrator</a>, and ping you only
+for the calls that matter — every envelope visible on a live office floor.
+<a href="https://munderdiffl.in/#install">Download Munder Difflin</a> to watch your agents actually talk to each
+other; it’s free and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">Can Claude Code agents talk to each other?</p>
+          <p class="a">Not by default. A Claude Code agent can spawn subagents, but those subagents only report their result back to the agent that launched them — there is no built-in peer-to-peer channel. To get true agent-to-agent communication you add a thin coordination layer, usually a file-based message system that a router delivers between agents.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How do two AI agents send messages without a server?</p>
+          <p class="a">Each agent writes a message as a single file into its own outbox, and a coordinating process moves that file into the recipient&#39;s inbox. No broker, no socket — just files and atomic renames. It is durable, auditable, and conflict-free because every file has exactly one writer.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What stops two agents from messaging back and forth forever?</p>
+          <p class="a">Two things. First, only certain message types expect a reply — a request, query, or proposal — while an inform or done is terminal and must not be answered. Second, every message carries a hop count, so a thread that bounces too many times is capped before it can loop.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/concepts/">Concepts</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a><a class="tag" href="/blog/tags/getting-started/">Getting Started</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-default-subagents-report-up-not-across">The default: subagents report up, not across</a></li><li class="lvl-2"><a href="#the-coordination-layer-mailboxes-and-a-router">The coordination layer: mailboxes and a router</a></li><li class="lvl-2"><a href="#whats-actually-in-a-message">What’s actually in a message</a></li><li class="lvl-2"><a href="#talking-to-the-orchestrator-and-to-you">Talking to the orchestrator — and to you</a></li><li class="lvl-2"><a href="#memory-is-a-slower-kind-of-talking">Memory is a slower kind of talking</a></li><li class="lvl-2"><a href="#so-can-they-talk">So — can they talk?</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/claude-code-automation-while-you-sleep/"><span class="k">← Older</span><span class="t">Claude Code Automation: Let Agents Build While You Sleep</span></a>
+      <a class="pn next" href="/blog/building-reliable-ai-agents/"><span class="k">Newer →</span><span class="t">Building Reliable AI Agents: Failure Is the Default</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Concepts</h2>
+      <div class="post-grid">
+        <article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-ollama-good-for-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-ollama-good-for-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-ollama-good-for-coding/">Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do</a></h3>
+    <p class="dek">Ollama only runs the model, so the answer depends on which one you pull and your memory. What local models do well, where Claude wins, and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-ollama-good-for-coding/" aria-label="Read: Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-max-worth-it/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-max-worth-it/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-max-worth-it/">Is It Worth Paying for Claude Code Max?</a></h3>
+    <p class="dek">Who should pay for Claude Max 5x or 20x, who should stay on Pro or an API key, and the break even math to run on your own Claude Code usage.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-max-worth-it/" aria-label="Read: Is It Worth Paying for Claude Code Max?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-open-source/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-open-source/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-open-source/">Is Claude Code Open Source?</a></h3>
+    <p class="dek">No. Claude Code is proprietary under Anthropic&#39;s terms. What its GitHub repo holds, what the 2026 leak changed, and which open tools sit around it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-open-source/" aria-label="Read: Is Claude Code Open Source?">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

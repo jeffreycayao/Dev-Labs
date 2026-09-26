@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitHub Copilot CLI vs Claude Code as Hive Workers — Munder Difflin Blog</title>
+<meta name="description" content="How GitHub Copilot CLI and Claude Code behave as agent engines inside a multi-agent harness: hooks, inbox mail, orchestration, session lifecycle — and why the right answer is to run both." />
+<link rel="canonical" href="https://munderdiffl.in/blog/github-copilot-cli-vs-claude-code-for-hive-work/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="GitHub Copilot CLI vs Claude Code as Hive Workers — Munder Difflin Blog" />
+<meta property="og:description" content="How GitHub Copilot CLI and Claude Code behave as agent engines inside a multi-agent harness: hooks, inbox mail, orchestration, session lifecycle — and why the right answer is to run both." />
+<meta property="og:url" content="https://munderdiffl.in/blog/github-copilot-cli-vs-claude-code-for-hive-work/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/github-copilot-cli-vs-claude-code-for-hive-work/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: GitHub Copilot CLI vs Claude Code as Hive Workers" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-07-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Comparisons" />
+<meta property="article:tag" content="Claude Code" />
+<meta property="article:tag" content="Copilot CLI" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Engines" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="GitHub Copilot CLI vs Claude Code as Hive Workers — Munder Difflin Blog" />
+<meta name="twitter:description" content="How GitHub Copilot CLI and Claude Code behave as agent engines inside a multi-agent harness: hooks, inbox mail, orchestration, session lifecycle — and why the right answer is to run both." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/github-copilot-cli-vs-claude-code-for-hive-work/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: GitHub Copilot CLI vs Claude Code as Hive Workers" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "GitHub Copilot CLI vs Claude Code as Hive Workers",
+  "description": "How GitHub Copilot CLI and Claude Code behave as agent engines inside a multi-agent harness: hooks, inbox mail, orchestration, session lifecycle — and why the right answer is to run both.",
+  "image": ["https://munderdiffl.in/blog/assets/media/github-copilot-cli-vs-claude-code-for-hive-work/hero.png"],
+  "datePublished": "2026-07-03T00:00:00.000Z",
+  "dateModified": "2026-07-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/github-copilot-cli-vs-claude-code-for-hive-work/" },
+  "keywords": "github copilot cli vs claude code, copilot cli multi-agent, claude code multi-agent harness, copilot cli print mode, agent engine comparison, copilot cli automation, claude code hooks",
+  "articleSection": "Comparisons",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/github-copilot-cli-vs-claude-code-for-hive-work/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "GitHub Copilot CLI vs Claude Code as Hive Workers", "item": "https://munderdiffl.in/blog/github-copilot-cli-vs-claude-code-for-hive-work/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Can GitHub Copilot CLI work as an agent in a multi-agent system?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, with a specific shape. Copilot CLI's documented programmatic mode (copilot -p) executes one prompt and exits after completion, which makes it excellent for dispatched, self-contained tasks: hand it a scoped job, it runs autonomously with --allow-all-tools and --no-ask-user, returns a result, and terminates. What it can't do in that mode is stay resident and react to incoming messages, because there is no long-lived process to deliver them to." } },
+    { "@type": "Question", "name": "Why is Claude Code better suited to long-lived hive work?", "acceptedAnswer": { "@type": "Answer", "text": "Claude Code exposes lifecycle hooks that an external harness can attach to. In Munder Difflin, those hooks let the harness see every turn, gate actions for human approval, steer mid-run, and — critically — drain the agent's inbox at the end of each turn via the Stop hook, so a Claude worker picks up new mail without being respawned. That persistent, observable lifecycle is what makes it eligible to be a worker that converses, or the GOD orchestrator itself." } },
+    { "@type": "Question", "name": "What happens when you send a message to a Copilot CLI worker in Munder Difflin?", "acceptedAnswer": { "@type": "Answer", "text": "It doesn't silently disappear — it bounces to the GOD orchestrator. Because Copilot's print mode exits per turn, there's no resident process with a hook bridge to drain an inbox, so the provider is registered with canReceiveInbox set to false and routed mail is redirected to the orchestrator, which can re-dispatch the work as a fresh Copilot task or hand it to a hive-aware worker." } },
+    { "@type": "Question", "name": "Does GitHub Copilot CLI have hooks of its own?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Copilot CLI supports hooks defined in JSON files (in .github/hooks/ per repo or ~/.copilot/hooks/ personally), including sessionStart and sessionEnd events, plus MCP servers and custom instructions. Munder Difflin's v0.3.3 integration doesn't bridge those into the hive yet — it drives the documented print mode, where the process exits after each prompt — so within the harness a Copilot worker is non-hive-aware by design." } },
+    { "@type": "Question", "name": "How is Copilot CLI billed compared to Claude Code?", "acceptedAnswer": { "@type": "Answer", "text": "Copilot CLI authenticates with your existing GitHub Copilot login and consumes premium requests from your Copilot plan — GitHub documents one premium request per prompt on the default model, multiplied by the model's rate for others. Claude Code runs on your Anthropic plan or API key. Practically, that means a mixed hive spreads work across two subscriptions you may already be paying for." } },
+    { "@type": "Question", "name": "Should I pick one engine or mix them?", "acceptedAnswer": { "@type": "Answer", "text": "Mix them. Use Claude Code for the orchestrator and long-lived workers that need to receive mail, converse across turns, and run under hook-driven guardrails. Use Copilot CLI workers for burst work: scoped, self-contained tasks dispatched by the orchestrator that finish in one shot. Munder Difflin lets you choose the engine per hire, so this is a per-agent decision, not a platform decision." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-comparisons">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/comparisons/">Comparisons</a>
+    </nav>
+    <h1>GitHub Copilot CLI vs Claude Code as Hive Workers</h1>
+    <p class="dek">How GitHub Copilot CLI and Claude Code behave as agent engines inside a multi-agent harness: hooks, inbox mail, orchestration, session lifecycle — and why the right answer is to run both.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Comparisons</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/github-copilot-cli-vs-claude-code-for-hive-work/hero.png" alt="Illustration: GitHub Copilot CLI vs Claude Code as Hive Workers" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Inside a multi-agent harness, the engine question isn't "which CLI writes better code" — it's <strong>what lifecycle the process exposes</strong>. <strong>Claude Code</strong> runs as a long-lived session with native hooks, so Munder Difflin can gate it, steer it, <strong>drain its inbox on the Stop hook</strong>, and even make it the GOD orchestrator. <strong>GitHub Copilot CLI</strong> (new in v0.3.3) runs in its documented print mode — <code>copilot -p</code> — which <strong>exits after every prompt</strong>: brilliant for dispatched, self-contained tasks on your existing Copilot subscription, but with no resident process to receive mail, routed messages <strong>bounce to the orchestrator</strong> instead. Verdict: <strong>mix them</strong> — Claude as orchestrator and long-lived workers, Copilot for burst tasks.</p></div>
+<p>Munder Difflin v0.3.3 added GitHub Copilot CLI as its seventh agent engine — the project’s first community-contributed provider (<a href="https://github.com/chaitanyagiri/munder-difflin/pull/101">PR #101</a> by @anxkhn). That makes a comparison suddenly practical rather than theoretical: you can hire a Claude Code worker and a Copilot worker onto the same floor and watch them behave differently. This post is about <em>that</em> difference — not “which model is smarter,” but how each CLI behaves as a <strong>worker inside a hive</strong>.</p>
+<p>Both are genuinely good tools. The differences below are lifecycle differences, and lifecycle is what a harness cares about.</p>
+<h2 id="the-thing-a-harness-actually-needs-from-an-engine" tabindex="-1">The thing a harness actually needs from an engine <a class="anchor" href="#the-thing-a-harness-actually-needs-from-an-engine" aria-hidden="true">#</a></h2>
+<p>A <a href="/blog/what-is-a-multi-agent-harness/">multi-agent harness</a> wraps real CLI processes and coordinates them: routing messages between inboxes, gating destructive actions, tracking turns, waking idle agents when mail arrives. To do all that, it needs answers from the engine to three questions:</p>
+<ol>
+<li><strong>Does the process stay alive between turns?</strong> (Can it hold a conversation, or is every invocation a fresh start?)</li>
+<li><strong>Does it emit lifecycle signals a harness can attach to?</strong> (Turn ended, tool about to run, session stopped?)</li>
+<li><strong>Can it be interrupted, steered, and fed new input mid-stream?</strong></li>
+</ol>
+<p>Claude Code and Copilot CLI give very different answers — and neither answer is wrong. They’re different shapes for different jobs.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/github-copilot-cli-vs-claude-code-for-hive-work/note-1.png" alt="Hand-drawn sketch from “GitHub Copilot CLI vs Claude Code as Hive Workers”" loading="lazy" decoding="async" /></figure>
+<h2 id="claude-code-the-hive-aware-resident" tabindex="-1">Claude Code: the hive-aware resident <a class="anchor" href="#claude-code-the-hive-aware-resident" aria-hidden="true">#</a></h2>
+<p>Claude Code runs as a persistent interactive session in its pseudo-terminal, and it exposes native hooks — external commands fired at lifecycle points. Munder Difflin leans on those hard:</p>
+<ul>
+<li><strong>Turn-end inbox drain.</strong> When a Claude worker finishes a turn, the Stop hook fires and the harness checks the agent’s mailbox. If mail is waiting, the agent drains it <em>in the same session</em> — no respawn, no lost context. This is what makes a worker conversational: other agents can message it and it will actually respond.</li>
+<li><strong>Hook-driven guardrails.</strong> The human-in-the-loop gate, mid-run steering, and graceful stop are all driven through Claude Code hook returns — you can intervene without killing the session.</li>
+<li><strong>Orchestrator eligibility.</strong> Because the process is long-lived and observable, Claude Code can be the <a href="/blog/how-the-god-orchestrator-works/">GOD orchestrator</a> itself — the always-on supervisor that adjudicates traffic and routes tasks.</li>
+</ul>
+<p>If you want the deeper treatment of driving Claude Code as a coordinated fleet, see the <a href="/blog/claude-code-orchestration-guide/">Claude Code orchestration guide</a>.</p>
+<h2 id="github-copilot-cli-the-burst-specialist" tabindex="-1">GitHub Copilot CLI: the burst specialist <a class="anchor" href="#github-copilot-cli-the-burst-specialist" aria-hidden="true">#</a></h2>
+<p>GitHub Copilot CLI is GitHub’s terminal agent, and its docs describe two modes: an interactive session, and a <strong>programmatic mode</strong> built for scripting — per GitHub’s own reference, <code>-p</code> will “execute a prompt programmatically (exits after completion).” That exit-per-turn behavior is the documented design, and Munder Difflin drives it exactly as documented. The spawn shape from the v0.3.3 changelog:</p>
+<pre><code>copilot -p &quot;&lt;prompt&gt;&quot; -s --allow-all-tools --no-ask-user [--model &lt;id&gt;]
+</code></pre>
+<p>Piece by piece: <code>-p</code> passes the task, <code>-s</code> (silent) outputs only the agent response, <code>--allow-all-tools</code> auto-approves tool use (GitHub notes it’s required for programmatic runs — and in Munder Difflin these auto-approval flags are gated by the floor’s auto-mode toggle, like every other engine), and <code>--no-ask-user</code> disables clarifying questions so the run is fully autonomous. There’s a model picker (Claude Sonnet 4.5 by default, GPT-5.4, or <code>auto</code>) and best-effort <code>--resume</code> session continuity.</p>
+<p>Two things make Copilot workers genuinely attractive:</p>
+<ul>
+<li><strong>It’s on your existing subscription.</strong> Copilot CLI authenticates with your GitHub Copilot login — no new API key. GitHub bills it in premium requests (one per prompt on the default model, times the model’s multiplier), drawing from the allowance you may already have.</li>
+<li><strong>Exit-per-turn is a feature for dispatched work.</strong> A scoped task arrives, the process runs it to completion with no residual state, and terminates cleanly. For burst tasks, that’s exactly what you want.</li>
+</ul>
+<p>The honest limitation: with no resident process between turns, there’s nothing to deliver inbox mail <em>to</em>. So in Munder Difflin, Copilot’s provider is registered non-hive-aware (<code>canReceiveInbox: false</code>), and routed mail <strong>bounces to the GOD orchestrator</strong> instead of silently dropping. The orchestrator can then re-dispatch it as a fresh Copilot task or hand it to a hive-aware worker.</p>
+<p>To be fair to Copilot CLI: the tool itself is more extensible than the print-mode integration uses. GitHub ships its own hooks system (JSON files in <code>.github/hooks/</code> or <code>~/.copilot/hooks/</code>, with <code>sessionStart</code>/<code>sessionEnd</code> events), MCP server support, and custom instructions. A deeper bridge is conceivable; v0.3.3 ships the documented, honest version.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/github-copilot-cli-vs-claude-code-for-hive-work/note-2.png" alt="Hand-drawn sketch from “GitHub Copilot CLI vs Claude Code as Hive Workers”" loading="lazy" decoding="async" /></figure>
+<h2 id="verdict-dont-pick-mix" tabindex="-1">Verdict: don’t pick — mix <a class="anchor" href="#verdict-dont-pick-mix" aria-hidden="true">#</a></h2>
+<p>The comparison table writes itself once you frame it as lifecycle:</p>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Claude Code</th>
+<th>GitHub Copilot CLI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Process lifetime</td>
+<td>Long-lived session</td>
+<td>Exits after each prompt (<code>-p</code>)</td>
+</tr>
+<tr>
+<td>Harness hook bridge</td>
+<td>Native hooks (incl. Stop-hook inbox drain)</td>
+<td>None in print mode</td>
+</tr>
+<tr>
+<td>Receives hive mail</td>
+<td>Yes, drains inbox in-session</td>
+<td>No — bounces to orchestrator</td>
+</tr>
+<tr>
+<td>Orchestrator-eligible</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>Anthropic plan / API key</td>
+<td>Existing GitHub Copilot login</td>
+</tr>
+<tr>
+<td>Sweet spot</td>
+<td>Orchestrator, conversational workers</td>
+<td>Dispatched, self-contained burst tasks</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Because Munder Difflin makes the engine a per-hire choice, this isn’t an either/or. The pattern that works: <strong>Claude Code as the orchestrator and your long-lived workers</strong> — the agents that need to receive messages, hold context across turns, and run under hook-driven approval gates — and <strong>Copilot CLI workers for burst tasks</strong> the orchestrator dispatches: a scoped refactor, a test-writing pass, a one-shot investigation. Different engines for different roles is the general lesson of mixed fleets, and it also spreads cost across two subscriptions you likely already pay for.</p>
+<p>For everything else in the release — including the built-in Monaco IDE — see the <a href="/blog/launching-munder-difflin-v0-3-3/">v0.3.3 launch post</a>.</p>
+<h2 id="try-both-on-one-floor" tabindex="-1">Try both on one floor <a class="anchor" href="#try-both-on-one-floor" aria-hidden="true">#</a></h2>
+<p>Hire a Claude worker and a Copilot worker side by side and watch the difference yourself — <a href="https://github.com/chaitanyagiri/munder-difflin/releases/latest">download Munder Difflin</a> (free, MIT, local-first), and if it’s useful, <a href="https://github.com/chaitanyagiri/munder-difflin">a GitHub star</a> helps more people find it.</p>
+<p>Sources: <a href="https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference">GitHub Docs — Copilot CLI command reference</a>;
+<a href="https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/run-cli-programmatically">GitHub Docs — Running Copilot CLI programmatically</a>;
+<a href="https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli">GitHub Docs — About Copilot CLI</a>;
+<a href="https://docs.github.com/en/copilot/concepts/agents/hooks">GitHub Docs — Hooks for Copilot</a>;
+<a href="https://docs.github.com/en/copilot/concepts/billing/copilot-requests">GitHub Docs — Copilot premium requests</a>.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">Can GitHub Copilot CLI work as an agent in a multi-agent system?</p>
+          <p class="a">Yes, with a specific shape. Copilot CLI&#39;s documented programmatic mode (copilot -p) executes one prompt and exits after completion, which makes it excellent for dispatched, self-contained tasks: hand it a scoped job, it runs autonomously with --allow-all-tools and --no-ask-user, returns a result, and terminates. What it can&#39;t do in that mode is stay resident and react to incoming messages, because there is no long-lived process to deliver them to.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why is Claude Code better suited to long-lived hive work?</p>
+          <p class="a">Claude Code exposes lifecycle hooks that an external harness can attach to. In Munder Difflin, those hooks let the harness see every turn, gate actions for human approval, steer mid-run, and — critically — drain the agent&#39;s inbox at the end of each turn via the Stop hook, so a Claude worker picks up new mail without being respawned. That persistent, observable lifecycle is what makes it eligible to be a worker that converses, or the GOD orchestrator itself.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What happens when you send a message to a Copilot CLI worker in Munder Difflin?</p>
+          <p class="a">It doesn&#39;t silently disappear — it bounces to the GOD orchestrator. Because Copilot&#39;s print mode exits per turn, there&#39;s no resident process with a hook bridge to drain an inbox, so the provider is registered with canReceiveInbox set to false and routed mail is redirected to the orchestrator, which can re-dispatch the work as a fresh Copilot task or hand it to a hive-aware worker.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Does GitHub Copilot CLI have hooks of its own?</p>
+          <p class="a">Yes. Copilot CLI supports hooks defined in JSON files (in .github/hooks/ per repo or ~/.copilot/hooks/ personally), including sessionStart and sessionEnd events, plus MCP servers and custom instructions. Munder Difflin&#39;s v0.3.3 integration doesn&#39;t bridge those into the hive yet — it drives the documented print mode, where the process exits after each prompt — so within the harness a Copilot worker is non-hive-aware by design.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How is Copilot CLI billed compared to Claude Code?</p>
+          <p class="a">Copilot CLI authenticates with your existing GitHub Copilot login and consumes premium requests from your Copilot plan — GitHub documents one premium request per prompt on the default model, multiplied by the model&#39;s rate for others. Claude Code runs on your Anthropic plan or API key. Practically, that means a mixed hive spreads work across two subscriptions you may already be paying for.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Should I pick one engine or mix them?</p>
+          <p class="a">Mix them. Use Claude Code for the orchestrator and long-lived workers that need to receive mail, converse across turns, and run under hook-driven guardrails. Use Copilot CLI workers for burst work: scoped, self-contained tasks dispatched by the orchestrator that finish in one shot. Munder Difflin lets you choose the engine per hire, so this is a per-agent decision, not a platform decision.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/comparisons/">Comparisons</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a><a class="tag" href="/blog/tags/copilot-cli/">Copilot CLI</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/engines/">Engines</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-thing-a-harness-actually-needs-from-an-engine">The thing a harness actually needs from an engine</a></li><li class="lvl-2"><a href="#claude-code-the-hive-aware-resident">Claude Code: the hive-aware resident</a></li><li class="lvl-2"><a href="#github-copilot-cli-the-burst-specialist">GitHub Copilot CLI: the burst specialist</a></li><li class="lvl-2"><a href="#verdict-dont-pick-mix">Verdict: don’t pick — mix</a></li><li class="lvl-2"><a href="#try-both-on-one-floor">Try both on one floor</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/how-to-add-a-github-copilot-cli-agent/"><span class="k">← Older</span><span class="t">How to Add a GitHub Copilot CLI Agent to Your Floor</span></a>
+      <a class="pn next" href="/blog/crewai-autogen-vs-a-local-agent-harness/"><span class="k">Newer →</span><span class="t">CrewAI and AutoGen vs a Local Agent Harness: Framework or App?</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Comparisons</h2>
+      <div class="post-grid">
+        <article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-pricing/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/grok-bot-pricing/">Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy</a></h3>
+    <p class="dek">Grok Bot has no plan of its own. It comes bundled with SuperGrok and Cursor plans from $20 to $300 a month. Here is what each one gets you, what the free trial is, and the $0 route for work agents.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-pricing/" aria-label="Read: Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-alternatives/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-alternatives/">Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse</a></h3>
+    <p class="dek">Meta Muse is US only and trains on your chats by default. Seven alternatives, from open source agents that run on your own computer to hosted ones from OpenAI, Google and SpaceXAI.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-alternatives/" aria-label="Read: Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-grok-bot-privacy/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-grok-bot-privacy/">Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both ask for your logins. We read both companies&#39; security docs: who sees your passwords, what trains on your chats, and how to keep AI agents on your own computer instead.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-grok-bot-privacy/" aria-label="Read: Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

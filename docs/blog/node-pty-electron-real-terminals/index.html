@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Real Terminals in Electron with node-pty — Munder Difflin Blog</title>
+<meta name="description" content="How to run byte-for-byte authentic shells inside Electron with node-pty: the native-rebuild gotcha, the macOS PATH trap, and streaming PTY output over IPC." />
+<link rel="canonical" href="https://munderdiffl.in/blog/node-pty-electron-real-terminals/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Real Terminals in Electron with node-pty — Munder Difflin Blog" />
+<meta property="og:description" content="How to run byte-for-byte authentic shells inside Electron with node-pty: the native-rebuild gotcha, the macOS PATH trap, and streaming PTY output over IPC." />
+<meta property="og:url" content="https://munderdiffl.in/blog/node-pty-electron-real-terminals/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/node-pty-electron-real-terminals/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Real Terminals in Electron with node-pty" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Internals" />
+<meta property="article:tag" content="Electron" />
+<meta property="article:tag" content="node-pty" />
+<meta property="article:tag" content="Terminals" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Real Terminals in Electron with node-pty — Munder Difflin Blog" />
+<meta name="twitter:description" content="How to run byte-for-byte authentic shells inside Electron with node-pty: the native-rebuild gotcha, the macOS PATH trap, and streaming PTY output over IPC." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/node-pty-electron-real-terminals/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Real Terminals in Electron with node-pty" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Real Terminals in Electron with node-pty",
+  "description": "How to run byte-for-byte authentic shells inside Electron with node-pty: the native-rebuild gotcha, the macOS PATH trap, and streaming PTY output over IPC.",
+  "image": ["https://munderdiffl.in/blog/assets/media/node-pty-electron-real-terminals/hero.png"],
+  "datePublished": "2026-06-03T00:00:00.000Z",
+  "dateModified": "2026-06-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/node-pty-electron-real-terminals/" },
+  "keywords": "node-pty electron, node-pty, pseudo terminal, electron terminal app",
+  "articleSection": "Internals",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/node-pty-electron-real-terminals/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Real Terminals in Electron with node-pty", "item": "https://munderdiffl.in/blog/node-pty-electron-real-terminals/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Why use node-pty instead of child_process for a terminal app?", "acceptedAnswer": { "@type": "Answer", "text": "child_process gives you pipes, not a terminal. Interactive programs detect that they're not attached to a TTY and change behavior — no colors, no prompts, broken full-screen UIs. node-pty allocates a real pseudo-terminal so programs behave exactly as they would in a normal shell." } },
+    { "@type": "Question", "name": "What's the native-rebuild gotcha with node-pty in Electron?", "acceptedAnswer": { "@type": "Answer", "text": "node-pty is a native addon compiled against a specific Node ABI. Electron ships its own Node, so the npm-installed binary won't load. You have to rebuild node-pty against Electron's ABI — typically with electron-rebuild in a postinstall step." } },
+    { "@type": "Question", "name": "Why can't my Electron app find `claude` or other commands?", "acceptedAnswer": { "@type": "Answer", "text": "On macOS, a GUI-launched Electron app doesn't inherit your interactive shell's PATH, so commands installed by nvm, asdf, or Homebrew aren't found. Resolve the command against an interactive login shell, or fall back to known install locations." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-internals">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/internals/">Internals</a>
+    </nav>
+    <h1>Real Terminals in Electron with node-pty</h1>
+    <p class="dek">How to run byte-for-byte authentic shells inside Electron with node-pty: the native-rebuild gotcha, the macOS PATH trap, and streaming PTY output over IPC.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>7 min read</span>
+      <span class="tag kind">Internals</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/node-pty-electron-real-terminals/hero.png" alt="Illustration: Real Terminals in Electron with node-pty" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>To run real shells inside Electron, use
+<strong>node-pty</strong> — it allocates a genuine pseudo-terminal so programs behave byte-for-byte
+like they do in a normal terminal. The three things that bite everyone:
+<strong>rebuild the native addon against Electron's ABI</strong> (electron-rebuild),
+<strong>resolve commands against an interactive shell PATH</strong> (GUI apps don't inherit it on
+macOS), and <strong>stream output over IPC safely</strong>, guarding sends during window teardown.</p></div>
+<p>If you want to embed a working terminal in a desktop app — a dev tool, an IDE, an agent harness that
+runs <code>claude</code> sessions — <code>node-pty</code> is the foundation. But “embed a terminal” hides three sharp edges
+that every Electron + node-pty project hits. This post is the field guide: what a PTY is, why you need
+one, and the gotchas that turn a one-line <code>spawn</code> into a day of debugging.</p>
+<h2 id="why-a-pseudo-terminal-not-a-pipe" tabindex="-1">Why a pseudo-terminal, not a pipe <a class="anchor" href="#why-a-pseudo-terminal-not-a-pipe" aria-hidden="true">#</a></h2>
+<p>The instinct is to reach for Node’s <code>child_process.spawn</code> and pipe stdout into a <code>&lt;div&gt;</code>. It seems to
+work — until you run anything interactive. Here’s why it breaks.</p>
+<p>Programs check whether their output is attached to a <strong>TTY</strong> (a terminal). When they detect a plain
+pipe instead, they assume “I’m being scripted” and change behavior:</p>
+<ul>
+<li>colors and styling switch off,</li>
+<li>interactive prompts vanish or hang,</li>
+<li>full-screen TUIs (editors, <code>top</code>, anything using the alternate screen buffer) don’t render at all,</li>
+<li>line editing, arrow keys, and signals like Ctrl-C don’t behave.</li>
+</ul>
+<p>A <strong>pseudo-terminal (PTY)</strong> is the fix. It’s a kernel feature that presents a real terminal interface
+to the child process while handing the bytes to your code on the other end. The program thinks it’s
+talking to an honest terminal — because it is — so it behaves exactly as it would in your shell.
+<code>node-pty</code> is the Node binding that allocates one and gives you <code>write</code>, <code>resize</code>, <code>onData</code>, and
+<code>onExit</code>.</p>
+<pre class="language-ts"><code class="language-ts"><span class="token keyword">import</span> <span class="token operator">*</span> <span class="token keyword">as</span> pty <span class="token keyword">from</span> <span class="token string">'node-pty'</span><span class="token punctuation">;</span>
+
+<span class="token keyword">const</span> proc <span class="token operator">=</span> pty<span class="token punctuation">.</span><span class="token function">spawn</span><span class="token punctuation">(</span><span class="token string">'claude'</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+  name<span class="token operator">:</span> <span class="token string">'xterm-256color'</span><span class="token punctuation">,</span>
+  cols<span class="token operator">:</span> <span class="token number">100</span><span class="token punctuation">,</span>
+  rows<span class="token operator">:</span> <span class="token number">30</span><span class="token punctuation">,</span>
+  cwd<span class="token operator">:</span> <span class="token string">'/path/to/project'</span><span class="token punctuation">,</span>
+  env<span class="token operator">:</span> <span class="token punctuation">{</span> <span class="token operator">...</span>process<span class="token punctuation">.</span>env<span class="token punctuation">,</span> <span class="token constant">TERM</span><span class="token operator">:</span> <span class="token string">'xterm-256color'</span><span class="token punctuation">,</span> <span class="token constant">COLORTERM</span><span class="token operator">:</span> <span class="token string">'truecolor'</span> <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+proc<span class="token punctuation">.</span><span class="token function">onData</span><span class="token punctuation">(</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token function">sendToRenderer</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>   <span class="token comment">// bytes from the shell</span>
+proc<span class="token punctuation">.</span><span class="token function">onExit</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">{</span> exitCode<span class="token punctuation">,</span> signal <span class="token punctuation">}</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token function">cleanup</span><span class="token punctuation">(</span>exitCode<span class="token punctuation">,</span> signal<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Note <code>name: 'xterm-256color'</code> and the <code>TERM</code>/<code>COLORTERM</code> env — they tell the child what terminal it’s
+talking to, which is what unlocks 24-bit color. Set them, or you’ll spend an hour wondering why output
+is monochrome.</p>
+<h2 id="gotcha-1-the-native-rebuild-trap" tabindex="-1">Gotcha 1 — The native-rebuild trap <a class="anchor" href="#gotcha-1-the-native-rebuild-trap" aria-hidden="true">#</a></h2>
+<p>This is the one that stops people cold on first install. <code>node-pty</code> is a <strong>native addon</strong>: it’s
+compiled C++ that links against a specific Node ABI. You <code>npm install node-pty</code>, it builds against your
+system Node, and everything looks fine — until you load it inside Electron and get:</p>
+<pre><code>Error: The module was compiled against a different Node.js ABI version
+</code></pre>
+<p>Electron bundles <strong>its own</strong> Node, with a different ABI than the one npm built against. The binary that
+works in a plain <code>node</code> REPL won’t load in Electron. The fix is to rebuild the addon against Electron’s
+ABI, which is what <code>electron-rebuild</code> does. Wire it into a postinstall script so it happens
+automatically:</p>
+<pre class="language-jsonc"><code class="language-jsonc">{
+  "scripts": {
+    "postinstall": "electron-rebuild -f -w node-pty"
+  }
+}</code></pre>
+<p>The <code>-w node-pty</code> scopes the rebuild to just that module (faster than rebuilding everything), and <code>-f</code>
+forces it. After this runs, the addon loads cleanly inside Electron. Forget it, and the app crashes on
+launch with an ABI error that looks scarier than it is.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/node-pty-electron-real-terminals/note-1.png" alt="Hand-drawn sketch from “Real Terminals in Electron with node-pty”" loading="lazy" decoding="async" /></figure>
+<h2 id="gotcha-2-the-macos-path-trap" tabindex="-1">Gotcha 2 — The macOS PATH trap <a class="anchor" href="#gotcha-2-the-macos-path-trap" aria-hidden="true">#</a></h2>
+<p>You ship the app, double-click it, and your terminal can’t find <code>claude</code> — or <code>node</code>, or <code>git</code>, or
+whatever you installed with nvm, asdf, or Homebrew. Run the same command in a real terminal and it
+works fine. What gives?</p>
+<p>On macOS, an app launched from the <strong>GUI</strong> (Finder, Dock) doesn’t inherit your interactive shell’s
+environment. Your <code>PATH</code> additions live in <code>.zshrc</code>/<code>.zprofile</code>, which a login shell reads — but the
+GUI process never started a login shell, so it gets a bare system <code>PATH</code> that’s missing every
+user-installed tool.</p>
+<p>There are two halves to fixing this:</p>
+<p><strong>Resolve the command’s full path.</strong> Don’t trust a bare command name to be found. Ask an interactive
+login shell where it lives, then fall back to common install locations:</p>
+<pre class="language-ts"><code class="language-ts"><span class="token keyword">function</span> <span class="token function">resolveCommand</span><span class="token punctuation">(</span>command<span class="token operator">:</span> <span class="token builtin">string</span><span class="token punctuation">)</span><span class="token operator">:</span> <span class="token builtin">string</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>command<span class="token punctuation">.</span><span class="token function">includes</span><span class="token punctuation">(</span><span class="token string">'/'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">return</span> command<span class="token punctuation">;</span>            <span class="token comment">// already absolute</span>
+  <span class="token comment">// Ask the user's login shell — picks up nvm/asdf/brew.</span>
+  <span class="token keyword">const</span> res <span class="token operator">=</span> <span class="token function">spawnSync</span><span class="token punctuation">(</span>process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">SHELL</span> <span class="token operator">??</span> <span class="token string">'/bin/zsh'</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">'-ilc'</span><span class="token punctuation">,</span> <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">which </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>command<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+    encoding<span class="token operator">:</span> <span class="token string">'utf8'</span><span class="token punctuation">,</span> timeout<span class="token operator">:</span> <span class="token number">3000</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> found <span class="token operator">=</span> res<span class="token punctuation">.</span>stdout<span class="token punctuation">.</span><span class="token function">trim</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">split</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">pop</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>found <span class="token operator">&amp;&amp;</span> <span class="token function">existsSync</span><span class="token punctuation">(</span>found<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">return</span> found<span class="token punctuation">;</span>
+  <span class="token comment">// Fall back to known locations.</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> c <span class="token keyword">of</span> <span class="token punctuation">[</span>
+    <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">/opt/homebrew/bin/</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>command<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span>
+    <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">/usr/local/bin/</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>command<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span>
+    <span class="token template-string"><span class="token template-punctuation string">`</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">HOME</span><span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">/.local/bin/</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>command<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span>
+  <span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">existsSync</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">return</span> c<span class="token punctuation">;</span>
+  <span class="token keyword">return</span> command<span class="token punctuation">;</span>                                        <span class="token comment">// last resort — let it ENOENT</span>
+<span class="token punctuation">}</span></code></pre>
+<p>The <code>-ilc</code> flags matter: <code>-i</code> interactive, <code>-l</code> login, <code>-c</code> run a command — that combination loads the
+same startup files your terminal does, so <code>which</code> finds what you’d expect.</p>
+<p><strong>Give the child a real PATH too.</strong> Even with the binary resolved, the spawned shell needs a full
+<code>PATH</code> so <em>its</em> subprocesses resolve (the <code>claude</code> session that shells out to <code>git</code>, say). Compute the
+login shell’s <code>PATH</code> once and pass it into the PTY’s env:</p>
+<pre class="language-ts"><code class="language-ts"><span class="token keyword">const</span> userPath <span class="token operator">=</span> <span class="token function">spawnSync</span><span class="token punctuation">(</span>process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">SHELL</span> <span class="token operator">??</span> <span class="token string">'/bin/zsh'</span><span class="token punctuation">,</span> <span class="token punctuation">[</span><span class="token string">'-ilc'</span><span class="token punctuation">,</span> <span class="token string">'echo -n "$PATH"'</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+  <span class="token punctuation">{</span> encoding<span class="token operator">:</span> <span class="token string">'utf8'</span><span class="token punctuation">,</span> timeout<span class="token operator">:</span> <span class="token number">3000</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">.</span>stdout<span class="token punctuation">.</span><span class="token function">trim</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">||</span> process<span class="token punctuation">.</span>env<span class="token punctuation">.</span><span class="token constant">PATH</span><span class="token punctuation">;</span></code></pre>
+<p>Skip this and your terminal will run, but anything it tries to launch will mysteriously not be found.</p>
+<h2 id="gotcha-3-streaming-over-ipc-without-crashing-on-quit" tabindex="-1">Gotcha 3 — Streaming over IPC without crashing on quit <a class="anchor" href="#gotcha-3-streaming-over-ipc-without-crashing-on-quit" aria-hidden="true">#</a></h2>
+<p>In Electron, the PTY lives in the <strong>main</strong> process and the UI lives in the <strong>renderer</strong>. So PTY output
+has to cross the process boundary over IPC. The pattern is straightforward — forward each <code>onData</code>
+chunk on a per-session channel:</p>
+<pre class="language-ts"><code class="language-ts">proc<span class="token punctuation">.</span><span class="token function">onData</span><span class="token punctuation">(</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span> <span class="token operator">=></span> webContents<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">pty:data:</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>id<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span> data<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+proc<span class="token punctuation">.</span><span class="token function">onExit</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">{</span> exitCode<span class="token punctuation">,</span> signal <span class="token punctuation">}</span><span class="token punctuation">)</span> <span class="token operator">=></span> webContents<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">pty:exit:</span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>id<span class="token interpolation-punctuation punctuation">}</span></span><span class="token template-punctuation string">`</span></span><span class="token punctuation">,</span> <span class="token punctuation">{</span> exitCode<span class="token punctuation">,</span> signal <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>But there’s a teardown hazard that produces an ugly crash dialog. During app quit, killing a PTY fires
+<code>onExit</code> <strong>asynchronously</strong>. By the time that callback runs, the window may already be destroyed — and
+calling <code>.send()</code> on a destroyed <code>webContents</code> throws <code>&quot;Object has been destroyed&quot;</code>, which surfaces as
+a main-process crash. The guard is simple but essential: check the target is alive before every send.</p>
+<pre class="language-ts"><code class="language-ts"><span class="token keyword">function</span> <span class="token function">safeSend</span><span class="token punctuation">(</span>channel<span class="token operator">:</span> <span class="token builtin">string</span><span class="token punctuation">,</span> payload<span class="token operator">:</span> <span class="token builtin">unknown</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> wc <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>webContents<span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>wc <span class="token operator">||</span> wc<span class="token punctuation">.</span><span class="token function">isDestroyed</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">return</span><span class="token punctuation">;</span>     <span class="token comment">// window torn down — drop it</span>
+  <span class="token keyword">try</span> <span class="token punctuation">{</span> wc<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span>channel<span class="token punctuation">,</span> payload<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">{</span> <span class="token comment">/* raced during teardown */</span> <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>Route every PTY-to-renderer message through that, and quitting the app is clean instead of a crash
+report.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/node-pty-electron-real-terminals/note-2.png" alt="Hand-drawn sketch from “Real Terminals in Electron with node-pty”" loading="lazy" decoding="async" /></figure>
+<h2 id="managing-many-sessions" tabindex="-1">Managing many sessions <a class="anchor" href="#managing-many-sessions" aria-hidden="true">#</a></h2>
+<p>A real app runs more than one terminal, so wrap all of this in a manager keyed by session id —
+<code>spawn</code>, <code>write</code>, <code>resize</code>, <code>kill</code>, <code>list</code>, <code>killAll</code>. Two details pay off at scale:</p>
+<ul>
+<li><strong>Resize is a real operation.</strong> When the UI panel changes size, recompute cols/rows and call
+<code>proc.resize(cols, rows)</code>, or full-screen TUIs will wrap wrong. The renderer side of this — measuring
+the grid and writing keystrokes back — is its own craft, covered in
+<a href="/blog/building-a-terminal-ui-xterm-node-pty/">building a terminal UI with xterm.js and node-pty</a>.</li>
+<li><strong>Clean up on exit.</strong> Remove a session from your map in <code>onExit</code>, and on app quit kill everything so
+you don’t leak child processes.</li>
+</ul>
+<h2 id="why-this-matters-for-an-agent-harness" tabindex="-1">Why this matters for an agent harness <a class="anchor" href="#why-this-matters-for-an-agent-harness" aria-hidden="true">#</a></h2>
+<p>Everything above is in service of a simple idea: if your “agents” are real <code>claude</code> CLI sessions, they
+deserve real terminals. A PTY makes each agent byte-for-byte authentic — same colors, same prompts,
+same behavior as if you’d typed <code>claude</code> yourself. That authenticity is the whole premise of a
+<a href="https://munderdiffl.in/#what">multi-agent harness</a>: you’re not reimplementing the agent, you’re
+running the genuine article and coordinating many of them. And because every session is a real process,
+the same single-writer discipline that keeps their shared state safe — see
+<a href="/blog/single-committer-git-pattern/">the single-committer git pattern</a> — applies cleanly on top.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>Does node-pty work on Windows?</strong> Yes — it uses the ConPTY API on modern Windows (and winpty as a
+fallback on older versions). The PATH gotcha is macOS-specific; the native-rebuild gotcha applies
+everywhere.</p>
+<p><strong>Can I avoid the native addon entirely?</strong> Not if you want a true TTY. Pure-JS “terminals” that pipe
+<code>child_process</code> hit exactly the non-TTY problems described up top. node-pty exists because a real
+pseudo-terminal needs a kernel-level allocation.</p>
+<hr>
+<p>Munder Difflin runs every Claude Code agent in a real node-pty terminal — authentic shells, streamed
+to a live UI, coordinated as a hive. <a href="https://munderdiffl.in/#install">Download Munder Difflin</a> to see
+real terminals driving real agents; it’s free and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">Why use node-pty instead of child_process for a terminal app?</p>
+          <p class="a">child_process gives you pipes, not a terminal. Interactive programs detect that they&#39;re not attached to a TTY and change behavior — no colors, no prompts, broken full-screen UIs. node-pty allocates a real pseudo-terminal so programs behave exactly as they would in a normal shell.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What&#39;s the native-rebuild gotcha with node-pty in Electron?</p>
+          <p class="a">node-pty is a native addon compiled against a specific Node ABI. Electron ships its own Node, so the npm-installed binary won&#39;t load. You have to rebuild node-pty against Electron&#39;s ABI — typically with electron-rebuild in a postinstall step.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why can&#39;t my Electron app find `claude` or other commands?</p>
+          <p class="a">On macOS, a GUI-launched Electron app doesn&#39;t inherit your interactive shell&#39;s PATH, so commands installed by nvm, asdf, or Homebrew aren&#39;t found. Resolve the command against an interactive login shell, or fall back to known install locations.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/internals/">Internals</a><a class="tag" href="/blog/tags/electron/">Electron</a><a class="tag" href="/blog/tags/node-pty/">node-pty</a><a class="tag" href="/blog/tags/terminals/">Terminals</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#why-a-pseudo-terminal-not-a-pipe">Why a pseudo-terminal, not a pipe</a></li><li class="lvl-2"><a href="#gotcha-1-the-native-rebuild-trap">Gotcha 1 — The native-rebuild trap</a></li><li class="lvl-2"><a href="#gotcha-2-the-macos-path-trap">Gotcha 2 — The macOS PATH trap</a></li><li class="lvl-2"><a href="#gotcha-3-streaming-over-ipc-without-crashing-on-quit">Gotcha 3 — Streaming over IPC without crashing on quit</a></li><li class="lvl-2"><a href="#managing-many-sessions">Managing many sessions</a></li><li class="lvl-2"><a href="#why-this-matters-for-an-agent-harness">Why this matters for an agent harness</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/rendering-many-live-terminals-performance/"><span class="k">← Older</span><span class="t">Rendering Many Live Terminals Without Melting the CPU</span></a>
+      <a class="pn next" href="/blog/mcp-and-skills-in-a-hive/"><span class="k">Newer →</span><span class="t">Bringing Your MCP Servers and Skills Into a Hive of Agents</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Internals</h2>
+      <div class="post-grid">
+        <article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>INTERNALS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-22">Aug 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>10 min</span>
+    </div>
+    <h3><a href="/blog/the-spend-counter-that-went-back-to-zero/">The Spend Counter That Went Back to Zero</a></h3>
+    <p class="dek">Our own floor was under reporting what it cost by 59 percent. The counter was cumulative since process start, the app restarts, and the session id stayed the same. Here is how a monotonic invariant let us recover the real number from an append-only log.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-label="Read: The Spend Counter That Went Back to Zero">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-newline-that-silenced-windows-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-newline-that-silenced-windows-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/the-newline-that-silenced-windows-agents/">The Newline That Silenced Every Windows Agent</a></h3>
+    <p class="dek">A cmd.exe parsing rule from the 1980s meant Windows agents received exactly one line of their multi-line startup protocol — and nothing errored. The anatomy of our worst silent failure, and the fix.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-newline-that-silenced-windows-agents/" aria-label="Read: The Newline That Silenced Every Windows Agent">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/why-our-auto-update-never-ran/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-our-auto-update-never-ran/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-08">Aug 8, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/why-our-auto-update-never-ran/">Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace</a></h3>
+    <p class="dek">Munder Difflin shipped auto-update in v0.3.4 and it silently never worked in a single packaged build. The cause was one destructuring assignment across the CommonJS/ESM boundary — and a catch block that threw the evidence away. Here&#39;s how we found it, and what v0.3.7 changes.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/why-our-auto-update-never-ran/" aria-label="Read: Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

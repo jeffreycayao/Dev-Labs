@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Building an AI &quot;Office Floor&quot;: Avatars, Pathfinding, Envelopes — Munder Difflin Blog</title>
+<meta name="description" content="The game-dev techniques behind a dev tool&#39;s office floor: Tiled maps, BFS pathfinding, sprite recoloring, and flying message envelopes in Pixi.js." />
+<link rel="canonical" href="https://munderdiffl.in/blog/building-an-ai-office-floor/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Building an AI &quot;Office Floor&quot;: Avatars, Pathfinding, Envelopes — Munder Difflin Blog" />
+<meta property="og:description" content="The game-dev techniques behind a dev tool&#39;s office floor: Tiled maps, BFS pathfinding, sprite recoloring, and flying message envelopes in Pixi.js." />
+<meta property="og:url" content="https://munderdiffl.in/blog/building-an-ai-office-floor/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/building-an-ai-office-floor/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Building an AI &#92;&quot;Office Floor&#92;&quot;: Avatars, Pathfinding, Envelopes" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Internals" />
+<meta property="article:tag" content="Pixi.js" />
+<meta property="article:tag" content="Game Dev" />
+<meta property="article:tag" content="Visualization" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Building an AI &quot;Office Floor&quot;: Avatars, Pathfinding, Envelopes — Munder Difflin Blog" />
+<meta name="twitter:description" content="The game-dev techniques behind a dev tool&#39;s office floor: Tiled maps, BFS pathfinding, sprite recoloring, and flying message envelopes in Pixi.js." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/building-an-ai-office-floor/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Building an AI &#92;&quot;Office Floor&#92;&quot;: Avatars, Pathfinding, Envelopes" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Building an AI \"Office Floor\": Avatars, Pathfinding, Envelopes",
+  "description": "The game-dev techniques behind a dev tool's office floor: Tiled maps, BFS pathfinding, sprite recoloring, and flying message envelopes in Pixi.js.",
+  "image": ["https://munderdiffl.in/blog/assets/media/building-an-ai-office-floor/hero.png"],
+  "datePublished": "2026-06-03T00:00:00.000Z",
+  "dateModified": "2026-06-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/building-an-ai-office-floor/" },
+  "keywords": "ai agent visualization, tiled maps, pathfinding, game-ui for tools",
+  "articleSection": "Internals",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/building-an-ai-office-floor/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Building an AI \"Office Floor\": Avatars, Pathfinding, Envelopes", "item": "https://munderdiffl.in/blog/building-an-ai-office-floor/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What game-dev techniques does an AI office floor use?", "acceptedAnswer": { "@type": "Answer", "text": "Tiled tile maps for the level, a grid pathfinder for movement, sprite-sheet slicing and recoloring for distinct avatars, a seat-reservation pool for desk assignment, and tween-based animation for flying message envelopes — all rendered with a 2D engine like Pixi.js." } },
+    { "@type": "Question", "name": "Do you need a game engine to build an office floor?", "acceptedAnswer": { "@type": "Answer", "text": "No — a 2D renderer like Pixi.js plus a few classic techniques is enough. The map comes from the Tiled editor, pathfinding is a small BFS, and avatars are sprite sheets. It's game tech, but lightweight enough to live inside a developer tool." } },
+    { "@type": "Question", "name": "How are the avatars made distinct?", "acceptedAnswer": { "@type": "Answer", "text": "They start from a shared character walk sheet and are recolored per character with palette recipes (skin, hair, shirt), so each agent reads as a different person on the floor without drawing every sprite by hand." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-internals">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/internals/">Internals</a>
+    </nav>
+    <h1>Building an AI &quot;Office Floor&quot;: Avatars, Pathfinding, Envelopes</h1>
+    <p class="dek">The game-dev techniques behind a dev tool&#39;s office floor: Tiled maps, BFS pathfinding, sprite recoloring, and flying message envelopes in Pixi.js.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>6 min read</span>
+      <span class="tag kind">Internals</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/building-an-ai-office-floor/hero.png" alt="Illustration: Building an AI \&quot;Office Floor\&quot;: Avatars, Pathfinding, Envelopes" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>An <strong>AI agent visualization</strong>
+that looks like a tiny office game uses ordinary game-dev tech: a <strong>Tiled</strong> tile map for
+the floor, a small <strong>BFS pathfinder</strong> for movement, <strong>sprite-sheet</strong> slicing
++ recoloring for distinct avatars, a <strong>seat pool</strong> for desk assignment, and tweened
+<strong>envelopes</strong> for messages — all in Pixi.js. None of it is heavy; it's game craft applied
+to a developer tool.</p></div>
+<p>The office floor in Munder Difflin looks like a little workplace sim, and that’s on purpose — a
+spatial, game-like view makes a hive of agents legible. Under the hood it’s a handful of classic
+game-development techniques, kept deliberately lightweight so they fit inside a dev tool. This post is
+the techniques tour. (For <em>why</em> a visualization matters and the Pixi.js plumbing, start with
+<a href="/blog/visualizing-ai-agents-pixijs/">visualizing AI agents with Pixi.js</a>.)</p>
+<p>A note up front: several of these pieces are ported from an open-source 2D office game
+(shahar061/the-office), with character art from LimeZu’s sprite packs. Standing on game-dev shoulders
+is exactly the point — these are solved problems.</p>
+<h2 id="the-floor-is-a-tiled-map" tabindex="-1">The floor is a Tiled map <a class="anchor" href="#the-floor-is-a-tiled-map" aria-hidden="true">#</a></h2>
+<p>The office isn’t drawn in code; it’s authored in <strong>Tiled</strong>, the standard 2D map editor, and exported as
+a <code>.tmj</code> (JSON) file. The renderer reads its layers:</p>
+<ul>
+<li><strong>Tile layers</strong> — floor, walls, furniture — drawn from tileset textures. Each tile references a
+global id, resolved back to the right tileset by its <code>firstgid</code> offset.</li>
+<li>A <strong>collision layer</strong> — which tiles are solid (walls, desks) versus walkable floor.</li>
+<li>A <strong>spawn-points</strong> object layer — named anchors for desks and seats.</li>
+</ul>
+<p>Because the level is data, changing the office is a <em>design</em> task: open the map in Tiled, move a desk,
+re-export. No code changes to rearrange the furniture. One subtlety worth stealing: desk/seat tiles are
+marked solid for collision but force-flagged <em>walkable</em> for pathing, so an avatar can walk <em>onto</em> its
+chair instead of treating it as a wall.</p>
+<h2 id="movement-is-grid-pathfinding" tabindex="-1">Movement is grid pathfinding <a class="anchor" href="#movement-is-grid-pathfinding" aria-hidden="true">#</a></h2>
+<p>Avatars walk from their desk to a station and back. The pathfinder is a <strong>breadth-first search</strong> on the
+map’s walkability grid — four-directional, no diagonals:</p>
+<pre class="language-ts"><code class="language-ts"><span class="token comment">// BFS over walkable tiles → shortest tile path from start to goal</span>
+<span class="token keyword">function</span> <span class="token function">findPath</span><span class="token punctuation">(</span>map<span class="token punctuation">,</span> start<span class="token punctuation">,</span> goal<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>map<span class="token punctuation">.</span><span class="token function">isWalkable</span><span class="token punctuation">(</span>goal<span class="token punctuation">.</span>x<span class="token punctuation">,</span> goal<span class="token punctuation">.</span>y<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> queue <span class="token operator">=</span> <span class="token punctuation">[</span>start<span class="token punctuation">]</span><span class="token punctuation">,</span> visited <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Set</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token function">key</span><span class="token punctuation">(</span>start<span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">,</span> parent <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Map</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">while</span> <span class="token punctuation">(</span>queue<span class="token punctuation">.</span>length<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> cur <span class="token operator">=</span> queue<span class="token punctuation">.</span><span class="token function">shift</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> d <span class="token keyword">of</span> <span class="token punctuation">[</span><span class="token punctuation">{</span>x<span class="token operator">:</span><span class="token number">0</span><span class="token punctuation">,</span>y<span class="token operator">:</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">}</span><span class="token punctuation">,</span><span class="token punctuation">{</span>x<span class="token operator">:</span><span class="token number">0</span><span class="token punctuation">,</span>y<span class="token operator">:</span><span class="token number">1</span><span class="token punctuation">}</span><span class="token punctuation">,</span><span class="token punctuation">{</span>x<span class="token operator">:</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span>y<span class="token operator">:</span><span class="token number">0</span><span class="token punctuation">}</span><span class="token punctuation">,</span><span class="token punctuation">{</span>x<span class="token operator">:</span><span class="token number">1</span><span class="token punctuation">,</span>y<span class="token operator">:</span><span class="token number">0</span><span class="token punctuation">}</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token keyword">const</span> next <span class="token operator">=</span> <span class="token punctuation">{</span> x<span class="token operator">:</span> cur<span class="token punctuation">.</span>x <span class="token operator">+</span> d<span class="token punctuation">.</span>x<span class="token punctuation">,</span> y<span class="token operator">:</span> cur<span class="token punctuation">.</span>y <span class="token operator">+</span> d<span class="token punctuation">.</span>y <span class="token punctuation">}</span><span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>visited<span class="token punctuation">.</span><span class="token function">has</span><span class="token punctuation">(</span><span class="token function">key</span><span class="token punctuation">(</span>next<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token operator">!</span>map<span class="token punctuation">.</span><span class="token function">isWalkable</span><span class="token punctuation">(</span>next<span class="token punctuation">.</span>x<span class="token punctuation">,</span> next<span class="token punctuation">.</span>y<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">continue</span><span class="token punctuation">;</span>
+      visited<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token function">key</span><span class="token punctuation">(</span>next<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> parent<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token function">key</span><span class="token punctuation">(</span>next<span class="token punctuation">)</span><span class="token punctuation">,</span> cur<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>next<span class="token punctuation">.</span>x <span class="token operator">===</span> goal<span class="token punctuation">.</span>x <span class="token operator">&amp;&amp;</span> next<span class="token punctuation">.</span>y <span class="token operator">===</span> goal<span class="token punctuation">.</span>y<span class="token punctuation">)</span> <span class="token keyword">return</span> <span class="token function">reconstruct</span><span class="token punctuation">(</span>parent<span class="token punctuation">,</span> start<span class="token punctuation">,</span> goal<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      queue<span class="token punctuation">.</span><span class="token function">push</span><span class="token punctuation">(</span>next<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span></code></pre>
+<p>On an unweighted grid, BFS returns the shortest path for free — no heuristic, no priority queue, no A*
+needed at office scale. It’s a dozen lines and it’s correct, which is the right trade for a map this
+size.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/building-an-ai-office-floor/note-1.png" alt="Hand-drawn sketch from “Building an AI \&quot;Office Floor\&quot;: Avatars, Pathfinding, Envelopes”" loading="lazy" decoding="async" /></figure>
+<h2 id="avatars-one-sheet-many-people" tabindex="-1">Avatars: one sheet, many people <a class="anchor" href="#avatars-one-sheet-many-people" aria-hidden="true">#</a></h2>
+<p>Drawing fifteen unique characters by hand would be a slog. Instead, avatars start from a shared
+<strong>character walk sheet</strong> and are made distinct by <em>recoloring</em>:</p>
+<ul>
+<li>A <strong>sprite adapter</strong> slices the sheet into frames — walk cycles for each facing direction. The sheet
+packs directions in a known order (right, up, left, down); the adapter maps them into the
+three-row grid the renderer wants, and <em>left</em> is just <em>right</em> drawn flipped, so you store fewer
+frames.</li>
+<li>The <strong>character sprite</strong> plays walk / type / read / idle animations and applies a small <strong>leg-crop
+mask</strong> when an agent sits, so it tucks under the desk instead of standing on it.</li>
+<li>Each character gets a <strong>palette recipe</strong> — skin, hair, shirt — so the cast is visually distinct from
+one base sheet. (If the cast looks suspiciously like a certain paper company’s staff, that’s not an
+accident.)</li>
+</ul>
+<p>The payoff: a recognizable, individuated team without an artist hand-drawing every avatar.</p>
+<h2 id="seats-a-reservation-pool" tabindex="-1">Seats: a reservation pool <a class="anchor" href="#seats-a-reservation-pool" aria-hidden="true">#</a></h2>
+<p>When an agent joins, it needs a desk. A tiny <strong>seat pool</strong> holds the ordered list of spawn points from
+the map and hands out the first free one, releasing it when the agent leaves:</p>
+<pre class="language-ts"><code class="language-ts"><span class="token function">reserveNext</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>                      <span class="token comment">// first unclaimed seat, in map order</span>
+  <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">const</span> seat <span class="token keyword">of</span> <span class="token keyword">this</span><span class="token punctuation">.</span>seats<span class="token punctuation">)</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token keyword">this</span><span class="token punctuation">.</span>claimed<span class="token punctuation">.</span><span class="token function">has</span><span class="token punctuation">(</span>seat<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">this</span><span class="token punctuation">.</span>claimed<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>seat<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token keyword">return</span> seat<span class="token punctuation">;</span> <span class="token punctuation">}</span>
+  <span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>                       <span class="token comment">// office is full</span>
+<span class="token punctuation">}</span></code></pre>
+<p>First-come, first-served, one desk each — so a growing team fills the office in order rather than
+stacking onto one chair. Thirty-three lines of bookkeeping that make dynamic agents Just Work.</p>
+<h2 id="envelopes-messages-you-can-see-fly" tabindex="-1">Envelopes: messages you can see fly <a class="anchor" href="#envelopes-messages-you-can-see-fly" aria-hidden="true">#</a></h2>
+<p>When the hive routes a message between agents, the floor spawns a little pixel <strong>envelope</strong> that arcs
+from the sender’s desk to the recipient’s. The animation is a quadratic arc — lerp the endpoints, lift
+the midpoint with a sine — eased in and out, with a small burst ring on arrival. The envelope is
+<strong>tinted by the message’s speech act</strong>: asks are cool-colored, agreements and confirmations warm,
+refusals red, and an escalation to the human a distinct color. So you don’t just see <em>that</em> a message
+moved — you see <em>who asked whom, and what kind of ask it was</em>, at a glance.</p>
+<p>That envelope is pure presentation riding on real data: it only flies because the
+<a href="/blog/atomic-file-mailboxes-for-agents/">message router</a> actually delivered something.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/building-an-ai-office-floor/note-2.png" alt="Hand-drawn sketch from “Building an AI \&quot;Office Floor\&quot;: Avatars, Pathfinding, Envelopes”" loading="lazy" decoding="async" /></figure>
+<h2 id="keeping-it-lightweight" tabindex="-1">Keeping it lightweight <a class="anchor" href="#keeping-it-lightweight" aria-hidden="true">#</a></h2>
+<p>The whole point is that this is <em>game tech in a dev tool</em>, not a game. So the implementation stays
+lean: pixel-art settings (no antialias, nearest-neighbor scaling, integer positions), a single shared
+animation ticker, and a camera that transforms one world container rather than every sprite. That
+discipline is what lets the floor run alongside a fleet of live terminals without contention — the same
+performance mindset as <a href="/blog/rendering-many-live-terminals-performance/">rendering many live terminals</a>.</p>
+<h2 id="why-borrow-from-games-at-all" tabindex="-1">Why borrow from games at all <a class="anchor" href="#why-borrow-from-games-at-all" aria-hidden="true">#</a></h2>
+<p>Developer tools usually present work as text. A spatial, animated floor borrows what games are great at
+— making <em>state</em> immediately readable through position and motion — and applies it to “what is my team
+of agents doing?” The techniques are old and solved; the novelty is pointing them at observability
+instead of entertainment. An avatar at the terminal, an envelope in flight, a teammate waving for your
+input: that’s a status dashboard you read with your eyes instead of your patience.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>Is the office floor just eye candy?</strong> No — it’s observability. Every position and motion maps to a
+real event (a tool call, a routed message), so the floor is a live, glanceable read of the hive’s
+state, not decoration.</p>
+<p><strong>Do I need to know game dev to build something like this?</strong> Not deeply. A 2D renderer, the Tiled
+editor, a BFS, and sprite sheets get you most of the way. These are approachable, well-documented
+techniques — the hard part is wiring them to <em>real</em> agent events, not the rendering.</p>
+<hr>
+<p>Munder Difflin’s <a href="https://munderdiffl.in/#how">office floor</a> turns a hive of Claude Code agents into a little workplace you can watch
+— Tiled maps, pathing avatars, and flying envelopes, all driven by real activity.
+<a href="https://munderdiffl.in/#install">Download Munder Difflin</a> to see it run; it’s free and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What game-dev techniques does an AI office floor use?</p>
+          <p class="a">Tiled tile maps for the level, a grid pathfinder for movement, sprite-sheet slicing and recoloring for distinct avatars, a seat-reservation pool for desk assignment, and tween-based animation for flying message envelopes — all rendered with a 2D engine like Pixi.js.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Do you need a game engine to build an office floor?</p>
+          <p class="a">No — a 2D renderer like Pixi.js plus a few classic techniques is enough. The map comes from the Tiled editor, pathfinding is a small BFS, and avatars are sprite sheets. It&#39;s game tech, but lightweight enough to live inside a developer tool.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How are the avatars made distinct?</p>
+          <p class="a">They start from a shared character walk sheet and are recolored per character with palette recipes (skin, hair, shirt), so each agent reads as a different person on the floor without drawing every sprite by hand.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/internals/">Internals</a><a class="tag" href="/blog/tags/pixijs/">Pixi.js</a><a class="tag" href="/blog/tags/game-dev/">Game Dev</a><a class="tag" href="/blog/tags/visualization/">Visualization</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-floor-is-a-tiled-map">The floor is a Tiled map</a></li><li class="lvl-2"><a href="#movement-is-grid-pathfinding">Movement is grid pathfinding</a></li><li class="lvl-2"><a href="#avatars-one-sheet-many-people">Avatars: one sheet, many people</a></li><li class="lvl-2"><a href="#seats-a-reservation-pool">Seats: a reservation pool</a></li><li class="lvl-2"><a href="#envelopes-messages-you-can-see-fly">Envelopes: messages you can see fly</a></li><li class="lvl-2"><a href="#keeping-it-lightweight">Keeping it lightweight</a></li><li class="lvl-2"><a href="#why-borrow-from-games-at-all">Why borrow from games at all</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/claude-code-hooks-explained/"><span class="k">← Older</span><span class="t">Claude Code Hooks, Explained (PreToolUse, PostToolUse, Stop)</span></a>
+      <a class="pn next" href="/blog/building-a-terminal-ui-xterm-node-pty/"><span class="k">Newer →</span><span class="t">Building a Terminal UI with xterm.js and node-pty</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Internals</h2>
+      <div class="post-grid">
+        <article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>INTERNALS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-22">Aug 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>10 min</span>
+    </div>
+    <h3><a href="/blog/the-spend-counter-that-went-back-to-zero/">The Spend Counter That Went Back to Zero</a></h3>
+    <p class="dek">Our own floor was under reporting what it cost by 59 percent. The counter was cumulative since process start, the app restarts, and the session id stayed the same. Here is how a monotonic invariant let us recover the real number from an append-only log.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-label="Read: The Spend Counter That Went Back to Zero">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-newline-that-silenced-windows-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-newline-that-silenced-windows-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/the-newline-that-silenced-windows-agents/">The Newline That Silenced Every Windows Agent</a></h3>
+    <p class="dek">A cmd.exe parsing rule from the 1980s meant Windows agents received exactly one line of their multi-line startup protocol — and nothing errored. The anatomy of our worst silent failure, and the fix.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-newline-that-silenced-windows-agents/" aria-label="Read: The Newline That Silenced Every Windows Agent">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/why-our-auto-update-never-ran/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-our-auto-update-never-ran/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-08">Aug 8, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/why-our-auto-update-never-ran/">Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace</a></h3>
+    <p class="dek">Munder Difflin shipped auto-update in v0.3.4 and it silently never worked in a single packaged build. The cause was one destructuring assignment across the CommonJS/ESM boundary — and a catch block that threw the evidence away. Here&#39;s how we found it, and what v0.3.7 changes.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/why-our-auto-update-never-ran/" aria-label="Read: Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

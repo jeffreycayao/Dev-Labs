@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How AI Agents Remember: Semantic Memory in a Hive — Munder Difflin Blog</title>
+<meta name="description" content="A code-grounded guide to how AI agents remember — the MemPalace mine loop, per-agent wings, and wake-up digest that give a Claude Code hive shared recall." />
+<link rel="canonical" href="https://munderdiffl.in/blog/how-agents-remember-semantic-memory/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="How AI Agents Remember: Semantic Memory in a Hive — Munder Difflin Blog" />
+<meta property="og:description" content="A code-grounded guide to how AI agents remember — the MemPalace mine loop, per-agent wings, and wake-up digest that give a Claude Code hive shared recall." />
+<meta property="og:url" content="https://munderdiffl.in/blog/how-agents-remember-semantic-memory/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/how-agents-remember-semantic-memory/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: How AI Agents Remember: Semantic Memory in a Hive" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-04T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Memory" />
+<meta property="article:tag" content="MemPalace" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Claude Code" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="How AI Agents Remember: Semantic Memory in a Hive — Munder Difflin Blog" />
+<meta name="twitter:description" content="A code-grounded guide to how AI agents remember — the MemPalace mine loop, per-agent wings, and wake-up digest that give a Claude Code hive shared recall." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/how-agents-remember-semantic-memory/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: How AI Agents Remember: Semantic Memory in a Hive" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How AI Agents Remember: Semantic Memory in a Hive",
+  "description": "A code-grounded guide to how AI agents remember — the MemPalace mine loop, per-agent wings, and wake-up digest that give a Claude Code hive shared recall.",
+  "image": ["https://munderdiffl.in/blog/assets/media/how-agents-remember-semantic-memory/hero.png"],
+  "datePublished": "2026-06-04T00:00:00.000Z",
+  "dateModified": "2026-06-04T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/how-agents-remember-semantic-memory/" },
+  "keywords": "how ai agents remember, semantic memory mempalace, ai agent memory, claude code memory",
+  "articleSection": "Memory",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/how-agents-remember-semantic-memory/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "How AI Agents Remember: Semantic Memory in a Hive", "item": "https://munderdiffl.in/blog/how-agents-remember-semantic-memory/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "How do AI agents remember between sessions?", "acceptedAnswer": { "@type": "Answer", "text": "They write durable facts to a plain-markdown memory file, and the harness mines that file into a shared semantic index — so any agent can recall it by meaning in a later session, even after its context window is wiped." } },
+    { "@type": "Question", "name": "What is MemPalace?", "acceptedAnswer": { "@type": "Answer", "text": "MemPalace is the CLI-driven semantic memory layer Munder Difflin uses: one shared palace on disk, a wing per agent, mined from each agent's memory.md and queried with `mempalace search` and `mempalace wake-up`." } },
+    { "@type": "Question", "name": "Do agents manage the search index themselves?", "acceptedAnswer": { "@type": "Answer", "text": "No. The harness re-mines each changed memory.md every few minutes; agents just write notes and later run `mempalace search` or `wake-up` to recall — there's no database to administer and no MCP server to stand up." } },
+    { "@type": "Question", "name": "What happens if MemPalace isn't installed?", "acceptedAnswer": { "@type": "Answer", "text": "Nothing breaks. The semantic layer degrades to a no-op and agents fall back to reading their markdown memory directly — the fast path is an upgrade, not a dependency." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-memory">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/memory/">Memory</a>
+    </nav>
+    <h1>How AI Agents Remember: Semantic Memory in a Hive</h1>
+    <p class="dek">A code-grounded guide to how AI agents remember — the MemPalace mine loop, per-agent wings, and wake-up digest that give a Claude Code hive shared recall.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Memory</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/how-agents-remember-semantic-memory/hero.png" alt="Illustration: How AI Agents Remember: Semantic Memory in a Hive" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>An agent's working memory — its context
+window — is wiped at the end of every session. So agents "remember" in two moves: they write durable
+facts to a plain-markdown file, and the harness <strong>mines</strong> that file into a shared
+semantic index. Later, any agent recalls by <strong>meaning</strong> with <code>mempalace search</code>
+or boots with a <code>wake-up</code> digest. This is the hands-on version, grounded in the real code in
+<code>src/main/memory.ts</code> — the mine loop, the per-agent wings, and the gotchas we hit
+making it not hang.</p></div>
+<p>If you’ve read <a href="/blog/semantic-memory-for-ai-agents/">what semantic memory is and why markdown-first beats a heavy database</a>,
+this is the companion that shows the machinery actually working. No new theory — just the moving parts,
+the exact commands, and the small decisions that make shared recall reliable in
+<a href="/blog/coordinating-ai-coding-agents/">a coordinated hive of Claude Code agents</a>.</p>
+<h2 id="the-shape-one-palace-many-wings" tabindex="-1">The shape: one palace, many wings <a class="anchor" href="#the-shape-one-palace-many-wings" aria-hidden="true">#</a></h2>
+<p>The whole thing lives in one file — <code>src/main/memory.ts</code>, a <code>MemoryManager</code> running in the Electron
+main process. It’s deliberately <strong>CLI-only</strong> (no MCP server): the harness keeps a single shared
+<em>palace</em> on disk under the harness home, and points every agent’s <code>MEMPALACE_PALACE_PATH</code> at it. When
+an agent is spawned, that env var (plus <code>MEMPALACE_EMBEDDING_MODEL</code>) is merged into its environment, so
+the agent’s own <code>mempalace</code> CLI hits the shared store automatically.</p>
+<p>Inside the palace, each agent gets its own <strong>wing</strong> — addressed by its agent id (<code>--wing &lt;id&gt;</code>). This
+buys two properties at once:</p>
+<ul>
+<li><strong>Private authorship.</strong> Each agent only ever writes its own <code>memory.md</code>, which keeps the
+<a href="/blog/single-committer-git-pattern/">single-writer rule</a> intact — no two agents clobber the same file.</li>
+<li><strong>Shared recall.</strong> A query can scope to one wing <em>or</em> sweep the whole palace. So the researcher’s
+notes are recallable by the coder later, with nobody copy-pasting context.</li>
+</ul>
+<p>That second property is the entire reason a hive beats a lone agent on memory: knowledge accumulates in
+one place and everyone draws from it.</p>
+<h2 id="mining-how-a-note-becomes-searchable" tabindex="-1">Mining: how a note becomes searchable <a class="anchor" href="#mining-how-a-note-becomes-searchable" aria-hidden="true">#</a></h2>
+<p>Agents don’t touch the index by hand. A background <strong>mine loop</strong> does it for them. From the real code,
+<code>MINE_INTERVAL_MS</code> is <code>180_000</code> — so every <strong>three minutes</strong> the manager walks
+<code>hive/agents/*</code>, looks at each <code>memory.md</code>, and mines the ones that changed:</p>
+<pre class="language-bash"><code class="language-bash">mempalace mine <span class="token operator">&lt;</span>agentDir<span class="token operator">></span> <span class="token parameter variable">--wing</span> <span class="token operator">&lt;</span>id<span class="token operator">></span> <span class="token parameter variable">--agent</span> <span class="token operator">&lt;</span>id<span class="token operator">></span></code></pre>
+<p>The “ones that changed” part matters. The loop keeps a <code>lastMined</code> map of each agent’s <code>memory.md</code>
+modification time and <strong>skips files whose mtime is unchanged</strong> — so it doesn’t reload the embedding
+model to re-index notes that haven’t moved. Write a durable fact to your markdown, and a few minutes
+later it’s searchable by the whole team, with zero extra steps on your part. (This is also why
+<code>PROTOCOL.md</code> tells agents <em>“your <a href="http://memory.md">memory.md</a> is mined automatically — you don’t run mine yourself.”</em>)</p>
+<p>Two robustness details worth copying if you build something similar:</p>
+<ul>
+<li><strong>Re-mining is safe.</strong> MemPalace dedups, so mining the same notes again is idempotent. If a mine
+exits non-zero, the loop simply drops that agent from <code>lastMined</code> so the next tick retries it.</li>
+<li><strong>stdin is closed.</strong> The child is spawned with stdin ignored, because the CLI can prompt — and a
+spawned process waiting on a prompt nobody answers hangs forever.</li>
+</ul>
+<h3 id="why-we-dont-run-mempalace-init" tabindex="-1">Why we don’t run <code>mempalace init</code> <a class="anchor" href="#why-we-dont-run-mempalace-init" aria-hidden="true">#</a></h3>
+<p>This is the kind of detail you only learn by hitting it. The obvious bootstrap is <code>mempalace init</code>,
+but it ends in an interactive <code>Mine now? [Y/n]</code> prompt that <code>--yes</code> doesn’t cover — so a spawned child
+would hang on it indefinitely. The fix in <code>memory.ts</code> is to <strong>skip init entirely</strong> and let the first
+<code>mempalace mine</code> lazily create the palace (downloading the local embedding model once, on first run).
+One less moving part, and no hang.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/how-agents-remember-semantic-memory/note-1.png" alt="Hand-drawn sketch from “How AI Agents Remember: Semantic Memory in a Hive”" loading="lazy" decoding="async" /></figure>
+<h2 id="recall-search-and-wake-up" tabindex="-1">Recall: <code>search</code> and <code>wake-up</code> <a class="anchor" href="#recall-search-and-wake-up" aria-hidden="true">#</a></h2>
+<p>With notes mined, an agent recalls in two ways — both plain CLI calls it runs itself:</p>
+<pre class="language-bash"><code class="language-bash">mempalace search <span class="token string">"how do we build the web bundle?"</span> <span class="token parameter variable">--results</span> <span class="token number">5</span>
+mempalace search <span class="token string">"build quirks"</span> <span class="token parameter variable">--wing</span> dwight-abc123   <span class="token comment"># scope to one agent's wing</span>
+mempalace wake-up                                       <span class="token comment"># session-start digest</span></code></pre>
+<ul>
+<li><strong><code>search</code></strong> returns the most relevant notes <em>by meaning</em> — so “how do we build the web bundle?”
+finds a note about electron-vite even with no shared keywords. You can widen with <code>--results N</code> or
+narrow with <code>--wing &lt;id&gt;</code>.</li>
+<li><strong><code>wake-up</code></strong> returns a short digest (a few hundred tokens) structured into an identity layer and an
+“essential story” of what matters across the team. It’s meant to be read at the <em>start</em> of a task, so
+an agent boots with the hive’s relevant knowledge already in hand instead of cold. <code>PROTOCOL.md</code>
+bakes this into the routine: run <code>wake-up</code> at the start of a task, <code>search</code> when you need to recall
+something specific.</li>
+</ul>
+<p>Both calls run with a generous timeout and an empty stdin (again: never wait on a prompt). The reason
+recall feels instant is that the expensive work — turning notes into vectors — already happened during
+mining; at recall time you embed one short query and compare against pre-computed vectors.</p>
+<h2 id="graceful-degradation-is-the-safety-net" tabindex="-1">Graceful degradation is the safety net <a class="anchor" href="#graceful-degradation-is-the-safety-net" aria-hidden="true">#</a></h2>
+<p>The manager exposes a <code>status()</code> with four honest booleans — <code>available</code> (is the <code>mempalace</code> CLI on
+PATH?), <code>enabled</code> (user setting), <code>active</code>, and <code>initialized</code>. It resolves the binary across the
+shell PATH plus the usual <code>~/.local/bin</code>, Homebrew, and <code>/usr/local/bin</code> spots. And critically: <strong>if
+the CLI isn’t installed, the whole layer is a silent no-op.</strong> Agents fall back to reading their
+markdown <code>memory.md</code> directly. The semantic index is a recall <em>accelerator</em> sitting on top of the
+markdown — never a single point of failure that takes the memory down with it.</p>
+<p>The embedding model is configurable (<code>minilm</code> by default for snappy local recall, <code>embeddinggemma</code>
+when you want a heavier multilingual model). Everything runs locally — the palace, the model, the
+mining — so memory stays <a href="/blog/why-local-first-matters-for-ai-agents/">local-first</a> and private.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/how-agents-remember-semantic-memory/note-2.png" alt="Hand-drawn sketch from “How AI Agents Remember: Semantic Memory in a Hive”" loading="lazy" decoding="async" /></figure>
+<h2 id="why-this-matters-for-a-hive-not-just-one-agent" tabindex="-1">Why this matters for a hive (not just one agent) <a class="anchor" href="#why-this-matters-for-a-hive-not-just-one-agent" aria-hidden="true">#</a></h2>
+<p>A single agent with memory is useful. A <em>hive</em> with shared memory compounds:</p>
+<ul>
+<li>Your briefs get shorter every week, because the team stops needing context re-explained.</li>
+<li>Agents stop contradicting each other, because they recall the same shared decisions.</li>
+<li>A brand-new agent is useful immediately — it wakes up into the team’s accumulated knowledge instead
+of a blank slate.</li>
+</ul>
+<p>That shared, durable recall is also what lets the <a href="/blog/how-the-god-orchestrator-works/">GOD orchestrator</a>
+route well: it can recall what’s been tried and who knows what, instead of asking you every time.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>Where does the palace actually live?</strong> Under the harness home, in a <code>palace/</code> directory. Every
+agent’s <code>MEMPALACE_PALACE_PATH</code> points there, so it’s genuinely one shared store, not a copy per agent.</p>
+<p><strong>How often is memory refreshed?</strong> Every three minutes the harness re-mines any <code>memory.md</code> that
+changed since last time. Unchanged files are skipped, so it’s cheap.</p>
+<p><strong>Do I have to write notes a certain way?</strong> Small, atomic, factual notes recall sharply; rambling ones
+recall fuzzily. Good memory hygiene is the one thing that’s on you — see
+<a href="/blog/markdown-first-agent-memory/">why we built agent memory markdown-first</a>.</p>
+<hr>
+<p>Munder Difflin gives every Claude Code agent plain-markdown memory plus a shared semantic palace the
+whole <a href="/#how">hive can recall from</a> — local, fast, and graceful when the index isn’t there.
+<a href="/#install">Download Munder Difflin</a> to give your agents memory that actually sticks; it’s free and
+open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">How do AI agents remember between sessions?</p>
+          <p class="a">They write durable facts to a plain-markdown memory file, and the harness mines that file into a shared semantic index — so any agent can recall it by meaning in a later session, even after its context window is wiped.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What is MemPalace?</p>
+          <p class="a">MemPalace is the CLI-driven semantic memory layer Munder Difflin uses: one shared palace on disk, a wing per agent, mined from each agent&#39;s memory.md and queried with `mempalace search` and `mempalace wake-up`.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Do agents manage the search index themselves?</p>
+          <p class="a">No. The harness re-mines each changed memory.md every few minutes; agents just write notes and later run `mempalace search` or `wake-up` to recall — there&#39;s no database to administer and no MCP server to stand up.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What happens if MemPalace isn&#39;t installed?</p>
+          <p class="a">Nothing breaks. The semantic layer degrades to a no-op and agents fall back to reading their markdown memory directly — the fast path is an upgrade, not a dependency.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/memory/">Memory</a><a class="tag" href="/blog/tags/mempalace/">MemPalace</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-shape-one-palace-many-wings">The shape: one palace, many wings</a></li><li class="lvl-2"><a href="#mining-how-a-note-becomes-searchable">Mining: how a note becomes searchable</a></li><li class="lvl-3"><a href="#why-we-dont-run-mempalace-init">Why we don’t run mempalace init</a></li><li class="lvl-2"><a href="#recall-search-and-wake-up">Recall: search and wake-up</a></li><li class="lvl-2"><a href="#graceful-degradation-is-the-safety-net">Graceful degradation is the safety net</a></li><li class="lvl-2"><a href="#why-this-matters-for-a-hive-not-just-one-agent">Why this matters for a hive (not just one agent)</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/how-ai-agents-verify-their-own-work/"><span class="k">← Older</span><span class="t">How AI Agents Verify Their Own Work (Before Saying &#39;Done&#39;)</span></a>
+      <a class="pn next" href="/blog/file-based-coordination-vs-message-queues/"><span class="k">Newer →</span><span class="t">File-Based Coordination vs Message Queues for AI Agents</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Memory</h2>
+      <div class="post-grid">
+        <article class="card t-memory">
+  <a class="thumb t-memory" href="/blog/keep-agent-semantic-memory-clean/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/keep-agent-semantic-memory-clean/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/keep-agent-semantic-memory-clean/">Keep Your Agent&#39;s Semantic Memory Clean: Don&#39;t Index the Config</a></h3>
+    <p class="dek">A semantic memory layer is only as good as what you feed it — how an agent&#39;s recall got swamped by config and logs, and the .gitignore + prune fix.</p>
+    <div class="foot">
+      <span class="tag kind">Memory</span>
+      <a class="more" href="/blog/keep-agent-semantic-memory-clean/" aria-label="Read: Keep Your Agent&#39;s Semantic Memory Clean: Don&#39;t Index the Config">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-memory">
+  <a class="thumb t-memory" href="/blog/give-claude-code-long-term-memory/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/give-claude-code-long-term-memory/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-27">May 27, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/give-claude-code-long-term-memory/">How to Give Claude Code Long-Term Memory</a></h3>
+    <p class="dek">Claude Code forgets between sessions. Here&#39;s how a markdown-first memory layer with semantic recall lets your agents remember across runs.</p>
+    <div class="foot">
+      <span class="tag kind">Memory</span>
+      <a class="more" href="/blog/give-claude-code-long-term-memory/" aria-label="Read: How to Give Claude Code Long-Term Memory">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-memory">
+  <a class="thumb t-memory" href="/blog/markdown-first-agent-memory/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/markdown-first-agent-memory/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-27">May 27, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/markdown-first-agent-memory/">Why We Built Agent Memory Markdown-First</a></h3>
+    <p class="dek">Markdown-first AI agent long-term memory: plain notes a human can read and git can diff, with a semantic index on top that degrades gracefully.</p>
+    <div class="foot">
+      <span class="tag kind">Memory</span>
+      <a class="more" href="/blog/markdown-first-agent-memory/" aria-label="Read: Why We Built Agent Memory Markdown-First">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

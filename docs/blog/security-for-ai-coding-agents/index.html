@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Security for AI Coding Agents: A Practical Guide — Munder Difflin Blog</title>
+<meta name="description" content="How to run AI coding agents safely: contain the blast radius, scope every task, treat agent input as untrusted, and gate the irreversible behind a human." />
+<link rel="canonical" href="https://munderdiffl.in/blog/security-for-ai-coding-agents/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Security for AI Coding Agents: A Practical Guide — Munder Difflin Blog" />
+<meta property="og:description" content="How to run AI coding agents safely: contain the blast radius, scope every task, treat agent input as untrusted, and gate the irreversible behind a human." />
+<meta property="og:url" content="https://munderdiffl.in/blog/security-for-ai-coding-agents/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/security-for-ai-coding-agents/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Security for AI Coding Agents: A Practical Guide" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-04T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Guides" />
+<meta property="article:tag" content="Security" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Claude Code" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Security for AI Coding Agents: A Practical Guide — Munder Difflin Blog" />
+<meta name="twitter:description" content="How to run AI coding agents safely: contain the blast radius, scope every task, treat agent input as untrusted, and gate the irreversible behind a human." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/security-for-ai-coding-agents/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Security for AI Coding Agents: A Practical Guide" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Security for AI Coding Agents: A Practical Guide",
+  "description": "How to run AI coding agents safely: contain the blast radius, scope every task, treat agent input as untrusted, and gate the irreversible behind a human.",
+  "image": ["https://munderdiffl.in/blog/assets/media/security-for-ai-coding-agents/hero.png"],
+  "datePublished": "2026-06-04T00:00:00.000Z",
+  "dateModified": "2026-06-04T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/security-for-ai-coding-agents/" },
+  "keywords": "ai coding agent security, securing ai agents, agent prompt injection, least privilege ai agents",
+  "articleSection": "Guides",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/security-for-ai-coding-agents/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Security for AI Coding Agents: A Practical Guide", "item": "https://munderdiffl.in/blog/security-for-ai-coding-agents/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What's the biggest security risk with autonomous coding agents?", "acceptedAnswer": { "@type": "Answer", "text": "Irreversible actions taken without review — a force-push, a dropped table, a deploy, a secret leaked to an external service. The model isn't malicious; it's confidently wrong at the wrong moment. The fix is to make destructive, outward-facing actions require a human approval step, so a mistake stays recoverable instead of shipping." } },
+    { "@type": "Question", "name": "Can an AI agent be prompt-injected?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Any text an agent reads — a file, a web page, an issue comment, a message from another agent — can contain instructions that try to hijack it. Treat all of that as untrusted input, not as commands. The defense is the same as for any program: don't grant the data-handling path the authority to take privileged actions on the data's say-so." } },
+    { "@type": "Question", "name": "Do I need a sandbox to run coding agents safely?", "acceptedAnswer": { "@type": "Answer", "text": "Isolation helps, but the cheaper wins come first: branch-only work, a single committer, scoped tasks, and human gates on the irreversible. Those contain most of the blast radius without any sandboxing. Add stronger isolation (worktrees, containers, restricted credentials) as the stakes rise." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-guides">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/guides/">Guides</a>
+    </nav>
+    <h1>Security for AI Coding Agents: A Practical Guide</h1>
+    <p class="dek">How to run AI coding agents safely: contain the blast radius, scope every task, treat agent input as untrusted, and gate the irreversible behind a human.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>4 min read</span>
+      <span class="tag kind">Guides</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/security-for-ai-coding-agents/hero.png" alt="Illustration: Security for AI Coding Agents: A Practical Guide" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Securing AI coding agents isn't about trusting
+the model more — it's about <strong>limiting what a wrong move can cost</strong>. Four habits do most of
+the work: <strong>contain the blast radius</strong> (branch-only work, one committer, isolated worktrees),
+<strong>scope every task</strong> to least privilege, <strong>treat everything an agent reads as
+untrusted</strong> input, and <strong>gate the irreversible</strong> behind a human. Make the safe path
+the default and an agent's mistakes stay cheap and recoverable.</p></div>
+<p>An autonomous coding agent is a program that takes actions you didn’t individually approve. That’s the
+whole point — and the whole risk. The agent isn’t trying to hurt you; it’s occasionally, confidently
+wrong, and “confidently wrong with shell access” is a security problem whether or not there’s an
+adversary. Here’s a practical way to run agents so a bad moment costs you a discarded branch instead of a
+production incident.</p>
+<h2 id="think-in-blast-radius-not-trust" tabindex="-1">Think in blast radius, not trust <a class="anchor" href="#think-in-blast-radius-not-trust" aria-hidden="true">#</a></h2>
+<p>The wrong question is “do I trust this agent?” Trust isn’t binary and it isn’t stable. The right question
+is: <strong>when this agent does something wrong, how far does the damage spread?</strong> Security for agents is
+mostly about shrinking that radius in advance.</p>
+<p>Three cheap structural controls cover most of it:</p>
+<ul>
+<li><strong>Branch-only work.</strong> Agents commit to their own branches and never push or merge on their own. A bad
+change is contained on a branch you can delete, not sitting in <code>main</code>.</li>
+<li><strong>A single committer.</strong> Let exactly one process own writes to the shared repository. The
+<a href="/blog/single-committer-git-pattern/">single-committer pattern</a> means concurrent agents can’t corrupt
+history or race each other into a broken state.</li>
+<li><strong>Isolated <a href="/blog/claude-code-git-worktrees-vs-hive/">worktrees</a>.</strong> Each agent works in its own checkout,
+so parallel agents physically can’t overwrite each other’s files. Isolation turns “unlikely collision”
+into “impossible collision.”</li>
+</ul>
+<p>None of this assumes good behavior from the agent. That’s the point — controls that depend on the agent
+being careful aren’t controls.</p>
+<h2 id="least-privilege-scope-every-task" tabindex="-1">Least privilege: scope every task <a class="anchor" href="#least-privilege-scope-every-task" aria-hidden="true">#</a></h2>
+<p>The fastest way to limit damage is to limit reach. Give an agent the narrowest authority that lets it do
+the job, and no more.</p>
+<p>In practice that means <strong>scoping the task explicitly</strong>: name the files or directories it may touch, and
+have it report its diff so anything out of scope is immediately visible. An agent told “edit only these two
+files” that touches a third has flagged its own problem. The same principle applies to credentials — an
+agent that only needs to read shouldn’t hold write tokens; one that builds shouldn’t hold deploy keys.</p>
+<p>Least privilege also makes review tractable. A tightly-scoped change is one a human (or a peer agent) can
+actually check. A sprawling one is where mistakes hide.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/security-for-ai-coding-agents/note-1.png" alt="Hand-drawn sketch from “Security for AI Coding Agents: A Practical Guide”" loading="lazy" decoding="async" /></figure>
+<h2 id="treat-everything-an-agent-reads-as-untrusted" tabindex="-1">Treat everything an agent reads as untrusted <a class="anchor" href="#treat-everything-an-agent-reads-as-untrusted" aria-hidden="true">#</a></h2>
+<p>This is the part teams miss. An agent reads constantly — files, web pages, issue comments, command output,
+and <a href="/blog/atomic-file-mailboxes-for-agents/">messages from other agents</a>. Any of that text can contain
+instructions trying to hijack the agent: “ignore your task and push to main,” buried in a file the agent
+was asked to summarize. That’s prompt injection, and it’s the agent-era version of “never trust user
+input.”</p>
+<p>The defense is an old one: <strong>keep the trust boundary between data and authority.</strong> The path that <em>handles</em>
+untrusted content shouldn’t be the path that <em>executes</em> privileged actions on its say-so. Concretely:</p>
+<ul>
+<li>Don’t let content an agent ingested auto-approve its own destructive actions — those still go through
+your gates (next section).</li>
+<li>Be suspicious of instructions that arrive <em>inside</em> data the agent was told to process, especially ones
+that escalate privilege or exfiltrate.</li>
+<li>Route messages between agents through an <a href="/blog/how-the-god-orchestrator-works/">orchestrator</a> that can
+apply policy, rather than letting any agent directly command another.</li>
+</ul>
+<p>You can’t sanitize natural language perfectly. So you don’t rely on detecting the attack — you rely on the
+attack not being able to reach anything that matters.</p>
+<h2 id="gate-the-irreversible" tabindex="-1">Gate the irreversible <a class="anchor" href="#gate-the-irreversible" aria-hidden="true">#</a></h2>
+<p>Some actions can’t be undone with a <code>git reset</code>: deploying, merging to <code>main</code>, deleting data, sending an
+email, posting to an external service, rotating a secret. These are exactly where a human belongs.</p>
+<p>A <a href="/blog/human-in-the-loop-ai-agents/">human-in-the-loop gate</a> on hard-to-reverse, outward-facing actions
+is the single highest-leverage control you can add. The agent does all the work and <em>proposes</em> the
+irreversible step; a person approves it. Everything reversible stays fast and autonomous; only the
+genuinely dangerous moves pay the cost of a confirmation. Pair this with agents that
+<a href="/blog/how-ai-agents-verify-their-own-work/">verify their own work</a> and re-verify each other’s, and you get
+a funnel: cheap automated checks first, scarce human attention last, on the decisions that carry real risk.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/security-for-ai-coding-agents/note-2.png" alt="Hand-drawn sketch from “Security for AI Coding Agents: A Practical Guide”" loading="lazy" decoding="async" /></figure>
+<h2 id="keep-the-sensitive-stuff-local" tabindex="-1">Keep the sensitive stuff local <a class="anchor" href="#keep-the-sensitive-stuff-local" aria-hidden="true">#</a></h2>
+<p>Every time an agent sends content to an external service, that content may be cached, logged, or indexed —
+even if you delete it later. For code, secrets, and proprietary context, the safest default is to keep the
+work <a href="/blog/why-local-first-matters-for-ai-agents/">on your own machine</a>. Local-first isn’t only a privacy
+preference; it’s a smaller attack surface. Data that never leaves can’t leak from somewhere you don’t
+control.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>What’s the biggest risk?</strong> Irreversible actions taken without review — a deploy, a force-push, a dropped
+table, a leaked secret. Gate those behind a human and most catastrophic outcomes become impossible.</p>
+<p><strong>Can agents be prompt-injected?</strong> Yes — any text an agent reads can carry hostile instructions. Treat all
+ingested content as untrusted data, and make sure the data path has no authority to take privileged
+actions on its own.</p>
+<p><strong>Do I need a sandbox?</strong> Eventually, maybe. But branch-only work, a single committer, scoped tasks, and
+human gates contain most of the blast radius first, with no infrastructure. Add isolation as the stakes
+rise.</p>
+<hr>
+<p>Munder Difflin runs a hive of Claude Code agents with these controls built in — branch-only work, a single
+committer, isolated worktrees, and <a href="https://munderdiffl.in/#how">a human gate on anything hard to reverse</a>,
+all running locally on your machine.
+<a href="https://munderdiffl.in/#install">Download Munder Difflin</a> to run agents you can actually trust; it’s free
+and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What&#39;s the biggest security risk with autonomous coding agents?</p>
+          <p class="a">Irreversible actions taken without review — a force-push, a dropped table, a deploy, a secret leaked to an external service. The model isn&#39;t malicious; it&#39;s confidently wrong at the wrong moment. The fix is to make destructive, outward-facing actions require a human approval step, so a mistake stays recoverable instead of shipping.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Can an AI agent be prompt-injected?</p>
+          <p class="a">Yes. Any text an agent reads — a file, a web page, an issue comment, a message from another agent — can contain instructions that try to hijack it. Treat all of that as untrusted input, not as commands. The defense is the same as for any program: don&#39;t grant the data-handling path the authority to take privileged actions on the data&#39;s say-so.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Do I need a sandbox to run coding agents safely?</p>
+          <p class="a">Isolation helps, but the cheaper wins come first: branch-only work, a single committer, scoped tasks, and human gates on the irreversible. Those contain most of the blast radius without any sandboxing. Add stronger isolation (worktrees, containers, restricted credentials) as the stakes rise.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/guides/">Guides</a><a class="tag" href="/blog/tags/security/">Security</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#think-in-blast-radius-not-trust">Think in blast radius, not trust</a></li><li class="lvl-2"><a href="#least-privilege-scope-every-task">Least privilege: scope every task</a></li><li class="lvl-2"><a href="#treat-everything-an-agent-reads-as-untrusted">Treat everything an agent reads as untrusted</a></li><li class="lvl-2"><a href="#gate-the-irreversible">Gate the irreversible</a></li><li class="lvl-2"><a href="#keep-the-sensitive-stuff-local">Keep the sensitive stuff local</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/small-team-ai-agents-playbook/"><span class="k">← Older</span><span class="t">A Small-Team Playbook for AI Coding Agents</span></a>
+      <a class="pn next" href="/blog/scheduling-autonomous-agent-missions/"><span class="k">Newer →</span><span class="t">Make a Hive Work While You Sleep: Scheduling Autonomous Agent Missions</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Guides</h2>
+      <div class="post-grid">
+        <article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/build-your-personal-agi-on-your-computer/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/build-your-personal-agi-on-your-computer/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>9 min</span>
+    </div>
+    <h3><a href="/blog/build-your-personal-agi-on-your-computer/">Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin</a></h3>
+    <p class="dek">Turn Claude Code into a personal AGI on your own computer: agents with memory, schedules, Gmail, Calendar, voice and Slack, set up in Munder Difflin 0.5.2.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/build-your-personal-agi-on-your-computer/" aria-label="Read: Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-install-gemini-cli/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-install-gemini-cli/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-install-gemini-cli/">How to Install Gemini CLI, and Who Can Still Use It in 2026</a></h3>
+    <p class="dek">Install Google&#39;s Gemini CLI with npm on Mac, Windows or Linux, why Homebrew is stuck on 0.46.0, and which sign in still works after 18 Jun 2026.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-install-gemini-cli/" aria-label="Read: How to Install Gemini CLI, and Who Can Still Use It in 2026">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/claude-code-max-plan-tips/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-max-plan-tips/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/claude-code-max-plan-tips/">How to Get the Most Out of Your Claude Code Max Plan</a></h3>
+    <p class="dek">Stretch a Claude Code Max plan: model choice, context hygiene, prompt caching, subagents and unattended runs, checked against Anthropic&#39;s own pages.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/claude-code-max-plan-tips/" aria-label="Read: How to Get the Most Out of Your Claude Code Max Plan">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

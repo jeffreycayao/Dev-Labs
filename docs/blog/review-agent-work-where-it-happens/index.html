@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Review Agent Work Where It Happens — Munder Difflin Blog</title>
+<meta name="description" content="AI agents produce diffs faster than humans can review them, and alt-tabbing to an external editor breaks supervision flow. The case for review-in-place: Munder Difflin&#39;s built-in Monaco IDE puts a CHANGES rail and side-by-side diffs vs HEAD right on the office floor." />
+<link rel="canonical" href="https://munderdiffl.in/blog/review-agent-work-where-it-happens/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Review Agent Work Where It Happens — Munder Difflin Blog" />
+<meta property="og:description" content="AI agents produce diffs faster than humans can review them, and alt-tabbing to an external editor breaks supervision flow. The case for review-in-place: Munder Difflin&#39;s built-in Monaco IDE puts a CHANGES rail and side-by-side diffs vs HEAD right on the office floor." />
+<meta property="og:url" content="https://munderdiffl.in/blog/review-agent-work-where-it-happens/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/review-agent-work-where-it-happens/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Review Agent Work Where It Happens" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-07-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Concepts" />
+<meta property="article:tag" content="Code Review" />
+<meta property="article:tag" content="Monaco IDE" />
+<meta property="article:tag" content="Human-in-the-Loop" />
+<meta property="article:tag" content="Git" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Review Agent Work Where It Happens — Munder Difflin Blog" />
+<meta name="twitter:description" content="AI agents produce diffs faster than humans can review them, and alt-tabbing to an external editor breaks supervision flow. The case for review-in-place: Munder Difflin&#39;s built-in Monaco IDE puts a CHANGES rail and side-by-side diffs vs HEAD right on the office floor." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/review-agent-work-where-it-happens/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Review Agent Work Where It Happens" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Review Agent Work Where It Happens",
+  "description": "AI agents produce diffs faster than humans can review them, and alt-tabbing to an external editor breaks supervision flow. The case for review-in-place: Munder Difflin's built-in Monaco IDE puts a CHANGES rail and side-by-side diffs vs HEAD right on the office floor.",
+  "image": ["https://munderdiffl.in/blog/assets/media/review-agent-work-where-it-happens/hero.png"],
+  "datePublished": "2026-07-03T00:00:00.000Z",
+  "dateModified": "2026-07-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/review-agent-work-where-it-happens/" },
+  "keywords": "review ai agent code changes, ai agent code review bottleneck, review agent diffs in place, built-in monaco ide, supervising ai coding agents, human in the loop code review, multi-agent git workflow",
+  "articleSection": "Concepts",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/review-agent-work-where-it-happens/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Review Agent Work Where It Happens", "item": "https://munderdiffl.in/blog/review-agent-work-where-it-happens/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Why is code review the bottleneck in multi-agent coding?", "acceptedAnswer": { "@type": "Answer", "text": "Because generation scaled and review didn't. A floor of CLI agents can produce diffs across several worktrees in parallel, but every change still has to pass through one human's judgment before it ships. The constraint on a supervised agent fleet is no longer how fast the agents write code — it's how fast you can read, verify, and accept what they wrote." } },
+    { "@type": "Question", "name": "What is review-in-place?", "acceptedAnswer": { "@type": "Answer", "text": "Reviewing agent output inside the same tool where you supervise the agents, instead of alt-tabbing to an external editor. In Munder Difflin, a title-bar IDE button opens a built-in Monaco editor over the office floor: a git CHANGES rail lists what the agents touched, clicking a file shows a side-by-side diff against HEAD, and the file tree lets you open and edit anything with Cmd/Ctrl+S save. You never leave the app where the agents, terminals, and approvals live." } },
+    { "@type": "Question", "name": "Is the built-in IDE a full VS Code replacement?", "acceptedAnswer": { "@type": "Answer", "text": "No, and it isn't trying to be. It's Monaco — the same editor engine VS Code uses, fully self-hosted with no CDN — scoped to the supervision loop: see what changed via the CHANGES rail, read the side-by-side diff vs HEAD, and make small corrections with editor tabs and Cmd/Ctrl+S. For deep multi-hour editing sessions your usual editor is still the right tool; for reviewing and touching up agent work, in-place is faster." } },
+    { "@type": "Question", "name": "How does the single-committer git pattern make review safer?", "acceptedAnswer": { "@type": "Answer", "text": "In Munder Difflin, no agent ever runs git against the shared hive repo — agents write plain files to their outbox and one harness-owned committer does all the git operations. That prevents index.lock corruption from concurrent commits and gives you a serialized, auditable history. Combined with per-agent worktrees for code changes, it means the diff you review is exactly what one agent did, not an interleaving of several." } },
+    { "@type": "Question", "name": "Where do human approval gates fit into reviewing agent work?", "acceptedAnswer": { "@type": "Answer", "text": "The GOD orchestrator resolves routine requests itself and escalates only critical items — spend, destructive operations, scope changes — into an approvals queue you act on. That's decision-level review. The IDE's diff view is code-level review. Together they cover both halves: you approve what the fleet is allowed to do, and you verify what it actually did, without leaving the app." } },
+    { "@type": "Question", "name": "Does the IDE give the renderer direct filesystem access?", "acceptedAnswer": { "@type": "Answer", "text": "No. All filesystem and git access is brokered through the Electron main process over IPC — the renderer holds no fs or git access of its own. The diff comes from a main-process git bridge, saves go through the same brokered path, and a v0.3.3 fix ensures keystrokes typed during an in-flight save are never silently lost." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-concepts">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/concepts/">Concepts</a>
+    </nav>
+    <h1>Review Agent Work Where It Happens</h1>
+    <p class="dek">AI agents produce diffs faster than humans can review them, and alt-tabbing to an external editor breaks supervision flow. The case for review-in-place: Munder Difflin&#39;s built-in Monaco IDE puts a CHANGES rail and side-by-side diffs vs HEAD right on the office floor.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>4 min read</span>
+      <span class="tag kind">Concepts</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/review-agent-work-where-it-happens/hero.png" alt="Illustration: Review Agent Work Where It Happens" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p><strong>Agents write diffs faster than you can review them</strong> — and every alt-tab to an external editor breaks the supervision loop you're supposed to be running. The fix is <strong>review-in-place</strong>: Munder Difflin v0.3.3 ships a <strong>built-in Monaco IDE</strong> (the VS Code editor engine, self-hosted) over the office floor — a <strong>git CHANGES rail</strong>, <strong>side-by-side diffs vs HEAD</strong>, a file tree, and <strong>Cmd/Ctrl+S</strong> edits — so you verify agent work where the agents actually are. Pair it with the <strong>single-committer git pattern</strong> (clean, serialized, reviewable history) and <strong>human approval gates</strong> (decision-level review), and the review bottleneck stops being the reason your fleet idles.</p></div>
+<p>Here’s the uncomfortable math of running a floor of coding agents: generation scaled, review didn’t. One <a href="/blog/how-the-god-orchestrator-works/">GOD orchestrator</a> dispatching work to a handful of CLI agents in isolated worktrees can produce more diffs in an hour than most engineers review in a day. The agents aren’t the bottleneck anymore. <strong>You are.</strong></p>
+<p>That’s not an insult — it’s the design constraint. A supervised fleet is only as fast as its slowest verification step, and for code, verification means a human actually reading the change. So the question worth engineering is: how do you make the reading step cheap?</p>
+<h2 id="alt-tabbing-is-where-supervision-goes-to-die" tabindex="-1">Alt-tabbing is where supervision goes to die <a class="anchor" href="#alt-tabbing-is-where-supervision-goes-to-die" aria-hidden="true">#</a></h2>
+<p>The default answer is “open the repo in your editor.” It works, and it’s also quietly terrible for this job.</p>
+<p>When you supervise agents, you’re running a loop: watch the floor, read an escalation, check what an agent changed, answer, move on. Every hop out to an external editor breaks that loop. You alt-tab, find the right window, find the right worktree (each agent has its own), pull up a diff, and by the time you’ve read it, the context that prompted the check — which agent, which task, what it claimed — has evaporated. Then you tab back and reconstruct it.</p>
+<p>Multiply that by every agent, every task, all day. The cost isn’t the seconds per switch; it’s that switching makes review feel expensive, so you do less of it, so agent work merges less verified than it should. The bottleneck doesn’t just slow you down — it degrades the quality of the supervision itself.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/review-agent-work-where-it-happens/note-1.png" alt="Hand-drawn sketch from “Review Agent Work Where It Happens”" loading="lazy" decoding="async" /></figure>
+<h2 id="review-in-place-the-ide-comes-to-the-floor" tabindex="-1">Review-in-place: the IDE comes to the floor <a class="anchor" href="#review-in-place-the-ide-comes-to-the-floor" aria-hidden="true">#</a></h2>
+<p>This is the problem the v0.3.3 built-in IDE exists to solve. A title-bar <strong>IDE</strong> button opens a full-window <strong>Monaco</strong> editor — the same editor engine VS Code runs on, fully self-hosted with no CDN — as an overlay on the office floor. The floor, the terminals, and everything else stay untouched underneath; you toggle in, review, toggle out.</p>
+<p>The layout is built around the review loop, not general-purpose editing:</p>
+<ul>
+<li><strong>A git CHANGES rail</strong> on the left lists exactly what changed in the workspace. This is the “what did my agents just do” view, one click from the floor.</li>
+<li><strong>Click a changed file</strong> and you get a read-only <strong>side-by-side diff vs HEAD</strong> — the honest before/after, not a summary the agent wrote about itself.</li>
+<li><strong>A workspace file tree</strong> below it opens any file for real editing, with <strong>editor tabs</strong>, dirty-state dots, and <strong>Cmd/Ctrl+S</strong> save. Spot a wrong variable name in review? Fix it there. No round-trip through another app, no “hey agent, please rename x to y” for a two-character change.</li>
+</ul>
+<p>The workspace root snapshots from the selected agent’s cwd (falling back to the GOD agent’s, then the first agent’s), so the IDE opens onto the code you were just looking at, not a generic project picker.</p>
+<p>One architectural note that matters more than it sounds: <strong>the renderer holds no filesystem or git access.</strong> Every read, diff, and save is brokered through the Electron main process over IPC. The pretty editor window is just a view; the privileged operations happen in one audited place. And a v0.3.3 fix hardened the save path so keystrokes typed while a save is still writing are never silently dropped — a small thing, exactly the kind of small thing that erodes trust in an in-app editor if it’s wrong.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/review-agent-work-where-it-happens/note-2.png" alt="Hand-drawn sketch from “Review Agent Work Where It Happens”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-diff-is-only-trustworthy-because-of-how-it-was-made" tabindex="-1">The diff is only trustworthy because of how it was made <a class="anchor" href="#the-diff-is-only-trustworthy-because-of-how-it-was-made" aria-hidden="true">#</a></h2>
+<p>A side-by-side diff vs HEAD is only useful if HEAD means something. In a naive multi-agent setup — several agents committing to one repo — it doesn’t: histories interleave, <code>index.lock</code> collisions corrupt state, and “what did agent B change” has no clean answer.</p>
+<p>Munder Difflin avoids this with two structural choices. For the shared hive, <strong>no agent ever touches git</strong>: agents write plain files to their <code>outbox/</code>, the router delivers mail, and a single harness-owned committer performs every git operation — the <a href="/blog/single-committer-git-pattern/">single-committer git pattern</a>, which trades a theoretical bottleneck for a serialized, corruption-free, auditable history. For code, <strong>each agent gets its own isolated worktree</strong> (see <a href="/blog/claude-code-git-worktrees-vs-hive/">worktrees vs the hive</a>), so the diff you review is one agent’s coherent work, not a merge puzzle.</p>
+<p>Review-in-place sits on top of that foundation. The CHANGES rail is legible <em>because</em> the git story underneath is disciplined.</p>
+<h2 id="the-other-half-gates-for-decisions-diffs-for-code" tabindex="-1">The other half: gates for decisions, diffs for code <a class="anchor" href="#the-other-half-gates-for-decisions-diffs-for-code" aria-hidden="true">#</a></h2>
+<p>Reading diffs is code-level review. But half of supervising agents is <strong>decision-level</strong> review: should this agent spend that much, delete that thing, expand that scope? The GOD orchestrator handles the routine traffic itself and escalates only critical items — spend, destructive ops, scope changes — into an approvals queue you act on. That’s the <a href="/blog/human-in-the-loop-approving-ai-agents/">human-in-the-loop gate</a>, and it’s deliberately the same shape as the IDE: the decision comes to you, in the app, with context attached.</p>
+<p>Put together, the review story has two lanes and zero alt-tabs. Approvals catch the <em>should we</em> questions before damage happens; the IDE’s diff rail catches the <em>what actually happened</em> questions before code merges. Both live where the agents live. The supervision loop stays unbroken, review stays cheap, and cheap review is review that actually happens.</p>
+<p>Agents got fast. The winning move isn’t reviewing less — it’s moving review to where the work is. <a href="https://github.com/chaitanyagiri/munder-difflin/releases/latest">Grab the latest release</a> and try the IDE button, and if the floor earns it, <a href="https://github.com/chaitanyagiri/munder-difflin">a GitHub star</a> helps more people find it.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">Why is code review the bottleneck in multi-agent coding?</p>
+          <p class="a">Because generation scaled and review didn&#39;t. A floor of CLI agents can produce diffs across several worktrees in parallel, but every change still has to pass through one human&#39;s judgment before it ships. The constraint on a supervised agent fleet is no longer how fast the agents write code — it&#39;s how fast you can read, verify, and accept what they wrote.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What is review-in-place?</p>
+          <p class="a">Reviewing agent output inside the same tool where you supervise the agents, instead of alt-tabbing to an external editor. In Munder Difflin, a title-bar IDE button opens a built-in Monaco editor over the office floor: a git CHANGES rail lists what the agents touched, clicking a file shows a side-by-side diff against HEAD, and the file tree lets you open and edit anything with Cmd/Ctrl+S save. You never leave the app where the agents, terminals, and approvals live.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is the built-in IDE a full VS Code replacement?</p>
+          <p class="a">No, and it isn&#39;t trying to be. It&#39;s Monaco — the same editor engine VS Code uses, fully self-hosted with no CDN — scoped to the supervision loop: see what changed via the CHANGES rail, read the side-by-side diff vs HEAD, and make small corrections with editor tabs and Cmd/Ctrl+S. For deep multi-hour editing sessions your usual editor is still the right tool; for reviewing and touching up agent work, in-place is faster.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How does the single-committer git pattern make review safer?</p>
+          <p class="a">In Munder Difflin, no agent ever runs git against the shared hive repo — agents write plain files to their outbox and one harness-owned committer does all the git operations. That prevents index.lock corruption from concurrent commits and gives you a serialized, auditable history. Combined with per-agent worktrees for code changes, it means the diff you review is exactly what one agent did, not an interleaving of several.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Where do human approval gates fit into reviewing agent work?</p>
+          <p class="a">The GOD orchestrator resolves routine requests itself and escalates only critical items — spend, destructive operations, scope changes — into an approvals queue you act on. That&#39;s decision-level review. The IDE&#39;s diff view is code-level review. Together they cover both halves: you approve what the fleet is allowed to do, and you verify what it actually did, without leaving the app.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Does the IDE give the renderer direct filesystem access?</p>
+          <p class="a">No. All filesystem and git access is brokered through the Electron main process over IPC — the renderer holds no fs or git access of its own. The diff comes from a main-process git bridge, saves go through the same brokered path, and a v0.3.3 fix ensures keystrokes typed during an in-flight save are never silently lost.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/concepts/">Concepts</a><a class="tag" href="/blog/tags/code-review/">Code Review</a><a class="tag" href="/blog/tags/monaco-ide/">Monaco IDE</a><a class="tag" href="/blog/tags/human-in-the-loop/">Human-in-the-Loop</a><a class="tag" href="/blog/tags/git/">Git</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#alt-tabbing-is-where-supervision-goes-to-die">Alt-tabbing is where supervision goes to die</a></li><li class="lvl-2"><a href="#review-in-place-the-ide-comes-to-the-floor">Review-in-place: the IDE comes to the floor</a></li><li class="lvl-2"><a href="#the-diff-is-only-trustworthy-because-of-how-it-was-made">The diff is only trustworthy because of how it was made</a></li><li class="lvl-2"><a href="#the-other-half-gates-for-decisions-diffs-for-code">The other half: gates for decisions, diffs for code</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/run-a-mixed-engine-office/"><span class="k">← Older</span><span class="t">Run a Mixed-Engine Office: the Right CLI for Every Desk</span></a>
+      <a class="pn next" href="/blog/orca-vs-munder-difflin/"><span class="k">Newer →</span><span class="t">Orca vs Munder Difflin: Agent IDE or Agent Office?</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Concepts</h2>
+      <div class="post-grid">
+        <article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-ollama-good-for-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-ollama-good-for-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-ollama-good-for-coding/">Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do</a></h3>
+    <p class="dek">Ollama only runs the model, so the answer depends on which one you pull and your memory. What local models do well, where Claude wins, and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-ollama-good-for-coding/" aria-label="Read: Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-max-worth-it/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-max-worth-it/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-max-worth-it/">Is It Worth Paying for Claude Code Max?</a></h3>
+    <p class="dek">Who should pay for Claude Max 5x or 20x, who should stay on Pro or an API key, and the break even math to run on your own Claude Code usage.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-max-worth-it/" aria-label="Read: Is It Worth Paying for Claude Code Max?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-open-source/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-open-source/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-open-source/">Is Claude Code Open Source?</a></h3>
+    <p class="dek">No. Claude Code is proprietary under Anthropic&#39;s terms. What its GitHub repo holds, what the 2026 leak changed, and which open tools sit around it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-open-source/" aria-label="Read: Is Claude Code Open Source?">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

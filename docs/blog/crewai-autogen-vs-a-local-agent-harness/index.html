@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CrewAI and AutoGen vs a Local Agent Harness: Framework or App? — Munder Difflin Blog</title>
+<meta name="description" content="CrewAI, AutoGen (now Microsoft Agent Framework), and LangGraph are frameworks — Python you write to build your own agent system. A multi-agent harness is an app you download that runs a team on your repos today. Here&#39;s how to tell which one you actually need." />
+<link rel="canonical" href="https://munderdiffl.in/blog/crewai-autogen-vs-a-local-agent-harness/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="CrewAI and AutoGen vs a Local Agent Harness: Framework or App? — Munder Difflin Blog" />
+<meta property="og:description" content="CrewAI, AutoGen (now Microsoft Agent Framework), and LangGraph are frameworks — Python you write to build your own agent system. A multi-agent harness is an app you download that runs a team on your repos today. Here&#39;s how to tell which one you actually need." />
+<meta property="og:url" content="https://munderdiffl.in/blog/crewai-autogen-vs-a-local-agent-harness/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/crewai-autogen-vs-a-local-agent-harness/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: CrewAI and AutoGen vs a Local Agent Harness: Framework or App?" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-07-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Comparisons" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="CrewAI" />
+<meta property="article:tag" content="AutoGen" />
+<meta property="article:tag" content="LangGraph" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="CrewAI and AutoGen vs a Local Agent Harness: Framework or App? — Munder Difflin Blog" />
+<meta name="twitter:description" content="CrewAI, AutoGen (now Microsoft Agent Framework), and LangGraph are frameworks — Python you write to build your own agent system. A multi-agent harness is an app you download that runs a team on your repos today. Here&#39;s how to tell which one you actually need." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/crewai-autogen-vs-a-local-agent-harness/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: CrewAI and AutoGen vs a Local Agent Harness: Framework or App?" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "CrewAI and AutoGen vs a Local Agent Harness: Framework or App?",
+  "description": "CrewAI, AutoGen (now Microsoft Agent Framework), and LangGraph are frameworks — Python you write to build your own agent system. A multi-agent harness is an app you download that runs a team on your repos today. Here's how to tell which one you actually need.",
+  "image": ["https://munderdiffl.in/blog/assets/media/crewai-autogen-vs-a-local-agent-harness/hero.png"],
+  "datePublished": "2026-07-03T00:00:00.000Z",
+  "dateModified": "2026-07-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/crewai-autogen-vs-a-local-agent-harness/" },
+  "keywords": "crewai vs autogen vs agent harness, multi-agent framework vs harness, crewai alternative, autogen alternative, langgraph vs harness, microsoft agent framework, multi-agent orchestration app",
+  "articleSection": "Comparisons",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/crewai-autogen-vs-a-local-agent-harness/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "CrewAI and AutoGen vs a Local Agent Harness: Framework or App?", "item": "https://munderdiffl.in/blog/crewai-autogen-vs-a-local-agent-harness/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What's the difference between a multi-agent framework and a multi-agent harness?", "acceptedAnswer": { "@type": "Answer", "text": "A framework is a library — CrewAI, Microsoft Agent Framework, and LangGraph are Python (and .NET/JS) packages you import to build your own agent system, which means you also build the UI, guardrails, memory, and triggers around it. A harness is a finished application: you download it, point it at your repos, and a coordinated team of agents runs with orchestration, approvals, budgets, and memory already built in. Same underlying idea, opposite division of labor." } },
+    { "@type": "Question", "name": "Is CrewAI free and open source?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The CrewAI Python framework is MIT-licensed and open source, with agents organized into Crews (autonomous role-based teams) and Flows (event-driven workflows with precise control). You bring an LLM API key — OpenAI by default, with local models via Ollama supported — and CrewAI also sells an enterprise platform (AMP) for managed deployment, observability, and governance." } },
+    { "@type": "Question", "name": "What happened to Microsoft AutoGen?", "acceptedAnswer": { "@type": "Answer", "text": "Microsoft merged AutoGen with Semantic Kernel into the Microsoft Agent Framework, which reached its production-ready 1.0 release in April 2026 for Python and .NET. AutoGen and Semantic Kernel are now in maintenance mode — bug fixes and security patches, but new feature work happens in Agent Framework. It combines AutoGen's agent abstractions with Semantic Kernel's enterprise features plus graph-based workflows." } },
+    { "@type": "Question", "name": "Do frameworks like CrewAI or LangGraph require API keys?", "acceptedAnswer": { "@type": "Answer", "text": "Generally yes — they call model provider APIs directly, so you supply keys (or point at a local model server). A harness like Munder Difflin instead drives the agent CLIs you already run — Claude Code, Codex, Copilot CLI and others — so it can ride the subscriptions you already pay for, with BYO keys and local LLMs as options rather than requirements." } },
+    { "@type": "Question", "name": "When should I pick a framework instead of a harness?", "acceptedAnswer": { "@type": "Answer", "text": "Pick a framework when the agent system is a component of your product: a support pipeline inside your SaaS, a document-processing workflow, anything that needs custom logic, your own deployment, and tight integration with your stack. CrewAI, Agent Framework, and LangGraph are excellent at exactly that. Pick a harness when the goal is a team of coding agents working your repos today, with no code to write." } },
+    { "@type": "Question", "name": "Is Munder Difflin a framework I can import into my own app?", "acceptedAnswer": { "@type": "Answer", "text": "No. It's a local-first, MIT-licensed Electron desktop app for macOS, Windows, and Linux — the harness itself is the product. You download it, spawn agents that run as real CLI processes in isolated git worktrees, and a GOD orchestrator routes work between them while you watch, with approvals, budgets, a circuit breaker, and shared memory already wired in." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-comparisons">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/comparisons/">Comparisons</a>
+    </nav>
+    <h1>CrewAI and AutoGen vs a Local Agent Harness: Framework or App?</h1>
+    <p class="dek">CrewAI, AutoGen (now Microsoft Agent Framework), and LangGraph are frameworks — Python you write to build your own agent system. A multi-agent harness is an app you download that runs a team on your repos today. Here&#39;s how to tell which one you actually need.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Comparisons</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/crewai-autogen-vs-a-local-agent-harness/hero.png" alt="Illustration: CrewAI and AutoGen vs a Local Agent Harness: Framework or App?" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p><strong>CrewAI, AutoGen (now Microsoft Agent Framework), and LangGraph are frameworks</strong> — Python you import to <em>build</em> a multi-agent system, which means you also build the UI, guardrails, memory, and triggers yourself. <strong>A multi-agent harness is the finished app</strong>: Munder Difflin is a free, local-first desktop app that drives the agent CLIs you already have — Claude Code, Codex, Copilot CLI — as a coordinated team, with an orchestrator, approval gates, budgets, and shared memory built in. <strong>Frameworks win when agents are a component of your product. A harness wins when you want a team working your repos today, with no code.</strong></p></div>
+<p>“Which multi-agent framework should I use?” is usually the wrong first question. The right first question is: <strong>are you building an agent system, or do you want to use one?</strong></p>
+<p>Those are different jobs, and the tools for them belong to different categories. CrewAI, Microsoft’s Agent Framework, and LangGraph sit in one; a multi-agent harness like Munder Difflin sits in the other. This post draws the line honestly, because both sides of it are good at what they’re for.</p>
+<h2 id="what-the-frameworks-actually-are" tabindex="-1">What the frameworks actually are <a class="anchor" href="#what-the-frameworks-actually-are" aria-hidden="true">#</a></h2>
+<p><strong>CrewAI</strong> is an MIT-licensed Python framework for orchestrating role-based agents. You define agents, tasks, and workflows in code: <em>Crews</em> for autonomous collaborative teams, <em>Flows</em> for event-driven workflows with conditional branching and state management. You bring an LLM API key (OpenAI by default; local models via Ollama work too), and there’s a commercial platform (AMP) layered on top for managed deployment, observability, and governance. It’s a genuinely well-designed library with serious enterprise adoption.</p>
+<p><strong>AutoGen</strong> — the Microsoft research project that popularized conversational multi-agent patterns — has been merged with Semantic Kernel into the <strong>Microsoft Agent Framework</strong>, which shipped its production-ready 1.0 in April 2026 for Python and .NET. AutoGen and Semantic Kernel themselves are in maintenance mode; Agent Framework carries the torch, combining AutoGen’s agent abstractions with Semantic Kernel’s enterprise plumbing (state management, middleware, telemetry) plus graph-based workflows. If you’re on Azure and building agents into a product, it’s the obvious pick.</p>
+<p><strong>LangGraph</strong> hit a stable 1.0 in late 2025 and is used in production at companies like Klarna, LinkedIn, Uber, and Replit. It models agent workflows as graphs with cycles — loop, retry, reflect — with checkpointing and a first-class <code>interrupt()</code> primitive for human-in-the-loop. For complex stateful pipelines where you want explicit control over every branch, it’s the default answer.</p>
+<p>Notice what all three have in common. They’re <strong>libraries</strong>. <code>pip install</code>, import, write Python. That’s not a criticism — it’s the point. A framework’s job is to give a developer building blocks.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/crewai-autogen-vs-a-local-agent-harness/note-1.png" alt="Hand-drawn sketch from “CrewAI and AutoGen vs a Local Agent Harness: Framework or App?”" loading="lazy" decoding="async" /></figure>
+<h2 id="what-a-framework-doesnt-give-you" tabindex="-1">What a framework doesn’t give you <a class="anchor" href="#what-a-framework-doesnt-give-you" aria-hidden="true">#</a></h2>
+<p>Here’s the part the comparison charts skip: when you pick a framework, <strong>you’ve signed up to build the harness yourself.</strong> The agent loop is maybe a fifth of a working multi-agent system. Around it you still need:</p>
+<ul>
+<li><strong>A UI</strong> — some way to see what N agents are doing right now, not just logs.</li>
+<li><strong>Guardrails</strong> — approval gates for spend and destructive operations, budgets, something that stops a looping agent before it burns $200.</li>
+<li><strong>Memory</strong> — persistence across sessions, so Tuesday’s agent knows what Monday’s learned.</li>
+<li><strong>Triggers</strong> — Slack, webhooks, schedules, so work arrives without you typing it.</li>
+<li><strong>Isolation</strong> — so two agents editing the same repo don’t destroy each other’s work.</li>
+</ul>
+<p>Frameworks are adding pieces of this (LangGraph’s interrupts, CrewAI’s memory and tracing, Agent Framework’s telemetry), and their commercial platforms sell more of it. But the assembled, running system is still your project. That’s a great deal if the agent system <em>is</em> your product. It’s a terrible deal if what you wanted was help with your repos this afternoon.</p>
+<h2 id="what-a-harness-is-instead" tabindex="-1">What a harness is instead <a class="anchor" href="#what-a-harness-is-instead" aria-hidden="true">#</a></h2>
+<p>A <a href="/blog/what-is-a-multi-agent-harness/">multi-agent harness</a> is the other answer: the system, already assembled, as an app. Munder Difflin is a free, MIT-licensed, local-first desktop app (macOS/Windows/Linux) where every agent is a <strong>real CLI process</strong> — Claude Code, OpenAI Codex, Antigravity, OpenCode, Crush, pi.dev, GitHub Copilot CLI — running in its own pseudo-terminal and its own isolated git worktree. A <a href="/blog/how-the-god-orchestrator-works/">GOD orchestrator</a> routes work between them; agents share long-term memory; triggers include typing, Slack, webhooks, schedules, and voice.</p>
+<p>The pieces you’d have built around a framework are already there: <a href="/blog/human-in-the-loop-approving-ai-agents/">human approval gates</a> on spend, scope, and destructive ops; a circuit breaker with a steer → constrain → stop ladder; per-agent token budgets; OpenTelemetry observability; a Command Center with a kanban board and live fleet monitoring. And because it drives CLIs rather than calling model APIs, it rides the <strong>subscriptions you already pay for</strong> — no mandatory API key, with BYO keys and local LLMs as options.</p>
+<p>The honest flip side: you can’t <code>import</code> Munder Difflin into your SaaS. It won’t run your custom document pipeline inside your product. It’s an app for a specific job — a team of agents working your repositories, visible on one screen — not a toolkit for arbitrary agent systems. Server based meta harnesses such as Databricks’ Omnigent sit in between, which our <a href="/blog/omniagent-alternatives/">OmniAgent alternatives</a> post covers.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/crewai-autogen-vs-a-local-agent-harness/note-2.png" alt="Hand-drawn sketch from “CrewAI and AutoGen vs a Local Agent Harness: Framework or App?”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-honest-decision-rule" tabindex="-1">The honest decision rule <a class="anchor" href="#the-honest-decision-rule" aria-hidden="true">#</a></h2>
+<p><strong>Choose a framework (CrewAI, Agent Framework, LangGraph) when:</strong></p>
+<ul>
+<li>Agents are a <em>component of something you’re shipping</em> — embedded in your product, your pipeline, your infrastructure.</li>
+<li>You need custom orchestration logic, your own deployment story, or deep integration with your stack (Azure, LangSmith, your data layer).</li>
+<li>You have engineering time to build and maintain the surrounding harness, and that investment pays off because the system is core to your business.</li>
+</ul>
+<p><strong>Choose a harness (Munder Difflin) when:</strong></p>
+<ul>
+<li>The goal is “a team working my repos today” — coding, reviewing, fixing issues — with zero glue code.</li>
+<li>You want guardrails, memory, isolation, and a UI on day one, not as a Q3 project.</li>
+<li>You want it local and driving the CLI subscriptions you already have, rather than metering API calls through code you wrote.</li>
+</ul>
+<p>There’s no loser here. It’s the same distinction as Rails vs. a deployed app: nobody asks which is “better,” because one is for builders of systems and the other is a system. If you’re still weighing categories, <a href="/blog/how-to-choose-a-multi-agent-tool/">how to choose a multi-agent tool</a> walks the wider field, and <a href="/blog/local-first-vs-cloud-agent-sdks/">local-first vs cloud agent SDKs</a> covers the deployment axis.</p>
+<h2 id="try-the-harness-side-in-five-minutes" tabindex="-1">Try the harness side in five minutes <a class="anchor" href="#try-the-harness-side-in-five-minutes" aria-hidden="true">#</a></h2>
+<p>If your answer was “I just want the team,” that’s the job Munder Difflin exists for. <a href="https://github.com/chaitanyagiri/munder-difflin/releases/latest">Download the latest release</a> — free, open source, local-first — and if it earns it, <a href="https://github.com/chaitanyagiri/munder-difflin">a GitHub star</a> helps more people find it.</p>
+<p>Sources: <a href="https://github.com/crewAIInc/crewAI">CrewAI on GitHub</a>; <a href="https://learn.microsoft.com/en-us/agent-framework/overview/">Microsoft Agent Framework overview</a>; <a href="https://devblogs.microsoft.com/agent-framework/migrate-your-semantic-kernel-and-autogen-projects-to-microsoft-agent-framework-release-candidate/">Migrating Semantic Kernel and AutoGen to Agent Framework</a>; <a href="https://www.langchain.com/langgraph">LangGraph</a>.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What&#39;s the difference between a multi-agent framework and a multi-agent harness?</p>
+          <p class="a">A framework is a library — CrewAI, Microsoft Agent Framework, and LangGraph are Python (and .NET/JS) packages you import to build your own agent system, which means you also build the UI, guardrails, memory, and triggers around it. A harness is a finished application: you download it, point it at your repos, and a coordinated team of agents runs with orchestration, approvals, budgets, and memory already built in. Same underlying idea, opposite division of labor.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is CrewAI free and open source?</p>
+          <p class="a">Yes. The CrewAI Python framework is MIT-licensed and open source, with agents organized into Crews (autonomous role-based teams) and Flows (event-driven workflows with precise control). You bring an LLM API key — OpenAI by default, with local models via Ollama supported — and CrewAI also sells an enterprise platform (AMP) for managed deployment, observability, and governance.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What happened to Microsoft AutoGen?</p>
+          <p class="a">Microsoft merged AutoGen with Semantic Kernel into the Microsoft Agent Framework, which reached its production-ready 1.0 release in April 2026 for Python and .NET. AutoGen and Semantic Kernel are now in maintenance mode — bug fixes and security patches, but new feature work happens in Agent Framework. It combines AutoGen&#39;s agent abstractions with Semantic Kernel&#39;s enterprise features plus graph-based workflows.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Do frameworks like CrewAI or LangGraph require API keys?</p>
+          <p class="a">Generally yes — they call model provider APIs directly, so you supply keys (or point at a local model server). A harness like Munder Difflin instead drives the agent CLIs you already run — Claude Code, Codex, Copilot CLI and others — so it can ride the subscriptions you already pay for, with BYO keys and local LLMs as options rather than requirements.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">When should I pick a framework instead of a harness?</p>
+          <p class="a">Pick a framework when the agent system is a component of your product: a support pipeline inside your SaaS, a document-processing workflow, anything that needs custom logic, your own deployment, and tight integration with your stack. CrewAI, Agent Framework, and LangGraph are excellent at exactly that. Pick a harness when the goal is a team of coding agents working your repos today, with no code to write.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is Munder Difflin a framework I can import into my own app?</p>
+          <p class="a">No. It&#39;s a local-first, MIT-licensed Electron desktop app for macOS, Windows, and Linux — the harness itself is the product. You download it, spawn agents that run as real CLI processes in isolated git worktrees, and a GOD orchestrator routes work between them while you watch, with approvals, budgets, a circuit breaker, and shared memory already wired in.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/comparisons/">Comparisons</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/crewai/">CrewAI</a><a class="tag" href="/blog/tags/autogen/">AutoGen</a><a class="tag" href="/blog/tags/langgraph/">LangGraph</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#what-the-frameworks-actually-are">What the frameworks actually are</a></li><li class="lvl-2"><a href="#what-a-framework-doesnt-give-you">What a framework doesn’t give you</a></li><li class="lvl-2"><a href="#what-a-harness-is-instead">What a harness is instead</a></li><li class="lvl-2"><a href="#the-honest-decision-rule">The honest decision rule</a></li><li class="lvl-2"><a href="#try-the-harness-side-in-five-minutes">Try the harness side in five minutes</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/github-copilot-cli-vs-claude-code-for-hive-work/"><span class="k">← Older</span><span class="t">GitHub Copilot CLI vs Claude Code as Hive Workers</span></a>
+      <a class="pn next" href="/blog/command-center-guide/"><span class="k">Newer →</span><span class="t">The Command Center: Kanban, Fleet and Budgets in One Place</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Comparisons</h2>
+      <div class="post-grid">
+        <article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-pricing/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/grok-bot-pricing/">Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy</a></h3>
+    <p class="dek">Grok Bot has no plan of its own. It comes bundled with SuperGrok and Cursor plans from $20 to $300 a month. Here is what each one gets you, what the free trial is, and the $0 route for work agents.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-pricing/" aria-label="Read: Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-alternatives/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-alternatives/">Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse</a></h3>
+    <p class="dek">Meta Muse is US only and trains on your chats by default. Seven alternatives, from open source agents that run on your own computer to hosted ones from OpenAI, Google and SpaceXAI.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-alternatives/" aria-label="Read: Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-grok-bot-privacy/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-grok-bot-privacy/">Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both ask for your logins. We read both companies&#39; security docs: who sees your passwords, what trains on your chats, and how to keep AI agents on your own computer instead.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-grok-bot-privacy/" aria-label="Read: Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

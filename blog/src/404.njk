@@ -1,0 +1,18 @@
+---
+layout: base.njk
+title: Page not found
+seoTitle: "404 — Munder Difflin Blog"
+description: "That page wandered off the office floor."
+noindex: true
+permalink: /404.html
+---
+{% block content %}
+<div class="center-stage wrap">
+  <div>
+    <p class="eyebrow">404</p>
+    <h1>Off the floor.</h1>
+    <p>That page isn't at any desk. Maybe it took a coffee break.</p>
+    <a class="btn primary" href="{{ '/' | u }}">← Back to the blog</a>
+  </div>
+</div>
+{% endblock %}

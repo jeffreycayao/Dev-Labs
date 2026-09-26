@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How to Choose a Multi-Agent Coding Tool: A Buyer&#39;s Checklist — Munder Difflin Blog</title>
+<meta name="description" content="A decision framework for choosing a multi-agent coding tool — memory, control, visibility, cost, local-first — with a simple scoring rubric you can run." />
+<link rel="canonical" href="https://munderdiffl.in/blog/how-to-choose-a-multi-agent-tool/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="How to Choose a Multi-Agent Coding Tool: A Buyer&#39;s Checklist — Munder Difflin Blog" />
+<meta property="og:description" content="A decision framework for choosing a multi-agent coding tool — memory, control, visibility, cost, local-first — with a simple scoring rubric you can run." />
+<meta property="og:url" content="https://munderdiffl.in/blog/how-to-choose-a-multi-agent-tool/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/how-to-choose-a-multi-agent-tool/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: How to Choose a Multi-Agent Coding Tool: A Buyer&#39;s Checklist" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-02T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Comparisons" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Tools" />
+<meta property="article:tag" content="Getting Started" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="How to Choose a Multi-Agent Coding Tool: A Buyer&#39;s Checklist — Munder Difflin Blog" />
+<meta name="twitter:description" content="A decision framework for choosing a multi-agent coding tool — memory, control, visibility, cost, local-first — with a simple scoring rubric you can run." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/how-to-choose-a-multi-agent-tool/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: How to Choose a Multi-Agent Coding Tool: A Buyer&#39;s Checklist" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to Choose a Multi-Agent Coding Tool: A Buyer's Checklist",
+  "description": "A decision framework for choosing a multi-agent coding tool — memory, control, visibility, cost, local-first — with a simple scoring rubric you can run.",
+  "image": ["https://munderdiffl.in/blog/assets/media/how-to-choose-a-multi-agent-tool/hero.png"],
+  "datePublished": "2026-06-02T00:00:00.000Z",
+  "dateModified": "2026-06-02T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/how-to-choose-a-multi-agent-tool/" },
+  "keywords": "agentic coding tools, agentic coding tools, ai coding agent teams, choosing ai tools",
+  "articleSection": "Comparisons",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/how-to-choose-a-multi-agent-tool/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "How to Choose a Multi-Agent Coding Tool: A Buyer's Checklist", "item": "https://munderdiffl.in/blog/how-to-choose-a-multi-agent-tool/" }
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-comparisons">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/comparisons/">Comparisons</a>
+    </nav>
+    <h1>How to Choose a Multi-Agent Coding Tool: A Buyer&#39;s Checklist</h1>
+    <p class="dek">A decision framework for choosing a multi-agent coding tool — memory, control, visibility, cost, local-first — with a simple scoring rubric you can run.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>3 min read</span>
+      <span class="tag kind">Comparisons</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/how-to-choose-a-multi-agent-tool/hero.png" alt="Illustration: How to Choose a Multi-Agent Coding Tool: A Buyer's Checklist" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Choose a <strong>multi-agent coding
+tool</strong> by scoring it on six things that actually change your workflow: <strong>memory</strong>,
+<strong>messaging</strong>, <strong>orchestration</strong>, <strong>visibility</strong>,
+<strong>control</strong>, and <strong>cost &amp; local-first</strong>. Weight each by how much it
+matters to <em>you</em>, score each tool 0–3, and the highest total wins — for your situation, not in
+the abstract.</p></div>
+<p>There’s no single best <a href="/blog/best-claude-code-multi-agent-tools/">agentic coding tool</a> — there’s the
+best one for your workload. The way to find it isn’t reading ten reviews; it’s running the same
+checklist across the contenders. Here’s a framework you can use in fifteen minutes.</p>
+<h2 id="start-with-the-question-behind-the-question" tabindex="-1">Start with the question behind the question <a class="anchor" href="#start-with-the-question-behind-the-question" aria-hidden="true">#</a></h2>
+<p>Before scoring anything, name your actual bottleneck. Most people are solving one of two problems:</p>
+<ul>
+<li><strong>“I need to run agents in parallel without them colliding.”</strong> A session manager or
+worktree-isolating app solves this directly.</li>
+<li><strong>“I’m drowning in coordination — re-explaining context, relaying messages, assigning every
+task.”</strong> That’s a <a href="/#how">coordination</a> problem, and it needs memory, messaging, and an
+orchestrator.</li>
+</ul>
+<p>If you’re in the first camp, optimize for simplicity. If you’re in the second, the checklist below
+will steer you toward heavier, more coordinated tools — and that’s correct.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/how-to-choose-a-multi-agent-tool/note-1.png" alt="Hand-drawn sketch from “How to Choose a Multi-Agent Coding Tool: A Buyer's Checklist”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-six-criteria" tabindex="-1">The six criteria <a class="anchor" href="#the-six-criteria" aria-hidden="true">#</a></h2>
+<h3 id="1-memory" tabindex="-1">1. Memory <a class="anchor" href="#1-memory" aria-hidden="true">#</a></h3>
+<p>Does the tool give agents a shared, durable <a href="/blog/give-claude-code-long-term-memory/">long-term
+memory</a> they read on startup and write to as they learn — or
+does each agent start cold every session? Memory is the single biggest multiplier on a team’s output
+over time, because it stops you re-explaining the project.</p>
+<h3 id="2-messaging" tabindex="-1">2. Messaging <a class="anchor" href="#2-messaging" aria-hidden="true">#</a></h3>
+<p>Can agents hand work and findings to each other directly (mailboxes, a router), or are <em>you</em> the
+message bus relaying between windows? Direct messaging is what lets a team self-coordinate.</p>
+<h3 id="3-orchestration" tabindex="-1">3. Orchestration <a class="anchor" href="#3-orchestration" aria-hidden="true">#</a></h3>
+<p>Is there a coordinator that decomposes your intent and routes work — escalating only the critical
+decisions — or do you assign every task by hand? More orchestration means more leverage; less means
+more control.</p>
+<h3 id="4-visibility" tabindex="-1">4. Visibility <a class="anchor" href="#4-visibility" aria-hidden="true">#</a></h3>
+<p>Can you <em>see</em> what the team is doing — a live view, not a wall of terminal tabs? Visibility builds
+trust and catches problems early. Forms vary: a session list, a diff view, a board, a
+<a href="/#how">visual office floor</a>.</p>
+<h3 id="5-control" tabindex="-1">5. Control <a class="anchor" href="#5-control" aria-hidden="true">#</a></h3>
+<p>How much do you steer vs. delegate? Some workloads want a human approving each step; others want to
+describe a goal and walk away. Decide where you sit on that spectrum before you judge a tool’s
+autonomy as a pro or a con.</p>
+<h3 id="6-cost-local-first" tabindex="-1">6. Cost &amp; local-first <a class="anchor" href="#6-cost-local-first" aria-hidden="true">#</a></h3>
+<p>Is it free or paid? Open source or closed? Does it run <a href="/blog/why-local-first-matters-for-ai-agents/">locally on your
+machine</a> (privacy, predictable cost, offline) or in the
+cloud? For many developers, local-first and open source are non-negotiable.</p>
+<h2 id="the-scoring-rubric" tabindex="-1">The scoring rubric <a class="anchor" href="#the-scoring-rubric" aria-hidden="true">#</a></h2>
+<p>For each criterion, give the tool a 0–3:</p>
+<ul>
+<li><strong>0</strong> — absent</li>
+<li><strong>1</strong> — minimal / workaround</li>
+<li><strong>2</strong> — present, partial</li>
+<li><strong>3</strong> — first-class</li>
+</ul>
+<p>Then weight by importance to <em>you</em> (×1 for “nice to have”, ×2 for “matters”, ×3 for “dealbreaker”).
+Multiply, sum, compare. A worked example for a team whose bottleneck is coordination:</p>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Weight</th>
+<th>Tool A (session manager)</th>
+<th>Tool B (coordinated hive)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Memory</td>
+<td>×3</td>
+<td>0 → 0</td>
+<td>3 → 9</td>
+</tr>
+<tr>
+<td>Messaging</td>
+<td>×3</td>
+<td>0 → 0</td>
+<td>3 → 9</td>
+</tr>
+<tr>
+<td>Orchestration</td>
+<td>×2</td>
+<td>0 → 0</td>
+<td>3 → 6</td>
+</tr>
+<tr>
+<td>Visibility</td>
+<td>×2</td>
+<td>1 → 2</td>
+<td>3 → 6</td>
+</tr>
+<tr>
+<td>Control</td>
+<td>×1</td>
+<td>3 → 3</td>
+<td>2 → 2</td>
+</tr>
+<tr>
+<td>Cost &amp; local-first</td>
+<td>×2</td>
+<td>3 → 6</td>
+<td>3 → 6</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td></td>
+<td><strong>11</strong></td>
+<td><strong>38</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Flip the weights for a team whose bottleneck is “just run three parallel tasks,” and the session
+manager wins handily — that’s the point. The rubric encodes <em>your</em> priorities, so it gives <em>your</em>
+answer. For a ready-made criteria breakdown across the real tools, see <a href="/blog/claude-code-orchestration-tools-compared/">Claude Code orchestration
+tools, compared</a>.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/how-to-choose-a-multi-agent-tool/note-2.png" alt="Hand-drawn sketch from “How to Choose a Multi-Agent Coding Tool: A Buyer's Checklist”" loading="lazy" decoding="async" /></figure>
+<h2 id="three-traps-to-avoid" tabindex="-1">Three traps to avoid <a class="anchor" href="#three-traps-to-avoid" aria-hidden="true">#</a></h2>
+<ul>
+<li><strong>Buying for a workload you don’t have.</strong> A coordinated hive is overkill for two independent tasks;
+a session manager is underpowered for a ten-agent project. Score for <em>your</em> reality.</li>
+<li><strong>Treating “more autonomy” as automatically better.</strong> Delegation is leverage <em>if</em> you trust the
+guardrails. Check how a tool escalates the critical stuff before you hand it the wheel.</li>
+<li><strong>Ignoring lock-in.</strong> Open source and local-first cost nothing to leave. Weight that if you’re
+risk-averse.</li>
+</ul>
+<h2 id="run-the-checklist" tabindex="-1">Run the checklist <a class="anchor" href="#run-the-checklist" aria-hidden="true">#</a></h2>
+<p>Pick your two or three finalists from <a href="/blog/best-claude-code-multi-agent-tools/">the roundup</a>, score
+each on the six criteria with your weights, and trust the total. The exercise is fast and it kills
+analysis paralysis.</p>
+<hr>
+<p>If your scores point at memory + messaging + orchestration, Munder Difflin is built squarely for that
+profile — and it’s free to test the thesis. <a href="/#install">Download Munder Difflin</a>; it’s open source and
+local-first.</p>
+
+
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/comparisons/">Comparisons</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/tools/">Tools</a><a class="tag" href="/blog/tags/getting-started/">Getting Started</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#start-with-the-question-behind-the-question">Start with the question behind the question</a></li><li class="lvl-2"><a href="#the-six-criteria">The six criteria</a></li><li class="lvl-3"><a href="#1-memory">1. Memory</a></li><li class="lvl-3"><a href="#2-messaging">2. Messaging</a></li><li class="lvl-3"><a href="#3-orchestration">3. Orchestration</a></li><li class="lvl-3"><a href="#4-visibility">4. Visibility</a></li><li class="lvl-3"><a href="#5-control">5. Control</a></li><li class="lvl-3"><a href="#6-cost-local-first">6. Cost &amp;amp; local-first</a></li><li class="lvl-2"><a href="#the-scoring-rubric">The scoring rubric</a></li><li class="lvl-2"><a href="#three-traps-to-avoid">Three traps to avoid</a></li><li class="lvl-2"><a href="#run-the-checklist">Run the checklist</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/human-in-the-loop-ai-agents/"><span class="k">← Older</span><span class="t">Human-in-the-Loop AI Agents: Approvals That Don&#39;t Slow You Down</span></a>
+      <a class="pn next" href="/blog/from-one-terminal-to-a-team/"><span class="k">Newer →</span><span class="t">From One Terminal to a Team: Scaling Your Claude Code Workflow</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Comparisons</h2>
+      <div class="post-grid">
+        <article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-pricing/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/grok-bot-pricing/">Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy</a></h3>
+    <p class="dek">Grok Bot has no plan of its own. It comes bundled with SuperGrok and Cursor plans from $20 to $300 a month. Here is what each one gets you, what the free trial is, and the $0 route for work agents.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-pricing/" aria-label="Read: Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-alternatives/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-alternatives/">Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse</a></h3>
+    <p class="dek">Meta Muse is US only and trains on your chats by default. Seven alternatives, from open source agents that run on your own computer to hosted ones from OpenAI, Google and SpaceXAI.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-alternatives/" aria-label="Read: Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-grok-bot-privacy/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-grok-bot-privacy/">Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both ask for your logins. We read both companies&#39; security docs: who sees your passwords, what trains on your chats, and how to keep AI agents on your own computer instead.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-grok-bot-privacy/" aria-label="Read: Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

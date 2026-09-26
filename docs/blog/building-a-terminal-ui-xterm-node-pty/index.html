@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Building a Terminal UI with xterm.js and node-pty — Munder Difflin Blog</title>
+<meta name="description" content="Wire xterm.js to a node-pty backend: stream output, write keystrokes back, handle resize, and keep many live terminals fast with a terminal pool." />
+<link rel="canonical" href="https://munderdiffl.in/blog/building-a-terminal-ui-xterm-node-pty/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Building a Terminal UI with xterm.js and node-pty — Munder Difflin Blog" />
+<meta property="og:description" content="Wire xterm.js to a node-pty backend: stream output, write keystrokes back, handle resize, and keep many live terminals fast with a terminal pool." />
+<meta property="og:url" content="https://munderdiffl.in/blog/building-a-terminal-ui-xterm-node-pty/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/building-a-terminal-ui-xterm-node-pty/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Building a Terminal UI with xterm.js and node-pty" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Internals" />
+<meta property="article:tag" content="xterm.js" />
+<meta property="article:tag" content="Terminals" />
+<meta property="article:tag" content="Electron" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Building a Terminal UI with xterm.js and node-pty — Munder Difflin Blog" />
+<meta name="twitter:description" content="Wire xterm.js to a node-pty backend: stream output, write keystrokes back, handle resize, and keep many live terminals fast with a terminal pool." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/building-a-terminal-ui-xterm-node-pty/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Building a Terminal UI with xterm.js and node-pty" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Building a Terminal UI with xterm.js and node-pty",
+  "description": "Wire xterm.js to a node-pty backend: stream output, write keystrokes back, handle resize, and keep many live terminals fast with a terminal pool.",
+  "image": ["https://munderdiffl.in/blog/assets/media/building-a-terminal-ui-xterm-node-pty/hero.png"],
+  "datePublished": "2026-06-03T00:00:00.000Z",
+  "dateModified": "2026-06-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/building-a-terminal-ui-xterm-node-pty/" },
+  "keywords": "xterm.js terminal app, xterm.js, terminal emulator, node-pty electron",
+  "articleSection": "Internals",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/building-a-terminal-ui-xterm-node-pty/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Building a Terminal UI with xterm.js and node-pty", "item": "https://munderdiffl.in/blog/building-a-terminal-ui-xterm-node-pty/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is xterm.js?", "acceptedAnswer": { "@type": "Answer", "text": "xterm.js is a terminal emulator for the browser. It renders a terminal grid in the DOM (or on a canvas/WebGL), parses ANSI escape sequences, and exposes write() for output and onData() for keystrokes — so you can pair it with a backend like node-pty to build a real, interactive terminal in a web UI." } },
+    { "@type": "Question", "name": "How do xterm.js and node-pty fit together?", "acceptedAnswer": { "@type": "Answer", "text": "node-pty runs the real shell and produces bytes; xterm.js displays them and captures input. You forward node-pty's output into xterm's write(), and send xterm's onData() keystrokes back to node-pty. The two halves are connected by your IPC layer." } },
+    { "@type": "Question", "name": "Why does my xterm.js terminal go blank when I switch tabs?", "acceptedAnswer": { "@type": "Answer", "text": "Because node-pty keeps no scrollback — if you destroy and recreate the xterm instance, the new one starts empty until the program repaints. Keep one persistent terminal per session and re-parent its element instead of recreating it." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-internals">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/internals/">Internals</a>
+    </nav>
+    <h1>Building a Terminal UI with xterm.js and node-pty</h1>
+    <p class="dek">Wire xterm.js to a node-pty backend: stream output, write keystrokes back, handle resize, and keep many live terminals fast with a terminal pool.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>8 min read</span>
+      <span class="tag kind">Internals</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/building-a-terminal-ui-xterm-node-pty/hero.png" alt="Illustration: Building a Terminal UI with xterm.js and node-pty" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>A real terminal UI is two halves wired
+together: <strong>node-pty</strong> runs the shell, <strong>xterm.js</strong> renders it. Forward PTY
+output into <code>term.write()</code>, send <code>term.onData()</code> keystrokes back to the PTY, and
+sync size with the <strong>FitAddon</strong> plus a <code>resize</code> call. The non-obvious win for
+many terminals: keep <strong>one persistent xterm per session</strong> and re-parent its DOM element
+instead of recreating it — because node-pty has no scrollback, recreating means a blank screen.</p></div>
+<p><a href="/blog/node-pty-electron-real-terminals/">node-pty gives you a real shell</a>; xterm.js gives you a place
+to see and drive it. Connecting them is straightforward in the happy path and full of small, important
+details once you have <em>many</em> live terminals — which is exactly the situation an agent harness is in.
+This post builds the wiring up from one terminal to dozens.</p>
+<h2 id="the-two-halves" tabindex="-1">The two halves <a class="anchor" href="#the-two-halves" aria-hidden="true">#</a></h2>
+<p>Keep the model clear and everything else follows:</p>
+<ul>
+<li><strong>node-pty</strong> (backend) runs the actual process in a pseudo-terminal. It emits bytes (<code>onData</code>) and
+accepts bytes (<code>write</code>) and size changes (<code>resize</code>).</li>
+<li><strong>xterm.js</strong> (frontend) is a terminal <em>emulator</em>: it renders the grid, interprets ANSI escape
+sequences into colors and cursor moves, and reports keystrokes back via its own <code>onData</code>.</li>
+</ul>
+<p>Your job is to connect them across whatever boundary sits between — in Electron, that’s IPC between the
+main process (PTY) and the renderer (xterm).</p>
+<pre class="language-text"><code class="language-text">node-pty.onData ──▶ IPC ──▶ xterm.write()        (output: shell → screen)
+xterm.onData    ──▶ IPC ──▶ node-pty.write()     (input: keys → shell)
+resize observer ──▶ IPC ──▶ node-pty.resize()    (geometry: panel → shell)</code></pre>
+<h2 id="step-1-create-the-terminal" tabindex="-1">Step 1 — Create the terminal <a class="anchor" href="#step-1-create-the-terminal" aria-hidden="true">#</a></h2>
+<p>Instantiate an xterm <code>Terminal</code>, load the <code>FitAddon</code> (it sizes the grid to its container), and open it
+into a host element:</p>
+<pre class="language-ts"><code class="language-ts"><span class="token keyword">import</span> <span class="token punctuation">{</span> Terminal <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'@xterm/xterm'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token punctuation">{</span> FitAddon <span class="token punctuation">}</span> <span class="token keyword">from</span> <span class="token string">'@xterm/addon-fit'</span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token string">'@xterm/xterm/css/xterm.css'</span><span class="token punctuation">;</span>
+
+<span class="token keyword">const</span> term <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Terminal</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  fontFamily<span class="token operator">:</span> <span class="token string">'monospace'</span><span class="token punctuation">,</span>
+  fontSize<span class="token operator">:</span> <span class="token number">14</span><span class="token punctuation">,</span>
+  lineHeight<span class="token operator">:</span> <span class="token number">1.0</span><span class="token punctuation">,</span>
+  cursorBlink<span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+  scrollback<span class="token operator">:</span> <span class="token number">10000</span><span class="token punctuation">,</span>
+  allowProposedApi<span class="token operator">:</span> <span class="token boolean">true</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">const</span> fit <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">FitAddon</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+term<span class="token punctuation">.</span><span class="token function">loadAddon</span><span class="token punctuation">(</span>fit<span class="token punctuation">)</span><span class="token punctuation">;</span>
+term<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>hostElement<span class="token punctuation">)</span><span class="token punctuation">;</span>   <span class="token comment">// ← must be in the document to measure correctly</span>
+<span class="token function">setTimeout</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> fit<span class="token punctuation">.</span><span class="token function">fit</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>One subtlety that bites early: <strong>xterm needs its host attached to the document before it can measure
+character size.</strong> <code>open()</code> an element that isn’t in the DOM yet and the geometry comes out wrong.
+That’s why the <code>fit()</code> is deferred a tick — and why, in the pooled design below, we delay <code>open()</code> until
+the first real attach.</p>
+<h2 id="step-2-stream-output-in" tabindex="-1">Step 2 — Stream output in <a class="anchor" href="#step-2-stream-output-in" aria-hidden="true">#</a></h2>
+<p>Subscribe to the PTY’s output and write each chunk to the terminal:</p>
+<pre class="language-ts"><code class="language-ts">window<span class="token punctuation">.</span>cth<span class="token punctuation">.</span><span class="token function">onPtyData</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">,</span> <span class="token punctuation">(</span>chunk<span class="token punctuation">)</span> <span class="token operator">=></span> term<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>chunk<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+window<span class="token punctuation">.</span>cth<span class="token punctuation">.</span><span class="token function">onPtyExit</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token punctuation">{</span> exitCode<span class="token punctuation">,</span> signal <span class="token punctuation">}</span><span class="token punctuation">)</span> <span class="token operator">=></span>
+  term<span class="token punctuation">.</span><span class="token function">writeln</span><span class="token punctuation">(</span><span class="token template-string"><span class="token template-punctuation string">`</span><span class="token string">\r\n\x1b[2m─ process exited (code </span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">${</span>exitCode<span class="token interpolation-punctuation punctuation">}</span></span><span class="token string">) ─\x1b[0m</span><span class="token template-punctuation string">`</span></span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p><code>term.write()</code> takes the raw bytes including escape sequences — you do <strong>not</strong> strip ANSI; that’s
+xterm’s whole job. Writing a dim “process exited” line on <code>onExit</code> is a nice touch so a dead terminal
+doesn’t just freeze silently.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/building-a-terminal-ui-xterm-node-pty/note-1.png" alt="Hand-drawn sketch from “Building a Terminal UI with xterm.js and node-pty”" loading="lazy" decoding="async" /></figure>
+<h2 id="step-3-send-keystrokes-back" tabindex="-1">Step 3 — Send keystrokes back <a class="anchor" href="#step-3-send-keystrokes-back" aria-hidden="true">#</a></h2>
+<p><code>term.onData</code> fires for every keystroke (already encoded as the bytes a terminal would send — arrow
+keys as escape sequences, Enter as <code>\r</code>, and so on). Forward them straight to the PTY:</p>
+<pre class="language-ts"><code class="language-ts">term<span class="token punctuation">.</span><span class="token function">onData</span><span class="token punctuation">(</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span> <span class="token operator">=></span> window<span class="token punctuation">.</span>cth<span class="token punctuation">.</span><span class="token function">writePty</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">,</span> data<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>That’s the entire input path. You don’t interpret keys yourself; xterm hands you terminal-ready bytes
+and node-pty feeds them to the shell. (If you want a “last command” signal for, say, a UI bubble, you
+can keep a tiny line buffer on the side — accumulate printable chars, flush on <code>\r</code>, and skip escape
+sequences — without touching the forwarding.)</p>
+<h2 id="step-4-handle-resize-properly" tabindex="-1">Step 4 — Handle resize properly <a class="anchor" href="#step-4-handle-resize-properly" aria-hidden="true">#</a></h2>
+<p>This is where lazy implementations look broken. A terminal has a <strong>character grid</strong> (cols × rows), and
+both halves must agree on it. When the panel changes size:</p>
+<ol>
+<li>Re-fit xterm to its container so it recomputes cols/rows.</li>
+<li>Tell the PTY the new geometry so the shell reflows.</li>
+</ol>
+<pre class="language-ts"><code class="language-ts"><span class="token keyword">const</span> ro <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ResizeObserver</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span>
+  fit<span class="token punctuation">.</span><span class="token function">fit</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  window<span class="token punctuation">.</span>cth<span class="token punctuation">.</span><span class="token function">resizePty</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">,</span> term<span class="token punctuation">.</span>cols<span class="token punctuation">,</span> term<span class="token punctuation">.</span>rows<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  term<span class="token punctuation">.</span><span class="token function">refresh</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> Math<span class="token punctuation">.</span><span class="token function">max</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> term<span class="token punctuation">.</span>rows <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>   <span class="token comment">// force a repaint</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ro<span class="token punctuation">.</span><span class="token function">observe</span><span class="token punctuation">(</span>containerElement<span class="token punctuation">)</span><span class="token punctuation">;</span>
+window<span class="token punctuation">.</span><span class="token function">addEventListener</span><span class="token punctuation">(</span><span class="token string">'resize'</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">=></span> <span class="token punctuation">{</span> fit<span class="token punctuation">.</span><span class="token function">fit</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> window<span class="token punctuation">.</span>cth<span class="token punctuation">.</span><span class="token function">resizePty</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">,</span> term<span class="token punctuation">.</span>cols<span class="token punctuation">,</span> term<span class="token punctuation">.</span>rows<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>A <code>ResizeObserver</code> on the container catches layout changes a window-<code>resize</code> listener misses (a
+splitter drag, a panel collapse). Skip the <code>resizePty</code> call and full-screen TUIs wrap at the old width
+— the classic “why is <code>htop</code> drawing garbage” bug.</p>
+<h2 id="step-5-the-hard-part-many-terminals-at-once" tabindex="-1">Step 5 — The hard part: many terminals at once <a class="anchor" href="#step-5-the-hard-part-many-terminals-at-once" aria-hidden="true">#</a></h2>
+<p>Everything above works for one terminal. The interesting problems start when you have a sidebar of
+agents and the user switches between them, or pops one fullscreen. The naive approach — create an xterm
+when a view mounts, dispose it on unmount — produces a notorious bug: <strong>the terminal is blank until
+something repaints it.</strong></p>
+<p>The cause is fundamental: <strong>node-pty keeps no scrollback.</strong> The scrollback buffer lives in <em>xterm</em>, not
+the PTY. So if you dispose the xterm and make a fresh one, the new instance has an empty buffer and
+stays blank until the running program happens to redraw — which for an idle shell might be never (or
+“until I drag the splitter,” as the bug reports always say).</p>
+<p>The fix is a <strong>persistent terminal pool</strong>: one xterm instance per PTY session, created once and kept
+alive for the app’s lifetime, decoupled from any particular view.</p>
+<pre class="language-ts"><code class="language-ts"><span class="token comment">// One Terminal per ptyId, alive for the whole app. Views borrow its element.</span>
+<span class="token keyword">const</span> pool <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Map<span class="token operator">&lt;</span><span class="token builtin">string</span><span class="token punctuation">,</span> TerminalEntry<span class="token operator">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">function</span> <span class="token function">acquireTerminal</span><span class="token punctuation">(</span>ptyId<span class="token operator">:</span> <span class="token builtin">string</span><span class="token punctuation">)</span><span class="token operator">:</span> TerminalEntry <span class="token punctuation">{</span>
+  <span class="token keyword">const</span> existing <span class="token operator">=</span> pool<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span>existing<span class="token punctuation">)</span> <span class="token keyword">return</span> existing<span class="token punctuation">;</span>
+
+  <span class="token keyword">const</span> host <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">createElement</span><span class="token punctuation">(</span><span class="token string">'div'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>     <span class="token comment">// detached host</span>
+  <span class="token keyword">const</span> term <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Terminal</span><span class="token punctuation">(</span><span class="token punctuation">{</span> scrollback<span class="token operator">:</span> <span class="token number">10000</span><span class="token punctuation">,</span> <span class="token comment">/* … */</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">const</span> fit <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">FitAddon</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  term<span class="token punctuation">.</span><span class="token function">loadAddon</span><span class="token punctuation">(</span>fit<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token comment">// Subscribe to the PTY stream ONCE — the buffer keeps filling even while</span>
+  <span class="token comment">// this terminal isn't shown in any view.</span>
+  window<span class="token punctuation">.</span>cth<span class="token punctuation">.</span><span class="token function">onPtyData</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">,</span> <span class="token punctuation">(</span>chunk<span class="token punctuation">)</span> <span class="token operator">=></span> term<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>chunk<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  term<span class="token punctuation">.</span><span class="token function">onData</span><span class="token punctuation">(</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span> <span class="token operator">=></span> window<span class="token punctuation">.</span>cth<span class="token punctuation">.</span><span class="token function">writePty</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">,</span> data<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token keyword">const</span> entry <span class="token operator">=</span> <span class="token punctuation">{</span> term<span class="token punctuation">,</span> fit<span class="token punctuation">,</span> host<span class="token punctuation">,</span> opened<span class="token operator">:</span> <span class="token boolean">false</span> <span class="token punctuation">}</span><span class="token punctuation">;</span>
+  pool<span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span>ptyId<span class="token punctuation">,</span> entry<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> entry<span class="token punctuation">;</span>            <span class="token comment">// note: not open()ed yet</span>
+<span class="token punctuation">}</span></code></pre>
+<p>The two ideas that make this work:</p>
+<ul>
+<li><strong>Subscribe to the stream once, for the terminal’s whole life.</strong> Output flows into the buffer
+whether or not the terminal is currently mounted in a view. When you re-show it, the content is
+already there.</li>
+<li><strong>Re-parent the host element instead of recreating the terminal.</strong> A view simply moves the existing
+<code>host</code> <code>&lt;div&gt;</code> into itself on mount and lets it go on unmount. The rendered content moves with the
+element — instant, no repaint required.</li>
+</ul>
+<pre class="language-ts"><code class="language-ts"><span class="token keyword">function</span> <span class="token function">attachTerminal</span><span class="token punctuation">(</span>entry<span class="token operator">:</span> TerminalEntry<span class="token punctuation">,</span> container<span class="token operator">:</span> HTMLElement<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  container<span class="token punctuation">.</span><span class="token function">appendChild</span><span class="token punctuation">(</span>entry<span class="token punctuation">.</span>host<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>entry<span class="token punctuation">.</span>opened<span class="token punctuation">)</span> <span class="token punctuation">{</span>            <span class="token comment">// open lazily, on first real attach</span>
+    entry<span class="token punctuation">.</span>term<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>entry<span class="token punctuation">.</span>host<span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment">// now the host is in the document → measures correctly</span>
+    entry<span class="token punctuation">.</span>opened <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>Switching agents becomes a DOM move, not a teardown. The terminal is always populated and always
+visible immediately — which is what you need when a user is flicking between a dozen live sessions.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/building-a-terminal-ui-xterm-node-pty/note-2.png" alt="Hand-drawn sketch from “Building a Terminal UI with xterm.js and node-pty”" loading="lazy" decoding="async" /></figure>
+<h2 id="performance-notes-for-dozens-of-terminals" tabindex="-1">Performance notes for dozens of terminals <a class="anchor" href="#performance-notes-for-dozens-of-terminals" aria-hidden="true">#</a></h2>
+<p>A pool keeps correctness; a few habits keep it fast:</p>
+<ul>
+<li><strong>Don’t render what’s off-screen.</strong> Only the visible terminal needs to be in the DOM and laid out.
+The pool’s buffers keep filling in the background, but you’re only painting one (or a few) at a time.</li>
+<li><strong>Pick a sane scrollback.</strong> xterm holds scrollback in memory per terminal. 10,000 lines is generous;
+multiply by many terminals and it adds up — tune it to your needs.</li>
+<li><strong>Dispose for real when a session is gone.</strong> When an agent is truly finished, tear its entry down:
+unsubscribe from the stream, <code>term.dispose()</code>, and drop it from the pool. The pool is for <em>live</em>
+sessions, not a leak.</li>
+</ul>
+<p>The deeper performance story — rendering backends, batching writes, and keeping CPU flat with many
+streaming PTYs — gets its own deep dive in
+<a href="/blog/rendering-many-live-terminals-performance/">rendering many live terminals without melting the CPU</a>,
+but the pool is the structural decision everything else builds on.</p>
+<h2 id="why-a-harness-needs-all-of-this" tabindex="-1">Why a harness needs all of this <a class="anchor" href="#why-a-harness-needs-all-of-this" aria-hidden="true">#</a></h2>
+<p>An agent harness shows you many live terminals — one per agent — and lets you switch, zoom, and watch
+them stream simultaneously. Every detail above is load-bearing for that: real shells from
+<a href="/blog/node-pty-electron-real-terminals/">node-pty</a>, a persistent pool so switching agents is instant,
+and correct resize so each agent’s TUI renders right. It’s the visible half of a
+<a href="https://munderdiffl.in/#what">multi-agent harness</a> — the part that makes “a hive of agents” something
+you can actually watch instead of a black box. And keeping those agents’ shared state safe under all
+that concurrency is the job of <a href="/blog/single-committer-git-pattern/">the single-committer git pattern</a>.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>Should I use the canvas or WebGL renderer?</strong> xterm’s DOM renderer is fine for a few terminals; for
+many high-throughput ones, an accelerated renderer addon reduces CPU. Measure with your real workload
+before reaching for it.</p>
+<p><strong>Do I need to handle ANSI parsing myself?</strong> No — that’s exactly what xterm.js does. You feed it raw
+bytes from the PTY and it handles colors, cursor movement, and the alternate screen buffer.</p>
+<hr>
+<p>Munder Difflin renders a whole floor of live Claude Code terminals with xterm.js — one persistent,
+pooled terminal per agent, switchable instantly. <a href="https://munderdiffl.in/#install">Download Munder Difflin</a>
+to watch many real terminals at once; it’s free and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What is xterm.js?</p>
+          <p class="a">xterm.js is a terminal emulator for the browser. It renders a terminal grid in the DOM (or on a canvas/WebGL), parses ANSI escape sequences, and exposes write() for output and onData() for keystrokes — so you can pair it with a backend like node-pty to build a real, interactive terminal in a web UI.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How do xterm.js and node-pty fit together?</p>
+          <p class="a">node-pty runs the real shell and produces bytes; xterm.js displays them and captures input. You forward node-pty&#39;s output into xterm&#39;s write(), and send xterm&#39;s onData() keystrokes back to node-pty. The two halves are connected by your IPC layer.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why does my xterm.js terminal go blank when I switch tabs?</p>
+          <p class="a">Because node-pty keeps no scrollback — if you destroy and recreate the xterm instance, the new one starts empty until the program repaints. Keep one persistent terminal per session and re-parent its element instead of recreating it.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/internals/">Internals</a><a class="tag" href="/blog/tags/xtermjs/">xterm.js</a><a class="tag" href="/blog/tags/terminals/">Terminals</a><a class="tag" href="/blog/tags/electron/">Electron</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-two-halves">The two halves</a></li><li class="lvl-2"><a href="#step-1-create-the-terminal">Step 1 — Create the terminal</a></li><li class="lvl-2"><a href="#step-2-stream-output-in">Step 2 — Stream output in</a></li><li class="lvl-2"><a href="#step-3-send-keystrokes-back">Step 3 — Send keystrokes back</a></li><li class="lvl-2"><a href="#step-4-handle-resize-properly">Step 4 — Handle resize properly</a></li><li class="lvl-2"><a href="#step-5-the-hard-part-many-terminals-at-once">Step 5 — The hard part: many terminals at once</a></li><li class="lvl-2"><a href="#performance-notes-for-dozens-of-terminals">Performance notes for dozens of terminals</a></li><li class="lvl-2"><a href="#why-a-harness-needs-all-of-this">Why a harness needs all of this</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/building-an-ai-office-floor/"><span class="k">← Older</span><span class="t">Building an AI &quot;Office Floor&quot;: Avatars, Pathfinding, Envelopes</span></a>
+      <a class="pn next" href="/blog/when-do-agents-need-an-agent-protocol/"><span class="k">Newer →</span><span class="t">When Do AI Agents Actually Need an Agent Protocol?</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Internals</h2>
+      <div class="post-grid">
+        <article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>INTERNALS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-22">Aug 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>10 min</span>
+    </div>
+    <h3><a href="/blog/the-spend-counter-that-went-back-to-zero/">The Spend Counter That Went Back to Zero</a></h3>
+    <p class="dek">Our own floor was under reporting what it cost by 59 percent. The counter was cumulative since process start, the app restarts, and the session id stayed the same. Here is how a monotonic invariant let us recover the real number from an append-only log.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-label="Read: The Spend Counter That Went Back to Zero">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-newline-that-silenced-windows-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-newline-that-silenced-windows-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/the-newline-that-silenced-windows-agents/">The Newline That Silenced Every Windows Agent</a></h3>
+    <p class="dek">A cmd.exe parsing rule from the 1980s meant Windows agents received exactly one line of their multi-line startup protocol — and nothing errored. The anatomy of our worst silent failure, and the fix.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-newline-that-silenced-windows-agents/" aria-label="Read: The Newline That Silenced Every Windows Agent">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/why-our-auto-update-never-ran/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-our-auto-update-never-ran/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-08">Aug 8, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/why-our-auto-update-never-ran/">Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace</a></h3>
+    <p class="dek">Munder Difflin shipped auto-update in v0.3.4 and it silently never worked in a single packaged build. The cause was one destructuring assignment across the CommonJS/ESM boundary — and a catch block that threw the evidence away. Here&#39;s how we found it, and what v0.3.7 changes.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/why-our-auto-update-never-ran/" aria-label="Read: Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

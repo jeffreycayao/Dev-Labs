@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How to Use Claude Code Plan Mode — Munder Difflin Blog</title>
+<meta name="description" content="How Claude Code&#39;s plan mode works: turning it on, what it blocks, what a real headless plan mode run prints, and how to leave it." />
+<link rel="canonical" href="https://munderdiffl.in/blog/how-to-use-claude-code-plan-mode/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="How to Use Claude Code Plan Mode — Munder Difflin Blog" />
+<meta property="og:description" content="How Claude Code&#39;s plan mode works: turning it on, what it blocks, what a real headless plan mode run prints, and how to leave it." />
+<meta property="og:url" content="https://munderdiffl.in/blog/how-to-use-claude-code-plan-mode/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/how-to-use-claude-code-plan-mode/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: How to Use Claude Code Plan Mode" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-09-11T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Guides" />
+<meta property="article:tag" content="Claude Code" />
+<meta property="article:tag" content="Getting Started" />
+<meta property="article:tag" content="Human-in-the-Loop" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="How to Use Claude Code Plan Mode — Munder Difflin Blog" />
+<meta name="twitter:description" content="How Claude Code&#39;s plan mode works: turning it on, what it blocks, what a real headless plan mode run prints, and how to leave it." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/how-to-use-claude-code-plan-mode/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: How to Use Claude Code Plan Mode" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to Use Claude Code Plan Mode",
+  "description": "How Claude Code's plan mode works: turning it on, what it blocks, what a real headless plan mode run prints, and how to leave it.",
+  "image": ["https://munderdiffl.in/blog/assets/media/how-to-use-claude-code-plan-mode/hero.png"],
+  "datePublished": "2026-09-11T00:00:00.000Z",
+  "dateModified": "2026-09-11T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/how-to-use-claude-code-plan-mode/" },
+  "keywords": "how to use claude code plan mode, how to use claude code plan mode effectively, how to enable claude code plan mode, how to exit claude code plan mode, claude code plan mode shortcut, claude code plan mode vs accept edits, should i use claude code plan mode",
+  "articleSection": "Guides",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/how-to-use-claude-code-plan-mode/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "How to Use Claude Code Plan Mode", "item": "https://munderdiffl.in/blog/how-to-use-claude-code-plan-mode/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is Claude Code plan mode?", "acceptedAnswer": { "@type": "Answer", "text": "It is one of Claude Code's permission modes. Claude reads files and runs shell commands to explore, then writes a plan, but does not edit your source. The official docs put it plainly: plan mode tells Claude to research and propose changes without making them, and edits stay blocked until you approve the plan." } },
+    { "@type": "Question", "name": "How do you enable plan mode in Claude Code?", "acceptedAnswer": { "@type": "Answer", "text": "Press Shift+Tab during a session to cycle to it, prefix a single prompt with /plan, or start the session already in it with claude --permission-mode plan. The same flag works with -p for headless runs, so scripts and CI steps can start in plan mode too." } },
+    { "@type": "Question", "name": "How do you exit plan mode?", "acceptedAnswer": { "@type": "Answer", "text": "Press Shift+Tab again to leave without approving anything, or approve the plan, which exits plan mode for you. The prompt offers Yes, and use auto mode (Yes, auto-accept edits when auto mode is unavailable), Yes, manually approve edits, or No, keep planning, which keeps you in plan mode so you can redirect Claude." } },
+    { "@type": "Question", "name": "Can plan mode edit files?", "acceptedAnswer": { "@type": "Answer", "text": "No. Plan mode blocks edits to your source until you approve the plan, even when you ask for the edit directly, and in our headless run Claude declined exactly that request. It does write the plan itself, by default under ~/.claude/plans/ (the plansDirectory setting can move it). The exception is a session started with bypass permissions available, for example with --dangerously-skip-permissions or --allow-dangerously-skip-permissions: Claude is still told to plan, but an edit it attempts then runs without prompting." } },
+    { "@type": "Question", "name": "What is the difference between plan mode and accept edits mode?", "acceptedAnswer": { "@type": "Answer", "text": "Accept edits mode auto-approves file writes and common filesystem commands like mkdir and mv, so you review changes afterward. Plan mode is the phase before that: read and explore only, meant to run first so you can approve or redirect the plan before anything gets written." } },
+    { "@type": "Question", "name": "Should you use plan mode for every task?", "acceptedAnswer": { "@type": "Answer", "text": "No. Claude Code's own best practices docs, checked 11 Sep 2026, say planning matters most when you're uncertain about the approach, the change touches multiple files, or you don't know the code well, and that you can skip it when you could describe the diff in one sentence. For a small, obvious fix, just ask Claude to make it directly." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-guides">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/guides/">Guides</a>
+    </nav>
+    <h1>How to Use Claude Code Plan Mode</h1>
+    <p class="dek">How Claude Code&#39;s plan mode works: turning it on, what it blocks, what a real headless plan mode run prints, and how to leave it.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">MD</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-09-11">Sep 11, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Guides</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/how-to-use-claude-code-plan-mode/hero.png" alt="Illustration: How to Use Claude Code Plan Mode" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Turn on <strong>plan mode</strong> with <code>claude --permission-mode plan</code>, the <code>/plan</code> prefix, or <code>Shift+Tab</code> until the status bar shows plan mode on. Claude reads your codebase and shell output but cannot edit your source, and writes a plan you read before approving it. Approving switches the session to auto mode (accept edits when auto mode is unavailable) or to approving each edit yourself; <code>Shift+Tab</code> again leaves without approving anything. The same flag works with <code>-p</code>, though a headless run has no approval prompt: it just writes the plan and exits.</p></div>
+<p>Plan mode is a Claude Code permission mode that makes Claude read your codebase and write a plan before it touches a single file. Turn it on with <code>claude --permission-mode plan</code>, the <code>/plan</code> prefix, or by pressing Shift+Tab until the status bar shows plan mode on. Nothing gets edited until you approve what it wrote.</p>
+<p>The rest of this covers how the mode actually behaves, which commands run without asking while it plans, and what a headless run with <code>--permission-mode plan</code> really prints, since most writeups describe the behavior without pasting any output. Running several Claude Code sessions at once makes this matter more: a plan per session is one document to read before anything changes, not several diffs to untangle after (<a href="/blog/manage-multiple-claude-code-sessions/">manage multiple Claude Code sessions</a>).</p>
+<h2 id="how-do-you-turn-on-plan-mode-in-claude-code" tabindex="-1">How do you turn on plan mode in Claude Code? <a class="anchor" href="#how-do-you-turn-on-plan-mode-in-claude-code" aria-hidden="true">#</a></h2>
+<p>Three ways, and they all land in the same mode. Press Shift+Tab during a session to cycle to it (the cycle runs <code>default</code>, <code>acceptEdits</code>, <code>plan</code>, then <code>bypassPermissions</code> and <code>auto</code> if they’re available, then back to <code>default</code>; Pro, Max and Team sessions start in <code>auto</code>, so plan mode is three presses away), prefix a single prompt with <code>/plan</code>, or start the session already in it with <code>claude --permission-mode plan</code> (checked 11 Sep 2026, <a href="https://code.claude.com/docs/en/permission-modes">Choose a permission mode</a>). The same flag works with <code>-p</code> for non-interactive runs.</p>
+<h2 id="what-does-plan-mode-actually-let-claude-do" tabindex="-1">What does plan mode actually let Claude do? <a class="anchor" href="#what-does-plan-mode-actually-let-claude-do" aria-hidden="true">#</a></h2>
+<p>Reads, mostly, and not much else. The docs describe it as telling “Claude to research and propose changes without making them. Claude reads files, runs shell commands to explore, and writes a plan, but does not edit your source” (checked 11 Sep 2026, <a href="https://code.claude.com/docs/en/permission-modes">Choose a permission mode</a>). When auto mode is available and the <code>useAutoModeDuringPlan</code> setting is on, which it is by default, a classifier reviews the shell commands Claude wants to run while it plans, instead of prompting you for each one; when auto mode isn’t available, anything past the built-in read-only command set still prompts as usual.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/how-to-use-claude-code-plan-mode/note-1.png" alt="Hand-drawn sketch from “How to Use Claude Code Plan Mode”" loading="lazy" decoding="async" /></figure>
+<h2 id="what-does-a-plan-mode-run-actually-print" tabindex="-1">What does a plan mode run actually print? <a class="anchor" href="#what-does-a-plan-mode-run-actually-print" aria-hidden="true">#</a></h2>
+<p>We made a two-function <code>hello.py</code> in a scratch folder on 11 Sep 2026 and ran Claude Code with <code>-p --permission-mode plan</code>, first asking for a suggestion, then asking directly for an edit to see whether plan mode holds:</p>
+<pre><code>$ claude --version
+2.1.268 (Claude Code)
+
+$ claude -p --permission-mode plan &quot;Add a multiply function to hello.py right now, actually edit the file.&quot;
+I haven't edited `hello.py` yet. Plan mode is on, and it blocks every file change except the plan file, even when you ask me to edit right away. I also can't switch plan mode off from here: the tool for that isn't available in this session.
+...
+The plan is saved at `~/.claude/plans/add-a-multiply-function-buzzing-dolphin.md`. It includes a one-line `python3` check that `multiply(3, 4) == 12`, and that `add` and `subtract` still work.
+
+Turn plan mode off (Shift+Tab in the CLI, or restart without plan mode) and tell me to go ahead, and I'll make the edit and run the check.
+</code></pre>
+<p>Told to actually edit the file, it wrote a memo about the edit instead. Fitting, for a paper company’s blog.</p>
+<p>The first prompt, “Read <code>hello.py</code> and suggest one small refactor. Do not edit any files.”, told Claude not to edit, so it proves less: it printed type-hinted versions of both functions, wrote its plan to <code>~/.claude/plans/</code>, and left <code>hello.py</code> untouched. The second run above is the real test: asked directly to edit, it still didn’t: it read <code>hello.py</code>, wrote the plan and never attempted an edit, with no approval prompt to accept.</p>
+<h2 id="how-do-you-get-out-of-plan-mode" tabindex="-1">How do you get out of plan mode? <a class="anchor" href="#how-do-you-get-out-of-plan-mode" aria-hidden="true">#</a></h2>
+<p>Two ways: reject everything with another Shift+Tab, or approve the plan, which exits plan mode for you. When the plan is ready, the CLI asks how to proceed: Yes, and use auto mode (it reads Yes, auto-accept edits when auto mode is unavailable), Yes, manually approve edits, or No, keep planning, which keeps you in plan mode so you can redirect Claude (checked 11 Sep 2026, <a href="https://code.claude.com/docs/en/permission-modes">Choose a permission mode</a>). Press Ctrl+G first if you’d rather open the plan in your own text editor and change it before Claude proceeds.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/how-to-use-claude-code-plan-mode/note-2.png" alt="Hand-drawn sketch from “How to Use Claude Code Plan Mode”" loading="lazy" decoding="async" /></figure>
+<h2 id="does-plan-mode-work-the-same-in-scripts-not-just-the-terminal" tabindex="-1">Does plan mode work the same in scripts, not just the terminal? <a class="anchor" href="#does-plan-mode-work-the-same-in-scripts-not-just-the-terminal" aria-hidden="true">#</a></h2>
+<p>Partly. Plan mode applies in a <code>-p</code> run, but there’s no approval step: Claude writes the plan, prints its summary, and exits, as the run above shows. Claude Code’s own headless docs are direct about the default: “the built-in starting permission mode is Manual on every plan, so pass the permission mode you want” (checked 11 Sep 2026, <a href="https://code.claude.com/docs/en/headless">Run Claude Code programmatically</a>), unless a project’s <code>permissions.defaultMode</code> setting already sets <code>plan</code>. Passing <code>--permission-mode plan</code> in a CI step gets you a proposed change with no edits. Set <code>plansDirectory</code> to a path inside the project (the default is <code>~/.claude/plans</code>) so a later step can upload the plan for review, the same gate as <a href="/blog/human-in-the-loop-approving-ai-agents/">approving AI agents without a queue</a>.</p>
+<h2 id="plan-mode-vs-accept-edits-mode-which-do-you-actually-want" tabindex="-1">Plan mode vs accept edits mode: which do you actually want? <a class="anchor" href="#plan-mode-vs-accept-edits-mode-which-do-you-actually-want" aria-hidden="true">#</a></h2>
+<p>Different phases of the same job, not competitors. <code>acceptEdits</code> mode auto-approves file writes and common filesystem commands like <code>mkdir</code> and <code>mv</code>, so you review changes afterward in <code>git diff</code>; plan mode blocks the edits and hands you a document to read first. Claude Code’s best practices page says planning is most useful “when you’re uncertain about the approach, when the change modifies multiple files, or when you’re unfamiliar with the code being modified” (checked 11 Sep 2026, <a href="https://code.claude.com/docs/en/best-practices">Best practices</a>). If you only want to gate one risky command rather than a whole session, <a href="/blog/claude-code-hooks-explained/">Claude Code’s hooks</a> can block a single tool call.</p>
+<p>None of this needs Munder Difflin. Each Claude Code agent on the floor is a real <code>claude</code> process, but as of Munder Difflin 0.5.2, Auto Mode is on by default and starts it with <code>--permission-mode bypassPermissions</code>, and in a session like that Claude Code does not enforce plan mode’s blocks (checked 11 Sep 2026, <a href="https://code.claude.com/docs/en/permission-modes#skip-all-checks-with-bypasspermissions-mode">Choose a permission mode</a>). Turn Auto Mode off and restart the agent if you want plan mode to hold for your Claude Code agents. <a href="https://munderdiffl.in/download">Download Munder Difflin</a> to try it, the classic office is free, and <a href="https://munderdiffl.in/#pricing">pricing</a> covers the paid plans.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What is Claude Code plan mode?</p>
+          <p class="a">It is one of Claude Code&#39;s permission modes. Claude reads files and runs shell commands to explore, then writes a plan, but does not edit your source. The official docs put it plainly: plan mode tells Claude to research and propose changes without making them, and edits stay blocked until you approve the plan.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How do you enable plan mode in Claude Code?</p>
+          <p class="a">Press Shift+Tab during a session to cycle to it, prefix a single prompt with /plan, or start the session already in it with claude --permission-mode plan. The same flag works with -p for headless runs, so scripts and CI steps can start in plan mode too.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How do you exit plan mode?</p>
+          <p class="a">Press Shift+Tab again to leave without approving anything, or approve the plan, which exits plan mode for you. The prompt offers Yes, and use auto mode (Yes, auto-accept edits when auto mode is unavailable), Yes, manually approve edits, or No, keep planning, which keeps you in plan mode so you can redirect Claude.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Can plan mode edit files?</p>
+          <p class="a">No. Plan mode blocks edits to your source until you approve the plan, even when you ask for the edit directly, and in our headless run Claude declined exactly that request. It does write the plan itself, by default under ~/.claude/plans/ (the plansDirectory setting can move it). The exception is a session started with bypass permissions available, for example with --dangerously-skip-permissions or --allow-dangerously-skip-permissions: Claude is still told to plan, but an edit it attempts then runs without prompting.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What is the difference between plan mode and accept edits mode?</p>
+          <p class="a">Accept edits mode auto-approves file writes and common filesystem commands like mkdir and mv, so you review changes afterward. Plan mode is the phase before that: read and explore only, meant to run first so you can approve or redirect the plan before anything gets written.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Should you use plan mode for every task?</p>
+          <p class="a">No. Claude Code&#39;s own best practices docs, checked 11 Sep 2026, say planning matters most when you&#39;re uncertain about the approach, the change touches multiple files, or you don&#39;t know the code well, and that you can skip it when you could describe the diff in one sentence. For a small, obvious fix, just ask Claude to make it directly.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/guides/">Guides</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a><a class="tag" href="/blog/tags/getting-started/">Getting Started</a><a class="tag" href="/blog/tags/human-in-the-loop/">Human-in-the-Loop</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#how-do-you-turn-on-plan-mode-in-claude-code">How do you turn on plan mode in Claude Code?</a></li><li class="lvl-2"><a href="#what-does-plan-mode-actually-let-claude-do">What does plan mode actually let Claude do?</a></li><li class="lvl-2"><a href="#what-does-a-plan-mode-run-actually-print">What does a plan mode run actually print?</a></li><li class="lvl-2"><a href="#how-do-you-get-out-of-plan-mode">How do you get out of plan mode?</a></li><li class="lvl-2"><a href="#does-plan-mode-work-the-same-in-scripts-not-just-the-terminal">Does plan mode work the same in scripts, not just the terminal?</a></li><li class="lvl-2"><a href="#plan-mode-vs-accept-edits-mode-which-do-you-actually-want">Plan mode vs accept edits mode: which do you actually want?</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/what-is-an-mcp-server/"><span class="k">← Older</span><span class="t">What Is an MCP Server?</span></a>
+      <a class="pn next" href="/blog/why-does-claude-code-keep-asking-for-permission/"><span class="k">Newer →</span><span class="t">Why Does Claude Code Keep Asking for Permission?</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Guides</h2>
+      <div class="post-grid">
+        <article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/build-your-personal-agi-on-your-computer/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/build-your-personal-agi-on-your-computer/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>9 min</span>
+    </div>
+    <h3><a href="/blog/build-your-personal-agi-on-your-computer/">Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin</a></h3>
+    <p class="dek">Turn Claude Code into a personal AGI on your own computer: agents with memory, schedules, Gmail, Calendar, voice and Slack, set up in Munder Difflin 0.5.2.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/build-your-personal-agi-on-your-computer/" aria-label="Read: Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-install-gemini-cli/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-install-gemini-cli/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-install-gemini-cli/">How to Install Gemini CLI, and Who Can Still Use It in 2026</a></h3>
+    <p class="dek">Install Google&#39;s Gemini CLI with npm on Mac, Windows or Linux, why Homebrew is stuck on 0.46.0, and which sign in still works after 18 Jun 2026.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-install-gemini-cli/" aria-label="Read: How to Install Gemini CLI, and Who Can Still Use It in 2026">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/claude-code-max-plan-tips/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-max-plan-tips/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/claude-code-max-plan-tips/">How to Get the Most Out of Your Claude Code Max Plan</a></h3>
+    <p class="dek">Stretch a Claude Code Max plan: model choice, context hygiene, prompt caching, subagents and unattended runs, checked against Anthropic&#39;s own pages.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/claude-code-max-plan-tips/" aria-label="Read: How to Get the Most Out of Your Claude Code Max Plan">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

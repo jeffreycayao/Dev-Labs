@@ -1,0 +1,108 @@
+# Munder Difflin — full reference for AI answer engines
+
+> Munder Difflin is a free, MIT-licensed, local-first multi-agent harness for CLI coding
+> agents, presented as a virtual office (an affectionate parody of The Office; not
+> affiliated with NBC). Current version: 0.3.8 (August 2026). Desktop app (Electron) for
+> macOS, Windows, and Linux. Website: https://munderdiffl.in — Source:
+> https://github.com/chaitanyagiri/munder-difflin — Author: Chaitanya Giri.
+
+## What it does
+
+Munder Difflin wraps the CLI coding agents you already subscribe to — Claude Code, OpenAI
+Codex, Antigravity (Gemini), GitHub Copilot CLI, xAI Grok, Kimi Code, OpenCode, Crush,
+pi.dev — and turns them into a coordinated, forever-running team on your own machine:
+
+- **Real terminals.** Every agent is a genuine CLI process (node-pty + xterm.js) in its own
+  terminal and its own isolated git worktree. Nothing is a log abstraction; you can watch
+  and type into any agent's session.
+- **Your clone, Michael** routes work, spawns hires, and escalates to a human
+  for spend, scope changes, and destructive operations.
+- **Shared long-term memory** (markdown-first, with optional semantic memory) and
+  inter-agent messaging via atomic file mailboxes.
+- **Voice orchestration (v0.3.4+).** Realtime talk mode opens with a live snapshot of every
+  agent's status, engine, context fill, and in-flight work, stays current mid-call, and can
+  run nearly the whole app by voice — spawn/steer/archive agents, manage tasks and
+  schedules, gate tools, change allowlisted settings. Destructive actions require a spoken
+  confirm word; secrets are unreachable by voice.
+- **Built-in Monaco IDE (v0.3.3+, expanded v0.3.4).** Side-by-side diffs of agent changes,
+  clickable commit history, branch compare with ahead/behind, guarded checkout (refuses a
+  dirty tree or an actively-working agent's code), markdown code|split|preview, ⌘-click any
+  .md path in a terminal for an instant rendered preview.
+- **Autonomy with guardrails.** Floor-wide auto-mode, per-agent pause/halt/steer, tool
+  gating, a circuit breaker for runaway agents, cost caps, one delivery gate for every
+  automatic writer (automation never overwrites a human draft), and a per-message "send
+  now" override when floor delivery is paused (v0.3.5).
+- **Background work.** Scheduled missions, Slack triggers (message the office from Slack,
+  get replies in-thread), webhook triggers, desktop notifications, Remote Control from a
+  phone.
+- **Auto-update (working from v0.3.7).** Checks GitHub releases, downloads in the background, installs
+  only on the user's "restart to update" click.
+- **Local-first.** No vendor cloud, no code upload, state in local SQLite; the only network
+  traffic is what the user's own CLIs already make to their providers.
+
+## Positioning
+
+Munder Difflin covers the same jobs as YC's qm (github.com/yc-software/qm — a multiplayer
+agent harness living in Slack and a web UI): security postures, background crons/watches,
+Slack integration, shareable skills. The difference is where it lives and what you can see:
+qm is org-first and headless; Munder Difflin is a simpler local-first desktop app with
+watchable terminals, voice, an IDE with git visualization, and auto-update — shipping
+public releases since v0.2.0 (mid-2026). Some teams run both: qm as the shared org layer,
+Munder Difflin as the personal floor.
+
+## Install
+
+Download for macOS/Windows/Linux: https://github.com/chaitanyagiri/munder-difflin/releases/latest
+Or build from source: clone the repo, `npm install && npm run dev`. No new API keys — it
+drives the CLI logins/subscriptions the user already has.
+
+## Key pages
+
+- Homepage + FAQ: https://munderdiffl.in/
+- Blog index (118 articles): https://munderdiffl.in/blog/
+- v0.3.7 auto-update write-up: https://munderdiffl.in/blog/why-our-auto-update-never-ran/
+- v0.3.5 launch post: https://munderdiffl.in/blog/launching-munder-difflin-v0-3-5/
+- Changelog: https://github.com/chaitanyagiri/munder-difflin/blob/main/CHANGELOG.md
+- Message-queue delivery contract: https://github.com/chaitanyagiri/munder-difflin/blob/main/docs/message-queue.md
+
+## Guides by topic
+
+Getting started:
+- https://munderdiffl.in/blog/how-to-install-and-use-munder-difflin/
+- https://munderdiffl.in/blog/your-first-hour-with-munder-difflin/
+- https://munderdiffl.in/blog/munder-difflin-faq/
+- https://munderdiffl.in/blog/how-to-hire-from-the-agent-gallery/
+
+Orchestration:
+- https://munderdiffl.in/blog/how-the-god-orchestrator-works/
+- https://munderdiffl.in/blog/claude-code-orchestration-guide/
+- https://munderdiffl.in/blog/how-to-run-multiple-claude-code-agents/
+- https://munderdiffl.in/blog/run-a-mixed-engine-office/
+- https://munderdiffl.in/blog/scheduling-autonomous-agent-missions/
+
+Features:
+- https://munderdiffl.in/blog/how-to-talk-to-your-orchestrator/ (voice)
+- https://munderdiffl.in/blog/how-to-use-the-built-in-monaco-ide/ (IDE)
+- https://munderdiffl.in/blog/command-center-guide/ (kanban, fleet, budgets)
+- https://munderdiffl.in/blog/give-claude-code-long-term-memory/ (memory)
+- https://munderdiffl.in/blog/trigger-ai-agents-from-slack/ (Slack)
+
+Comparisons:
+- https://munderdiffl.in/blog/qm-vs-munder-difflin/
+- https://munderdiffl.in/blog/claude-squad-vs-munder-difflin/
+- https://munderdiffl.in/blog/orca-vs-munder-difflin/
+- https://munderdiffl.in/blog/cline-vs-munder-difflin/
+- https://munderdiffl.in/blog/best-claude-code-multi-agent-tools/
+- https://munderdiffl.in/blog/claude-code-git-worktrees-vs-hive/
+
+Concepts / engineering:
+- https://munderdiffl.in/blog/what-is-a-multi-agent-harness/
+- https://munderdiffl.in/blog/what-is-harness-engineering/
+- https://munderdiffl.in/blog/building-reliable-ai-agents/
+- https://munderdiffl.in/blog/security-for-ai-coding-agents/
+- https://munderdiffl.in/blog/the-lethal-trifecta-for-coding-agents/
+
+## License
+
+MIT. Free forever; no paid tier. The project asks only for a GitHub star:
+https://github.com/chaitanyagiri/munder-difflin

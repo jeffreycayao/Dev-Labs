@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Claude Code Orchestration Tools, Compared — Munder Difflin Blog</title>
+<meta name="description" content="Claude Code orchestration tools compared on memory, messaging, visibility, control, and local-first — across Claude Squad, Conductor, Crystal, and more." />
+<link rel="canonical" href="https://munderdiffl.in/blog/claude-code-orchestration-tools-compared/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Claude Code Orchestration Tools, Compared — Munder Difflin Blog" />
+<meta property="og:description" content="Claude Code orchestration tools compared on memory, messaging, visibility, control, and local-first — across Claude Squad, Conductor, Crystal, and more." />
+<meta property="og:url" content="https://munderdiffl.in/blog/claude-code-orchestration-tools-compared/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/claude-code-orchestration-tools-compared/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Claude Code Orchestration Tools, Compared" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-04T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Comparisons" />
+<meta property="article:tag" content="Orchestration" />
+<meta property="article:tag" content="Claude Code" />
+<meta property="article:tag" content="Tools" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Claude Code Orchestration Tools, Compared — Munder Difflin Blog" />
+<meta name="twitter:description" content="Claude Code orchestration tools compared on memory, messaging, visibility, control, and local-first — across Claude Squad, Conductor, Crystal, and more." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/claude-code-orchestration-tools-compared/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Claude Code Orchestration Tools, Compared" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Claude Code Orchestration Tools, Compared",
+  "description": "Claude Code orchestration tools compared on memory, messaging, visibility, control, and local-first — across Claude Squad, Conductor, Crystal, and more.",
+  "image": ["https://munderdiffl.in/blog/assets/media/claude-code-orchestration-tools-compared/hero.png"],
+  "datePublished": "2026-06-04T00:00:00.000Z",
+  "dateModified": "2026-06-04T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/claude-code-orchestration-tools-compared/" },
+  "keywords": "claude code orchestration tools compared, claude code orchestration tools compared, best claude code multi-agent tools, claude code orchestration",
+  "articleSection": "Comparisons",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/claude-code-orchestration-tools-compared/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Claude Code Orchestration Tools, Compared", "item": "https://munderdiffl.in/blog/claude-code-orchestration-tools-compared/" }
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-comparisons">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/comparisons/">Comparisons</a>
+    </nav>
+    <h1>Claude Code Orchestration Tools, Compared</h1>
+    <p class="dek">Claude Code orchestration tools compared on memory, messaging, visibility, control, and local-first — across Claude Squad, Conductor, Crystal, and more.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>3 min read</span>
+      <span class="tag kind">Comparisons</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/claude-code-orchestration-tools-compared/hero.png" alt="Illustration: Claude Code Orchestration Tools, Compared" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Compare <strong>Claude Code orchestration
+tools</strong> on five criteria that actually change your day: <strong>shared memory</strong>,
+<strong>inter-agent messaging</strong>, <strong>visibility</strong>, <strong>control</strong>, and
+<strong>local-first</strong>. Session managers and worktree apps score high on control and simplicity;
+a coordinated hive scores high on memory, messaging, and visibility. Score the tools against <em>your</em>
+priorities, not a generic "best."</p></div>
+<p>“Orchestration” gets used loosely. To compare tools meaningfully, you need criteria that map to real
+outcomes — not feature checklists. Here are the five that matter for <a href="/#how">orchestrating Claude Code
+agents</a>, and how the main tools stack up against each.</p>
+<h2 id="the-five-criteria-that-matter" tabindex="-1">The five criteria that matter <a class="anchor" href="#the-five-criteria-that-matter" aria-hidden="true">#</a></h2>
+<ol>
+<li><strong>Shared memory</strong> — do agents pool what they learn into a durable, cross-session
+<a href="/blog/give-claude-code-long-term-memory/">long-term memory</a>, or does each start cold?</li>
+<li><strong>Inter-agent messaging</strong> — can agents hand work and findings to each other directly, or do you
+relay everything?</li>
+<li><strong>Visibility</strong> — can you <em>see</em> what the team is doing, or is it a black box of terminal tabs?</li>
+<li><strong>Control</strong> — how much do you steer vs. delegate? Manual assignment is more control; an
+orchestrator is more leverage.</li>
+<li><strong>Local-first</strong> — does everything run on your machine (privacy, cost, offline), or in the cloud?</li>
+</ol>
+<p>A sixth practical factor — <strong>footprint</strong> — decides whether a tool is overkill for your workload.
+We’ll fold it into the verdict.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/claude-code-orchestration-tools-compared/note-1.png" alt="Hand-drawn sketch from “Claude Code Orchestration Tools, Compared”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-comparison" tabindex="-1">The comparison <a class="anchor" href="#the-comparison" aria-hidden="true">#</a></h2>
+<p>Scored as ●●● strong · ●●○ partial · ●○○ minimal, to the best of our knowledge at the time of writing.
+Tools evolve — verify against each project’s current docs.</p>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Claude Squad</th>
+<th>Conductor</th>
+<th>Crystal</th>
+<th>vibe-kanban</th>
+<th>Munder Difflin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shared memory</td>
+<td>●○○</td>
+<td>●○○</td>
+<td>●○○</td>
+<td>●○○</td>
+<td>●●●</td>
+</tr>
+<tr>
+<td>Inter-agent messaging</td>
+<td>●○○</td>
+<td>●○○</td>
+<td>●○○</td>
+<td>●●○</td>
+<td>●●●</td>
+</tr>
+<tr>
+<td>Visibility</td>
+<td>●●○</td>
+<td>●●●</td>
+<td>●●○</td>
+<td>●●●</td>
+<td>●●●</td>
+</tr>
+<tr>
+<td>Control (manual ↔ delegated)</td>
+<td>manual</td>
+<td>manual</td>
+<td>manual</td>
+<td>board</td>
+<td>delegated + escalation</td>
+</tr>
+<tr>
+<td>Local-first</td>
+<td>●●●</td>
+<td>●●●</td>
+<td>●●●</td>
+<td>●●○</td>
+<td>●●●</td>
+</tr>
+<tr>
+<td>Footprint</td>
+<td>tiny</td>
+<td>medium</td>
+<td>medium</td>
+<td>medium</td>
+<td>larger</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Read the table as a fit, not a scoreboard. The tools clustered on the left optimize for <strong>control and
+simplicity</strong>; Munder Difflin optimizes for <strong>coordination</strong> (memory + messaging + a routing
+orchestrator). Both are legitimate.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/claude-code-orchestration-tools-compared/note-2.png" alt="Hand-drawn sketch from “Claude Code Orchestration Tools, Compared”" loading="lazy" decoding="async" /></figure>
+<h2 id="how-to-read-each-criterion" tabindex="-1">How to read each criterion <a class="anchor" href="#how-to-read-each-criterion" aria-hidden="true">#</a></h2>
+<h3 id="shared-memory-is-the-real-divider" tabindex="-1">Shared memory is the real divider <a class="anchor" href="#shared-memory-is-the-real-divider" aria-hidden="true">#</a></h3>
+<p>This is where the field genuinely splits. Session managers and worktree apps (Claude Squad, Conductor,
+Crystal) keep each agent’s context isolated — great for clean parallel attempts, but the team forgets
+between runs. vibe-kanban’s cards hold task state, not a shared brain. A hive with a <a href="/#how">semantic memory
+layer</a> is the outlier: every agent reads and writes MemPalace, so knowledge compounds.</p>
+<h3 id="messaging-vs-you-as-the-bus" tabindex="-1">Messaging vs. you-as-the-bus <a class="anchor" href="#messaging-vs-you-as-the-bus" aria-hidden="true">#</a></h3>
+<p>Most tools route coordination through you. vibe-kanban gives the board a coordinating role; a hive
+goes further with agent-to-agent mailboxes so findings flow without a human courier.</p>
+<h3 id="visibility-takes-different-forms" tabindex="-1">Visibility takes different forms <a class="anchor" href="#visibility-takes-different-forms" aria-hidden="true">#</a></h3>
+<p>A TUI list (Claude Squad), a diff-review GUI (Conductor, Crystal), a board (vibe-kanban), or a live
+office floor (Munder Difflin) — all “visible,” but they answer different questions. A floor answers
+“what’s everyone doing <em>right now</em>?”; a board answers “what’s the state of the backlog?”</p>
+<h3 id="control-is-a-preference-not-a-ranking" tabindex="-1">Control is a preference, not a ranking <a class="anchor" href="#control-is-a-preference-not-a-ranking" aria-hidden="true">#</a></h3>
+<p>More manual control (assign every task) suits small, deliberate workloads. More delegation (an
+orchestrator that routes, escalating only the critical) suits larger, fluid ones. Neither is “better”
+— it’s about how much you want to drive.</p>
+<h3 id="local-first-is-increasingly-a-deciding-factor" tabindex="-1">Local-first is increasingly a deciding factor <a class="anchor" href="#local-first-is-increasingly-a-deciding-factor" aria-hidden="true">#</a></h3>
+<p>Running the harness, agents, and memory <a href="/blog/why-local-first-matters-for-ai-agents/">on your own machine</a>
+buys privacy, predictable cost, and offline capability. Most of these tools are local; confirm where
+each one runs before you assume.</p>
+<h2 id="matching-tools-to-priorities" tabindex="-1">Matching tools to priorities <a class="anchor" href="#matching-tools-to-priorities" aria-hidden="true">#</a></h2>
+<ul>
+<li><strong>Prioritize simplicity + control</strong> → Claude Squad.</li>
+<li><strong>Prioritize Mac-native parallel review</strong> → Conductor.</li>
+<li><strong>Prioritize open-source parallel experiments</strong> → Crystal.</li>
+<li><strong>Prioritize a task-board workflow</strong> → vibe-kanban.</li>
+<li><strong>Prioritize memory + messaging + delegated routing</strong> → Munder Difflin.</li>
+</ul>
+<p>If you want a structured way to apply this to your own situation, the <a href="/blog/how-to-choose-a-multi-agent-tool/">buyer’s
+checklist</a> turns these criteria into a scoring rubric, and a
+<a href="/blog/conductor-claude-code-alternative/">Conductor alternative</a> digs into what “orchestration”
+should mean.</p>
+<hr>
+<p>If memory, messaging, and delegated orchestration top your list, the fastest way to judge is to run
+one: <a href="/#install">download Munder Difflin</a> — free, open source, and local-first on macOS, Windows, and
+Linux.</p>
+
+
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/comparisons/">Comparisons</a><a class="tag" href="/blog/tags/orchestration/">Orchestration</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a><a class="tag" href="/blog/tags/tools/">Tools</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-five-criteria-that-matter">The five criteria that matter</a></li><li class="lvl-2"><a href="#the-comparison">The comparison</a></li><li class="lvl-2"><a href="#how-to-read-each-criterion">How to read each criterion</a></li><li class="lvl-3"><a href="#shared-memory-is-the-real-divider">Shared memory is the real divider</a></li><li class="lvl-3"><a href="#messaging-vs-you-as-the-bus">Messaging vs. you-as-the-bus</a></li><li class="lvl-3"><a href="#visibility-takes-different-forms">Visibility takes different forms</a></li><li class="lvl-3"><a href="#control-is-a-preference-not-a-ranking">Control is a preference, not a ranking</a></li><li class="lvl-3"><a href="#local-first-is-increasingly-a-deciding-factor">Local-first is increasingly a deciding factor</a></li><li class="lvl-2"><a href="#matching-tools-to-priorities">Matching tools to priorities</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/claude-squad-vs-munder-difflin/"><span class="k">← Older</span><span class="t">Claude Squad vs Munder Difflin: Which Should You Use?</span></a>
+      <a class="pn next" href="/blog/claude-code-git-worktrees-vs-hive/"><span class="k">Newer →</span><span class="t">Git Worktrees vs a Hive: Two Ways to Parallelize Claude Code</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Comparisons</h2>
+      <div class="post-grid">
+        <article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-pricing/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/grok-bot-pricing/">Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy</a></h3>
+    <p class="dek">Grok Bot has no plan of its own. It comes bundled with SuperGrok and Cursor plans from $20 to $300 a month. Here is what each one gets you, what the free trial is, and the $0 route for work agents.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-pricing/" aria-label="Read: Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-alternatives/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-alternatives/">Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse</a></h3>
+    <p class="dek">Meta Muse is US only and trains on your chats by default. Seven alternatives, from open source agents that run on your own computer to hosted ones from OpenAI, Google and SpaceXAI.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-alternatives/" aria-label="Read: Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-grok-bot-privacy/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-grok-bot-privacy/">Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both ask for your logins. We read both companies&#39; security docs: who sees your passwords, what trains on your chats, and how to keep AI agents on your own computer instead.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-grok-bot-privacy/" aria-label="Read: Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

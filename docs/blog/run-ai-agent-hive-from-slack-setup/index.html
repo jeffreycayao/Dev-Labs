@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Run Your AI Agent Hive from Slack: The Complete Setup — Munder Difflin Blog</title>
+<meta name="description" content="Step-by-step setup for driving Munder Difflin&#39;s AI agent hive from Slack: create the app, set scopes, paste the tunnel Request URL, and @mention your bot to start work — done-summaries post back in-thread." />
+<link rel="canonical" href="https://munderdiffl.in/blog/run-ai-agent-hive-from-slack-setup/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Run Your AI Agent Hive from Slack: The Complete Setup — Munder Difflin Blog" />
+<meta property="og:description" content="Step-by-step setup for driving Munder Difflin&#39;s AI agent hive from Slack: create the app, set scopes, paste the tunnel Request URL, and @mention your bot to start work — done-summaries post back in-thread." />
+<meta property="og:url" content="https://munderdiffl.in/blog/run-ai-agent-hive-from-slack-setup/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/run-ai-agent-hive-from-slack-setup/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Run Your AI Agent Hive from Slack: The Complete Setup" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-10T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Guides" />
+<meta property="article:tag" content="Automation" />
+<meta property="article:tag" content="Slack" />
+<meta property="article:tag" content="Hive" />
+<meta property="article:tag" content="Setup" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Run Your AI Agent Hive from Slack: The Complete Setup — Munder Difflin Blog" />
+<meta name="twitter:description" content="Step-by-step setup for driving Munder Difflin&#39;s AI agent hive from Slack: create the app, set scopes, paste the tunnel Request URL, and @mention your bot to start work — done-summaries post back in-thread." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/run-ai-agent-hive-from-slack-setup/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Run Your AI Agent Hive from Slack: The Complete Setup" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Run Your AI Agent Hive from Slack: The Complete Setup",
+  "description": "Step-by-step setup for driving Munder Difflin's AI agent hive from Slack: create the app, set scopes, paste the tunnel Request URL, and @mention your bot to start work — done-summaries post back in-thread.",
+  "image": ["https://munderdiffl.in/blog/assets/media/run-ai-agent-hive-from-slack-setup/hero.png"],
+  "datePublished": "2026-06-10T00:00:00.000Z",
+  "dateModified": "2026-06-10T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/run-ai-agent-hive-from-slack-setup/" },
+  "keywords": "slack ai agent setup, slack bot ai agents, slack events api webhook, trigger agents from slack, slack app mention bot",
+  "articleSection": "Guides",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/run-ai-agent-hive-from-slack-setup/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Run Your AI Agent Hive from Slack: The Complete Setup", "item": "https://munderdiffl.in/blog/run-ai-agent-hive-from-slack-setup/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "How do I connect Slack to Munder Difflin?", "acceptedAnswer": { "@type": "Answer", "text": "Create a Slack app at api.slack.com/apps, grant the bot the chat:write, channels:history, and groups:history scopes, install it, then paste the Signing Secret and Bot User OAuth Token into Munder Difflin's Settings. Enable Slack, copy the public tunnel Request URL the app gives you into Slack's Event Subscriptions, and subscribe to app_mention plus message events. @mention the bot in a channel to start work." } },
+    { "@type": "Question", "name": "Which Slack scopes does the hive need?", "acceptedAnswer": { "@type": "Answer", "text": "Three Bot Token Scopes: chat:write (so the bot can post done-summaries back in-thread), channels:history and groups:history (so Slack delivers the message and thread-reply events the hive listens to). The Signing Secret authenticates every inbound request; the xoxb- Bot User OAuth Token authorizes the bot's replies." } },
+    { "@type": "Question", "name": "Why did Slack stop triggering my agents?", "acceptedAnswer": { "@type": "Answer", "text": "The public Request URL comes from a local tunnel that is ephemeral — it rotates every time you stop and start the app. If triggers go quiet, restart Munder Difflin, copy the new tunnel URL, and re-paste it into Slack's Event Subscriptions → Request URL. Slack re-verifies and triggers resume." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-guides">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/guides/">Guides</a>
+    </nav>
+    <h1>Run Your AI Agent Hive from Slack: The Complete Setup</h1>
+    <p class="dek">Step-by-step setup for driving Munder Difflin&#39;s AI agent hive from Slack: create the app, set scopes, paste the tunnel Request URL, and @mention your bot to start work — done-summaries post back in-thread.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>7 min read</span>
+      <span class="tag kind">Guides</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/run-ai-agent-hive-from-slack-setup/hero.png" alt="Illustration: Run Your AI Agent Hive from Slack: The Complete Setup" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout note"><span class="ic">0.5.2 update</span><p>On Munder Difflin 0.5.2 or later, Slack connects without a public URL, and the fields have moved. Follow <a href="/blog/connect-slack-to-munder-difflin/">How to Connect Slack to Munder Difflin 0.5.2</a> for the current setup.</p></div>
+<div class="callout tldr"><span class="ic">TL;DR</span><p>This is the full, working setup for driving your
+<strong>Munder Difflin</strong> hive from Slack. Create a Slack app, add three bot scopes
+(<code>chat:write</code>, <code>channels:history</code>, <code>groups:history</code>), paste the
+<strong>Signing Secret</strong> and <strong>Bot User OAuth Token</strong> into Settings, then drop the
+app's public <strong>tunnel Request URL</strong> into Slack's Event Subscriptions and subscribe to
+<code>app_mention</code> + <code>message</code> events. <strong>@mention the bot</strong> to kick off
+work; the office replies in-thread, ingests file attachments, and posts a done-summary when the task
+finishes. One quirk to remember: that tunnel URL rotates on restart.</p></div>
+<p>Munder Difflin runs a virtual office of AI agents on your own machine. Most days you drive that office
+from the desktop app. But the request often starts somewhere else — a teammate asks in a channel, or
+you’re away from your desk and want to kick off a run from your phone. The Slack integration closes that
+gap: <strong>@mention your bot in Slack, and the message becomes work for your hive.</strong> When the task finishes,
+a summary posts straight back into the same thread.</p>
+<p>This is a complete how-to for the setup that’s live right now. It has two halves: the Slack app side
+(<a href="http://api.slack.com">api.slack.com</a>), and the Munder Difflin side (Settings). Do them in order and you’ll be triggering
+agents from chat in about ten minutes.</p>
+<h2 id="what-youre-building" tabindex="-1">What you’re building <a class="anchor" href="#what-youre-building" aria-hidden="true">#</a></h2>
+<p>A message that @mentions your bot in a connected Slack channel becomes a task in
+<a href="/blog/how-the-god-orchestrator-works/">the orchestrator’s</a> queue — exactly like a task you’d type into
+the app yourself. GOD then triages it and routes it to the right agent. Two things make this feel
+conversational rather than fire-and-forget:</p>
+<ul>
+<li><strong>Thread activation.</strong> The first @mention in a thread “activates” it. After that, you can keep replying
+in that same thread <em>without</em> re-mentioning the bot, and the hive keeps listening. It’s a real
+back-and-forth, not a one-shot command.</li>
+<li><strong>Done-summaries.</strong> When the work lands, the office posts a summary reply <strong>in the same thread</strong> via
+Slack’s <code>chat.postMessage</code>. You see the result where you asked the question.</li>
+</ul>
+<p>It also reads <strong>file and image attachments</strong> — drop a screenshot or a log file alongside your @mention
+and the hive ingests it.</p>
+<p>Under the hood there’s no <code>@slack/bolt</code>, no framework, and nothing hosted in the cloud. A tiny
+<code>node:http</code> server inside the app implements just the slice of Slack’s <strong>Events API</strong> it needs, and a
+local tunnel gives Slack a public doorbell to ring. Your agents, their memory, and your code never leave
+your machine.</p>
+<h2 id="part-1-create-the-slack-app" tabindex="-1">Part 1 — Create the Slack app <a class="anchor" href="#part-1-create-the-slack-app" aria-hidden="true">#</a></h2>
+<p>Head to <a href="https://api.slack.com/apps">api.slack.com/apps</a> and create a new app <strong>from scratch</strong>, in the
+workspace you want the bot to live in.</p>
+<p>You’ll collect two secrets and set three scopes. Here’s exactly where each lives.</p>
+<h3 id="signing-secret" tabindex="-1">Signing Secret <a class="anchor" href="#signing-secret" aria-hidden="true">#</a></h3>
+<p>In your app’s left nav, open <strong>Basic Information</strong> and find <strong>App Credentials</strong>. Copy the <strong>Signing
+Secret</strong>. This is what Munder Difflin uses to verify that every inbound request is genuinely from Slack —
+it never leaves your machine and is never logged.</p>
+<h3 id="bot-token-scopes" tabindex="-1">Bot Token Scopes <a class="anchor" href="#bot-token-scopes" aria-hidden="true">#</a></h3>
+<p>Open <strong>OAuth &amp; Permissions → Scopes → Bot Token Scopes</strong> and add these three:</p>
+<ul>
+<li><strong><code>chat:write</code></strong> — lets the bot post replies, including the done-summary, back into the thread.</li>
+<li><strong><code>channels:history</code></strong> — lets Slack deliver message and thread-reply events from <strong>public</strong> channels.</li>
+<li><strong><code>groups:history</code></strong> — the same, for <strong>private</strong> channels.</li>
+</ul>
+<p>You don’t need anything beyond these three. The hive learns its own bot user id automatically from each
+event, so there’s no extra scope just to detect mentions.</p>
+<h3 id="install-and-grab-the-bot-user-oauth-token" tabindex="-1">Install and grab the Bot User OAuth Token <a class="anchor" href="#install-and-grab-the-bot-user-oauth-token" aria-hidden="true">#</a></h3>
+<p>Still on <strong>OAuth &amp; Permissions</strong>, click <strong>Install to Workspace</strong> and approve. Slack then shows a <strong>Bot
+User OAuth Token</strong> that starts with <strong><code>xoxb-</code></strong> — copy it. That token authorizes the bot’s replies; like
+the signing secret, it stays in the app’s main process and is never logged.</p>
+<blockquote>
+<p>Keep both values handy. You’ll paste them into Munder Difflin next, then come back to finish Event
+Subscriptions.</p>
+</blockquote>
+<figure class="fig fig-inline"><img src="/blog/assets/media/run-ai-agent-hive-from-slack-setup/note-1.png" alt="Hand-drawn sketch from “Run Your AI Agent Hive from Slack: The Complete Setup”" loading="lazy" decoding="async" /></figure>
+<h2 id="part-2-configure-munder-difflin" tabindex="-1">Part 2 — Configure Munder Difflin <a class="anchor" href="#part-2-configure-munder-difflin" aria-hidden="true">#</a></h2>
+<p>Open Munder Difflin and go to <strong>Settings</strong>. In the Slack section:</p>
+<ol>
+<li><strong>Enable Slack.</strong></li>
+<li>Paste the <strong>Signing Secret</strong>.</li>
+<li>Paste the <strong>Bot User OAuth Token</strong> (<code>xoxb-…</code>).</li>
+<li><em>(Optional)</em> Set a <strong>Channel ID</strong> to restrict ingestion to a single channel. Leave it blank to accept
+any channel the bot is in. This is the cleanest way to keep a noisy workspace from turning into a
+noisy hive.</li>
+<li><em>(Optional)</em> Change the <strong>port</strong> if <code>3847</code> (the default) is already taken on your machine.</li>
+</ol>
+<p>Start it. The app binds the local webhook server and opens a public tunnel, then shows you a <strong>Request
+URL</strong> — the public address Slack will call. Copy that URL; you need it for the last step.</p>
+<p>If the tunnel can’t start, the app surfaces a real error rather than handing you a dead URL. The local
+handler is the security boundary, so it stays up regardless — but you do need a working tunnel URL for
+Slack to reach it.</p>
+<h2 id="part-3-point-slack-at-your-request-url" tabindex="-1">Part 3 — Point Slack at your Request URL <a class="anchor" href="#part-3-point-slack-at-your-request-url" aria-hidden="true">#</a></h2>
+<p>Back in your Slack app, open <strong>Event Subscriptions</strong> and toggle <strong>Enable Events</strong> on.</p>
+<p>Paste the <strong>Request URL</strong> from Munder Difflin into the <strong>Request URL</strong> field. Slack immediately fires a
+one-time <code>url_verification</code> handshake at it; the app answers the challenge and Slack shows a green
+<strong>Verified</strong>. (If it doesn’t verify, jump to the troubleshooting note below — it’s almost always the
+tunnel.)</p>
+<p>Now scroll to <strong>Subscribe to bot events</strong> and add:</p>
+<ul>
+<li><strong><code>app_mention</code></strong> — fires when someone @mentions the bot. This is the primary trigger.</li>
+<li><strong><code>message.channels</code></strong> — message events in public channels (for <strong>thread replies</strong> in an activated
+thread, and <strong>file_share</strong> uploads).</li>
+<li><strong><code>message.groups</code></strong> — the same, for private channels.</li>
+</ul>
+<p><strong>Save changes.</strong> Slack may prompt you to reinstall the app to apply the new event subscriptions — do it.</p>
+<p>That’s the whole loop. The hive triggers on:</p>
+<ul>
+<li>a direct <strong>@mention</strong> of the bot in a connected channel,</li>
+<li>any <strong>reply inside a thread</strong> the bot was already mentioned in (no re-mention needed),</li>
+<li>a <strong>file or image upload</strong> that @mentions the bot.</li>
+</ul>
+<p>It deliberately ignores the bot’s own posts, edits, channel-join notices, and every other message
+subtype — so it never talks to itself and never reacts to channel noise.</p>
+<h2 id="try-it" tabindex="-1">Try it <a class="anchor" href="#try-it" aria-hidden="true">#</a></h2>
+<p>In a channel where the bot is a member, type something like:</p>
+<blockquote>
+<p>@YourBot summarize the open PRs in the api repo and flag anything stale</p>
+</blockquote>
+<p>The message lands in the queue, GOD routes it, and an agent picks it up. Keep the conversation going by
+replying in that same thread — the hive is still listening. When the task is done, a summary appears
+right there in the thread.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/run-ai-agent-hive-from-slack-setup/note-2.png" alt="Hand-drawn sketch from “Run Your AI Agent Hive from Slack: The Complete Setup”" loading="lazy" decoding="async" /></figure>
+<h2 id="troubleshooting-the-request-url-rotates-on-restart" tabindex="-1">Troubleshooting: the Request URL rotates on restart <a class="anchor" href="#troubleshooting-the-request-url-rotates-on-restart" aria-hidden="true">#</a></h2>
+<p>Here’s the one quirk worth tattooing on the back of your hand. <strong>The public Request URL comes from an
+ephemeral tunnel, and it changes every time the app restarts.</strong> So if Slack suddenly stops triggering
+your agents — verification was green yesterday, silence today — it’s almost always because the app was
+restarted and the old URL went stale.</p>
+<p>The fix is quick:</p>
+<ol>
+<li><strong>Stop and Start</strong> Munder Difflin’s Slack integration (or just relaunch the app).</li>
+<li>Copy the <strong>new Request URL</strong> it shows you.</li>
+<li>Paste it back into Slack’s <strong>Event Subscriptions → Request URL</strong> and let it re-verify.</li>
+</ol>
+<p>Triggers resume the moment Slack shows <strong>Verified</strong> again. If you find yourself doing this a lot, get
+into the habit of re-checking the Request URL whenever you restart — it’s the single most common reason
+Slack triggering “breaks.”</p>
+<h2 id="why-its-built-this-way" tabindex="-1">Why it’s built this way <a class="anchor" href="#why-its-built-this-way" aria-hidden="true">#</a></h2>
+<p>It would have been easier to host this in a cloud function. Doing it as a <strong>local</strong> webhook is the
+point. Every request is HMAC-verified against your signing secret in constant time, with a five-minute
+replay guard and a size cap checked first — anything suspicious gets a flat 403. The secrets stay on
+your box. Slack is only a thin remote surface for <em>starting and watching</em> work; the office itself —
+agents, memory, git history — never leaves your machine. It’s the same
+<a href="/blog/local-first-ai-agent-orchestration/">local-first philosophy</a> behind everything Munder Difflin
+does: keep the control plane on your computer, and let the outside world knock politely at the door.</p>
+<p>Pair it with <a href="/blog/scheduling-autonomous-agent-missions/">scheduled missions</a> and the picture rounds
+out: timers put recurring work into the queue, Slack puts ad-hoc work into the queue, and your office
+runs both — whether or not you’re watching.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>How do I connect Slack to Munder Difflin?</strong> Create a Slack app, add the <code>chat:write</code>,
+<code>channels:history</code>, and <code>groups:history</code> bot scopes, install it, then paste the Signing Secret and
+<code>xoxb-</code> Bot User OAuth Token into Settings. Copy the app’s Request URL into Slack’s Event Subscriptions,
+subscribe to <code>app_mention</code> + message events, and @mention the bot to start work.</p>
+<p><strong>Which scopes does it need?</strong> Just three: <code>chat:write</code> for replies and done-summaries,
+<code>channels:history</code> and <code>groups:history</code> so Slack delivers the message and thread-reply events the hive
+listens to.</p>
+<p><strong>Why did Slack stop triggering?</strong> The Request URL is from an ephemeral tunnel that rotates on restart.
+Relaunch the app, copy the new URL, and re-paste it into Event Subscriptions.</p>
+<hr>
+<p>Munder Difflin turns a Slack thread into a remote control for an AI office that still lives entirely on
+your machine — <a href="https://munderdiffl.in/#how">orchestrated by GOD</a>, verified at the edge, and queued like
+any other task. <a href="https://munderdiffl.in/#install">Download Munder Difflin</a> to run your hive from chat;
+it’s free and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">How do I connect Slack to Munder Difflin?</p>
+          <p class="a">Create a Slack app at api.slack.com/apps, grant the bot the chat:write, channels:history, and groups:history scopes, install it, then paste the Signing Secret and Bot User OAuth Token into Munder Difflin&#39;s Settings. Enable Slack, copy the public tunnel Request URL the app gives you into Slack&#39;s Event Subscriptions, and subscribe to app_mention plus message events. @mention the bot in a channel to start work.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Which Slack scopes does the hive need?</p>
+          <p class="a">Three Bot Token Scopes: chat:write (so the bot can post done-summaries back in-thread), channels:history and groups:history (so Slack delivers the message and thread-reply events the hive listens to). The Signing Secret authenticates every inbound request; the xoxb- Bot User OAuth Token authorizes the bot&#39;s replies.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why did Slack stop triggering my agents?</p>
+          <p class="a">The public Request URL comes from a local tunnel that is ephemeral — it rotates every time you stop and start the app. If triggers go quiet, restart Munder Difflin, copy the new tunnel URL, and re-paste it into Slack&#39;s Event Subscriptions → Request URL. Slack re-verifies and triggers resume.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/guides/">Guides</a><a class="tag" href="/blog/tags/automation/">Automation</a><a class="tag" href="/blog/tags/slack/">Slack</a><a class="tag" href="/blog/tags/hive/">Hive</a><a class="tag" href="/blog/tags/setup/">Setup</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#what-youre-building">What you’re building</a></li><li class="lvl-2"><a href="#part-1-create-the-slack-app">Part 1 — Create the Slack app</a></li><li class="lvl-3"><a href="#signing-secret">Signing Secret</a></li><li class="lvl-3"><a href="#bot-token-scopes">Bot Token Scopes</a></li><li class="lvl-3"><a href="#install-and-grab-the-bot-user-oauth-token">Install and grab the Bot User OAuth Token</a></li><li class="lvl-2"><a href="#part-2-configure-munder-difflin">Part 2 — Configure Munder Difflin</a></li><li class="lvl-2"><a href="#part-3-point-slack-at-your-request-url">Part 3 — Point Slack at your Request URL</a></li><li class="lvl-2"><a href="#try-it">Try it</a></li><li class="lvl-2"><a href="#troubleshooting-the-request-url-rotates-on-restart">Troubleshooting: the Request URL rotates on restart</a></li><li class="lvl-2"><a href="#why-its-built-this-way">Why it’s built this way</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/"><span class="k">← Older</span><span class="t">The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents</span></a>
+      <a class="pn next" href="/blog/deploy-automated-pr-reviewer-agent/"><span class="k">Newer →</span><span class="t">Deploy a PR Reviewer That Never Sleeps — In About One Prompt</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Guides</h2>
+      <div class="post-grid">
+        <article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/build-your-personal-agi-on-your-computer/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/build-your-personal-agi-on-your-computer/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>9 min</span>
+    </div>
+    <h3><a href="/blog/build-your-personal-agi-on-your-computer/">Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin</a></h3>
+    <p class="dek">Turn Claude Code into a personal AGI on your own computer: agents with memory, schedules, Gmail, Calendar, voice and Slack, set up in Munder Difflin 0.5.2.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/build-your-personal-agi-on-your-computer/" aria-label="Read: Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-install-gemini-cli/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-install-gemini-cli/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-install-gemini-cli/">How to Install Gemini CLI, and Who Can Still Use It in 2026</a></h3>
+    <p class="dek">Install Google&#39;s Gemini CLI with npm on Mac, Windows or Linux, why Homebrew is stuck on 0.46.0, and which sign in still works after 18 Jun 2026.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-install-gemini-cli/" aria-label="Read: How to Install Gemini CLI, and Who Can Still Use It in 2026">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/claude-code-max-plan-tips/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-max-plan-tips/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/claude-code-max-plan-tips/">How to Get the Most Out of Your Claude Code Max Plan</a></h3>
+    <p class="dek">Stretch a Claude Code Max plan: model choice, context hygiene, prompt caching, subagents and unattended runs, checked against Anthropic&#39;s own pages.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/claude-code-max-plan-tips/" aria-label="Read: How to Get the Most Out of Your Claude Code Max Plan">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

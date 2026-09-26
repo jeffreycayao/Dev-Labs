@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- RETIRED 17 Sep 2026. This page used to be a second, HAND MAINTAINED copy of the
+     download page: the version, the published date and all three file sizes were typed
+     into the HTML here and read off disk on harnessmd.com/download. Two copies agree
+     only until the next release, so this one is now a redirect and harnessmd.com/download
+     is the single source.
+
+     GitHub Pages cannot serve a real 301, so the redirect is done three ways on purpose:
+       1. the meta refresh below, which crawlers treat as a permanent redirect and which
+          works with JavaScript switched off,
+       2. the cross domain canonical, which tells anything that ignores the refresh which
+          URL is the real one,
+       3. location.replace in the body, which redirects without leaving a history entry,
+          so the back button returns to wherever the visitor came from instead of
+          bouncing them forward again.
+     The visible link is the fallback for anyone none of the above reaches.
+
+     Search value given up by doing this, measured 17 Sep 2026 before the change:
+     0 clicks and 16 impressions in three months, from three queries, all of them our own
+     brand name, on which the homepage already ranks. No inbound links, no ranking
+     keywords, and this URL was never in sitemap.xml.
+
+     #554 landed on this file first and its fix survives here. It replaced an "Every release"
+     link to app.harnessmd.com/releases/, an open directory index that is being switched off,
+     with harnessmd.com/download#whats-new. Redirecting the whole page to harnessmd.com/download
+     carries that intent rather than dropping it: the dying directory is no longer linked from
+     anywhere on munderdiffl.in, and the release notes the link promised are on the page this
+     redirect lands on. The three direct installer links that also pointed at
+     app.harnessmd.com/releases/ go with the page; #554 established those still serve by exact
+     filename, so nothing broken is being left behind, and the destination lists them anyway. -->
+<meta http-equiv="refresh" content="0; url=https://harnessmd.com/download" />
+<link rel="canonical" href="https://harnessmd.com/download" />
+
+<title>Download Munder Difflin</title>
+<meta name="description" content="Munder Difflin downloads have moved to harnessmd.com/download, where every installer is listed straight from the release server." />
+<link rel="icon" type="image/svg+xml" href="./logo.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="./logo.png" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+
+<style>
+  :root { color-scheme: light; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: #FBF1D6; color: #14110C;
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .card { max-width: 32rem; text-align: center; }
+  img.logo { width: 56px; height: 56px; margin-bottom: 20px; }
+  h1 { font-size: 1.35rem; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.01em; }
+  p { margin: 0 0 20px; color: #4A453A; }
+  a.go {
+    display: inline-block; padding: 12px 22px; border-radius: 10px;
+    background: #14110C; color: #FBF1D6; text-decoration: none; font-weight: 600;
+  }
+  a.go:focus-visible { outline: 3px solid #14110C; outline-offset: 3px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="./logo.svg" alt="Munder Difflin" />
+    <h1>Downloads have moved</h1>
+    <p>Every installer now lives on one page, listed straight from the release server. Taking you there now.</p>
+    <a class="go" href="https://harnessmd.com/download">Go to the download page</a>
+  </div>
+
+<script>
+  /* Redirect without adding a history entry, so the back button goes back to where the
+     visitor came from rather than returning here and forwarding them again. The meta
+     refresh above still covers anyone with JavaScript switched off. */
+  location.replace('https://harnessmd.com/download');
+</script>
+</body>
+</html>

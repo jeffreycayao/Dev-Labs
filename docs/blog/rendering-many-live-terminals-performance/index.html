@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rendering Many Live Terminals Without Melting the CPU — Munder Difflin Blog</title>
+<meta name="description" content="xterm.js performance for many live PTYs: a terminal pool, render-only-visible, smart scrollback, and accelerated rendering to stream dozens at once." />
+<link rel="canonical" href="https://munderdiffl.in/blog/rendering-many-live-terminals-performance/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Rendering Many Live Terminals Without Melting the CPU — Munder Difflin Blog" />
+<meta property="og:description" content="xterm.js performance for many live PTYs: a terminal pool, render-only-visible, smart scrollback, and accelerated rendering to stream dozens at once." />
+<meta property="og:url" content="https://munderdiffl.in/blog/rendering-many-live-terminals-performance/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/rendering-many-live-terminals-performance/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Rendering Many Live Terminals Without Melting the CPU" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Internals" />
+<meta property="article:tag" content="Performance" />
+<meta property="article:tag" content="xterm.js" />
+<meta property="article:tag" content="Terminals" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Rendering Many Live Terminals Without Melting the CPU — Munder Difflin Blog" />
+<meta name="twitter:description" content="xterm.js performance for many live PTYs: a terminal pool, render-only-visible, smart scrollback, and accelerated rendering to stream dozens at once." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/rendering-many-live-terminals-performance/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Rendering Many Live Terminals Without Melting the CPU" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Rendering Many Live Terminals Without Melting the CPU",
+  "description": "xterm.js performance for many live PTYs: a terminal pool, render-only-visible, smart scrollback, and accelerated rendering to stream dozens at once.",
+  "image": ["https://munderdiffl.in/blog/assets/media/rendering-many-live-terminals-performance/hero.png"],
+  "datePublished": "2026-06-03T00:00:00.000Z",
+  "dateModified": "2026-06-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/rendering-many-live-terminals-performance/" },
+  "keywords": "xterm.js performance, terminal rendering, xterm.js performance, electron performance",
+  "articleSection": "Internals",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/rendering-many-live-terminals-performance/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Rendering Many Live Terminals Without Melting the CPU", "item": "https://munderdiffl.in/blog/rendering-many-live-terminals-performance/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "How do you render many xterm.js terminals without high CPU?", "acceptedAnswer": { "@type": "Answer", "text": "Keep one persistent terminal per session and only render the visible one(s); re-parent the terminal's element instead of recreating it, tune scrollback, and use an accelerated renderer when throughput is high. The buffers keep filling in the background while you paint just what's on screen." } },
+    { "@type": "Question", "name": "Why is recreating an xterm terminal on tab switch slow and buggy?", "acceptedAnswer": { "@type": "Answer", "text": "node-pty keeps no scrollback, so a freshly created terminal is blank until the program repaints — and recreating instances thrashes the CPU. A persistent pool avoids both: the terminal lives for the session and its DOM element is moved in and out of views." } },
+    { "@type": "Question", "name": "Does scrollback size affect performance?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. xterm holds scrollback in memory per terminal, so a large scrollback multiplied by many terminals adds up. Pick a generous-but-bounded value and tune it to your workload." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-internals">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/internals/">Internals</a>
+    </nav>
+    <h1>Rendering Many Live Terminals Without Melting the CPU</h1>
+    <p class="dek">xterm.js performance for many live PTYs: a terminal pool, render-only-visible, smart scrollback, and accelerated rendering to stream dozens at once.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Internals</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/rendering-many-live-terminals-performance/hero.png" alt="Illustration: Rendering Many Live Terminals Without Melting the CPU" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Streaming dozens of live PTYs to xterm.js
+stays cheap if you do four things: keep <strong>one persistent terminal per session</strong> (don't
+recreate on tab switch), <strong>render only what's visible</strong> while buffers fill in the
+background, <strong>bound your scrollback</strong>, and reach for an <strong>accelerated renderer</strong>
+only when throughput demands it. The big win is the persistent pool — it fixes both the blank-terminal
+bug and the CPU thrash at once.</p></div>
+<p>A single xterm.js terminal is cheap. Thirty of them, all streaming output from live agents while the
+user switches between them, is where naive implementations melt the CPU — or show blank panes. This
+post is the performance playbook for rendering many live terminals at once, built on the same techniques
+that keep an agent harness’s floor of terminals smooth.</p>
+<h2 id="the-naive-approach-and-why-it-hurts" tabindex="-1">The naive approach and why it hurts <a class="anchor" href="#the-naive-approach-and-why-it-hurts" aria-hidden="true">#</a></h2>
+<p>The obvious design: when a terminal view mounts, create an xterm <code>Terminal</code>; when it unmounts, dispose
+it. For one terminal it’s fine. For many, it fails twice:</p>
+<ol>
+<li><strong>CPU thrash.</strong> Creating and destroying terminal instances as the user switches tabs is expensive —
+you’re rebuilding the emulator, re-opening it, re-measuring the grid, over and over.</li>
+<li><strong>Blank terminals.</strong> node-pty keeps <strong>no scrollback</strong> — the buffer lives in xterm, not the PTY. So a
+freshly created terminal starts empty and stays blank until the running program happens to repaint.
+For an idle shell, that might be never.</li>
+</ol>
+<p>Both problems have the same root: tying the terminal’s <em>lifetime</em> to a <em>view’s</em> lifetime. The fix is to
+decouple them.</p>
+<h2 id="technique-1-a-persistent-terminal-pool" tabindex="-1">Technique 1 — A persistent terminal pool <a class="anchor" href="#technique-1-a-persistent-terminal-pool" aria-hidden="true">#</a></h2>
+<p>Create <strong>one</strong> xterm terminal per PTY session and keep it alive for the whole app lifetime, independent
+of any view:</p>
+<ul>
+<li>The terminal is opened into a <strong>detached host element</strong> and subscribes to its PTY’s output stream
+<strong>once</strong>. Its buffer keeps filling whether or not it’s currently on screen.</li>
+<li>A view doesn’t create a terminal — it <strong>borrows</strong> one. On mount it re-parents the existing host
+element into itself; on unmount it lets go. The rendered content moves with the element, so the
+terminal is populated and visible <em>immediately</em>, with no repaint.</li>
+</ul>
+<pre class="language-ts"><code class="language-ts"><span class="token comment">// borrow, don't build: move the live terminal's element into the view</span>
+<span class="token keyword">function</span> <span class="token function">attachTerminal</span><span class="token punctuation">(</span>entry<span class="token punctuation">,</span> container<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  container<span class="token punctuation">.</span><span class="token function">appendChild</span><span class="token punctuation">(</span>entry<span class="token punctuation">.</span>host<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>entry<span class="token punctuation">.</span>opened<span class="token punctuation">)</span> <span class="token punctuation">{</span> entry<span class="token punctuation">.</span>term<span class="token punctuation">.</span><span class="token function">open</span><span class="token punctuation">(</span>entry<span class="token punctuation">.</span>host<span class="token punctuation">)</span><span class="token punctuation">;</span> entry<span class="token punctuation">.</span>opened <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span> <span class="token punctuation">}</span> <span class="token comment">// open once, lazily</span>
+<span class="token punctuation">}</span></code></pre>
+<p>This single change fixes both naive problems: no per-switch teardown (no thrash) and no empty buffer
+(no blank pane). It’s the structural decision everything else builds on — the same pool pattern at the
+center of <a href="/blog/building-a-terminal-ui-xterm-node-pty/">building a terminal UI with xterm.js and node-pty</a>.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/rendering-many-live-terminals-performance/note-1.png" alt="Hand-drawn sketch from “Rendering Many Live Terminals Without Melting the CPU”" loading="lazy" decoding="async" /></figure>
+<h2 id="technique-2-render-only-whats-visible" tabindex="-1">Technique 2 — Render only what’s visible <a class="anchor" href="#technique-2-render-only-whats-visible" aria-hidden="true">#</a></h2>
+<p>A pool keeps every session’s <em>buffer</em> current, but you don’t need to <em>paint</em> every terminal every
+frame. Only the terminal(s) actually on screen need to be laid out and rendered; the rest keep
+accumulating output in memory at near-zero cost. When the user switches to one, it’s already
+up to date — you just attach its element.</p>
+<p>The principle: <strong>decouple “receiving output” from “drawing pixels.”</strong> Receiving is cheap and always-on;
+drawing is the expensive part, so do it only for what’s visible. A floor of thirty agents costs you the
+rendering of the one or few panes you’re looking at, not all thirty.</p>
+<h2 id="technique-3-bound-your-scrollback" tabindex="-1">Technique 3 — Bound your scrollback <a class="anchor" href="#technique-3-bound-your-scrollback" aria-hidden="true">#</a></h2>
+<p>xterm holds scrollback in memory, per terminal. A 10,000-line scrollback is comfortable for one
+terminal and adds up fast across many. So:</p>
+<ul>
+<li>Pick a <strong>generous but bounded</strong> scrollback (enough to scroll back usefully, not infinite).</li>
+<li>Remember it’s <strong>per terminal</strong> — multiply by your terminal count for the real memory cost.</li>
+<li>Tune to your workload: high-volume log streams want less retained history than an interactive shell.</li>
+</ul>
+<p>It’s a small knob with a real effect when you have dozens of buffers alive at once.</p>
+<h2 id="technique-4-stream-efficiently-from-the-pty" tabindex="-1">Technique 4 — Stream efficiently from the PTY <a class="anchor" href="#technique-4-stream-efficiently-from-the-pty" aria-hidden="true">#</a></h2>
+<p>The bytes have to cross from the main process (where node-pty lives) to the renderer (where xterm
+lives) over IPC. A few habits keep that path cheap:</p>
+<ul>
+<li><strong>Per-session channels.</strong> Each PTY forwards its output on its own channel so the renderer routes
+chunks to the right terminal without inspecting them.</li>
+<li><strong>Guard sends during teardown.</strong> Killing a PTY fires its exit asynchronously; if the window is gone
+by then, sending throws. Check the target is alive before each send so quit stays clean (and you
+don’t pay for sends into the void).</li>
+<li><strong>Let xterm batch.</strong> xterm coalesces writes internally; feed it raw chunks and let it manage its own
+render scheduling rather than forcing a refresh per byte.</li>
+</ul>
+<p>These come straight from how the <a href="/blog/node-pty-electron-real-terminals/">node-pty terminal plane</a>
+streams to the UI.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/rendering-many-live-terminals-performance/note-2.png" alt="Hand-drawn sketch from “Rendering Many Live Terminals Without Melting the CPU”" loading="lazy" decoding="async" /></figure>
+<h2 id="technique-5-reach-for-an-accelerated-renderer-when-needed" tabindex="-1">Technique 5 — Reach for an accelerated renderer when needed <a class="anchor" href="#technique-5-reach-for-an-accelerated-renderer-when-needed" aria-hidden="true">#</a></h2>
+<p>xterm’s default DOM renderer is fine for a handful of terminals. When you’re rendering many
+high-throughput streams, an accelerated rendering addon (canvas/WebGL) moves the drawing off the DOM
+and reduces CPU. The discipline: <strong>measure first.</strong> Add it when your real workload shows the DOM
+renderer is the bottleneck — not preemptively, since for modest terminal counts it’s unnecessary
+complexity.</p>
+<h2 id="the-shape-of-a-fast-many-terminal-ui" tabindex="-1">The shape of a fast many-terminal UI <a class="anchor" href="#the-shape-of-a-fast-many-terminal-ui" aria-hidden="true">#</a></h2>
+<p>Put it together and the system looks like this:</p>
+<ol>
+<li><strong>One persistent terminal per PTY</strong>, in a pool, subscribed once.</li>
+<li><strong>Only the visible terminals render</strong>; the rest keep filling buffers cheaply.</li>
+<li><strong>Bounded scrollback</strong>, tuned per workload.</li>
+<li><strong>Per-session IPC streaming</strong> with teardown-safe sends.</li>
+<li><strong>An accelerated renderer</strong> added only when measurement says so.</li>
+</ol>
+<p>That’s how a single window can show a whole floor of live agents — each in its own real terminal,
+switchable instantly — without the fans spinning up. The visual companion to all those terminals, the
+office floor, follows the same keep-the-hot-loop-tight philosophy in
+<a href="/blog/visualizing-ai-agents-pixijs/">visualizing AI agents with Pixi.js</a>.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>How many terminals can this handle?</strong> Enough that your bottleneck becomes the agents and your RAM,
+not the rendering. Because only visible terminals paint and buffers are cheap, the count you can keep
+<em>alive</em> is far higher than the count you’d ever look at simultaneously.</p>
+<p><strong>Do I lose output for terminals I’m not looking at?</strong> No — that’s the point of the pool. Off-screen
+terminals still receive and buffer their PTY’s output; you just aren’t paying to draw them until you
+switch over.</p>
+<hr>
+<p>Munder Difflin streams <a href="https://munderdiffl.in/#what">a whole floor of live Claude Code terminals</a> with this exact approach — a
+persistent pool, visible-only rendering, and teardown-safe IPC. <a href="https://munderdiffl.in/#install">Download Munder Difflin</a>
+to run many real terminals without melting your CPU; it’s free and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">How do you render many xterm.js terminals without high CPU?</p>
+          <p class="a">Keep one persistent terminal per session and only render the visible one(s); re-parent the terminal&#39;s element instead of recreating it, tune scrollback, and use an accelerated renderer when throughput is high. The buffers keep filling in the background while you paint just what&#39;s on screen.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why is recreating an xterm terminal on tab switch slow and buggy?</p>
+          <p class="a">node-pty keeps no scrollback, so a freshly created terminal is blank until the program repaints — and recreating instances thrashes the CPU. A persistent pool avoids both: the terminal lives for the session and its DOM element is moved in and out of views.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Does scrollback size affect performance?</p>
+          <p class="a">Yes. xterm holds scrollback in memory per terminal, so a large scrollback multiplied by many terminals adds up. Pick a generous-but-bounded value and tune it to your workload.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/internals/">Internals</a><a class="tag" href="/blog/tags/performance/">Performance</a><a class="tag" href="/blog/tags/xtermjs/">xterm.js</a><a class="tag" href="/blog/tags/terminals/">Terminals</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-naive-approach-and-why-it-hurts">The naive approach and why it hurts</a></li><li class="lvl-2"><a href="#technique-1-a-persistent-terminal-pool">Technique 1 — A persistent terminal pool</a></li><li class="lvl-2"><a href="#technique-2-render-only-whats-visible">Technique 2 — Render only what’s visible</a></li><li class="lvl-2"><a href="#technique-3-bound-your-scrollback">Technique 3 — Bound your scrollback</a></li><li class="lvl-2"><a href="#technique-4-stream-efficiently-from-the-pty">Technique 4 — Stream efficiently from the PTY</a></li><li class="lvl-2"><a href="#technique-5-reach-for-an-accelerated-renderer-when-needed">Technique 5 — Reach for an accelerated renderer when needed</a></li><li class="lvl-2"><a href="#the-shape-of-a-fast-many-terminal-ui">The shape of a fast many-terminal UI</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/vibe-kanban-alternative/"><span class="k">← Older</span><span class="t">A vibe-kanban Alternative for Coordinating AI Agents</span></a>
+      <a class="pn next" href="/blog/node-pty-electron-real-terminals/"><span class="k">Newer →</span><span class="t">Real Terminals in Electron with node-pty</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Internals</h2>
+      <div class="post-grid">
+        <article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>INTERNALS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-22">Aug 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>10 min</span>
+    </div>
+    <h3><a href="/blog/the-spend-counter-that-went-back-to-zero/">The Spend Counter That Went Back to Zero</a></h3>
+    <p class="dek">Our own floor was under reporting what it cost by 59 percent. The counter was cumulative since process start, the app restarts, and the session id stayed the same. Here is how a monotonic invariant let us recover the real number from an append-only log.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-label="Read: The Spend Counter That Went Back to Zero">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-newline-that-silenced-windows-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-newline-that-silenced-windows-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/the-newline-that-silenced-windows-agents/">The Newline That Silenced Every Windows Agent</a></h3>
+    <p class="dek">A cmd.exe parsing rule from the 1980s meant Windows agents received exactly one line of their multi-line startup protocol — and nothing errored. The anatomy of our worst silent failure, and the fix.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-newline-that-silenced-windows-agents/" aria-label="Read: The Newline That Silenced Every Windows Agent">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/why-our-auto-update-never-ran/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-our-auto-update-never-ran/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-08">Aug 8, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/why-our-auto-update-never-ran/">Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace</a></h3>
+    <p class="dek">Munder Difflin shipped auto-update in v0.3.4 and it silently never worked in a single packaged build. The cause was one destructuring assignment across the CommonJS/ESM boundary — and a catch block that threw the evidence away. Here&#39;s how we found it, and what v0.3.7 changes.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/why-our-auto-update-never-ran/" aria-label="Read: Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

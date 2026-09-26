@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="54" viewBox="0 0 250 54" role="img" aria-label="GitHub Trending: #1 Repository of the Day">
+  <rect x="0.5" y="0.5" width="249" height="53" rx="9" fill="#FFFFFF" stroke="#E0BC72"/>
+  <g transform="translate(15,16) scale(1.6)" fill="none" stroke="#E5A00D" stroke-width="1.7" stroke-linecap="square">
+    <path d="M1 10.6 4.9 6.7 7.3 9.1 12.6 3.4"/>
+    <path d="M9.2 3.4H12.9V7"/>
+  </g>
+  <text x="49" y="24" font-family="Menlo, Consolas, monospace" font-size="9" font-weight="700" letter-spacing="1.5" fill="#7D8798">GITHUB TRENDING</text>
+  <rect x="49" y="30.5" width="27" height="17" rx="3.5" fill="#FFC94F"/>
+  <text x="62.5" y="43" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="800" fill="#17150E">#1</text>
+  <text x="82" y="43.5" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="-0.2" fill="#131722">Repository of the Day</text>
+</svg>

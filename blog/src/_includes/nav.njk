@@ -1,0 +1,16 @@
+<nav id="nav">
+  <a class="brand" href="{{ site.origin }}" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="{{ site.origin }}/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="{{ '/' | u }}"{% if page.url == '/' %} aria-current="page"{% endif %}>Latest</a>
+    <a href="{{ '/topics/' | u }}"{% if '/topics/' in page.url %} aria-current="page"{% endif %}>Topics</a>
+    <a href="{{ '/about/' | u }}"{% if '/about/' in page.url %} aria-current="page"{% endif %}>About</a>
+    <a href="{{ site.origin }}">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="{{ site.baseUrl }}feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="{{ site.origin }}/#install">⤓ Download</a>
+  </div>
+</nav>

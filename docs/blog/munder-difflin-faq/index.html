@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Munder Difflin FAQ: Everything People Ask — Munder Difflin Blog</title>
+<meta name="description" content="Answers to the top Munder Difflin questions — what it is, is it free, does it run locally, which platforms, and how it differs from many terminals." />
+<link rel="canonical" href="https://munderdiffl.in/blog/munder-difflin-faq/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Munder Difflin FAQ: Everything People Ask — Munder Difflin Blog" />
+<meta property="og:description" content="Answers to the top Munder Difflin questions — what it is, is it free, does it run locally, which platforms, and how it differs from many terminals." />
+<meta property="og:url" content="https://munderdiffl.in/blog/munder-difflin-faq/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/munder-difflin-faq/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Munder Difflin FAQ: Everything People Ask" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-02T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Concepts" />
+<meta property="article:tag" content="FAQ" />
+<meta property="article:tag" content="Claude Code" />
+<meta property="article:tag" content="Multi-Agent" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Munder Difflin FAQ: Everything People Ask — Munder Difflin Blog" />
+<meta name="twitter:description" content="Answers to the top Munder Difflin questions — what it is, is it free, does it run locally, which platforms, and how it differs from many terminals." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/munder-difflin-faq/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Munder Difflin FAQ: Everything People Ask" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Munder Difflin FAQ: Everything People Ask",
+  "description": "Answers to the top Munder Difflin questions — what it is, is it free, does it run locally, which platforms, and how it differs from many terminals.",
+  "image": ["https://munderdiffl.in/blog/assets/media/munder-difflin-faq/hero.png"],
+  "datePublished": "2026-06-02T00:00:00.000Z",
+  "dateModified": "2026-06-02T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/munder-difflin-faq/" },
+  "keywords": "munder difflin app, munder difflin download, munder difflin claude code, is munder difflin free",
+  "articleSection": "Concepts",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/munder-difflin-faq/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Munder Difflin FAQ: Everything People Ask", "item": "https://munderdiffl.in/blog/munder-difflin-faq/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is Munder Difflin?", "acceptedAnswer": { "@type": "Answer", "text": "Munder Difflin is a local, open-source desktop app that turns the Claude Code terminals you already run into a self-coordinating hive of agents — with shared long-term memory, inter-agent messaging, and a GOD orchestrator you talk to." } },
+    { "@type": "Question", "name": "Is Munder Difflin free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Munder Difflin is free and open source under the MIT license. You can download a build or run it from source — there's no paid tier to unlock the core." } },
+    { "@type": "Question", "name": "Does it run my data or code in the cloud?", "acceptedAnswer": { "@type": "Answer", "text": "No. Munder Difflin is local-first — the harness, agents, and memory all live on your own machine. Your Claude Code sessions talk to Anthropic the same way they already do; Munder Difflin itself doesn't ship your code anywhere." } },
+    { "@type": "Question", "name": "What platforms does Munder Difflin support?", "acceptedAnswer": { "@type": "Answer", "text": "macOS, Windows, and Linux. You can download a build or build it from source in a couple of commands." } },
+    { "@type": "Question", "name": "How is this different from running several Claude Code terminals myself?", "acceptedAnswer": { "@type": "Answer", "text": "Munder Difflin adds the coordination that loose terminals lack: shared long-term memory (MemPalace), inter-agent messaging, a GOD orchestrator that routes work, and a visual office floor — so the sessions act as one team instead of isolated windows that collide and forget, plus a task kanban board, scheduled recurring missions, real spend telemetry, GitHub issue ingestion, CI status watching, and desktop notifications — a full coordination layer rather than just a pretty face." } },
+    { "@type": "Question", "name": "Do I need to know how to code to use it?", "acceptedAnswer": { "@type": "Answer", "text": "You should be comfortable with Claude Code and a terminal, since Munder Difflin coordinates Claude Code agents. But you steer the team in plain language by talking to the GOD orchestrator — you don't script the coordination yourself." } },
+    { "@type": "Question", "name": "What is MemPalace?", "acceptedAnswer": { "@type": "Answer", "text": "MemPalace is Munder Difflin's shared memory layer — a semantic store the whole hive reads and writes, mined automatically from each agent's plain-markdown notes, so agents recall relevant knowledge across sessions." } },
+    { "@type": "Question", "name": "What is the GOD orchestrator?", "acceptedAnswer": { "@type": "Answer", "text": "The GOD orchestrator is a coordinating agent you talk to in plain language. It decomposes your intent, routes work to the right agents, adjudicates routine decisions, and escalates only the genuinely critical ones to you." } },
+    { "@type": "Question", "name": "Can the agents talk to each other?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Each agent has a mailbox and a router delivers messages between them, so one agent can hand work or findings to another directly — without you relaying it." } },
+    { "@type": "Question", "name": "Does Munder Difflin work with my existing Claude Code setup, MCP servers, and skills?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. It coordinates the Claude Code you already run, including your tools, MCP servers, and skills — it adds a coordination layer rather than replacing your setup." } },
+    { "@type": "Question", "name": "Is Munder Difflin affiliated with Dunder Mifflin or The Office?", "acceptedAnswer": { "@type": "Answer", "text": "No. The name is an affectionate parody — 'the world's best agents, the world's worst paper company.' It's an independent open-source project, not affiliated with NBC or The Office." } },
+    { "@type": "Question", "name": "Where do I download Munder Difflin?", "acceptedAnswer": { "@type": "Answer", "text": "From the install section on munderdiffl.in, which links to the latest release. It's free, open source, and available for macOS, Windows, and Linux." } },
+    { "@type": "Question", "name": "Does Munder Difflin show how much each agent is costing me?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, as of v0.1.6. The Activity tab in Michael's Command Center reads your local Claude Code transcript files and surfaces real token counts (input, output, cache) and estimated USD cost per agent. No external service — it reads the same files Claude Code already writes to your machine." } },
+    { "@type": "Question", "name": "Can agents work in parallel on the same repo without colliding?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The Git isolation toggle in Add Agent auto-provisions a dedicated git worktree for each agent on spawn and tears it down on kill. Agents on the same repo work on separate branches, so there are no branch-switch collisions." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-concepts">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/concepts/">Concepts</a>
+    </nav>
+    <h1>Munder Difflin FAQ: Everything People Ask</h1>
+    <p class="dek">Answers to the top Munder Difflin questions — what it is, is it free, does it run locally, which platforms, and how it differs from many terminals.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>1 min read</span>
+      <span class="tag kind">Concepts</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/munder-difflin-faq/hero.png" alt="Illustration: Munder Difflin FAQ: Everything People Ask" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p><strong>Munder Difflin</strong> is a free,
+open-source (MIT), local-first desktop app that turns the Claude Code terminals you already run into a
+coordinated hive — shared memory, messaging, and a <a href="/#how">GOD orchestrator</a> you talk to — on macOS,
+Windows, and Linux. The full answers to the questions people ask most are below.</p></div>
+<p>This page answers the questions we hear most about Munder Difflin, kept short and direct. If your
+question isn’t here, the <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub repo</a> and the rest
+of <a href="/blog/">the blog</a> go deeper.</p>
+<h2 id="the-one-sentence-version" tabindex="-1">The one-sentence version <a class="anchor" href="#the-one-sentence-version" aria-hidden="true">#</a></h2>
+<p>Munder Difflin is a <a href="/blog/what-is-a-multi-agent-harness/">multi-agent harness</a> for Claude Code: it
+takes the agents you already run and makes them act like one team — they message each other, share
+long-term memory, and are routed by a coordinator you talk to in plain language, all visualized as a
+live office floor on your own machine.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/munder-difflin-faq/note-1.png" alt="Hand-drawn sketch from “Munder Difflin FAQ: Everything People Ask”" loading="lazy" decoding="async" /></figure>
+<h2 id="still-deciding" tabindex="-1">Still deciding? <a class="anchor" href="#still-deciding" aria-hidden="true">#</a></h2>
+<p>If you’re comparing options, these go deeper than an FAQ can:</p>
+<ul>
+<li><a href="/blog/best-claude-code-multi-agent-tools/">The best tools to run multiple Claude Code agents</a> — the
+honest field roundup.</li>
+<li><a href="/blog/why-we-built-munder-difflin/">Why we built Munder Difflin</a> — the origin story and the problem
+it solves.</li>
+<li><a href="/blog/what-are-claude-code-agents/">What are Claude Code agents?</a> — the basics, if you’re new.</li>
+</ul>
+<hr>
+<p>The fastest way to answer “is this for me?” is to run it. <a href="/#install">Download Munder Difflin</a> — it’s
+free, open source, and local-first.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What is Munder Difflin?</p>
+          <p class="a">Munder Difflin is a local, open-source desktop app that turns the Claude Code terminals you already run into a self-coordinating hive of agents — with shared long-term memory, inter-agent messaging, and a GOD orchestrator you talk to.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is Munder Difflin free?</p>
+          <p class="a">Yes. Munder Difflin is free and open source under the MIT license. You can download a build or run it from source — there&#39;s no paid tier to unlock the core.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Does it run my data or code in the cloud?</p>
+          <p class="a">No. Munder Difflin is local-first — the harness, agents, and memory all live on your own machine. Your Claude Code sessions talk to Anthropic the same way they already do; Munder Difflin itself doesn&#39;t ship your code anywhere.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What platforms does Munder Difflin support?</p>
+          <p class="a">macOS, Windows, and Linux. You can download a build or build it from source in a couple of commands.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How is this different from running several Claude Code terminals myself?</p>
+          <p class="a">Munder Difflin adds the coordination that loose terminals lack: shared long-term memory (MemPalace), inter-agent messaging, a GOD orchestrator that routes work, and a visual office floor — so the sessions act as one team instead of isolated windows that collide and forget, plus a task kanban board, scheduled recurring missions, real spend telemetry, GitHub issue ingestion, CI status watching, and desktop notifications — a full coordination layer rather than just a pretty face.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Do I need to know how to code to use it?</p>
+          <p class="a">You should be comfortable with Claude Code and a terminal, since Munder Difflin coordinates Claude Code agents. But you steer the team in plain language by talking to the GOD orchestrator — you don&#39;t script the coordination yourself.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What is MemPalace?</p>
+          <p class="a">MemPalace is Munder Difflin&#39;s shared memory layer — a semantic store the whole hive reads and writes, mined automatically from each agent&#39;s plain-markdown notes, so agents recall relevant knowledge across sessions.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What is the GOD orchestrator?</p>
+          <p class="a">The GOD orchestrator is a coordinating agent you talk to in plain language. It decomposes your intent, routes work to the right agents, adjudicates routine decisions, and escalates only the genuinely critical ones to you.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Can the agents talk to each other?</p>
+          <p class="a">Yes. Each agent has a mailbox and a router delivers messages between them, so one agent can hand work or findings to another directly — without you relaying it.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Does Munder Difflin work with my existing Claude Code setup, MCP servers, and skills?</p>
+          <p class="a">Yes. It coordinates the Claude Code you already run, including your tools, MCP servers, and skills — it adds a coordination layer rather than replacing your setup.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is Munder Difflin affiliated with Dunder Mifflin or The Office?</p>
+          <p class="a">No. The name is an affectionate parody — &#39;the world&#39;s best agents, the world&#39;s worst paper company.&#39; It&#39;s an independent open-source project, not affiliated with NBC or The Office.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Where do I download Munder Difflin?</p>
+          <p class="a">From the install section on munderdiffl.in, which links to the latest release. It&#39;s free, open source, and available for macOS, Windows, and Linux.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Does Munder Difflin show how much each agent is costing me?</p>
+          <p class="a">Yes, as of v0.1.6. The Activity tab in Michael&#39;s Command Center reads your local Claude Code transcript files and surfaces real token counts (input, output, cache) and estimated USD cost per agent. No external service — it reads the same files Claude Code already writes to your machine.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Can agents work in parallel on the same repo without colliding?</p>
+          <p class="a">Yes. The Git isolation toggle in Add Agent auto-provisions a dedicated git worktree for each agent on spawn and tears it down on kill. Agents on the same repo work on separate branches, so there are no branch-switch collisions.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/concepts/">Concepts</a><a class="tag" href="/blog/tags/faq/">FAQ</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a>
+      </div>
+      
+    </div>
+
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/run-an-office-of-ai-agents/"><span class="k">← Older</span><span class="t">Run an Office of AI Agents While You Sleep</span></a>
+      <a class="pn next" href="/blog/human-in-the-loop-ai-agents/"><span class="k">Newer →</span><span class="t">Human-in-the-Loop AI Agents: Approvals That Don&#39;t Slow You Down</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Concepts</h2>
+      <div class="post-grid">
+        <article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-ollama-good-for-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-ollama-good-for-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-ollama-good-for-coding/">Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do</a></h3>
+    <p class="dek">Ollama only runs the model, so the answer depends on which one you pull and your memory. What local models do well, where Claude wins, and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-ollama-good-for-coding/" aria-label="Read: Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-max-worth-it/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-max-worth-it/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-max-worth-it/">Is It Worth Paying for Claude Code Max?</a></h3>
+    <p class="dek">Who should pay for Claude Max 5x or 20x, who should stay on Pro or an API key, and the break even math to run on your own Claude Code usage.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-max-worth-it/" aria-label="Read: Is It Worth Paying for Claude Code Max?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-open-source/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-open-source/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-open-source/">Is Claude Code Open Source?</a></h3>
+    <p class="dek">No. Claude Code is proprietary under Anthropic&#39;s terms. What its GitHub repo holds, what the 2026 leak changed, and which open tools sit around it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-open-source/" aria-label="Read: Is Claude Code Open Source?">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Multi-agent &amp; Claude Code blog — Munder Difflin</title>
+<meta name="description" content="Guides, deep dives, and comparisons on running multi-agent Claude Code: orchestration, agent memory, automation, and the tooling landscape." />
+<link rel="canonical" href="https://munderdiffl.in/blog/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Multi-agent &amp; Claude Code blog — Munder Difflin" />
+<meta property="og:description" content="Guides, deep dives, and comparisons on running multi-agent Claude Code: orchestration, agent memory, automation, and the tooling landscape." />
+<meta property="og:url" content="https://munderdiffl.in/blog/" />
+<meta property="og:image" content="https://munderdiffl.in/media/og.png" />
+<meta property="og:locale" content="en_US" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Multi-agent &amp; Claude Code blog — Munder Difflin" />
+<meta name="twitter:description" content="Guides, deep dives, and comparisons on running multi-agent Claude Code: orchestration, agent memory, automation, and the tooling landscape." />
+<meta name="twitter:image" content="https://munderdiffl.in/media/og.png" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/" aria-current="page">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "Munder Difflin Blog",
+  "description": "Guides, deep dives, and comparisons on running multi-agent Claude Code: orchestration, agent memory, automation, and the tooling landscape.",
+  "url": "https://munderdiffl.in/blog/",
+  "blogPost": [
+    { "@type": "BlogPosting", "headline": "Top 10 Indian open source projects that are giving US big tech a tough time", "url": "https://munderdiffl.in/blog/indian-open-source-ai-projects-vs-big-tech/", "datePublished": "2026-09-25T00:00:00.000Z", "image": "https://munderdiffl.in/blog/assets/media/indian-open-source-ai-projects-vs-big-tech/hero.png" }
+  ],
+  "publisher": { "@type": "Organization", "name": "Munder Difflin", "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" } }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" }
+  ]
+}
+</script>
+
+<header class="page-head wrap">
+  <p class="eyebrow">Notes from the office floor</p>
+  <h1>The Munder Difflin <span class="hl">Blog.</span></h1>
+  <p class="lead">Guides, deep dives, and comparisons on running <strong>multi-agent Claude
+  Code</strong> — orchestration, agent memory, automation, and the tooling landscape. From the team
+  building a self-coordinating hive of agents with a GOD orchestrator you talk to.</p>
+
+  <div class="filters" role="navigation" aria-label="Topics">
+    <a class="chip" aria-current="page">All<span class="ct">161</span></a>
+    
+    <a class="chip" href="/blog/topics/guides/">guides<span class="ct">44</span></a>
+    
+    <a class="chip" href="/blog/topics/comparisons/">comparisons<span class="ct">29</span></a>
+    
+    <a class="chip" href="/blog/topics/concepts/">concepts<span class="ct">27</span></a>
+    
+    <a class="chip" href="/blog/topics/internals/">internals<span class="ct">19</span></a>
+    
+    <a class="chip" href="/blog/topics/story/">story<span class="ct">19</span></a>
+    
+    <a class="chip" href="/blog/topics/orchestration/">orchestration<span class="ct">9</span></a>
+    
+    <a class="chip" href="/blog/topics/use-cases/">use-cases<span class="ct">9</span></a>
+    
+    <a class="chip" href="/blog/topics/memory/">memory<span class="ct">5</span></a>
+    
+  </div>
+</header><section class="fhero wrap" aria-labelledby="fhero-title">
+  <div class="fhero-card t-comparisons">
+    <div class="fhero-text">
+      <p class="fhero-kicker"><span class="fhero-pill">Featured</span><span>Comparisons</span></p>
+      <h2 id="fhero-title"><a href="/blog/indian-open-source-ai-projects-vs-big-tech/">Top 10 Indian open source projects that are giving US big tech a tough time</a></h2>
+      <p class="fhero-dek">Ten open source AI projects from Indian developers, each lined up against the big tech product it takes on. Laya vs Jev, Munder Difflin vs Muse and Grok Bot.</p>
+      <p class="fhero-meta">Chaitanya Giri &middot; <time datetime="2026-09-25">Sep 25, 2026</time> &middot; 8 min read</p>
+      <a class="btn primary" href="/blog/indian-open-source-ai-projects-vs-big-tech/">Read the story &rarr;</a>
+    </div>
+    <a class="fhero-art" href="/blog/indian-open-source-ai-projects-vs-big-tech/" tabindex="-1" aria-hidden="true"><img src="/blog/assets/media/indian-open-source-ai-projects-vs-big-tech/hero.png" alt="" width="1600" height="900" fetchpriority="high" decoding="async" /></a>
+  </div>
+  
+</section>
+
+
+
+<section class="wrap pinned" aria-labelledby="pinned-title">
+  <h2 class="pinned-title" id="pinned-title">Start here</h2>
+  <div class="post-grid">
+    <article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-install-and-use-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-install-and-use-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-05">Jun 5, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>14 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/how-to-install-and-use-munder-difflin/">How to Install and Use Munder Difflin: A Beginner&#39;s Guide</a></h3>
+    <p class="dek">A plain language guide to Munder Difflin 0.5.2. What a coding agent is, which AI engine to pick based on what you already pay for, the one terminal command you&#39;ll ever run, and how to install and set it up on macOS, Windows or Linux.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-install-and-use-munder-difflin/" aria-label="Read: How to Install and Use Munder Difflin: A Beginner&#39;s Guide">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/your-first-hour-with-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/your-first-hour-with-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>13 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/your-first-hour-with-munder-difflin/">Your First Hour With Munder Difflin: Onboarding to a Pro Office</a></h3>
+    <p class="dek">Munder Difflin 0.5.2 from download to a working Pro office: install Claude Code, Codex or OpenCode, sign in, go Pro, then automate reviews, Slack and email.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/your-first-hour-with-munder-difflin/" aria-label="Read: Your First Hour With Munder Difflin: Onboarding to a Pro Office">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/claude-code-max-plan-tips/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-max-plan-tips/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/claude-code-max-plan-tips/">How to Get the Most Out of Your Claude Code Max Plan</a></h3>
+    <p class="dek">Stretch a Claude Code Max plan: model choice, context hygiene, prompt caching, subagents and unattended runs, checked against Anthropic&#39;s own pages.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/claude-code-max-plan-tips/" aria-label="Read: How to Get the Most Out of Your Claude Code Max Plan">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/codex-max-plan-tips/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/codex-max-plan-tips/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/codex-max-plan-tips/">How to Make the Most of Your Codex Max Plan</a></h3>
+    <p class="dek">There is no Codex Max plan. What ChatGPT Pro 5x and 20x give you in Codex, how the weekly limit works, and how to stretch it.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/codex-max-plan-tips/" aria-label="Read: How to Make the Most of Your Codex Max Plan">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-alternatives/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/grok-bot-alternatives/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/grok-bot-alternatives/">Grok Bot Alternatives: Six Picks, Grouped by What You Want</a></h3>
+    <p class="dek">Grok Bot runs every Bot on one shared cloud computer. Six alternatives checked on 14 Sep 2026, grouped by hosting, privacy and model choice.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-alternatives/" aria-label="Read: Grok Bot Alternatives: Six Picks, Grouped by What You Want">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/herdr-alternatives/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/herdr-alternatives/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/herdr-alternatives/">Herdr Alternatives: What to Pick and Who Each One Fits</a></h3>
+    <p class="dek">Herdr alternatives checked on 14 Sep 2026: tmux, Munder Difflin, Claude Squad, cmux, Orca, Conductor, Superset and Emdash, and who each fits.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/herdr-alternatives/" aria-label="Read: Herdr Alternatives: What to Pick and Who Each One Fits">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/omniagent-alternatives/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/omniagent-alternatives/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/omniagent-alternatives/">OmniAgent Alternatives: What to Use Instead of Databricks Omnigent</a></h3>
+    <p class="dek">OmniAgent is really Omnigent, the open source meta harness from Databricks. Alternatives checked on 14 Sep 2026, and who each one fits.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/omniagent-alternatives/" aria-label="Read: OmniAgent Alternatives: What to Use Instead of Databricks Omnigent">Read →</a>
+    </div>
+  </div>
+</article>
+
+  </div>
+</section>
+
+
+
+<div class="wrap featured"><article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-pricing/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/grok-bot-pricing/">Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy</a></h3>
+    <p class="dek">Grok Bot has no plan of its own. It comes bundled with SuperGrok and Cursor plans from $20 to $300 a month. Here is what each one gets you, what the free trial is, and the $0 route for work agents.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-pricing/" aria-label="Read: Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy">Read →</a>
+    </div>
+  </div>
+</article>
+
+</div>
+
+
+
+<section class="wrap">
+  <div class="post-grid">
+    <article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-alternatives/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-alternatives/">Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse</a></h3>
+    <p class="dek">Meta Muse is US only and trains on your chats by default. Seven alternatives, from open source agents that run on your own computer to hosted ones from OpenAI, Google and SpaceXAI.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-alternatives/" aria-label="Read: Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-grok-bot-privacy/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-grok-bot-privacy/">Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both ask for your logins. We read both companies&#39; security docs: who sees your passwords, what trains on your chats, and how to keep AI agents on your own computer instead.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-grok-bot-privacy/" aria-label="Read: Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-vs-grok-bot/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-vs-grok-bot/">Meta Muse vs Grok Bot: Same Blueprint, Different Locks</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both give an AI agent its own cloud computer. We compared price, security, platforms and who each one is for, plus the free option that runs on your own machine.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-vs-grok-bot/" aria-label="Read: Meta Muse vs Grok Bot: Same Blueprint, Different Locks">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/munder-difflin-0-5-3/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/munder-difflin-0-5-3/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>11 min</span>
+    </div>
+    <h3><a href="/blog/munder-difflin-0-5-3/">Munder Difflin 0.5.3: Stapler Listens, And It Listens Locally</a></h3>
+    <p class="dek">0.5.3 turns the Stapler into dictation for any app and a meeting recorder that hears both sides of a call, all on your machine. Plus the new sidebar, a Tasks tab with real ticket keys, two floors on one computer, Opus 5.5 as the default, and a long list of fixes.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/munder-difflin-0-5-3/" aria-label="Read: Munder Difflin 0.5.3: Stapler Listens, And It Listens Locally">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/aider-vs-claude-code/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/aider-vs-claude-code/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/aider-vs-claude-code/">Aider vs Claude Code in 2026: Which Should You Use?</a></h3>
+    <p class="dek">Aider vs Claude Code, checked 15 Sep 2026: how each edits code, which models it runs, what it costs, MCP, and Aider&#39;s stalled releases.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/aider-vs-claude-code/" aria-label="Read: Aider vs Claude Code in 2026: Which Should You Use?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/build-your-personal-agi-on-your-computer/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/build-your-personal-agi-on-your-computer/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>9 min</span>
+    </div>
+    <h3><a href="/blog/build-your-personal-agi-on-your-computer/">Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin</a></h3>
+    <p class="dek">Turn Claude Code into a personal AGI on your own computer: agents with memory, schedules, Gmail, Calendar, voice and Slack, set up in Munder Difflin 0.5.2.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/build-your-personal-agi-on-your-computer/" aria-label="Read: Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-install-gemini-cli/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-install-gemini-cli/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-install-gemini-cli/">How to Install Gemini CLI, and Who Can Still Use It in 2026</a></h3>
+    <p class="dek">Install Google&#39;s Gemini CLI with npm on Mac, Windows or Linux, why Homebrew is stuck on 0.46.0, and which sign in still works after 18 Jun 2026.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-install-gemini-cli/" aria-label="Read: How to Install Gemini CLI, and Who Can Still Use It in 2026">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-ollama-good-for-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-ollama-good-for-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-ollama-good-for-coding/">Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do</a></h3>
+    <p class="dek">Ollama only runs the model, so the answer depends on which one you pull and your memory. What local models do well, where Claude wins, and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-ollama-good-for-coding/" aria-label="Read: Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/claude-code-vs-antigravity/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-vs-antigravity/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-vs-antigravity/">Claude Code vs Antigravity: Which One Fits Your Work?</a></h3>
+    <p class="dek">Claude Code vs Google Antigravity, checked 14 Sep 2026: terminal agent or desktop agent app, Claude inside Antigravity, plans, limits and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/claude-code-vs-antigravity/" aria-label="Read: Claude Code vs Antigravity: Which One Fits Your Work?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/claude-code-vs-cursor/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-vs-cursor/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-vs-cursor/">Claude Code vs Cursor: Which Is Better in 2026?</a></h3>
+    <p class="dek">Claude Code vs Cursor, checked 14 Sep 2026: where each runs, models, plans, the new Claude Code weekly limits, parallel agents and using both.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/claude-code-vs-cursor/" aria-label="Read: Claude Code vs Cursor: Which Is Better in 2026?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/connect-slack-to-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/connect-slack-to-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/connect-slack-to-munder-difflin/">How to Connect Slack to Munder Difflin 0.5.2</a></h3>
+    <p class="dek">Connect Slack to Munder Difflin 0.5.2: create the Slack app, add the bot scopes, pick one of three connection modes, and get answers in the thread.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/connect-slack-to-munder-difflin/" aria-label="Read: How to Connect Slack to Munder Difflin 0.5.2">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-connect-ollama-to-claude-code/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-connect-ollama-to-claude-code/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-connect-ollama-to-claude-code/">How to Connect Ollama to Claude Code</a></h3>
+    <p class="dek">Point Claude Code at Ollama with ollama launch claude or three environment variables, give the model 64K of context, and know what stops working.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-connect-ollama-to-claude-code/" aria-label="Read: How to Connect Ollama to Claude Code">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-install-codex-cli/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-install-codex-cli/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/how-to-install-codex-cli/">How to Install Codex CLI on Mac, Windows and Linux</a></h3>
+    <p class="dek">Install OpenAI&#39;s Codex CLI with the official script, npm or Homebrew, sign in with ChatGPT or an API key, then update it and check your version.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-install-codex-cli/" aria-label="Read: How to Install Codex CLI on Mac, Windows and Linux">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-max-worth-it/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-max-worth-it/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-max-worth-it/">Is It Worth Paying for Claude Code Max?</a></h3>
+    <p class="dek">Who should pay for Claude Max 5x or 20x, who should stay on Pro or an API key, and the break even math to run on your own Claude Code usage.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-max-worth-it/" aria-label="Read: Is It Worth Paying for Claude Code Max?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-open-source/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-open-source/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-open-source/">Is Claude Code Open Source?</a></h3>
+    <p class="dek">No. Claude Code is proprietary under Anthropic&#39;s terms. What its GitHub repo holds, what the 2026 leak changed, and which open tools sit around it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-open-source/" aria-label="Read: Is Claude Code Open Source?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/what-is-vibe-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/what-is-vibe-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/what-is-vibe-coding/">What Is Vibe Coding? Meaning, Risks and Safer Habits</a></h3>
+    <p class="dek">Vibe coding means building software from AI prompts without reading the code. Where the term came from, when it is fine, where it bites, and what to check.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/what-is-vibe-coding/" aria-label="Read: What Is Vibe Coding? Meaning, Risks and Safer Habits">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/why-does-claude-code-keep-asking-for-permission/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-does-claude-code-keep-asking-for-permission/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/why-does-claude-code-keep-asking-for-permission/">Why Does Claude Code Keep Asking for Permission?</a></h3>
+    <p class="dek">Claude Code asks because Manual mode gates edits, shell commands and web requests. The fixes, safest first: modes, allow rules, sandboxing, then bypass.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/why-does-claude-code-keep-asking-for-permission/" aria-label="Read: Why Does Claude Code Keep Asking for Permission?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-use-claude-code-plan-mode/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-use-claude-code-plan-mode/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-11">Sep 11, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-use-claude-code-plan-mode/">How to Use Claude Code Plan Mode</a></h3>
+    <p class="dek">How Claude Code&#39;s plan mode works: turning it on, what it blocks, what a real headless plan mode run prints, and how to leave it.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-use-claude-code-plan-mode/" aria-label="Read: How to Use Claude Code Plan Mode">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/what-is-an-mcp-server/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/what-is-an-mcp-server/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-11">Sep 11, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/what-is-an-mcp-server/">What Is an MCP Server?</a></h3>
+    <p class="dek">An MCP server gives an AI agent tools, data and prompts over one open protocol. What it is, the host, client and server roles, and where Claude Code plugs in.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/what-is-an-mcp-server/" aria-label="Read: What Is an MCP Server?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/codex-cli-vs-claude-code/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/codex-cli-vs-claude-code/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-10">Sep 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/codex-cli-vs-claude-code/">Codex CLI vs Claude Code</a></h3>
+    <p class="dek">Codex CLI and Claude Code compared firsthand: sandbox and approval flags, AGENTS.md vs CLAUDE.md, real pricing, and where each terminal agent wins.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/codex-cli-vs-claude-code/" aria-label="Read: Codex CLI vs Claude Code">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/how-much-does-claude-code-cost/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-much-does-claude-code-cost/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-10">Sep 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-much-does-claude-code-cost/">How Much Does Claude Code Cost?</a></h3>
+    <p class="dek">What Claude Code actually costs: free plan access, Claude Pro and Max pricing, per token API rates, and what running several agents does to the bill.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/how-much-does-claude-code-cost/" aria-label="Read: How Much Does Claude Code Cost?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-add-an-mcp-server-to-claude-code/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-add-an-mcp-server-to-claude-code/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-10">Sep 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-add-an-mcp-server-to-claude-code/">How to Add an MCP Server to Claude Code</a></h3>
+    <p class="dek">The claude mcp add command, its scope flag, editing .mcp.json by hand, and how Munder Difflin&#39;s Capabilities screen grants an MCP server to one agent at a time.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-add-an-mcp-server-to-claude-code/" aria-label="Read: How to Add an MCP Server to Claude Code">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-5-2/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-5-2/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-10">Sep 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-5-2/">Munder Difflin 0.5.2: Pro, the Stapler and Everything Since 0.4.6</a></h3>
+    <p class="dek">Munder Difflin 0.5.2 is out: how to install it, how to start Pro, what Pro adds, what changed since 0.4.6, and the end of signed Community builds.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-5-2/" aria-label="Read: Munder Difflin 0.5.2: Pro, the Stapler and Everything Since 0.4.6">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-4-6/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-4-6/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-27">Aug 27, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>10 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-4-6/">Launching Munder Difflin v0.4.6: It Speaks Chinese and Arabic Now</a></h3>
+    <p class="dek">v0.4.6 adds Chinese and Arabic interfaces with right-to-left support, ships its fonts inside the app so nothing is fetched from Google, and makes the updater actually update itself instead of pointing at a download page.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-4-6/" aria-label="Read: Launching Munder Difflin v0.4.6: It Speaks Chinese and Arabic Now">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>INTERNALS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-22">Aug 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>10 min</span>
+    </div>
+    <h3><a href="/blog/the-spend-counter-that-went-back-to-zero/">The Spend Counter That Went Back to Zero</a></h3>
+    <p class="dek">Our own floor was under reporting what it cost by 59 percent. The counter was cumulative since process start, the app restarts, and the session id stayed the same. Here is how a monotonic invariant let us recover the real number from an append-only log.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-spend-counter-that-went-back-to-zero/" aria-label="Read: The Spend Counter That Went Back to Zero">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/agents-ran-our-launch-week-analytics/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/agents-ran-our-launch-week-analytics/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/agents-ran-our-launch-week-analytics/">Our Agents Ran Our Launch-Week Analytics</a></h3>
+    <p class="dek">Ten Reddit threads, a Product Hunt page, GitHub traffic and PostHog funnels — every comment read, cross-referenced, and reported by a hive of agents. The workflow, and how to point it at your own launch.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/agents-ran-our-launch-week-analytics/" aria-label="Read: Our Agents Ran Our Launch-Week Analytics">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/an-agent-redesigned-this-blog/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/an-agent-redesigned-this-blog/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/an-agent-redesigned-this-blog/">An Agent Redesigned the Blog You&#39;re Reading</a></h3>
+    <p class="dek">Reddit said our blog was unreadable and AI-sloppy. So one agent redesigned it end to end: a new editorial theme, and 119 hand-drawn hero illustrations rendered as code for exactly $0 in image APIs. This is the making-of.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/an-agent-redesigned-this-blog/" aria-label="Read: An Agent Redesigned the Blog You&#39;re Reading">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-4-4/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-4-4/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-4-4/">Launching Munder Difflin v0.4.4: Windows Agents Can Finally Talk</a></h3>
+    <p class="dek">v0.4.4 fixes the bug that silently broke agent-to-agent messaging on Windows, starts hive services on the very first run, rebuilds dark mode so you can read it, and adds a 227-skill catalog, a Prerequisites page, and designed release notes.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-4-4/" aria-label="Read: Launching Munder Difflin v0.4.4: Windows Agents Can Finally Talk">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/number-five-on-product-hunt/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/number-five-on-product-hunt/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/number-five-on-product-hunt/">Nº 5 Product of the Day: How Our First Product Hunt Launch Went</a></h3>
+    <p class="dek">Munder Difflin finished #5 Product of the Day on Product Hunt — ahead of DeepSeek&#39;s harness launch that day. The honest retro: who showed up, what they asked, and the two pieces of feedback we&#39;re already shipping fixes for.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/number-five-on-product-hunt/" aria-label="Read: Nº 5 Product of the Day: How Our First Product Hunt Launch Went">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/run-a-release-train-with-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/run-a-release-train-with-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/run-a-release-train-with-agents/">Run a Release Train with Agents</a></h3>
+    <p class="dek">Version bumps, changelog entries, release notes in plain language, site updates, and link checks — the release chores that always slip are exactly the work a hive does well. The workflow behind our seven-releases-in-eight-days week.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/run-a-release-train-with-agents/" aria-label="Read: Run a Release Train with Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/seven-releases-in-eight-days/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/seven-releases-in-eight-days/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/seven-releases-in-eight-days/">Seven Releases in Eight Days: 0.3.8 → 0.4.4</a></h3>
+    <p class="dek">Between August 11 and August 18 we shipped seven releases: memory condensation that finally works, an update checker, a whole new brand, a public telemetry contract, ten engines named honestly, and the Windows fix. The full tour.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/seven-releases-in-eight-days/" aria-label="Read: Seven Releases in Eight Days: 0.3.8 → 0.4.4">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-newline-that-silenced-windows-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-newline-that-silenced-windows-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/the-newline-that-silenced-windows-agents/">The Newline That Silenced Every Windows Agent</a></h3>
+    <p class="dek">A cmd.exe parsing rule from the 1980s meant Windows agents received exactly one line of their multi-line startup protocol — and nothing errored. The anatomy of our worst silent failure, and the fix.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-newline-that-silenced-windows-agents/" aria-label="Read: The Newline That Silenced Every Windows Agent">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/turn-feedback-into-a-backlog-with-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/turn-feedback-into-a-backlog-with-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/turn-feedback-into-a-backlog-with-agents/">Turn a Firehose of Feedback into a Backlog with Agents</a></h3>
+    <p class="dek">Reddit threads, Product Hunt comments, GitHub issues and Discord — launch week buries you in feedback that decays if unprocessed. The agent workflow that turned ours into a ranked backlog, with receipts.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/turn-feedback-into-a-backlog-with-agents/" aria-label="Read: Turn a Firehose of Feedback into a Backlog with Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/we-opened-a-discord/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/we-opened-a-discord/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>2 min</span>
+    </div>
+    <h3><a href="/blog/we-opened-a-discord/">We Opened a Discord (Merge a PR, Become Employee of the Month)</a></h3>
+    <p class="dek">Munder Difflin has a Discord now. Come watch releases land, get help with your floor, and earn the most thematically necessary contributor role in open source.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/we-opened-a-discord/" aria-label="Read: We Opened a Discord (Merge a PR, Become Employee of the Month)">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/what-reddit-told-us-about-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/what-reddit-told-us-about-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-19">Aug 19, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/what-reddit-told-us-about-munder-difflin/">What Reddit Told Us About Munder Difflin</a></h3>
+    <p class="dek">We launched across ten subreddits and then read every single comment. What landed, what got roasted, and what we shipped because of it.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/what-reddit-told-us-about-munder-difflin/" aria-label="Read: What Reddit Told Us About Munder Difflin">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/whats-up-with-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/whats-up-with-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-08">Aug 8, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/whats-up-with-munder-difflin/">What&#39;s Up With Munder Difflin: Six Weeks, Four Releases, and the Part of the Stack You Actually Own</a></h3>
+    <p class="dek">Everything that shipped between v0.3.3 and v0.3.7 — a Michael who knows the floor and runs the app by voice, a git time-machine in the IDE, nine agent engines, a queue that respects your draft, Node that installs itself, and the auto-update bug that had been silently broken since the day we shipped it.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/whats-up-with-munder-difflin/" aria-label="Read: What&#39;s Up With Munder Difflin: Six Weeks, Four Releases, and the Part of the Stack You Actually Own">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/why-our-auto-update-never-ran/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-our-auto-update-never-ran/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-08">Aug 8, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/why-our-auto-update-never-ran/">Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace</a></h3>
+    <p class="dek">Munder Difflin shipped auto-update in v0.3.4 and it silently never worked in a single packaged build. The cause was one destructuring assignment across the CommonJS/ESM boundary — and a catch block that threw the evidence away. Here&#39;s how we found it, and what v0.3.7 changes.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/why-our-auto-update-never-ran/" aria-label="Read: Our Auto-Update Never Ran Once: A CommonJS Export That Vanished Into an ESM Namespace">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-3-5/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-3-5/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-06">Aug 6, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-3-5/">Launching Munder Difflin v0.3.5: A Michael Who Knows the Floor, a Git Time-Machine, and an App That Updates Itself</a></h3>
+    <p class="dek">The v0.3.4 + v0.3.5 wave: voice orchestration with live floor context and full app control, markdown previews everywhere, commit history and branch compare in the built-in IDE, a six-tab Settings redesign, xAI Grok and Kimi Code engines, auto-update, and a queue that always has an escape hatch.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-3-5/" aria-label="Read: Launching Munder Difflin v0.3.5: A Michael Who Knows the Floor, a Git Time-Machine, and an App That Updates Itself">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/qm-vs-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/qm-vs-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-08-06">Aug 6, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/qm-vs-munder-difflin/">qm vs Munder Difflin: YC&#39;s Multiplayer Harness or an Office of Your Clones?</a></h3>
+    <p class="dek">An honest September 2026 comparison of YC&#39;s qm and Munder Difflin. qm is a multiplayer agent harness a company deploys for Slack and the web. Munder Difflin runs an office of your clones on your own machine, with Teams to connect them.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/qm-vs-munder-difflin/" aria-label="Read: qm vs Munder Difflin: YC&#39;s Multiplayer Harness or an Office of Your Clones?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/command-center-guide/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/command-center-guide/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/command-center-guide/">The Command Center: Kanban, Fleet and Budgets in One Place</a></h3>
+    <p class="dek">A guide to Munder Difflin&#39;s Command Center in 0.5.2: the kanban with task dependencies, the ask me tab, triggers, memory, live token use against each agent&#39;s budget, and when to watch the board instead of the floor.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/command-center-guide/" aria-label="Read: The Command Center: Kanban, Fleet and Budgets in One Place">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/crewai-autogen-vs-a-local-agent-harness/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/crewai-autogen-vs-a-local-agent-harness/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/crewai-autogen-vs-a-local-agent-harness/">CrewAI and AutoGen vs a Local Agent Harness: Framework or App?</a></h3>
+    <p class="dek">CrewAI, AutoGen (now Microsoft Agent Framework), and LangGraph are frameworks — Python you write to build your own agent system. A multi-agent harness is an app you download that runs a team on your repos today. Here&#39;s how to tell which one you actually need.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/crewai-autogen-vs-a-local-agent-harness/" aria-label="Read: CrewAI and AutoGen vs a Local Agent Harness: Framework or App?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/github-copilot-cli-vs-claude-code-for-hive-work/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/github-copilot-cli-vs-claude-code-for-hive-work/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/github-copilot-cli-vs-claude-code-for-hive-work/">GitHub Copilot CLI vs Claude Code as Hive Workers</a></h3>
+    <p class="dek">How GitHub Copilot CLI and Claude Code behave as agent engines inside a multi-agent harness: hooks, inbox mail, orchestration, session lifecycle — and why the right answer is to run both.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/github-copilot-cli-vs-claude-code-for-hive-work/" aria-label="Read: GitHub Copilot CLI vs Claude Code as Hive Workers">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-add-a-github-copilot-cli-agent/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-add-a-github-copilot-cli-agent/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/how-to-add-a-github-copilot-cli-agent/">How to Add a GitHub Copilot CLI Agent to Your Floor</a></h3>
+    <p class="dek">A step-by-step v0.3.3 walkthrough: install GitHub Copilot CLI (or let the harness install it for you), hire a Copilot worker, pick a model, and know exactly what print mode can and can&#39;t do.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-add-a-github-copilot-cli-agent/" aria-label="Read: How to Add a GitHub Copilot CLI Agent to Your Floor">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-hire-from-the-agent-gallery/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-hire-from-the-agent-gallery/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/how-to-hire-from-the-agent-gallery/">How to Hire From the Agent Gallery</a></h3>
+    <p class="dek">A practical guide to Munder Difflin&#39;s Agent Gallery: pick one of 80 ready made roles, download its manifest, import it with Add agent, review every field, customise identity, workspace, engine and briefing, then spawn it yourself.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-hire-from-the-agent-gallery/" aria-label="Read: How to Hire From the Agent Gallery">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-talk-to-your-orchestrator/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-talk-to-your-orchestrator/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-talk-to-your-orchestrator/">How to Brief Your Orchestrator (So the Floor Actually Ships)</a></h3>
+    <p class="dek">A practical guide to briefing Munder Difflin&#39;s GOD orchestrator: state the goal not the steps, set constraints and budgets, name the deliverable, and let Michael staff the floor. With bad-vs-good brief examples, mid-run steering, and Talk mode.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-talk-to-your-orchestrator/" aria-label="Read: How to Brief Your Orchestrator (So the Floor Actually Ships)">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-use-the-built-in-monaco-ide/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-use-the-built-in-monaco-ide/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/how-to-use-the-built-in-monaco-ide/">How to Use the Built-in Monaco IDE</a></h3>
+    <p class="dek">A practical walkthrough of Munder Difflin v0.3.3&#39;s built-in Monaco IDE: the title-bar IDE button, the git CHANGES rail with side-by-side diffs vs HEAD, the file tree, tabs, Cmd/Ctrl+S save — and the agent review workflow it enables.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-use-the-built-in-monaco-ide/" aria-label="Read: How to Use the Built-in Monaco IDE">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-3-3/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-3-3/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-3-3/">Launching Munder Difflin v0.3.3: A Built-in Monaco IDE and GitHub Copilot CLI Support</a></h3>
+    <p class="dek">Munder Difflin v0.3.3 adds a full Monaco IDE — file tree, editor tabs, save, and side-by-side git diffs of your agents&#39; changes — plus GitHub Copilot CLI as a first-class agent engine, our first community-contributed provider.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-3-3/" aria-label="Read: Launching Munder Difflin v0.3.3: A Built-in Monaco IDE and GitHub Copilot CLI Support">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/loop-engineering-for-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/loop-engineering-for-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/loop-engineering-for-ai-agents/">Loop Engineering: Designing Agent Loops That Converge</a></h3>
+    <p class="dek">Everyone engineers the prompt; almost nobody engineers the loop around it. Stop conditions, drain loops, retry with backoff, compaction cycles, breaker escalation, budgets, and human gates — the outer-loop mechanics that make an agent converge instead of run away.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/loop-engineering-for-ai-agents/" aria-label="Read: Loop Engineering: Designing Agent Loops That Converge">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/orca-vs-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/orca-vs-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/orca-vs-munder-difflin/">Orca vs Munder Difflin: Agent IDE or Agent Office?</a></h3>
+    <p class="dek">Orca is a YC-backed Agent IDE for driving coding agents side by side in isolated worktrees. Munder Difflin is an agent office that runs itself. An honest comparison of the two — and when each one is the right pick.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/orca-vs-munder-difflin/" aria-label="Read: Orca vs Munder Difflin: Agent IDE or Agent Office?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/review-agent-work-where-it-happens/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/review-agent-work-where-it-happens/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/review-agent-work-where-it-happens/">Review Agent Work Where It Happens</a></h3>
+    <p class="dek">AI agents produce diffs faster than humans can review them, and alt-tabbing to an external editor breaks supervision flow. The case for review-in-place: Munder Difflin&#39;s built-in Monaco IDE puts a CHANGES rail and side-by-side diffs vs HEAD right on the office floor.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/review-agent-work-where-it-happens/" aria-label="Read: Review Agent Work Where It Happens">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/run-a-mixed-engine-office/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/run-a-mixed-engine-office/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/run-a-mixed-engine-office/">Run a Mixed-Engine Office: the Right CLI for Every Desk</a></h3>
+    <p class="dek">A practical guide to mixing agent engines on one Munder Difflin floor: Claude Code as orchestrator, Codex for coding bursts, Copilot for dispatched tasks, and OpenCode/Crush/pi.dev for BYOK keys and local models.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/run-a-mixed-engine-office/" aria-label="Read: Run a Mixed-Engine Office: the Right CLI for Every Desk">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/tmux-and-scripts-vs-an-agent-harness/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/tmux-and-scripts-vs-an-agent-harness/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/tmux-and-scripts-vs-an-agent-harness/">Running Agents in tmux vs an Agent Harness</a></h3>
+    <p class="dek">tmux panes, git worktrees, shell scripts, and cron will absolutely run several Claude Code sessions at once. Here&#39;s what that DIY setup does well, where it breaks at scale, and what a purpose-built agent harness automates.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/tmux-and-scripts-vs-an-agent-harness/" aria-label="Read: Running Agents in tmux vs an Agent Harness">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/voice-as-a-control-plane-for-agent-fleets/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/voice-as-a-control-plane-for-agent-fleets/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/voice-as-a-control-plane-for-agent-fleets/">Voice Is a Control Plane, Not a Gimmick</a></h3>
+    <p class="dek">Voice is a terrible way to write code and a great way to run a fleet. Why low-bandwidth commands over high-bandwidth work is the right split — with Munder Difflin&#39;s Talk mode (echo-back confirmation, spend caps, michael-voice attribution) as the case study.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/voice-as-a-control-plane-for-agent-fleets/" aria-label="Read: Voice Is a Control Plane, Not a Gimmick">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/what-is-an-agent-development-environment/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/what-is-an-agent-development-environment/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/what-is-an-agent-development-environment/">What Is an Agent Development Environment (ADE)?</a></h3>
+    <p class="dek">ADE means two things in 2026: a platform for building agents (Letta&#39;s sense) and a workspace for shipping code with fleets of coding agents (Orca&#39;s sense). Here&#39;s the full tooling map — chat IDEs, agent CLIs, agent IDEs, and agent harnesses — and how to pick.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/what-is-an-agent-development-environment/" aria-label="Read: What Is an Agent Development Environment (ADE)?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/what-is-harness-engineering/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/what-is-harness-engineering/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/what-is-harness-engineering/">What Is Harness Engineering?</a></h3>
+    <p class="dek">Harness engineering is the discipline of building everything around the model — PTY plumbing, lifecycle hooks, mailboxes, memory, budgets, human gates, observability — because that&#39;s where agent reliability actually comes from. A definition, and four case studies from inside Munder Difflin.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/what-is-harness-engineering/" aria-label="Read: What Is Harness Engineering?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-3-2/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-3-2/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-27">Jun 27, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-3-2/">Launching Munder Difflin v0.3.2: Talk to Michael, a Realtime Voice Orchestrator</a></h3>
+    <p class="dek">Munder Difflin v0.3.2 adds Realtime Michael — a low-latency voice channel to the GOD orchestrator. Talk to Michael and he listens, answers, and acts: reading the hive and, behind spoken echo-back confirmation, dispatching, spawning, and steering the floor in real time.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-3-2/" aria-label="Read: Launching Munder Difflin v0.3.2: Talk to Michael, a Realtime Voice Orchestrator">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/run-munder-difflin-on-a-mac-mini/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/run-munder-difflin-on-a-mac-mini/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-22">Jun 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/run-munder-difflin-on-a-mac-mini/">Run Munder Difflin Locally on a Mac Mini</a></h3>
+    <p class="dek">Run a whole Munder Difflin office offline on an Apple silicon Mac mini: size the model to your unified memory, install Ollama or LM Studio, and wire OpenCode, Crush, Qwen and Pi to it. Current as of Munder Difflin 0.5.2 and the M6 and M5 Pro Mac mini.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/run-munder-difflin-on-a-mac-mini/" aria-label="Read: Run Munder Difflin Locally on a Mac Mini">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/run-munder-difflin-on-open-models/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/run-munder-difflin-on-open-models/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-22">Jun 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/run-munder-difflin-on-open-models/">Run Munder Difflin on Open Source Models: Fully Local or Through a Provider</a></h3>
+    <p class="dek">Munder Difflin can run your whole agent floor on open weight models like gpt-oss, Qwen3, DeepSeek, Llama, GLM and Kimi: fully local with Ollama, LM Studio or vLLM, or through a provider with your own key. The wiring for each engine, current as of 0.5.2.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/run-munder-difflin-on-open-models/" aria-label="Read: Run Munder Difflin on Open Source Models: Fully Local or Through a Provider">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-3-0/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-3-0/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-21">Jun 21, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-3-0/">Launching Munder Difflin v0.3.0: Selectable Engines, Integrations &amp; Slack-Spawned Workers</a></h3>
+    <p class="dek">Munder Difflin v0.3.0 makes every hire — and Michael himself — a pluggable engine, adds an integrations registry with a write-only secret broker, and lets the god orchestrator spawn an ephemeral worker straight from Slack.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-3-0/" aria-label="Read: Launching Munder Difflin v0.3.0: Selectable Engines, Integrations &amp; Slack-Spawned Workers">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/hire-manifest-untrusted-input/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/hire-manifest-untrusted-input/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-15">Jun 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>12 min</span>
+    </div>
+    <h3><a href="/blog/hire-manifest-untrusted-input/">Treating a Hire Manifest as Untrusted Input</a></h3>
+    <p class="dek">A shareable agent-config manifest is attacker input. How Munder Difflin&#39;s import pipeline stays inert: no auto-spawn, default-deny flags, and an SSRF-safe bounded fetch.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/hire-manifest-untrusted-input/" aria-label="Read: Treating a Hire Manifest as Untrusted Input">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-2-8/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-2-8/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-15">Jun 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-2-8/">Launching Munder Difflin v0.2.8: Shareable Hires</a></h3>
+    <p class="dek">Munder Difflin v0.2.8 ships Shareable Hires: a one-click, portable agent role manifest + The Hiring Fair gallery. Click a hire link, review every field, then spawn it yourself.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-2-8/" aria-label="Read: Launching Munder Difflin v0.2.8: Shareable Hires">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/shareable-agent-roles/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/shareable-agent-roles/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-15">Jun 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>8 min</span>
+    </div>
+    <h3><a href="/blog/shareable-agent-roles/">Shareable Agent Roles: A Portable Format for Hiring AI Coworkers</a></h3>
+    <p class="dek">Why agent roles should be portable: what a hire manifest encodes, how one-click hiring stays safe, and how The Hiring Fair turns tacit setup into a shareable artifact.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/shareable-agent-roles/" aria-label="Read: Shareable Agent Roles: A Portable Format for Hiring AI Coworkers">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/deploy-a-blog-writer-agent/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/deploy-a-blog-writer-agent/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/deploy-a-blog-writer-agent/">Deploy a Blog Writer Agent: The One That Wrote This Post</a></h3>
+    <p class="dek">How the Munder Difflin blog is written by agents in our own office: a brief, a house style, a draft in its own worktree, drawings made in code, a pull request, and one human merge. The pipeline, and how to build your own.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/deploy-a-blog-writer-agent/" aria-label="Read: Deploy a Blog Writer Agent: The One That Wrote This Post">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/deploy-automated-pr-reviewer-agent/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/deploy-automated-pr-reviewer-agent/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/deploy-automated-pr-reviewer-agent/">Deploy a PR Reviewer That Never Sleeps — In About One Prompt</a></h3>
+    <p class="dek">A how-to for standing up a fully automated PR-reviewing agent in Munder Difflin — one that reads your real source (not just the PR description), de-dupes noise, and only escalates what matters. With a real triage run that turned 22 duplicate firings into a clean v0.2.5 patch queue.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/deploy-automated-pr-reviewer-agent/" aria-label="Read: Deploy a PR Reviewer That Never Sleeps — In About One Prompt">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/run-ai-agent-hive-from-slack-setup/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/run-ai-agent-hive-from-slack-setup/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/run-ai-agent-hive-from-slack-setup/">Run Your AI Agent Hive from Slack: The Complete Setup</a></h3>
+    <p class="dek">Step-by-step setup for driving Munder Difflin&#39;s AI agent hive from Slack: create the app, set scopes, paste the tunnel Request URL, and @mention your bot to start work — done-summaries post back in-thread.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/run-ai-agent-hive-from-slack-setup/" aria-label="Read: Run Your AI Agent Hive from Slack: The Complete Setup">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-clone-army-trap-mixed-swarm-vs-identical-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/">The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents</a></h3>
+    <p class="dek">Spinning up tens of identical top-tier CLI agents feels powerful and burns tokens on work a cheaper agent could do. A mixed-capability swarm with shared memory wins on cost — and often on quality.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/" aria-label="Read: The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/trigger-ai-agents-from-github-webhook/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/trigger-ai-agents-from-github-webhook/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/trigger-ai-agents-from-github-webhook/">How to Trigger Your AI Agent Hive from a GitHub Webhook</a></h3>
+    <p class="dek">Wire a GitHub webhook to Munder Difflin: a secret-gated local endpoint turns each repo event into a task for your GOD orchestrator — POST a message, get a token, poll the result. No server to host.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/trigger-ai-agents-from-github-webhook/" aria-label="Read: How to Trigger Your AI Agent Hive from a GitHub Webhook">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/why-cli-agents-are-powerful/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-cli-agents-are-powerful/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/why-cli-agents-are-powerful/">Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work</a></h3>
+    <p class="dek">CLI agents are powerful because they have terminal-level access: they run builds, tests, and git, and verify their own work by executing it. Here&#39;s why that matters — and the concrete ways Munder Difflin cuts token consumption while doing it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/why-cli-agents-are-powerful/" aria-label="Read: Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-2-4/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-2-4/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-09">Jun 9, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-2-4/">Launching Munder Difflin v0.2.4</a></h3>
+    <p class="dek">Munder Difflin v0.2.4 is here: Claude Code, OpenAI Codex, and Antigravity (Gemini) agents now run as one hive with full parity — no API keys, no setup. Brief a GOD orchestrator, automate basically anything in one prompt, and close the lid while it keeps working.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-2-4/" aria-label="Read: Launching Munder Difflin v0.2.4">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/munder-difflin-v0-2-4-feature-walkthrough/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/munder-difflin-v0-2-4-feature-walkthrough/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-09">Jun 9, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/munder-difflin-v0-2-4-feature-walkthrough/">Munder Difflin v0.2.4 Feature Walkthrough</a></h3>
+    <p class="dek">A comprehensive guide to every change in Munder Difflin v0.2.4 — how the Codex lifecycle-hook bridge achieves full hive parity, what the Schedules tab adds, why tunnelmole replaced localtunnel, and what else shipped.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/munder-difflin-v0-2-4-feature-walkthrough/" aria-label="Read: Munder Difflin v0.2.4 Feature Walkthrough">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/launching-munder-difflin-v0-2-0/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/launching-munder-difflin-v0-2-0/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-07">Jun 7, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/launching-munder-difflin-v0-2-0/">Launching Munder Difflin v0.2.0</a></h3>
+    <p class="dek">Munder Difflin v0.2.0 is here: a Command Center overhaul, per-agent token budgets, live OpenTelemetry observability, a circuit breaker, durable SQLite persistence, and a big round of community fixes.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/launching-munder-difflin-v0-2-0/" aria-label="Read: Launching Munder Difflin v0.2.0">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/one-prompt-automated-pr-review/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/one-prompt-automated-pr-review/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-07">Jun 7, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/one-prompt-automated-pr-review/">One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story</a></h3>
+    <p class="dek">How a single prompt to the Munder Difflin god agent reviewed all open PRs and set up a recurring hourly PR reviewer — while the repo was blowing up with 400+ stars.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/one-prompt-automated-pr-review/" aria-label="Read: One Prompt, Five PR Reviews, and an Hourly Automation — A Dogfooding Story">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/does-the-june-2026-agent-sdk-change-affect-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/does-the-june-2026-agent-sdk-change-affect-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-06">Jun 6, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/does-the-june-2026-agent-sdk-change-affect-munder-difflin/">Does the June 2026 Agent SDK Change Affect Munder Difflin?</a></h3>
+    <p class="dek">From June 15, 2026 the Claude Agent SDK gets a separate credit. Munder Difflin drives the native Claude Code CLI, so your hive runs on your plan as before.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/does-the-june-2026-agent-sdk-change-affect-munder-difflin/" aria-label="Read: Does the June 2026 Agent SDK Change Affect Munder Difflin?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/best-ai-coding-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/best-ai-coding-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-05">Jun 5, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/best-ai-coding-agents/">The Best AI Coding Agents in 2026: A Field Guide</a></h3>
+    <p class="dek">A fair 2026 field guide to the best AI coding agents — Cursor, Aider, Cline, Devin, Copilot — by category, plus where a local multi-agent hive fits.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/best-ai-coding-agents/" aria-label="Read: The Best AI Coding Agents in 2026: A Field Guide">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/cline-vs-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/cline-vs-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-05">Jun 5, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/cline-vs-munder-difflin/">Cline vs Munder Difflin: In-Editor Agent or Local Hive?</a></h3>
+    <p class="dek">A fair comparison of Cline and Munder Difflin — an in-editor BYOK coding agent vs a local multi-agent orchestration hive — and when to pick which.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/cline-vs-munder-difflin/" aria-label="Read: Cline vs Munder Difflin: In-Editor Agent or Local Hive?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/compressing-agent-memory/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/compressing-agent-memory/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-05">Jun 5, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/compressing-agent-memory/">Compressing Agent Memory Without Losing the Original</a></h3>
+    <p class="dek">How and why to compress an agent&#39;s long-term memory: the toolbox, the lossy trap, and keeping a lossless original beside a compact copy.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/compressing-agent-memory/" aria-label="Read: Compressing Agent Memory Without Losing the Original">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/generative-engine-optimization-techniques/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/generative-engine-optimization-techniques/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-05">Jun 5, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/generative-engine-optimization-techniques/">Generative Engine Optimization: The Techniques the Research Backs</a></h3>
+    <p class="dek">What the first peer-reviewed GEO study found works to get content cited by AI — statistics, source citations, quotes — and why keyword stuffing backfires.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/generative-engine-optimization-techniques/" aria-label="Read: Generative Engine Optimization: The Techniques the Research Backs">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/mcp-security-tool-poisoning/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/mcp-security-tool-poisoning/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-05">Jun 5, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/mcp-security-tool-poisoning/">MCP Tool Poisoning: How to Secure the Model Context Protocol</a></h3>
+    <p class="dek">How the Model Context Protocol gets attacked — tool poisoning, rug pulls, command injection — and the layered defenses that secure your MCP tools.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/mcp-security-tool-poisoning/" aria-label="Read: MCP Tool Poisoning: How to Secure the Model Context Protocol">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/multi-agent-orchestration-patterns/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/multi-agent-orchestration-patterns/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-05">Jun 5, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/multi-agent-orchestration-patterns/">Multi-Agent Orchestration Patterns: Which Topology, and When</a></h3>
+    <p class="dek">The multi-agent orchestration patterns — orchestrator-worker, pipeline, fan-out, debate, swarm, blackboard — when to use each, and when one agent wins.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/multi-agent-orchestration-patterns/" aria-label="Read: Multi-Agent Orchestration Patterns: Which Topology, and When">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/the-multi-agent-cost-playbook/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-multi-agent-cost-playbook/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-05">Jun 5, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/the-multi-agent-cost-playbook/">The Multi-Agent Cost Playbook: Five Levers to Cut AI Agent Spend</a></h3>
+    <p class="dek">Caching, batching, model tiering, context discipline, local-first — the five levers that cut a multi-agent fleet&#39;s bill, and how they compound.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/the-multi-agent-cost-playbook/" aria-label="Read: The Multi-Agent Cost Playbook: Five Levers to Cut AI Agent Spend">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/agent-security-and-sandboxing/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/agent-security-and-sandboxing/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/agent-security-and-sandboxing/">Running AI Agents Safely: Permission Modes and Sandboxing</a></h3>
+    <p class="dek">How to run autonomous AI agents safely: permission modes and the bypassPermissions foot-gun, workspace isolation, and what to gate vs. allow.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/agent-security-and-sandboxing/" aria-label="Read: Running AI Agents Safely: Permission Modes and Sandboxing">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/agents-rule-of-two/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/agents-rule-of-two/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/agents-rule-of-two/">The Agents Rule of Two: A Simple Safety Rule for Coding Agents</a></h3>
+    <p class="dek">Meta&#39;s Agents Rule of Two for coding agents: don&#39;t let one session combine untrusted input, private data, and external reach at once — or supervise.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/agents-rule-of-two/" aria-label="Read: The Agents Rule of Two: A Simple Safety Rule for Coding Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/architecture-two-planes-one-renderer/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/architecture-two-planes-one-renderer/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/architecture-two-planes-one-renderer/">Munder Difflin&#39;s Architecture: Two Data Planes, One Renderer</a></h3>
+    <p class="dek">A walkthrough of the multi-agent harness architecture: a node-pty terminal plane and a hooks/hive event plane feeding one React + Pixi.js renderer.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/architecture-two-planes-one-renderer/" aria-label="Read: Munder Difflin&#39;s Architecture: Two Data Planes, One Renderer">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/best-claude-code-multi-agent-tools/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/best-claude-code-multi-agent-tools/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/best-claude-code-multi-agent-tools/">The Best Tools to Run Multiple Claude Code Agents (2026)</a></h3>
+    <p class="dek">An honest September 2026 roundup of tools for running several Claude Code agents: Claude Code agent teams, Claude Squad, Conductor, Nimbalyst, Emdash, Vibe Kanban and Munder Difflin, and how to pick one.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/best-claude-code-multi-agent-tools/" aria-label="Read: The Best Tools to Run Multiple Claude Code Agents (2026)">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/building-reliable-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/building-reliable-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/building-reliable-ai-agents/">Building Reliable AI Agents: Failure Is the Default</a></h3>
+    <p class="dek">Agents fail constantly: tools error, steps stall, output goes wrong. Reliability isn&#39;t avoiding failure — it&#39;s making each one contained and recoverable.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/building-reliable-ai-agents/" aria-label="Read: Building Reliable AI Agents: Failure Is the Default">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/can-claude-code-agents-talk-to-each-other/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/can-claude-code-agents-talk-to-each-other/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/can-claude-code-agents-talk-to-each-other/">Can Claude Code Agents Talk to Each Other?</a></h3>
+    <p class="dek">Can Claude Code agents talk to each other? By default they report to their launcher — but a small coordination layer lets them message peer-to-peer.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/can-claude-code-agents-talk-to-each-other/" aria-label="Read: Can Claude Code Agents Talk to Each Other?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/claude-code-automation-while-you-sleep/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-automation-while-you-sleep/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-automation-while-you-sleep/">Claude Code Automation: Let Agents Build While You Sleep</a></h3>
+    <p class="dek">Claude Code automation that runs overnight: an autonomous Stop-hook loop, safe permission bypass, and guardrails so you wake up to progress, not chaos.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/claude-code-automation-while-you-sleep/" aria-label="Read: Claude Code Automation: Let Agents Build While You Sleep">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/claude-code-git-worktrees-vs-hive/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-git-worktrees-vs-hive/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-git-worktrees-vs-hive/">Git Worktrees vs a Hive: Two Ways to Parallelize Claude Code</a></h3>
+    <p class="dek">Claude Code git worktrees vs a hive: when isolated worktrees suffice for parallel agents, and when you need memory, messaging, and an orchestrator on top.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/claude-code-git-worktrees-vs-hive/" aria-label="Read: Git Worktrees vs a Hive: Two Ways to Parallelize Claude Code">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/claude-code-orchestration-tools-compared/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-orchestration-tools-compared/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-orchestration-tools-compared/">Claude Code Orchestration Tools, Compared</a></h3>
+    <p class="dek">Claude Code orchestration tools compared on memory, messaging, visibility, control, and local-first — across Claude Squad, Conductor, Crystal, and more.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/claude-code-orchestration-tools-compared/" aria-label="Read: Claude Code Orchestration Tools, Compared">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/claude-squad-vs-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-squad-vs-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/claude-squad-vs-munder-difflin/">Claude Squad vs Munder Difflin: Which Should You Use?</a></h3>
+    <p class="dek">Claude Squad vs Munder Difflin: a lean terminal session manager against a memory-backed, orchestrated, visual hive. Feature table and an honest verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/claude-squad-vs-munder-difflin/" aria-label="Read: Claude Squad vs Munder Difflin: Which Should You Use?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/context-engineering-for-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/context-engineering-for-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/context-engineering-for-ai-agents/">Context Engineering for AI Agents: Budgeting the Window</a></h3>
+    <p class="dek">Why context engineering beats prompt wording for agents — and the tactics (isolation, retrieval, externalized state, compaction) that keep the window lean.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/context-engineering-for-ai-agents/" aria-label="Read: Context Engineering for AI Agents: Budgeting the Window">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/debugging-multi-agent-systems/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/debugging-multi-agent-systems/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/debugging-multi-agent-systems/">How to Debug a Multi-Agent System</a></h3>
+    <p class="dek">How to debug a multi-agent system: use the event log, per-agent terminals, message trails, and git history to find why a hive of AI agents went sideways.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/debugging-multi-agent-systems/" aria-label="Read: How to Debug a Multi-Agent System">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/do-more-with-less-model-routing/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/do-more-with-less-model-routing/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/do-more-with-less-model-routing/">Do More With Less: Smart Model Routing Across Agents</a></h3>
+    <p class="dek">Why a hive of agents shouldn&#39;t all run the biggest model — and how routing the right task to the right model cuts cost and latency without losing quality.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/do-more-with-less-model-routing/" aria-label="Read: Do More With Less: Smart Model Routing Across Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/evaluating-ai-agent-reliability/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/evaluating-ai-agent-reliability/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/evaluating-ai-agent-reliability/">Evaluating AI Agent Reliability: How to Measure What You Can Trust</a></h3>
+    <p class="dek">How to measure whether an AI agent is reliable enough to trust: reliability thresholds, why benchmarks overstate, and evaluating on your own codebase.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/evaluating-ai-agent-reliability/" aria-label="Read: Evaluating AI Agent Reliability: How to Measure What You Can Trust">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/file-based-coordination-vs-message-queues/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/file-based-coordination-vs-message-queues/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/file-based-coordination-vs-message-queues/">File-Based Coordination vs Message Queues for AI Agents</a></h3>
+    <p class="dek">Why a local agent hive coordinates through plain files, not Redis or RabbitMQ: the zero-ops wins, the real tradeoffs, and where files hit a ceiling.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/file-based-coordination-vs-message-queues/" aria-label="Read: File-Based Coordination vs Message Queues for AI Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-memory">
+  <a class="thumb t-memory" href="/blog/how-agents-remember-semantic-memory/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-agents-remember-semantic-memory/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-agents-remember-semantic-memory/">How AI Agents Remember: Semantic Memory in a Hive</a></h3>
+    <p class="dek">A code-grounded guide to how AI agents remember — the MemPalace mine loop, per-agent wings, and wake-up digest that give a Claude Code hive shared recall.</p>
+    <div class="foot">
+      <span class="tag kind">Memory</span>
+      <a class="more" href="/blog/how-agents-remember-semantic-memory/" aria-label="Read: How AI Agents Remember: Semantic Memory in a Hive">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/how-ai-agents-verify-their-own-work/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-ai-agents-verify-their-own-work/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-ai-agents-verify-their-own-work/">How AI Agents Verify Their Own Work (Before Saying &#39;Done&#39;)</a></h3>
+    <p class="dek">The discipline that makes an autonomous coding agent trustworthy: prove every claim, reproduce the green, and check the fix — not just the intent.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/how-ai-agents-verify-their-own-work/" aria-label="Read: How AI Agents Verify Their Own Work (Before Saying &#39;Done&#39;)">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/how-ai-answer-engines-choose-sources/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-ai-answer-engines-choose-sources/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/how-ai-answer-engines-choose-sources/">How AI Answer Engines Choose What to Cite</a></h3>
+    <p class="dek">How ChatGPT, Claude, Perplexity, and Google AI Overviews actually pick and cite sources in 2026 — the per-engine signals, and why there&#39;s no single rank.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/how-ai-answer-engines-choose-sources/" aria-label="Read: How AI Answer Engines Choose What to Cite">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/human-in-the-loop-approving-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/human-in-the-loop-approving-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/human-in-the-loop-approving-ai-agents/">Approving AI Agents: Human-in-the-Loop Without a Queue</a></h3>
+    <p class="dek">How to approve what AI agents do without a parallel approval queue: native permission prompts, routing &#39;to: human&#39; to the orchestrator, remote approval.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/human-in-the-loop-approving-ai-agents/" aria-label="Read: Approving AI Agents: Human-in-the-Loop Without a Queue">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-memory">
+  <a class="thumb t-memory" href="/blog/keep-agent-semantic-memory-clean/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/keep-agent-semantic-memory-clean/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/keep-agent-semantic-memory-clean/">Keep Your Agent&#39;s Semantic Memory Clean: Don&#39;t Index the Config</a></h3>
+    <p class="dek">A semantic memory layer is only as good as what you feed it — how an agent&#39;s recall got swamped by config and logs, and the .gitignore + prune fix.</p>
+    <div class="foot">
+      <span class="tag kind">Memory</span>
+      <a class="more" href="/blog/keep-agent-semantic-memory-clean/" aria-label="Read: Keep Your Agent&#39;s Semantic Memory Clean: Don&#39;t Index the Config">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/local-first-ai-agent-orchestration/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/local-first-ai-agent-orchestration/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/local-first-ai-agent-orchestration/">Local-First AI Agent Orchestration: How a Hive Runs Without a Cloud</a></h3>
+    <p class="dek">How local-first AI agent orchestration works under the hood — the loop, mailboxes, scheduler, and audit log that coordinate a hive on one machine.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/local-first-ai-agent-orchestration/" aria-label="Read: Local-First AI Agent Orchestration: How a Hive Runs Without a Cloud">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/local-first-vs-cloud-agent-sdks/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/local-first-vs-cloud-agent-sdks/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/local-first-vs-cloud-agent-sdks/">Local-First vs Cloud Agent SDKs: Which Wins in 2026?</a></h3>
+    <p class="dek">Local-first agent hives vs the 2026 cloud agent SDK wave (OpenAI, Google ADK, Microsoft, MCP/A2A): what each optimizes for, and when to pick which.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/local-first-vs-cloud-agent-sdks/" aria-label="Read: Local-First vs Cloud Agent SDKs: Which Wins in 2026?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/long-running-agents-the-2026-shift/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/long-running-agents-the-2026-shift/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/long-running-agents-the-2026-shift/">Long-Running Agents: The 2026 Shift from Minutes to Hours</a></h3>
+    <p class="dek">Agents used to answer in seconds; now they run for hours. The data behind the shift — and why a longer agent is a different problem, not just a bigger one.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/long-running-agents-the-2026-shift/" aria-label="Read: Long-Running Agents: The 2026 Shift from Minutes to Hours">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/observability-for-agent-fleets/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/observability-for-agent-fleets/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/observability-for-agent-fleets/">Observability for Agent Fleets: Seeing What Your Agents Do</a></h3>
+    <p class="dek">Agent fleet observability: the four questions your dashboard must answer about who&#39;s working, what they&#39;re doing, what it costs, and what they know.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/observability-for-agent-fleets/" aria-label="Read: Observability for Agent Fleets: Seeing What Your Agents Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/open-source-ai-tools-on-purpose/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/open-source-ai-tools-on-purpose/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/open-source-ai-tools-on-purpose/">Building AI Dev Tools in the Open, On Purpose</a></h3>
+    <p class="dek">Agents touch your code, keys, and memory. That&#39;s why agent tooling should be open source and local-first — so you can verify it, not just trust it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/open-source-ai-tools-on-purpose/" aria-label="Read: Building AI Dev Tools in the Open, On Purpose">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/overnight-ai-coding-realistic-expectations/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/overnight-ai-coding-realistic-expectations/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/overnight-ai-coding-realistic-expectations/">Overnight AI Coding: What&#39;s Realistic (and What&#39;s Not)</a></h3>
+    <p class="dek">An honest look at letting AI coding agents run overnight — what works today, where guardrails matter, and what still needs a human in the morning.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/overnight-ai-coding-realistic-expectations/" aria-label="Read: Overnight AI Coding: What&#39;s Realistic (and What&#39;s Not)">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/prompt-caching-for-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/prompt-caching-for-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/prompt-caching-for-ai-agents/">Prompt Caching for AI Agents: Stop Paying for the Same Tokens Twice</a></h3>
+    <p class="dek">An agent re-sends the same prompt, tools, and context every turn. Prompt caching makes you pay for that prefix once — here&#39;s how to design for it.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/prompt-caching-for-ai-agents/" aria-label="Read: Prompt Caching for AI Agents: Stop Paying for the Same Tokens Twice">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/recovering-from-agent-failures/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/recovering-from-agent-failures/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/recovering-from-agent-failures/">Recovering From Agent Failures: Resilience Patterns for a Hive</a></h3>
+    <p class="dek">How multi-agent systems survive partial failure: retry with stale-lock recovery, poison-message quarantine, hop-cap circuit breaking, idempotent handling.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/recovering-from-agent-failures/" aria-label="Read: Recovering From Agent Failures: Resilience Patterns for a Hive">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/scheduling-autonomous-agent-missions/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/scheduling-autonomous-agent-missions/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/scheduling-autonomous-agent-missions/">Make a Hive Work While You Sleep: Scheduling Autonomous Agent Missions</a></h3>
+    <p class="dek">How scheduled missions make a Claude Code hive work on a cadence — recurring requests that fire on an interval and land in an agent&#39;s queue, hands-free.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/scheduling-autonomous-agent-missions/" aria-label="Read: Make a Hive Work While You Sleep: Scheduling Autonomous Agent Missions">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/security-for-ai-coding-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/security-for-ai-coding-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/security-for-ai-coding-agents/">Security for AI Coding Agents: A Practical Guide</a></h3>
+    <p class="dek">How to run AI coding agents safely: contain the blast radius, scope every task, treat agent input as untrusted, and gate the irreversible behind a human.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/security-for-ai-coding-agents/" aria-label="Read: Security for AI Coding Agents: A Practical Guide">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/small-team-ai-agents-playbook/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/small-team-ai-agents-playbook/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/small-team-ai-agents-playbook/">A Small-Team Playbook for AI Coding Agents</a></h3>
+    <p class="dek">How a small team adopts a hive of AI coding agents without chaos — the roles to assign, the cadence to run, and the guardrails that keep it safe.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/small-team-ai-agents-playbook/" aria-label="Read: A Small-Team Playbook for AI Coding Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/the-hook-shim-pattern/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-hook-shim-pattern/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/the-hook-shim-pattern/">The Hook Shim Pattern: Wiring Agent Hooks to a Live Process</a></h3>
+    <p class="dek">How a tiny shim bridges Claude Code&#39;s lifecycle hooks to one live process over a Unix socket, turning per-event hooks into a telemetry and control channel.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/the-hook-shim-pattern/" aria-label="Read: The Hook Shim Pattern: Wiring Agent Hooks to a Live Process">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/the-lethal-trifecta-for-coding-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-lethal-trifecta-for-coding-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/the-lethal-trifecta-for-coding-agents/">The Lethal Trifecta for Coding Agents</a></h3>
+    <p class="dek">A coding agent reads private code, ingests untrusted content, and runs commands — the lethal trifecta. How a poisoned dependency leaks your secrets.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/the-lethal-trifecta-for-coding-agents/" aria-label="Read: The Lethal Trifecta for Coding Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/the-office-parody-behind-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/the-office-parody-behind-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/the-office-parody-behind-munder-difflin/">The Office Parody Behind Munder Difflin (and Why It Helps)</a></h3>
+    <p class="dek">Why Munder Difflin is a loving parody of The Office — and how the office metaphor makes a hive of AI agents genuinely easier to understand and trust.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/the-office-parody-behind-munder-difflin/" aria-label="Read: The Office Parody Behind Munder Difflin (and Why It Helps)">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/trigger-ai-agents-from-slack/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/trigger-ai-agents-from-slack/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/trigger-ai-agents-from-slack/">Trigger Your AI Agent Hive from Slack</a></h3>
+    <p class="dek">Trigger an AI agent hive from Slack: a local webhook verifies each message and drops it into your orchestrator&#39;s queue as a task — no server to host.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/trigger-ai-agents-from-slack/" aria-label="Read: Trigger Your AI Agent Hive from Slack">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/what-is-aeo-for-dev-tools/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/what-is-aeo-for-dev-tools/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/what-is-aeo-for-dev-tools/">AEO for Dev Tools: Getting Cited by ChatGPT and Claude</a></h3>
+    <p class="dek">Answer Engine Optimization for dev tools: how to get cited by ChatGPT, Claude, and Perplexity with the right robots.txt, JSON-LD, and writing patterns.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/what-is-aeo-for-dev-tools/" aria-label="Read: AEO for Dev Tools: Getting Cited by ChatGPT and Claude">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/whats-new-in-agentic-ai-june-2026/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/whats-new-in-agentic-ai-june-2026/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/whats-new-in-agentic-ai-june-2026/">What&#39;s New in Agentic AI: A June 2026 Field Guide</a></h3>
+    <p class="dek">A grounded June 2026 roundup of agentic AI: Claude Opus 4.8, the MCP and A2A protocol layer, usage-based agent billing, and agent governance.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/whats-new-in-agentic-ai-june-2026/" aria-label="Read: What&#39;s New in Agentic AI: A June 2026 Field Guide">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/when-do-agents-need-an-agent-protocol/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/when-do-agents-need-an-agent-protocol/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/when-do-agents-need-an-agent-protocol/">When Do AI Agents Actually Need an Agent Protocol?</a></h3>
+    <p class="dek">When do AI agents need a protocol like MCP or A2A? Agents you own coordinate fine with file mailboxes; protocols earn their keep across boundaries.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/when-do-agents-need-an-agent-protocol/" aria-label="Read: When Do AI Agents Actually Need an Agent Protocol?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/building-a-terminal-ui-xterm-node-pty/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/building-a-terminal-ui-xterm-node-pty/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>8 min</span>
+    </div>
+    <h3><a href="/blog/building-a-terminal-ui-xterm-node-pty/">Building a Terminal UI with xterm.js and node-pty</a></h3>
+    <p class="dek">Wire xterm.js to a node-pty backend: stream output, write keystrokes back, handle resize, and keep many live terminals fast with a terminal pool.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/building-a-terminal-ui-xterm-node-pty/" aria-label="Read: Building a Terminal UI with xterm.js and node-pty">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/building-an-ai-office-floor/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/building-an-ai-office-floor/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/building-an-ai-office-floor/">Building an AI &quot;Office Floor&quot;: Avatars, Pathfinding, Envelopes</a></h3>
+    <p class="dek">The game-dev techniques behind a dev tool&#39;s office floor: Tiled maps, BFS pathfinding, sprite recoloring, and flying message envelopes in Pixi.js.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/building-an-ai-office-floor/" aria-label="Read: Building an AI &quot;Office Floor&quot;: Avatars, Pathfinding, Envelopes">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/claude-code-hooks-explained/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-hooks-explained/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-hooks-explained/">Claude Code Hooks, Explained (PreToolUse, PostToolUse, Stop)</a></h3>
+    <p class="dek">A practical tour of Claude Code hooks — the PreToolUse, PostToolUse, and Stop lifecycle — and how a Unix-socket hook shim drives a live office floor.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/claude-code-hooks-explained/" aria-label="Read: Claude Code Hooks, Explained (PreToolUse, PostToolUse, Stop)">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/claude-squad-alternative/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-squad-alternative/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/claude-squad-alternative/">Looking for a Claude Squad Alternative?</a></h3>
+    <p class="dek">What Claude Squad does well, where it stops, and why a memory-backed, orchestrated hive may be the Claude Squad alternative you&#39;re after.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/claude-squad-alternative/" aria-label="Read: Looking for a Claude Squad Alternative?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/conductor-claude-code-alternative/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/conductor-claude-code-alternative/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/conductor-claude-code-alternative/">A Conductor Alternative for Orchestrating Claude Code</a></h3>
+    <p class="dek">Conductor is a polished macOS app for parallel Claude Code worktrees. When to pick a cross-platform, orchestrated hive as your Conductor alternative.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/conductor-claude-code-alternative/" aria-label="Read: A Conductor Alternative for Orchestrating Claude Code">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/crystal-claude-code-alternative/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/crystal-claude-code-alternative/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/crystal-claude-code-alternative/">A Crystal Alternative: Multi-Agent Claude Code with Memory</a></h3>
+    <p class="dek">Crystal runs parallel Claude Code worktrees well. Where a memory-backed, orchestrated hive changes the workflow — and when to stick with Crystal.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/crystal-claude-code-alternative/" aria-label="Read: A Crystal Alternative: Multi-Agent Claude Code with Memory">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/mcp-and-skills-in-a-hive/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/mcp-and-skills-in-a-hive/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/mcp-and-skills-in-a-hive/">Bringing Your MCP Servers and Skills Into a Hive of Agents</a></h3>
+    <p class="dek">How agents in a hive inherit your existing Claude Code MCP servers, skills, and tools — and how to scope which agent gets which capability.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/mcp-and-skills-in-a-hive/" aria-label="Read: Bringing Your MCP Servers and Skills Into a Hive of Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/node-pty-electron-real-terminals/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/node-pty-electron-real-terminals/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/node-pty-electron-real-terminals/">Real Terminals in Electron with node-pty</a></h3>
+    <p class="dek">How to run byte-for-byte authentic shells inside Electron with node-pty: the native-rebuild gotcha, the macOS PATH trap, and streaming PTY output over IPC.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/node-pty-electron-real-terminals/" aria-label="Read: Real Terminals in Electron with node-pty">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/rendering-many-live-terminals-performance/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/rendering-many-live-terminals-performance/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/rendering-many-live-terminals-performance/">Rendering Many Live Terminals Without Melting the CPU</a></h3>
+    <p class="dek">xterm.js performance for many live PTYs: a terminal pool, render-only-visible, smart scrollback, and accelerated rendering to stream dozens at once.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/rendering-many-live-terminals-performance/" aria-label="Read: Rendering Many Live Terminals Without Melting the CPU">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/vibe-kanban-alternative/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/vibe-kanban-alternative/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-03">Jun 3, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/vibe-kanban-alternative/">A vibe-kanban Alternative for Coordinating AI Agents</a></h3>
+    <p class="dek">vibe-kanban gives you a board to assign tasks to coding agents. When a self-routing hive is the better vibe-kanban alternative — and when a board wins.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/vibe-kanban-alternative/" aria-label="Read: A vibe-kanban Alternative for Coordinating AI Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/ai-agent-glossary/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/ai-agent-glossary/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/ai-agent-glossary/">The AI Coding Agent Glossary: Harness, Orchestrator, Hive, Subagent</a></h3>
+    <p class="dek">Plain-English definitions of the AI coding agent terms everyone trips over — harness, orchestrator, hive, subagent, agent memory — each in one line.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/ai-agent-glossary/" aria-label="Read: The AI Coding Agent Glossary: Harness, Orchestrator, Hive, Subagent">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/from-one-terminal-to-a-team/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/from-one-terminal-to-a-team/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/from-one-terminal-to-a-team/">From One Terminal to a Team: Scaling Your Claude Code Workflow</a></h3>
+    <p class="dek">The workflow shift from a single Claude Code session to a coordinated team of agents — what changes, where it breaks, and the concrete before-and-after.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/from-one-terminal-to-a-team/" aria-label="Read: From One Terminal to a Team: Scaling Your Claude Code Workflow">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/how-to-choose-a-multi-agent-tool/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-choose-a-multi-agent-tool/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/how-to-choose-a-multi-agent-tool/">How to Choose a Multi-Agent Coding Tool: A Buyer&#39;s Checklist</a></h3>
+    <p class="dek">A decision framework for choosing a multi-agent coding tool — memory, control, visibility, cost, local-first — with a simple scoring rubric you can run.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/how-to-choose-a-multi-agent-tool/" aria-label="Read: How to Choose a Multi-Agent Coding Tool: A Buyer&#39;s Checklist">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/human-in-the-loop-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/human-in-the-loop-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/human-in-the-loop-ai-agents/">Human-in-the-Loop AI Agents: Approvals That Don&#39;t Slow You Down</a></h3>
+    <p class="dek">Design human-in-the-loop AI agents that stay autonomous: an approvals queue that escalates only spend, destructive ops, and scope changes.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/human-in-the-loop-ai-agents/" aria-label="Read: Human-in-the-Loop AI Agents: Approvals That Don&#39;t Slow You Down">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/munder-difflin-faq/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/munder-difflin-faq/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>1 min</span>
+    </div>
+    <h3><a href="/blog/munder-difflin-faq/">Munder Difflin FAQ: Everything People Ask</a></h3>
+    <p class="dek">Answers to the top Munder Difflin questions — what it is, is it free, does it run locally, which platforms, and how it differs from many terminals.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/munder-difflin-faq/" aria-label="Read: Munder Difflin FAQ: Everything People Ask">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/run-an-office-of-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/run-an-office-of-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/run-an-office-of-ai-agents/">Run an Office of AI Agents While You Sleep</a></h3>
+    <p class="dek">What it takes to run a self-coordinating office of AI coding agents that keeps shipping after you log off — and the guardrails that keep it sane.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/run-an-office-of-ai-agents/" aria-label="Read: Run an Office of AI Agents While You Sleep">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/single-committer-git-pattern/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/single-committer-git-pattern/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/single-committer-git-pattern/">The Single-Committer Pattern: Multi-Agent Git Without Corruption</a></h3>
+    <p class="dek">Parallel agents corrupt a repo with index.lock races. The single-committer pattern — agents write, one process commits — fixes concurrent git writes.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/single-committer-git-pattern/" aria-label="Read: The Single-Committer Pattern: Multi-Agent Git Without Corruption">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/visualizing-ai-agents-pixijs/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/visualizing-ai-agents-pixijs/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/visualizing-ai-agents-pixijs/">Visualizing AI Agents with Pixi.js: An Office You Can Watch</a></h3>
+    <p class="dek">How we render AI agents as avatars on a Pixi.js office floor — driven by real hook and message events, with seat assignment, pathing, and flying envelopes.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/visualizing-ai-agents-pixijs/" aria-label="Read: Visualizing AI Agents with Pixi.js: An Office You Can Watch">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/what-are-claude-code-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/what-are-claude-code-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/what-are-claude-code-agents/">What Are Claude Code Agents? And How to Use Many at Once</a></h3>
+    <p class="dek">Claude Code agents explained in plain English — what an agent actually is, how subagents differ, and the leap from one agent to a coordinated team.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/what-are-claude-code-agents/" aria-label="Read: What Are Claude Code Agents? And How to Use Many at Once">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-use-cases">
+  <a class="thumb t-use-cases" href="/blog/why-local-first-matters-for-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-local-first-matters-for-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/why-local-first-matters-for-ai-agents/">Why Local-First Matters for Your AI Agents</a></h3>
+    <p class="dek">The control, privacy, and cost case for keeping your AI agents and their memory on your own machine — and what cloud orchestration quietly costs.</p>
+    <div class="foot">
+      <span class="tag kind">Use Cases</span>
+      <a class="more" href="/blog/why-local-first-matters-for-ai-agents/" aria-label="Read: Why Local-First Matters for Your AI Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-story">
+  <a class="thumb t-story" href="/blog/why-we-built-munder-difflin/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/why-we-built-munder-difflin/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-02">Jun 2, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/why-we-built-munder-difflin/">Why We Built Munder Difflin</a></h3>
+    <p class="dek">The origin story of Munder Difflin — how the pain of juggling Claude Code terminals led to a coordinated, memory-backed hive of agents you can watch.</p>
+    <div class="foot">
+      <span class="tag kind">Story</span>
+      <a class="more" href="/blog/why-we-built-munder-difflin/" aria-label="Read: Why We Built Munder Difflin">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/append-only-event-log-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/append-only-event-log-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-01">Jun 1, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/append-only-event-log-agents/">An Append-Only Event Log for a Hive of Agents</a></h3>
+    <p class="dek">How an append-only event log makes a multi-agent system debuggable and replayable: what to record, and why one JSON line per event beats a database.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/append-only-event-log-agents/" aria-label="Read: An Append-Only Event Log for a Hive of Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-run-multiple-claude-code-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-run-multiple-claude-code-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-06-01">Jun 1, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/how-to-run-multiple-claude-code-agents/">How to Run Multiple Claude Code Agents (Without Losing Track)</a></h3>
+    <p class="dek">Run several Claude Code agents in parallel without the chaos: give each a role, let them coordinate, and stop alt-tabbing between terminal windows.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-run-multiple-claude-code-agents/" aria-label="Read: How to Run Multiple Claude Code Agents (Without Losing Track)">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-internals">
+  <a class="thumb t-internals" href="/blog/atomic-file-mailboxes-for-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/atomic-file-mailboxes-for-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-31">May 31, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/atomic-file-mailboxes-for-agents/">Atomic File Mailboxes: How Agents Message Each Other</a></h3>
+    <p class="dek">Can Claude Code agents talk to each other? Yes — the outbox-router-inbox design that lets agents message safely using plain files and atomic renames.</p>
+    <div class="foot">
+      <span class="tag kind">Internals</span>
+      <a class="more" href="/blog/atomic-file-mailboxes-for-agents/" aria-label="Read: Atomic File Mailboxes: How Agents Message Each Other">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/how-the-god-orchestrator-works/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-the-god-orchestrator-works/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-30">May 30, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>7 min</span>
+    </div>
+    <h3><a href="/blog/how-the-god-orchestrator-works/">Inside the GOD Orchestrator: Routing, Adjudication, Escalation</a></h3>
+    <p class="dek">A deep dive into the Claude Code orchestrator: how a GOD agent reads requests, routes work, adjudicates routine traffic, and escalates the critical few.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/how-the-god-orchestrator-works/" aria-label="Read: Inside the GOD Orchestrator: Routing, Adjudication, Escalation">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/coordinating-ai-coding-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/coordinating-ai-coding-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-29">May 29, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/coordinating-ai-coding-agents/">The Best Way to Coordinate AI Coding Agents</a></h3>
+    <p class="dek">The best way to coordinate AI coding agents: single-writer files, a message router, a one-scribe plan, and an orchestrator — cooperate, not clobber.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/coordinating-ai-coding-agents/" aria-label="Read: The Best Way to Coordinate AI Coding Agents">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-orchestration">
+  <a class="thumb t-orchestration" href="/blog/claude-code-orchestration-guide/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-orchestration-guide/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-28">May 28, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-orchestration-guide/">Orchestrating Claude Code Agents: A Practical Guide</a></h3>
+    <p class="dek">How to orchestrate Claude Code agents in practice: what orchestration means, how a GOD orchestrator routes and escalates work, and how to wire it up.</p>
+    <div class="foot">
+      <span class="tag kind">Orchestration</span>
+      <a class="more" href="/blog/claude-code-orchestration-guide/" aria-label="Read: Orchestrating Claude Code Agents: A Practical Guide">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-memory">
+  <a class="thumb t-memory" href="/blog/give-claude-code-long-term-memory/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/give-claude-code-long-term-memory/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-27">May 27, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>3 min</span>
+    </div>
+    <h3><a href="/blog/give-claude-code-long-term-memory/">How to Give Claude Code Long-Term Memory</a></h3>
+    <p class="dek">Claude Code forgets between sessions. Here&#39;s how a markdown-first memory layer with semantic recall lets your agents remember across runs.</p>
+    <div class="foot">
+      <span class="tag kind">Memory</span>
+      <a class="more" href="/blog/give-claude-code-long-term-memory/" aria-label="Read: How to Give Claude Code Long-Term Memory">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-memory">
+  <a class="thumb t-memory" href="/blog/markdown-first-agent-memory/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/markdown-first-agent-memory/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-27">May 27, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/markdown-first-agent-memory/">Why We Built Agent Memory Markdown-First</a></h3>
+    <p class="dek">Markdown-first AI agent long-term memory: plain notes a human can read and git can diff, with a semantic index on top that degrades gracefully.</p>
+    <div class="foot">
+      <span class="tag kind">Memory</span>
+      <a class="more" href="/blog/markdown-first-agent-memory/" aria-label="Read: Why We Built Agent Memory Markdown-First">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-memory">
+  <a class="thumb t-memory" href="/blog/semantic-memory-for-ai-agents/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/semantic-memory-for-ai-agents/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-26">May 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/semantic-memory-for-ai-agents/">Semantic Memory for AI Agents: Recall in Milliseconds</a></h3>
+    <p class="dek">What semantic memory for AI agents is, why a markdown-first store beats a heavy DB, and how a shared palace lets a hive recall a note by meaning, fast.</p>
+    <div class="foot">
+      <span class="tag kind">Memory</span>
+      <a class="more" href="/blog/semantic-memory-for-ai-agents/" aria-label="Read: Semantic Memory for AI Agents: Recall in Milliseconds">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/manage-multiple-claude-code-sessions/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/manage-multiple-claude-code-sessions/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-25">May 25, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/manage-multiple-claude-code-sessions/">How to Manage Multiple Claude Code Sessions Like a Pro</a></h3>
+    <p class="dek">Tactics to manage multiple Claude Code sessions without losing track: naming, roles, context isolation, and when a harness beats juggling terminal tabs.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/manage-multiple-claude-code-sessions/" aria-label="Read: How to Manage Multiple Claude Code Sessions Like a Pro">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/claude-code-multi-agent-setup-tutorial/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-multi-agent-setup-tutorial/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-24">May 24, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-multi-agent-setup-tutorial/">Set Up a Claude Code Multi-Agent Workflow in 10 Minutes</a></h3>
+    <p class="dek">A from-zero Claude Code multi-agent setup: install Munder Difflin, onboard, spawn a few agents, and watch the GOD orchestrator route your first task.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/claude-code-multi-agent-setup-tutorial/" aria-label="Read: Set Up a Claude Code Multi-Agent Workflow in 10 Minutes">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/claude-code-subagents-vs-multi-agent-harness/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-subagents-vs-multi-agent-harness/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-23">May 23, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/claude-code-subagents-vs-multi-agent-harness/">Claude Code Subagents vs a Multi-Agent Harness</a></h3>
+    <p class="dek">Claude Code subagents vs a multi-agent harness: where subagents stop and a harness with shared memory, messaging, and an orchestrator takes over.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/claude-code-subagents-vs-multi-agent-harness/" aria-label="Read: Claude Code Subagents vs a Multi-Agent Harness">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/what-is-a-multi-agent-harness/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/what-is-a-multi-agent-harness/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-05-22">May 22, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/what-is-a-multi-agent-harness/">What Is a Multi-Agent Harness? A Plain English Guide</a></h3>
+    <p class="dek">A multi-agent harness runs several AI coding agents as one team, with roles, messages, shared memory and an orchestrator. What it is, how it differs from a framework, subagents or agent teams, and when you need one.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/what-is-a-multi-agent-harness/" aria-label="Read: What Is a Multi-Agent Harness? A Plain English Guide">Read →</a>
+    </div>
+  </div>
+</article>
+
+  </div>
+</section>
+
+
+
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

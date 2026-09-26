@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orca vs Munder Difflin: Agent IDE or Agent Office? — Munder Difflin Blog</title>
+<meta name="description" content="Orca is a YC-backed Agent IDE for driving coding agents side by side in isolated worktrees. Munder Difflin is an agent office that runs itself. An honest comparison of the two — and when each one is the right pick." />
+<link rel="canonical" href="https://munderdiffl.in/blog/orca-vs-munder-difflin/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Orca vs Munder Difflin: Agent IDE or Agent Office? — Munder Difflin Blog" />
+<meta property="og:description" content="Orca is a YC-backed Agent IDE for driving coding agents side by side in isolated worktrees. Munder Difflin is an agent office that runs itself. An honest comparison of the two — and when each one is the right pick." />
+<meta property="og:url" content="https://munderdiffl.in/blog/orca-vs-munder-difflin/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/orca-vs-munder-difflin/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Orca vs Munder Difflin: Agent IDE or Agent Office?" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-07-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Comparisons" />
+<meta property="article:tag" content="Orca" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Local-First" />
+<meta property="article:tag" content="Orchestration" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Orca vs Munder Difflin: Agent IDE or Agent Office? — Munder Difflin Blog" />
+<meta name="twitter:description" content="Orca is a YC-backed Agent IDE for driving coding agents side by side in isolated worktrees. Munder Difflin is an agent office that runs itself. An honest comparison of the two — and when each one is the right pick." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/orca-vs-munder-difflin/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Orca vs Munder Difflin: Agent IDE or Agent Office?" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Orca vs Munder Difflin: Agent IDE or Agent Office?",
+  "description": "Orca is a YC-backed Agent IDE for driving coding agents side by side in isolated worktrees. Munder Difflin is an agent office that runs itself. An honest comparison of the two — and when each one is the right pick.",
+  "image": ["https://munderdiffl.in/blog/assets/media/orca-vs-munder-difflin/hero.png"],
+  "datePublished": "2026-07-03T00:00:00.000Z",
+  "dateModified": "2026-07-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/orca-vs-munder-difflin/" },
+  "keywords": "orca vs munder difflin, orca agent ide, agent development environment, orca alternative, multi-agent orchestrator, run coding agents in parallel, autonomous coding agents",
+  "articleSection": "Comparisons",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/orca-vs-munder-difflin/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Orca vs Munder Difflin: Agent IDE or Agent Office?", "item": "https://munderdiffl.in/blog/orca-vs-munder-difflin/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is Orca (onorca.dev)?", "acceptedAnswer": { "@type": "Answer", "text": "Orca is a free, MIT-licensed Agent Development Environment (ADE) from the YC-backed team at Stably AI. It's a cross-platform desktop IDE built for running coding agent CLIs — Claude Code, Codex, OpenCode, Gemini, Copilot, and dozens more — side by side, each in its own isolated git worktree, with Ghostty-inspired terminals, a VS Code-based editor, an embedded browser with Design Mode, GitHub and Linear integration, and iOS/Android companion apps." } },
+    { "@type": "Question", "name": "How is Munder Difflin different from Orca?", "acceptedAnswer": { "@type": "Answer", "text": "They sit at different altitudes. Orca is an IDE you sit in: you send prompts, compare agents, annotate diffs, and steer. Munder Difflin is an office that runs itself: a GOD orchestrator routes work between agents, agents share long-term memory and mailboxes, and work arrives via Slack, webhooks, schedules, or voice — with approval gates, budgets, and a circuit breaker so it can run for days without you watching." } },
+    { "@type": "Question", "name": "Is Orca better than Munder Difflin?", "acceptedAnswer": { "@type": "Answer", "text": "For interactive, editor-centric work, honestly, often yes. Orca's editing, diff-annotation, per-worktree browser preview, and mobile companion are more polished for hands-on driving. Munder Difflin wins when you want autonomy: orchestration, shared memory, external triggers, scheduling, and guardrails that let a team of agents work while you're away. They solve different problems." } },
+    { "@type": "Question", "name": "Can I use Orca and Munder Difflin together?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, and it's a sensible split. Both are free, MIT-licensed, local-first desktop apps that drive the same agent CLIs on your own subscriptions, so nothing conflicts. Use Orca when you're at the keyboard iterating on a feature; use Munder Difflin as the always-on layer that handles routed, scheduled, and Slack-triggered work in the background." } },
+    { "@type": "Question", "name": "Do both tools use git worktrees for agent isolation?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Orca is built around worktree isolation — every agent task gets its own worktree so parallel agents never collide. Munder Difflin has the same per-agent worktree isolation as a toggle, but layers a coordination system on top: a hive of mailboxes, a shared blackboard, single-committer git, and an orchestrator that routes messages between the isolated agents." } },
+    { "@type": "Question", "name": "Are Orca and Munder Difflin both free and open source?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Both are MIT-licensed, free, local-first desktop apps for macOS, Windows, and Linux, and both are bring-your-own-subscription — they wrap the agent CLIs and accounts you already have rather than reselling model access." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-comparisons">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/comparisons/">Comparisons</a>
+    </nav>
+    <h1>Orca vs Munder Difflin: Agent IDE or Agent Office?</h1>
+    <p class="dek">Orca is a YC-backed Agent IDE for driving coding agents side by side in isolated worktrees. Munder Difflin is an agent office that runs itself. An honest comparison of the two — and when each one is the right pick.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Comparisons</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/orca-vs-munder-difflin/hero.png" alt="Illustration: Orca vs Munder Difflin: Agent IDE or Agent Office?" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p><strong>Orca is an Agent IDE; Munder Difflin is an agent office.</strong> Orca (from YC-backed Stably AI) is the polished cockpit for <strong>driving coding agents interactively</strong> — parallel worktrees, great terminals, a VS Code editor, diff annotation, and a genuinely useful mobile companion. Munder Difflin is the layer above the cockpit: a <strong>GOD orchestrator</strong> that routes work, <strong>shared long-term memory</strong>, triggers from <strong>Slack, webhooks, schedules, and voice</strong>, and guardrails (approvals, budgets, circuit breaker) that make <strong>days-long autonomy</strong> safe. Both are free, MIT-licensed, local-first, BYO-subscription. Pick Orca to <em>sit and steer</em>; pick Munder Difflin to <em>delegate and walk away</em>. They coexist fine.</p></div>
+<p>If you’re evaluating tools for running multiple coding agents, Orca and Munder Difflin will both show up in your search — and on paper they rhyme. Both are free, MIT-licensed desktop apps. Both run on macOS, Windows, and Linux. Both wrap the agent CLIs you already pay for — Claude Code, Codex, OpenCode, and more — instead of reselling model access. Both isolate agents in git worktrees so parallel work doesn’t collide.</p>
+<p>But they are not the same product, and pretending otherwise would help nobody. One is an IDE. The other is an office. Here’s the honest version of that boundary.</p>
+<h2 id="what-orca-actually-is" tabindex="-1">What Orca actually is <a class="anchor" href="#what-orca-actually-is" aria-hidden="true">#</a></h2>
+<p><a href="https://www.onorca.dev/">Orca</a> calls itself an <strong>Agent Development Environment (ADE)</strong> — an IDE rebuilt from the ground up around agents rather than retrofitted for them. It comes from Stably AI, a Y Combinator-backed team, and it shows: the product is fast, focused, and clearly built by people who drive agents all day.</p>
+<p>The core idea is <strong>parallel agents in isolated worktrees</strong>. Spin up a task and Orca creates a worktree for it; run Claude Code, Codex, OpenCode, Grok, Gemini, Copilot — it lists 25+ preconfigured agents and accepts any CLI — side by side, even firing one prompt at several agents at once and comparing what comes back. Around that core it builds a serious cockpit:</p>
+<ul>
+<li>A <strong>Ghostty-inspired terminal</strong> with WebGL rendering, infinite splits, and scrollback search.</li>
+<li><strong>VS Code’s editor</strong> with autosave and quick-open.</li>
+<li>An <strong>embedded Chromium browser per worktree</strong>, plus a Design Mode where you click any UI element to send its HTML, CSS, and a cropped screenshot straight into the agent’s context.</li>
+<li><strong>Diff annotation</strong> — drop markdown comments on any diff line and send them back to the agent.</li>
+<li>Native <strong>GitHub and Linear</strong> integration, SSH worktrees for remote machines, and <strong>iOS/Android companion apps</strong> to monitor and steer agents from your phone.</li>
+</ul>
+<p>That mobile companion and the editor-centric review flow are genuinely ahead of what Munder Difflin offers today. If your workflow is “I’m at my desk, I want to run three agents on a feature and pick the best diff,” Orca is excellent at exactly that.</p>
+<p>Notice, though, what the workflow assumes: <strong>you</strong>. You send the prompts. You compare the results. You annotate the diffs. You steer. Orca’s own docs describe an interactive loop, and there’s no orchestrator, scheduler, or external trigger in it. That’s not a flaw — it’s the product. An IDE is a place you sit.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/orca-vs-munder-difflin/note-1.png" alt="Hand-drawn sketch from “Orca vs Munder Difflin: Agent IDE or Agent Office?”" loading="lazy" decoding="async" /></figure>
+<h2 id="what-munder-difflin-actually-is" tabindex="-1">What Munder Difflin actually is <a class="anchor" href="#what-munder-difflin-actually-is" aria-hidden="true">#</a></h2>
+<p>Munder Difflin starts from the opposite question: what if you <em>don’t</em> sit there?</p>
+<p>It’s a local-first Electron app that turns the same agent CLIs — Claude Code, Codex, Antigravity, OpenCode, Crush, pi.dev, and GitHub Copilot CLI — into a <strong>coordinated office</strong>. Each agent is a real CLI process in its own pseudo-terminal and isolated worktree (same isolation idea as Orca — we’ve written about <a href="/blog/claude-code-git-worktrees-vs-hive/">how worktrees and the hive fit together</a>), visualized as an affectionate parody of The Office cast on a pixel-art floor. The differences stack up above that:</p>
+<ul>
+<li>A <strong>GOD orchestrator</strong> (“Michael”) is the one agent you talk to. It routes tasks between workers, adjudicates their messages, resolves routine questions itself, and escalates only critical items to you. (<a href="/blog/how-the-god-orchestrator-works/">How the GOD orchestrator works.</a>)</li>
+<li>Agents share <strong>long-term memory</strong> — markdown-first, with a semantic recall index — so what one agent learns, the office remembers across sessions.</li>
+<li>Work arrives without you: <strong>Slack messages</strong> (<a href="/blog/trigger-ai-agents-from-slack/">which can spawn ephemeral workers that reply in-thread</a>), <strong>webhooks</strong>, <strong>scheduled missions</strong> with a heartbeat that re-engages a quiet floor, GitHub issue ingestion, and <strong>voice</strong> — Talk mode connects you to Michael over the OpenAI Realtime API.</li>
+<li>Autonomy is bounded by <strong>guardrails</strong>: <a href="/blog/human-in-the-loop-approving-ai-agents/">human approval gates</a> on spend, scope, and destructive operations; per-agent token budgets; a cost/runaway circuit breaker; and OpenTelemetry observability with real per-agent cost attribution.</li>
+</ul>
+<p>v0.3.3 did add a built-in Monaco IDE — file tree, tabs, side-by-side diffs vs HEAD — but let’s be honest about what it’s for: it’s a <strong>review surface for what your agents changed</strong>, not a place you live. Orca’s editing experience is deeper. Munder Difflin’s bet is that you’ll spend less time in an editor at all, because the office handles the routing, memory, and follow-through that would otherwise pull you back to the keyboard.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/orca-vs-munder-difflin/note-2.png" alt="Hand-drawn sketch from “Orca vs Munder Difflin: Agent IDE or Agent Office?”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-boundary-drawn-plainly" tabindex="-1">The boundary, drawn plainly <a class="anchor" href="#the-boundary-drawn-plainly" aria-hidden="true">#</a></h2>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Orca</strong></th>
+<th><strong>Munder Difflin</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Category</td>
+<td>Agent IDE / ADE</td>
+<td>Autonomous agent office</td>
+</tr>
+<tr>
+<td>You are the…</td>
+<td>Driver</td>
+<td>Manager</td>
+</tr>
+<tr>
+<td>Coordination</td>
+<td>You, interactively</td>
+<td>GOD orchestrator routes work</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Per-session</td>
+<td>Shared long-term + semantic recall</td>
+</tr>
+<tr>
+<td>Triggers</td>
+<td>You send prompts</td>
+<td>Typing, Slack, webhooks, schedules, voice</td>
+</tr>
+<tr>
+<td>Away-from-desk</td>
+<td>Mobile app (monitor + steer)</td>
+<td>Runs autonomously with approval gates</td>
+</tr>
+<tr>
+<td>Editor flow</td>
+<td>VS Code editor, Design Mode, diff annotation — stronger</td>
+<td>Monaco review surface — lighter</td>
+</tr>
+<tr>
+<td>Guardrails</td>
+<td>Your judgment</td>
+<td>Approvals, budgets, circuit breaker, OTel</td>
+</tr>
+<tr>
+<td>License / cost</td>
+<td>MIT, free, BYO subscription</td>
+<td>MIT, free, BYO subscription</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="when-to-pick-which" tabindex="-1">When to pick which <a class="anchor" href="#when-to-pick-which" aria-hidden="true">#</a></h2>
+<p><strong>Pick Orca</strong> if your bottleneck is interactive throughput: you’re at the keyboard, you want several agents on one problem, and you want first-class tools for comparing, annotating, and shipping their diffs — plus a phone app to check in from the couch.</p>
+<p><strong>Pick Munder Difflin</strong> if your bottleneck is <em>you being required at all</em>: you want work triggered from Slack or a schedule, routed by an orchestrator, informed by shared memory, and bounded by budgets and approval gates while it runs overnight.</p>
+<p>And genuinely: <strong>you can run both.</strong> Same CLIs, same subscriptions, same machine, no conflict. Orca for the sessions you drive; Munder Difflin for the office that keeps working when you stop. (For the broader decision framework, see <a href="/blog/how-to-choose-a-multi-agent-tool/">how to choose a multi-agent tool</a>.)</p>
+<p>If the office side sounds like your bottleneck, <a href="https://github.com/chaitanyagiri/munder-difflin/releases/latest">grab the latest release</a> — and if it earns it, <a href="https://github.com/chaitanyagiri/munder-difflin">a GitHub star</a> helps more people find it.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What is Orca (onorca.dev)?</p>
+          <p class="a">Orca is a free, MIT-licensed Agent Development Environment (ADE) from the YC-backed team at Stably AI. It&#39;s a cross-platform desktop IDE built for running coding agent CLIs — Claude Code, Codex, OpenCode, Gemini, Copilot, and dozens more — side by side, each in its own isolated git worktree, with Ghostty-inspired terminals, a VS Code-based editor, an embedded browser with Design Mode, GitHub and Linear integration, and iOS/Android companion apps.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How is Munder Difflin different from Orca?</p>
+          <p class="a">They sit at different altitudes. Orca is an IDE you sit in: you send prompts, compare agents, annotate diffs, and steer. Munder Difflin is an office that runs itself: a GOD orchestrator routes work between agents, agents share long-term memory and mailboxes, and work arrives via Slack, webhooks, schedules, or voice — with approval gates, budgets, and a circuit breaker so it can run for days without you watching.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is Orca better than Munder Difflin?</p>
+          <p class="a">For interactive, editor-centric work, honestly, often yes. Orca&#39;s editing, diff-annotation, per-worktree browser preview, and mobile companion are more polished for hands-on driving. Munder Difflin wins when you want autonomy: orchestration, shared memory, external triggers, scheduling, and guardrails that let a team of agents work while you&#39;re away. They solve different problems.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Can I use Orca and Munder Difflin together?</p>
+          <p class="a">Yes, and it&#39;s a sensible split. Both are free, MIT-licensed, local-first desktop apps that drive the same agent CLIs on your own subscriptions, so nothing conflicts. Use Orca when you&#39;re at the keyboard iterating on a feature; use Munder Difflin as the always-on layer that handles routed, scheduled, and Slack-triggered work in the background.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Do both tools use git worktrees for agent isolation?</p>
+          <p class="a">Yes. Orca is built around worktree isolation — every agent task gets its own worktree so parallel agents never collide. Munder Difflin has the same per-agent worktree isolation as a toggle, but layers a coordination system on top: a hive of mailboxes, a shared blackboard, single-committer git, and an orchestrator that routes messages between the isolated agents.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Are Orca and Munder Difflin both free and open source?</p>
+          <p class="a">Yes. Both are MIT-licensed, free, local-first desktop apps for macOS, Windows, and Linux, and both are bring-your-own-subscription — they wrap the agent CLIs and accounts you already have rather than reselling model access.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/comparisons/">Comparisons</a><a class="tag" href="/blog/tags/orca/">Orca</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/local-first/">Local-First</a><a class="tag" href="/blog/tags/orchestration/">Orchestration</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#what-orca-actually-is">What Orca actually is</a></li><li class="lvl-2"><a href="#what-munder-difflin-actually-is">What Munder Difflin actually is</a></li><li class="lvl-2"><a href="#the-boundary-drawn-plainly">The boundary, drawn plainly</a></li><li class="lvl-2"><a href="#when-to-pick-which">When to pick which</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/review-agent-work-where-it-happens/"><span class="k">← Older</span><span class="t">Review Agent Work Where It Happens</span></a>
+      <a class="pn next" href="/blog/loop-engineering-for-ai-agents/"><span class="k">Newer →</span><span class="t">Loop Engineering: Designing Agent Loops That Converge</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Comparisons</h2>
+      <div class="post-grid">
+        <article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-pricing/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/grok-bot-pricing/">Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy</a></h3>
+    <p class="dek">Grok Bot has no plan of its own. It comes bundled with SuperGrok and Cursor plans from $20 to $300 a month. Here is what each one gets you, what the free trial is, and the $0 route for work agents.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-pricing/" aria-label="Read: Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-alternatives/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-alternatives/">Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse</a></h3>
+    <p class="dek">Meta Muse is US only and trains on your chats by default. Seven alternatives, from open source agents that run on your own computer to hosted ones from OpenAI, Google and SpaceXAI.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-alternatives/" aria-label="Read: Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-grok-bot-privacy/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-grok-bot-privacy/">Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both ask for your logins. We read both companies&#39; security docs: who sees your passwords, what trains on your chats, and how to keep AI agents on your own computer instead.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-grok-bot-privacy/" aria-label="Read: Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+{# Expects `p` (a post from collections.posts) in scope. #}
+{%- set d = p.data -%}
+{%- set catKey = (d.category | slug) if d.category else "default" -%}
+<article class="card t-{{ catKey }}">
+  <a class="thumb t-{{ catKey }}" href="{{ p.url | u }}" aria-hidden="true" tabindex="-1">
+    {%- if p.fileSlug | heroReady -%}
+    <img src="{{ ('/' + (p.fileSlug | heroFile)) | u }}" alt="" loading="lazy" decoding="async" />
+    {%- elif d.thumb -%}
+    <img src="{{ d.thumb }}" alt="" loading="lazy" decoding="async" />
+    {%- else -%}
+    <span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>{{ (d.categoryLabel or d.category or "Notes") | upper }}</span></span>
+    {%- endif -%}
+  </a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="{{ p.date | htmlDate }}">{{ p.date | readableDate }}</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>{{ p.content | readingTime }} min</span>
+      {%- if d.pinned %}<span class="pin">Pinned</span>{% endif %}
+    </div>
+    <h3><a href="{{ p.url | u }}">{{ d.title }}</a></h3>
+    {% if d.description %}<p class="dek">{{ d.description }}</p>{% endif %}
+    <div class="foot">
+      <span class="tag kind">{{ d.categoryLabel or d.category or "Notes" }}</span>
+      <a class="more" href="{{ p.url | u }}" aria-label="Read: {{ d.title }}">Read →</a>
+    </div>
+  </div>
+</article>

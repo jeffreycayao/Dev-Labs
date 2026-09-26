@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How to Use the Built-in Monaco IDE — Munder Difflin Blog</title>
+<meta name="description" content="A practical walkthrough of Munder Difflin v0.3.3&#39;s built-in Monaco IDE: the title-bar IDE button, the git CHANGES rail with side-by-side diffs vs HEAD, the file tree, tabs, Cmd/Ctrl+S save — and the agent review workflow it enables." />
+<link rel="canonical" href="https://munderdiffl.in/blog/how-to-use-the-built-in-monaco-ide/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="How to Use the Built-in Monaco IDE — Munder Difflin Blog" />
+<meta property="og:description" content="A practical walkthrough of Munder Difflin v0.3.3&#39;s built-in Monaco IDE: the title-bar IDE button, the git CHANGES rail with side-by-side diffs vs HEAD, the file tree, tabs, Cmd/Ctrl+S save — and the agent review workflow it enables." />
+<meta property="og:url" content="https://munderdiffl.in/blog/how-to-use-the-built-in-monaco-ide/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/how-to-use-the-built-in-monaco-ide/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: How to Use the Built-in Monaco IDE" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-07-03T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Guides" />
+<meta property="article:tag" content="IDE" />
+<meta property="article:tag" content="Git" />
+<meta property="article:tag" content="Human-in-the-Loop" />
+<meta property="article:tag" content="Local-First" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="How to Use the Built-in Monaco IDE — Munder Difflin Blog" />
+<meta name="twitter:description" content="A practical walkthrough of Munder Difflin v0.3.3&#39;s built-in Monaco IDE: the title-bar IDE button, the git CHANGES rail with side-by-side diffs vs HEAD, the file tree, tabs, Cmd/Ctrl+S save — and the agent review workflow it enables." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/how-to-use-the-built-in-monaco-ide/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: How to Use the Built-in Monaco IDE" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to Use the Built-in Monaco IDE",
+  "description": "A practical walkthrough of Munder Difflin v0.3.3's built-in Monaco IDE: the title-bar IDE button, the git CHANGES rail with side-by-side diffs vs HEAD, the file tree, tabs, Cmd/Ctrl+S save — and the agent review workflow it enables.",
+  "image": ["https://munderdiffl.in/blog/assets/media/how-to-use-the-built-in-monaco-ide/hero.png"],
+  "datePublished": "2026-07-03T00:00:00.000Z",
+  "dateModified": "2026-07-03T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/how-to-use-the-built-in-monaco-ide/" },
+  "keywords": "built-in monaco ide, review ai agent code changes, monaco editor electron app, side-by-side git diff vs head, munder difflin ide walkthrough, human review workflow for ai agents",
+  "articleSection": "Guides",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/how-to-use-the-built-in-monaco-ide/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "How to Use the Built-in Monaco IDE", "item": "https://munderdiffl.in/blog/how-to-use-the-built-in-monaco-ide/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "How do I open the built-in IDE in Munder Difflin?", "acceptedAnswer": { "@type": "Answer", "text": "Click the IDE button in the title bar. It toggles a full-window Monaco editor overlay on top of the office floor — the floor, terminals, and voice UX keep running underneath, untouched. Click the button again to drop back to the floor. It shipped in v0.3.3." } },
+    { "@type": "Question", "name": "How do I see what an agent changed?", "acceptedAnswer": { "@type": "Answer", "text": "Open the IDE and look at the git CHANGES rail on the left. It lists every file with uncommitted changes in the workspace; click a file and you get a read-only side-by-side diff against HEAD, so you see exactly what the agent wrote next to what was there before." } },
+    { "@type": "Question", "name": "Can I edit files in the built-in IDE, not just read diffs?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. The left rail also has the workspace file tree — clicking a file there opens it in a real editable Monaco tab. Tabs show a dirty-state dot when you have unsaved edits, and Cmd/Ctrl+S saves the active tab. Saves are hardened so keystrokes typed while a save is still writing are never silently dropped." } },
+    { "@type": "Question", "name": "Which folder does the IDE open — how is the workspace root chosen?", "acceptedAnswer": { "@type": "Answer", "text": "The workspace root snapshots from an agent's working directory when the overlay opens: the selected agent's cwd if one is selected, otherwise the GOD agent's, otherwise the first agent's. So selecting the agent whose work you want to review before clicking IDE puts you in the right repo." } },
+    { "@type": "Question", "name": "Does Monaco load from a CDN? Does the renderer touch my disk?", "acceptedAnswer": { "@type": "Answer", "text": "No and no. Monaco — the same editor engine VS Code uses — is fully self-hosted and bundled with the app, with no CDN involved, so it works offline. And the renderer holds no filesystem or git access at all: every read, write, and diff is brokered through main-process IPC via the preload bridge." } },
+    { "@type": "Question", "name": "Why build an IDE into an agent harness instead of using VS Code?", "acceptedAnswer": { "@type": "Answer", "text": "Because the review loop is faster when it lives where the agents live. An agent finishes, you click IDE, read the side-by-side diff vs HEAD, fix small things in place, and go approve — no context switch to another app, no hunting for the right worktree. For heavy editing sessions your regular editor is still there; the built-in IDE is optimized for reviewing agent output." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-guides">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/guides/">Guides</a>
+    </nav>
+    <h1>How to Use the Built-in Monaco IDE</h1>
+    <p class="dek">A practical walkthrough of Munder Difflin v0.3.3&#39;s built-in Monaco IDE: the title-bar IDE button, the git CHANGES rail with side-by-side diffs vs HEAD, the file tree, tabs, Cmd/Ctrl+S save — and the agent review workflow it enables.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-07-03">Jul 3, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>4 min read</span>
+      <span class="tag kind">Guides</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/how-to-use-the-built-in-monaco-ide/hero.png" alt="Illustration: How to Use the Built-in Monaco IDE" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Munder Difflin v0.3.3 ships a <strong>built-in Monaco IDE</strong> — the VS&nbsp;Code editor engine, fully self-hosted, no CDN. A title-bar <strong>IDE</strong> button toggles a full-window overlay above the office floor: a <strong>git CHANGES rail</strong> where clicking a file opens a <strong>side-by-side diff vs HEAD</strong>, a workspace <strong>file tree</strong>, <strong>editor tabs with dirty-state dots</strong>, and <strong>Cmd/Ctrl+S</strong> save. The workspace root snapshots from the <strong>selected → god → first agent's cwd</strong>, and <strong>all fs/git access goes through main-process IPC</strong> — the renderer never touches disk. The point: <em>agent finishes → open IDE → read the diff → tweak → approve</em>, without leaving the app.</p></div>
+<p>You hired a floor of agents, one of them just announced it’s done, and now comes the part that actually matters: <strong>reading what it changed before you bless it.</strong> Until v0.3.3, that meant alt-tabbing to your editor, finding the right directory, and running <code>git diff</code> by hand. Now the review surface is built in. This is a practical walkthrough of the Monaco IDE that shipped in <a href="/blog/launching-munder-difflin-v0-3-3/">v0.3.3</a> — what each piece does and the workflow it’s designed around.</p>
+<h2 id="opening-it-the-title-bar-ide-button" tabindex="-1">Opening it: the title-bar IDE button <a class="anchor" href="#opening-it-the-title-bar-ide-button" aria-hidden="true">#</a></h2>
+<p>There’s an <strong>IDE</strong> button in the title bar. Click it and a full-window Monaco editor overlays the office floor — same fullscreen-overlay pattern as the rest of the app, so the floor, the terminals, and the voice UX keep running underneath, untouched. Click it again and you’re back watching avatars.</p>
+<p>Monaco is the editor engine inside VS Code, and here it’s <strong>fully self-hosted</strong>: bundled workers, no CDN, themed to the harness’s light palette. That’s not a vanity detail — it means the IDE works offline and nothing about your code round-trips through a third-party host just to render syntax highlighting. Local-first, like everything else in the app.</p>
+<h2 id="the-left-rail-changes-first-tree-second" tabindex="-1">The left rail: CHANGES first, tree second <a class="anchor" href="#the-left-rail-changes-first-tree-second" aria-hidden="true">#</a></h2>
+<p>The left rail has two jobs, in priority order.</p>
+<p><strong>The git CHANGES list</strong> is the headline. It shows every file with uncommitted changes in the workspace. Click one and you get a <strong>read-only side-by-side diff against HEAD</strong> — the agent’s version on one side, what was committed before on the other. This is the “what did my agent actually do” view, and it’s deliberately read-only: a diff is for reading, not for accidentally editing the wrong pane.</p>
+<p><strong>The workspace file tree</strong> sits alongside it. Click any file there and it opens as a normal, <em>editable</em> Monaco tab. So the rail gives you both motions: <em>review</em> (CHANGES → diff) and <em>fix</em> (tree → edit).</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/how-to-use-the-built-in-monaco-ide/note-1.png" alt="Hand-drawn sketch from “How to Use the Built-in Monaco IDE”" loading="lazy" decoding="async" /></figure>
+<h2 id="tabs-dirty-dots-and-cmdctrls" tabindex="-1">Tabs, dirty dots, and Cmd/Ctrl+S <a class="anchor" href="#tabs-dirty-dots-and-cmdctrls" aria-hidden="true">#</a></h2>
+<p>Open files stack up as <strong>editor tabs</strong> on the right, each with a <strong>dirty-state dot</strong> when it has unsaved edits, plus save and close. <strong>Cmd/Ctrl+S</strong> saves the active tab.</p>
+<p>One hardening detail worth knowing because it’s the kind of thing that silently eats work in lesser editors: saves are protected against the in-flight race. If you keep typing while a save is still writing to disk, those keystrokes are <strong>not</strong> dropped when the save completes. v0.3.3 fixed this explicitly.</p>
+<h2 id="which-folder-am-i-looking-at-the-workspace-root" tabindex="-1">Which folder am I looking at? The workspace root <a class="anchor" href="#which-folder-am-i-looking-at-the-workspace-root" aria-hidden="true">#</a></h2>
+<p>The IDE has to pick a repo to show, and it snapshots the workspace root from an agent’s working directory when the overlay opens, in this order:</p>
+<ol>
+<li>the <strong>selected agent’s</strong> cwd, if you have one selected;</li>
+<li>otherwise the <strong>GOD agent’s</strong> cwd;</li>
+<li>otherwise the <strong>first agent’s</strong> cwd.</li>
+</ol>
+<p>Practical consequence: <strong>select the agent whose work you want to review, then click IDE.</strong> That drops you straight into its directory — which matters on a floor where <a href="/blog/claude-code-git-worktrees-vs-hive/">each agent can run in its own isolated git worktree</a>, so “the repo” isn’t one place.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/how-to-use-the-built-in-monaco-ide/note-2.png" alt="Hand-drawn sketch from “How to Use the Built-in Monaco IDE”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-security-posture-the-renderer-never-touches-disk" tabindex="-1">The security posture: the renderer never touches disk <a class="anchor" href="#the-security-posture-the-renderer-never-touches-disk" aria-hidden="true">#</a></h2>
+<p>Everything the IDE does — listing the tree, reading files, writing saves, computing diffs — is <strong>brokered through main-process IPC</strong>. The diff view rides a <code>git:diff</code> IPC channel plus the preload bridge; the renderer process holds no filesystem or git access of its own. That’s the same architecture as the rest of the harness: the sandboxed renderer asks, the main process does, and the attack surface of “web content with disk access” simply doesn’t exist here.</p>
+<h2 id="the-workflow-its-built-for-finish-diff-tweak-approve" tabindex="-1">The workflow it’s built for: finish → diff → tweak → approve <a class="anchor" href="#the-workflow-its-built-for-finish-diff-tweak-approve" aria-hidden="true">#</a></h2>
+<p>Here’s the loop the whole feature is shaped around:</p>
+<ol>
+<li><strong>An agent finishes.</strong> You get the desktop notification, or Michael tells you.</li>
+<li><strong>Select that agent, click IDE.</strong> You’re in its workspace.</li>
+<li><strong>Read the CHANGES rail.</strong> Click through each touched file, read the side-by-side diff vs HEAD. This is the honest answer to “what did it do,” straight from git — not the agent’s summary of itself.</li>
+<li><strong>Tweak in place.</strong> Wrong variable name, missing edge case, comment you’d phrase differently — open the file from the tree, fix it, Cmd/Ctrl+S. No editor switch.</li>
+<li><strong>Approve.</strong> Now that you’ve <em>seen</em> the change, act on it — answer the approval-queue escalation, tell the agent to commit, or dispatch the follow-up.</li>
+</ol>
+<p>That last step is the point. <a href="/blog/human-in-the-loop-approving-ai-agents/">Human-in-the-loop approval</a> is only as good as the human’s view of the change, and “I skimmed the agent’s summary” is not a view. A diff vs HEAD is. The built-in IDE closes the gap between <em>the agent says it’s done</em> and <em>you know what done contains</em> — inside the same window where the work happened.</p>
+<h2 id="try-it" tabindex="-1">Try it <a class="anchor" href="#try-it" aria-hidden="true">#</a></h2>
+<p>The IDE ships in v0.3.3 for macOS, Windows, and Linux — <a href="https://github.com/chaitanyagiri/munder-difflin/releases/latest">grab the latest release</a>, or start with the <a href="/blog/how-to-install-and-use-munder-difflin/">install guide</a> if you’re new. If the review loop saves you an alt-tab, a <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub star</a> helps more people find it.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">How do I open the built-in IDE in Munder Difflin?</p>
+          <p class="a">Click the IDE button in the title bar. It toggles a full-window Monaco editor overlay on top of the office floor — the floor, terminals, and voice UX keep running underneath, untouched. Click the button again to drop back to the floor. It shipped in v0.3.3.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How do I see what an agent changed?</p>
+          <p class="a">Open the IDE and look at the git CHANGES rail on the left. It lists every file with uncommitted changes in the workspace; click a file and you get a read-only side-by-side diff against HEAD, so you see exactly what the agent wrote next to what was there before.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Can I edit files in the built-in IDE, not just read diffs?</p>
+          <p class="a">Yes. The left rail also has the workspace file tree — clicking a file there opens it in a real editable Monaco tab. Tabs show a dirty-state dot when you have unsaved edits, and Cmd/Ctrl+S saves the active tab. Saves are hardened so keystrokes typed while a save is still writing are never silently dropped.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Which folder does the IDE open — how is the workspace root chosen?</p>
+          <p class="a">The workspace root snapshots from an agent&#39;s working directory when the overlay opens: the selected agent&#39;s cwd if one is selected, otherwise the GOD agent&#39;s, otherwise the first agent&#39;s. So selecting the agent whose work you want to review before clicking IDE puts you in the right repo.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Does Monaco load from a CDN? Does the renderer touch my disk?</p>
+          <p class="a">No and no. Monaco — the same editor engine VS Code uses — is fully self-hosted and bundled with the app, with no CDN involved, so it works offline. And the renderer holds no filesystem or git access at all: every read, write, and diff is brokered through main-process IPC via the preload bridge.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why build an IDE into an agent harness instead of using VS Code?</p>
+          <p class="a">Because the review loop is faster when it lives where the agents live. An agent finishes, you click IDE, read the side-by-side diff vs HEAD, fix small things in place, and go approve — no context switch to another app, no hunting for the right worktree. For heavy editing sessions your regular editor is still there; the built-in IDE is optimized for reviewing agent output.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/guides/">Guides</a><a class="tag" href="/blog/tags/ide/">IDE</a><a class="tag" href="/blog/tags/git/">Git</a><a class="tag" href="/blog/tags/human-in-the-loop/">Human-in-the-Loop</a><a class="tag" href="/blog/tags/local-first/">Local-First</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#opening-it-the-title-bar-ide-button">Opening it: the title-bar IDE button</a></li><li class="lvl-2"><a href="#the-left-rail-changes-first-tree-second">The left rail: CHANGES first, tree second</a></li><li class="lvl-2"><a href="#tabs-dirty-dots-and-cmdctrls">Tabs, dirty dots, and Cmd/Ctrl+S</a></li><li class="lvl-2"><a href="#which-folder-am-i-looking-at-the-workspace-root">Which folder am I looking at? The workspace root</a></li><li class="lvl-2"><a href="#the-security-posture-the-renderer-never-touches-disk">The security posture: the renderer never touches disk</a></li><li class="lvl-2"><a href="#the-workflow-its-built-for-finish-diff-tweak-approve">The workflow it’s built for: finish → diff → tweak → approve</a></li><li class="lvl-2"><a href="#try-it">Try it</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/launching-munder-difflin-v0-3-3/"><span class="k">← Older</span><span class="t">Launching Munder Difflin v0.3.3: A Built-in Monaco IDE and GitHub Copilot CLI Support</span></a>
+      <a class="pn next" href="/blog/how-to-talk-to-your-orchestrator/"><span class="k">Newer →</span><span class="t">How to Brief Your Orchestrator (So the Floor Actually Ships)</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Guides</h2>
+      <div class="post-grid">
+        <article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/build-your-personal-agi-on-your-computer/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/build-your-personal-agi-on-your-computer/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>9 min</span>
+    </div>
+    <h3><a href="/blog/build-your-personal-agi-on-your-computer/">Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin</a></h3>
+    <p class="dek">Turn Claude Code into a personal AGI on your own computer: agents with memory, schedules, Gmail, Calendar, voice and Slack, set up in Munder Difflin 0.5.2.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/build-your-personal-agi-on-your-computer/" aria-label="Read: Build Your Personal AGI on Your Computer Using Claude Code and Munder Difflin">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/how-to-install-gemini-cli/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/how-to-install-gemini-cli/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/how-to-install-gemini-cli/">How to Install Gemini CLI, and Who Can Still Use It in 2026</a></h3>
+    <p class="dek">Install Google&#39;s Gemini CLI with npm on Mac, Windows or Linux, why Homebrew is stuck on 0.46.0, and which sign in still works after 18 Jun 2026.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/how-to-install-gemini-cli/" aria-label="Read: How to Install Gemini CLI, and Who Can Still Use It in 2026">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-guides">
+  <a class="thumb t-guides" href="/blog/claude-code-max-plan-tips/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/claude-code-max-plan-tips/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span><span class="pin">Pinned</span>
+    </div>
+    <h3><a href="/blog/claude-code-max-plan-tips/">How to Get the Most Out of Your Claude Code Max Plan</a></h3>
+    <p class="dek">Stretch a Claude Code Max plan: model choice, context hygiene, prompt caching, subagents and unattended runs, checked against Anthropic&#39;s own pages.</p>
+    <div class="foot">
+      <span class="tag kind">Guides</span>
+      <a class="more" href="/blog/claude-code-max-plan-tips/" aria-label="Read: How to Get the Most Out of Your Claude Code Max Plan">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

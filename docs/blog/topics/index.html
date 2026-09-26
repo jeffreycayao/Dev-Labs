@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Topics — Munder Difflin Blog</title>
+<meta name="description" content="Browse the Munder Difflin blog by topic cluster — guides, engineering deep-dives, agentic-coding notes, and product dispatches." />
+<link rel="canonical" href="https://munderdiffl.in/blog/topics/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Topics — Munder Difflin Blog" />
+<meta property="og:description" content="Browse the Munder Difflin blog by topic cluster — guides, engineering deep-dives, agentic-coding notes, and product dispatches." />
+<meta property="og:url" content="https://munderdiffl.in/blog/topics/" />
+<meta property="og:image" content="https://munderdiffl.in/media/og.png" />
+<meta property="og:locale" content="en_US" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Topics — Munder Difflin Blog" />
+<meta name="twitter:description" content="Browse the Munder Difflin blog by topic cluster — guides, engineering deep-dives, agentic-coding notes, and product dispatches." />
+<meta name="twitter:image" content="https://munderdiffl.in/media/og.png" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/" aria-current="page">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<header class="page-head wrap">
+  <p class="eyebrow">Browse by cluster</p>
+  <h1>Topics</h1>
+  <p class="lead">Everything we write, grouped into clusters. Technical guides and engineering
+  deep-dives on the left; the human side of running an agent office on the right.</p>
+</header>
+
+<section class="wrap">
+  <div class="post-grid">
+    
+    <a class="card" href="/blog/topics/guides/" style="text-decoration:none">
+      <span class="thumb t-guides" aria-hidden="true">GUIDES</span>
+      <div class="body">
+        <h3 style="color:var(--ink)">guides</h3>
+        <p class="dek">44 posts.</p>
+        <div class="foot"><span class="more">View topic →</span></div>
+      </div>
+    </a>
+    
+    <a class="card" href="/blog/topics/comparisons/" style="text-decoration:none">
+      <span class="thumb t-comparisons" aria-hidden="true">COMPARISONS</span>
+      <div class="body">
+        <h3 style="color:var(--ink)">comparisons</h3>
+        <p class="dek">29 posts.</p>
+        <div class="foot"><span class="more">View topic →</span></div>
+      </div>
+    </a>
+    
+    <a class="card" href="/blog/topics/concepts/" style="text-decoration:none">
+      <span class="thumb t-concepts" aria-hidden="true">CONCEPTS</span>
+      <div class="body">
+        <h3 style="color:var(--ink)">concepts</h3>
+        <p class="dek">27 posts.</p>
+        <div class="foot"><span class="more">View topic →</span></div>
+      </div>
+    </a>
+    
+    <a class="card" href="/blog/topics/internals/" style="text-decoration:none">
+      <span class="thumb t-internals" aria-hidden="true">INTERNALS</span>
+      <div class="body">
+        <h3 style="color:var(--ink)">internals</h3>
+        <p class="dek">19 posts.</p>
+        <div class="foot"><span class="more">View topic →</span></div>
+      </div>
+    </a>
+    
+    <a class="card" href="/blog/topics/story/" style="text-decoration:none">
+      <span class="thumb t-story" aria-hidden="true">STORY</span>
+      <div class="body">
+        <h3 style="color:var(--ink)">story</h3>
+        <p class="dek">19 posts.</p>
+        <div class="foot"><span class="more">View topic →</span></div>
+      </div>
+    </a>
+    
+    <a class="card" href="/blog/topics/orchestration/" style="text-decoration:none">
+      <span class="thumb t-orchestration" aria-hidden="true">ORCHESTRATION</span>
+      <div class="body">
+        <h3 style="color:var(--ink)">orchestration</h3>
+        <p class="dek">9 posts.</p>
+        <div class="foot"><span class="more">View topic →</span></div>
+      </div>
+    </a>
+    
+    <a class="card" href="/blog/topics/use-cases/" style="text-decoration:none">
+      <span class="thumb t-use-cases" aria-hidden="true">USE-CASES</span>
+      <div class="body">
+        <h3 style="color:var(--ink)">use-cases</h3>
+        <p class="dek">9 posts.</p>
+        <div class="foot"><span class="more">View topic →</span></div>
+      </div>
+    </a>
+    
+    <a class="card" href="/blog/topics/memory/" style="text-decoration:none">
+      <span class="thumb t-memory" aria-hidden="true">MEMORY</span>
+      <div class="body">
+        <h3 style="color:var(--ink)">memory</h3>
+        <p class="dek">5 posts.</p>
+        <div class="foot"><span class="more">View topic →</span></div>
+      </div>
+    </a>
+    
+  </div>
+
+  
+  <div class="filters" style="padding-top:36px">
+    <span class="eyebrow" style="align-self:center">Tags</span>
+    
+    <a class="chip" href="/blog/tags/multi-agent/">Multi-Agent<span class="ct">88</span></a>
+    
+    <a class="chip" href="/blog/tags/claude-code/">Claude Code<span class="ct">62</span></a>
+    
+    <a class="chip" href="/blog/tags/open-source/">Open Source<span class="ct">35</span></a>
+    
+    <a class="chip" href="/blog/tags/guides/">Guides<span class="ct">33</span></a>
+    
+    <a class="chip" href="/blog/tags/comparisons/">Comparisons<span class="ct">29</span></a>
+    
+    <a class="chip" href="/blog/tags/internals/">Internals<span class="ct">26</span></a>
+    
+    <a class="chip" href="/blog/tags/concepts/">Concepts<span class="ct">24</span></a>
+    
+    <a class="chip" href="/blog/tags/story/">Story<span class="ct">20</span></a>
+    
+    <a class="chip" href="/blog/tags/local-first/">Local-First<span class="ct">20</span></a>
+    
+    <a class="chip" href="/blog/tags/orchestration/">Orchestration<span class="ct">19</span></a>
+    
+    <a class="chip" href="/blog/tags/getting-started/">Getting Started<span class="ct">17</span></a>
+    
+    <a class="chip" href="/blog/tags/release/">Release<span class="ct">16</span></a>
+    
+    <a class="chip" href="/blog/tags/cost/">Cost<span class="ct">15</span></a>
+    
+    <a class="chip" href="/blog/tags/automation/">Automation<span class="ct">13</span></a>
+    
+    <a class="chip" href="/blog/tags/tools/">Tools<span class="ct">12</span></a>
+    
+    <a class="chip" href="/blog/tags/security/">Security<span class="ct">12</span></a>
+    
+    <a class="chip" href="/blog/tags/memory/">Memory<span class="ct">10</span></a>
+    
+    <a class="chip" href="/blog/tags/use-cases/">Use Cases<span class="ct">10</span></a>
+    
+    <a class="chip" href="/blog/tags/human-in-the-loop/">Human-in-the-Loop<span class="ct">9</span></a>
+    
+    <a class="chip" href="/blog/tags/workflow/">Workflow<span class="ct">8</span></a>
+    
+    <a class="chip" href="/blog/tags/cli-agents/">CLI Agents<span class="ct">8</span></a>
+    
+    <a class="chip" href="/blog/tags/engines/">Engines<span class="ct">8</span></a>
+    
+    <a class="chip" href="/blog/tags/mempalace/">MemPalace<span class="ct">6</span></a>
+    
+    <a class="chip" href="/blog/tags/guardrails/">Guardrails<span class="ct">6</span></a>
+    
+    <a class="chip" href="/blog/tags/mcp/">MCP<span class="ct">6</span></a>
+    
+    <a class="chip" href="/blog/tags/hive/">Hive<span class="ct">6</span></a>
+    
+    <a class="chip" href="/blog/tags/ide/">IDE<span class="ct">6</span></a>
+    
+    <a class="chip" href="/blog/tags/observability/">Observability<span class="ct">5</span></a>
+    
+    <a class="chip" href="/blog/tags/electron/">Electron<span class="ct">5</span></a>
+    
+    <a class="chip" href="/blog/tags/autonomous/">Autonomous<span class="ct">5</span></a>
+    
+    <a class="chip" href="/blog/tags/codex/">Codex<span class="ct">5</span></a>
+    
+    <a class="chip" href="/blog/tags/voice/">Voice<span class="ct">5</span></a>
+    
+    <a class="chip" href="/blog/tags/ai-agents/">AI Agents<span class="ct">5</span></a>
+    
+    <a class="chip" href="/blog/tags/git/">Git<span class="ct">4</span></a>
+    
+    <a class="chip" href="/blog/tags/architecture/">Architecture<span class="ct">4</span></a>
+    
+    <a class="chip" href="/blog/tags/reliability/">Reliability<span class="ct">4</span></a>
+    
+    <a class="chip" href="/blog/tags/debugging/">Debugging<span class="ct">4</span></a>
+    
+    <a class="chip" href="/blog/tags/model-routing/">Model Routing<span class="ct">4</span></a>
+    
+    <a class="chip" href="/blog/tags/slack/">Slack<span class="ct">4</span></a>
+    
+    <a class="chip" href="/blog/tags/terminals/">Terminals<span class="ct">3</span></a>
+    
+    <a class="chip" href="/blog/tags/agentic-ai/">Agentic AI<span class="ct">3</span></a>
+    
+    <a class="chip" href="/blog/tags/aeo/">AEO<span class="ct">3</span></a>
+    
+    <a class="chip" href="/blog/tags/seo/">SEO<span class="ct">3</span></a>
+    
+    <a class="chip" href="/blog/tags/ollama/">Ollama<span class="ct">3</span></a>
+    
+    <a class="chip" href="/blog/tags/launch/">Launch<span class="ct">3</span></a>
+    
+    <a class="chip" href="/blog/tags/god/">GOD<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/messaging/">Messaging<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/faq/">FAQ<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/concurrency/">Concurrency<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/pixijs/">Pixi.js<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/visualization/">Visualization<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/xtermjs/">xterm.js<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/hooks/">Hooks<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/skills/">Skills<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/node-pty/">node-pty<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/performance/">Performance<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/prompt-caching/">Prompt Caching<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/protocols/">Protocols<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/tutorial/">Tutorial<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/code-review/">Code Review<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/agent-design/">Agent Design<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/windows/">Windows<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/postmortem/">Postmortem<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/community/">Community<span class="ct">2</span></a>
+    
+    <a class="chip" href="/blog/tags/subagents/">Subagents<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/markdown/">Markdown<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/coordination/">Coordination<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/event-log/">Event Log<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/glossary/">Glossary<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/privacy/">Privacy<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/game-dev/">Game Dev<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/error-handling/">Error Handling<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/context-engineering/">Context Engineering<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/evaluation/">Evaluation<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/ai-search/">AI Search<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/cloud-agents/">Cloud Agents<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/long-running-agents/">Long-Running Agents<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/trends/">Trends<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/trust/">Trust<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/prompt-injection/">Prompt Injection<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/coding-agents/">Coding Agents<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/hitl/">HITL<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/brand/">Brand<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/the-office/">The Office<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/munder-difflin/">Munder Difflin<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/devrel/">DevRel<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/industry/">Industry<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/interoperability/">Interoperability<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/ai-coding-agents/">AI Coding Agents<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/cline/">Cline<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/geo/">GEO<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/non-technical/">Non-Technical<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/content/">Content<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/setup/">Setup<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/github/">GitHub<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/webhooks/">Webhooks<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/command-injection/">Command Injection<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/ssrf/">SSRF<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/mac-mini/">Mac Mini<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/lm-studio/">LM Studio<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/byok/">BYOK<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/realtime/">Realtime<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/command-center/">Command Center<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/kanban/">Kanban<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/crewai/">CrewAI<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/autogen/">AutoGen<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/langgraph/">LangGraph<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/copilot-cli/">Copilot CLI<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/github-copilot/">GitHub Copilot<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/talk-mode/">Talk Mode<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/copilot/">Copilot<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/autonomy/">Autonomy<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/orca/">Orca<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/monaco-ide/">Monaco IDE<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/tmux/">tmux<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/git-worktrees/">Git Worktrees<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/ade/">ADE<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/tooling-landscape/">Tooling Landscape<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/harness-engineering/">Harness Engineering<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/onboarding/">Onboarding<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/research/">Research<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/design/">Design<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/eleventy/">Eleventy<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/meta/">Meta<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/product-hunt/">Product Hunt<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/changelog/">Changelog<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/feedback/">Feedback<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/product/">Product<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/discord/">Discord<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/reddit/">Reddit<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/telemetry/">Telemetry<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/i18n/">i18n<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/pro/">Pro<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/integrations/">Integrations<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/india/">India<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/pricing/">Pricing<span class="ct">1</span></a>
+    
+    <a class="chip" href="/blog/tags/transcription/">Transcription<span class="ct">1</span></a>
+    
+  </div>
+  
+</section>
+
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

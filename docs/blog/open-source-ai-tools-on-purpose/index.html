@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Building AI Dev Tools in the Open, On Purpose — Munder Difflin Blog</title>
+<meta name="description" content="Agents touch your code, keys, and memory. That&#39;s why agent tooling should be open source and local-first — so you can verify it, not just trust it." />
+<link rel="canonical" href="https://munderdiffl.in/blog/open-source-ai-tools-on-purpose/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Building AI Dev Tools in the Open, On Purpose — Munder Difflin Blog" />
+<meta property="og:description" content="Agents touch your code, keys, and memory. That&#39;s why agent tooling should be open source and local-first — so you can verify it, not just trust it." />
+<meta property="og:url" content="https://munderdiffl.in/blog/open-source-ai-tools-on-purpose/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/open-source-ai-tools-on-purpose/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Building AI Dev Tools in the Open, On Purpose" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-04T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Open Source" />
+<meta property="article:tag" content="Local-First" />
+<meta property="article:tag" content="Trust" />
+<meta property="article:tag" content="Multi-Agent" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Building AI Dev Tools in the Open, On Purpose — Munder Difflin Blog" />
+<meta name="twitter:description" content="Agents touch your code, keys, and memory. That&#39;s why agent tooling should be open source and local-first — so you can verify it, not just trust it." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/open-source-ai-tools-on-purpose/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Building AI Dev Tools in the Open, On Purpose" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Building AI Dev Tools in the Open, On Purpose",
+  "description": "Agents touch your code, keys, and memory. That's why agent tooling should be open source and local-first — so you can verify it, not just trust it.",
+  "image": ["https://munderdiffl.in/blog/assets/media/open-source-ai-tools-on-purpose/hero.png"],
+  "datePublished": "2026-06-04T00:00:00.000Z",
+  "dateModified": "2026-06-04T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/open-source-ai-tools-on-purpose/" },
+  "keywords": "open source ai agents, open source ai tools, mit license, building in public, local-first ai",
+  "articleSection": "Concepts",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/open-source-ai-tools-on-purpose/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Building AI Dev Tools in the Open, On Purpose", "item": "https://munderdiffl.in/blog/open-source-ai-tools-on-purpose/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Why does it matter whether an AI agent tool is open source?", "acceptedAnswer": { "@type": "Answer", "text": "Because agents act autonomously on your behalf — they read your code, call tools with your keys, and keep memory of your work. A closed, autonomous tool asks you to trust all of that on faith. An open one lets you read exactly what it does, audit it, and fix or fork it if you disagree. For software that operates this independently, inspectability isn't a nice-to-have; it's the basis of trust." } },
+    { "@type": "Question", "name": "What does MIT-licensed actually give me as a user?", "acceptedAnswer": { "@type": "Answer", "text": "The MIT license is permissive: you can read the full source, run it for any purpose, modify it, and fork it, with essentially no strings beyond keeping the copyright notice. Practically that means no lock-in — if the project changed direction or disappeared, your copy keeps working and you can carry it forward yourself." } },
+    { "@type": "Question", "name": "Isn't open source just a marketing label these days?", "acceptedAnswer": { "@type": "Answer", "text": "It can be, when 'open' means a crippled core with the useful parts behind a cloud subscription. The honest version is open source plus local-first: the whole thing runs on your machine, your data and memory stay local, and the code that orchestrates your agents is the code you can read. That combination is what makes 'open' mean something for a dev tool." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-concepts">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/concepts/">Concepts</a>
+    </nav>
+    <h1>Building AI Dev Tools in the Open, On Purpose</h1>
+    <p class="dek">Agents touch your code, keys, and memory. That&#39;s why agent tooling should be open source and local-first — so you can verify it, not just trust it.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Concepts</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/open-source-ai-tools-on-purpose/hero.png" alt="Illustration: Building AI Dev Tools in the Open, On Purpose" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>AI agents read your code, call tools with your
+keys, and remember your work — so an agent tool asks for an unusual amount of trust. The answer isn't to
+trust harder; it's to make the tool <strong>inspectable</strong>. Munder Difflin is
+<strong>MIT-licensed and local-first on purpose</strong>: the orchestrator, the agents, and their memory
+all run on your machine, and the code that drives them is code you can read, audit, and fork. For
+software this autonomous, open source isn't ideology — it's how you replace blind trust with
+verification.</p></div>
+<p>There’s a lot of AI agent tooling being built right now, and a striking amount of it is closed: a cloud
+service you send your code to, a black box that acts on your repo, a “core” that’s open while the parts
+that matter sit behind a subscription. <a href="https://munderdiffl.in/#opensource">Munder Difflin</a> went the
+other way — MIT-licensed, source-available, local-first — and not as an afterthought. It’s a deliberate
+choice about what a tool like this <em>should</em> be. Here’s the case for building agent tooling in the open,
+on purpose.</p>
+<h2 id="agents-raise-the-trust-bar" tabindex="-1">Agents raise the trust bar <a class="anchor" href="#agents-raise-the-trust-bar" aria-hidden="true">#</a></h2>
+<p>A linter or a formatter is a utility: it does one bounded thing and you can eyeball the result. An
+<strong>agent</strong> is different in kind. It runs semi-autonomously, decides its own next steps, reads and writes
+your files, calls tools using your credentials, and — increasingly — keeps a persistent
+<a href="/blog/markdown-first-agent-memory/">memory</a> of your project across sessions. A <em>hive</em> of them does all
+that in parallel.</p>
+<p>That’s a lot of latitude to hand to software. And the more autonomous the software, the worse a black
+box feels: with a closed agent you’re not trusting a single output, you’re trusting every decision it
+will make on your behalf, forever, without being able to look. The reasonable response isn’t to trust
+harder. It’s to demand that the tool be <strong>inspectable</strong> — that you can read what the orchestrator does
+with your code before you let it loose on it.</p>
+<p>Open source is what makes that possible. It turns “trust us” into “check for yourself.”</p>
+<h2 id="what-open-on-purpose-actually-buys-you" tabindex="-1">What “open, on purpose” actually buys you <a class="anchor" href="#what-open-on-purpose-actually-buys-you" aria-hidden="true">#</a></h2>
+<p>Being <a href="https://munderdiffl.in/#opensource">MIT-licensed</a> and built in the open isn’t a badge; it changes
+what you can do as a user:</p>
+<ul>
+<li><strong>Auditability.</strong> You can read exactly how work gets routed, what an agent is allowed to touch, and
+where your data goes. No guessing about a remote service’s behavior.</li>
+<li><strong>No lock-in.</strong> Permissive licensing means your copy keeps working regardless of what happens to the
+project. You’re never one pricing change or shutdown away from losing your workflow.</li>
+<li><strong>Forkability.</strong> Disagree with a decision? Change it. Need a behavior the maintainers won’t add? Fork
+it. The tool bends to your needs instead of the reverse.</li>
+<li><strong>Longevity.</strong> Open code outlives the company or the moment. The work you build on top of it is safe
+in a way that a closed SaaS can’t promise.</li>
+</ul>
+<figure class="fig fig-inline"><img src="/blog/assets/media/open-source-ai-tools-on-purpose/note-1.png" alt="Hand-drawn sketch from “Building AI Dev Tools in the Open, On Purpose”" loading="lazy" decoding="async" /></figure>
+<h2 id="open-and-local-first-the-combination-is-the-point" tabindex="-1">Open <em>and</em> local-first — the combination is the point <a class="anchor" href="#open-and-local-first-the-combination-is-the-point" aria-hidden="true">#</a></h2>
+<p>“Open source” alone can still be hollow if the useful half lives in someone else’s cloud. The version
+that actually means something pairs open code with <strong>local-first</strong> execution: the orchestrator, the
+agents, and their memory all run on <em>your</em> machine, and your code and notes never have to leave it.</p>
+<p>That pairing is deliberate in Munder Difflin, and the two halves reinforce each other. Local-first gives
+you <a href="/blog/why-local-first-matters-for-ai-agents/">control and privacy</a>; open source lets you <em>verify</em>
+that the local-first promise is real rather than taking it on faith. Closed-and-local is unverifiable;
+open-and-cloud still ships your data away. Open-and-local is the only quadrant where you can both keep
+your data and confirm what the tool is doing with it.</p>
+<h2 id="built-in-public-including-this-post" tabindex="-1">Built in public — including this post <a class="anchor" href="#built-in-public-including-this-post" aria-hidden="true">#</a></h2>
+<p>Building in the open also means the work itself is visible: the commits, the architecture decisions, the
+<a href="/blog/why-we-built-munder-difflin/">reasons behind them</a>. There’s a fitting proof of it in your hands
+right now — this blog is written and maintained by the hive of agents the tool runs, working in their
+own branches and committing source for review. The system documenting itself in public is about as
+on-the-nose a demonstration of “built in the open” as you’ll find.</p>
+<p>It also lowers the bar to contribute. When the code and the thinking are both public, a user who hits a
+rough edge can read the relevant file, understand it, and propose a fix — instead of filing a ticket into
+a void and hoping.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/open-source-ai-tools-on-purpose/note-2.png" alt="Hand-drawn sketch from “Building AI Dev Tools in the Open, On Purpose”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-honest-tradeoffs" tabindex="-1">The honest tradeoffs <a class="anchor" href="#the-honest-tradeoffs" aria-hidden="true">#</a></h2>
+<p>Open source isn’t free of cost, and pretending otherwise would be exactly the kind of marketing this post
+is arguing against. Building in the open means no proprietary moat, support that leans on community and
+docs rather than a guaranteed SLA, and the ongoing effort of keeping a public project healthy. Those are
+real.</p>
+<p>But weigh them against the alternative for <em>this</em> category of software: a closed, autonomous agent that
+touches everything and explains nothing. For a dev tool that operates with this much independence, the
+trust and control you get from open-and-local outweigh the convenience of a black box. That’s the bet —
+made on purpose.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>Why does it matter whether an AI agent tool is open source?</strong> Because agents act autonomously on your
+behalf — reading your code, calling tools with your keys, holding memory of your work. A closed tool asks
+you to trust all of that on faith; an open one lets you read what it does, audit it, and fork it if you
+disagree. For software this independent, inspectability is the basis of trust.</p>
+<p><strong>What does MIT-licensed actually give me?</strong> It’s permissive: read the source, run it for any purpose,
+modify it, fork it — essentially no strings beyond keeping the copyright notice. In practice that means
+no lock-in. If the project changed course or vanished, your copy keeps working and you can carry it
+forward.</p>
+<p><strong>Isn’t “open source” just a label sometimes?</strong> It can be, when “open” means a hollow core with the
+useful parts behind a cloud subscription. The honest version is open source <em>plus</em> local-first: the whole
+thing runs on your machine, your data stays local, and the orchestration code is the code you can read.</p>
+<h2 id="the-bottom-line" tabindex="-1">The bottom line <a class="anchor" href="#the-bottom-line" aria-hidden="true">#</a></h2>
+<p>The more an agent can do on your behalf, the more it matters that you can see what it’s doing. Open
+source plus local-first is how a tool earns that trust — not by asking for it, but by making itself
+checkable. Munder Difflin is MIT and built in the open <a href="https://munderdiffl.in/#opensource">on
+purpose</a>, because that’s the only honest way to ship software this
+autonomous. <a href="https://munderdiffl.in/#install">Download Munder Difflin</a> and read every line you’re running
+— it’s free and open source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">Why does it matter whether an AI agent tool is open source?</p>
+          <p class="a">Because agents act autonomously on your behalf — they read your code, call tools with your keys, and keep memory of your work. A closed, autonomous tool asks you to trust all of that on faith. An open one lets you read exactly what it does, audit it, and fix or fork it if you disagree. For software that operates this independently, inspectability isn&#39;t a nice-to-have; it&#39;s the basis of trust.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What does MIT-licensed actually give me as a user?</p>
+          <p class="a">The MIT license is permissive: you can read the full source, run it for any purpose, modify it, and fork it, with essentially no strings beyond keeping the copyright notice. Practically that means no lock-in — if the project changed direction or disappeared, your copy keeps working and you can carry it forward yourself.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Isn&#39;t open source just a marketing label these days?</p>
+          <p class="a">It can be, when &#39;open&#39; means a crippled core with the useful parts behind a cloud subscription. The honest version is open source plus local-first: the whole thing runs on your machine, your data and memory stay local, and the code that orchestrates your agents is the code you can read. That combination is what makes &#39;open&#39; mean something for a dev tool.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/open-source/">Open Source</a><a class="tag" href="/blog/tags/local-first/">Local-First</a><a class="tag" href="/blog/tags/trust/">Trust</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#agents-raise-the-trust-bar">Agents raise the trust bar</a></li><li class="lvl-2"><a href="#what-open-on-purpose-actually-buys-you">What “open, on purpose” actually buys you</a></li><li class="lvl-2"><a href="#open-and-local-first-the-combination-is-the-point">Open and local-first — the combination is the point</a></li><li class="lvl-2"><a href="#built-in-public-including-this-post">Built in public — including this post</a></li><li class="lvl-2"><a href="#the-honest-tradeoffs">The honest tradeoffs</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li><li class="lvl-2"><a href="#the-bottom-line">The bottom line</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/overnight-ai-coding-realistic-expectations/"><span class="k">← Older</span><span class="t">Overnight AI Coding: What&#39;s Realistic (and What&#39;s Not)</span></a>
+      <a class="pn next" href="/blog/observability-for-agent-fleets/"><span class="k">Newer →</span><span class="t">Observability for Agent Fleets: Seeing What Your Agents Do</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Concepts</h2>
+      <div class="post-grid">
+        <article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-ollama-good-for-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-ollama-good-for-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-ollama-good-for-coding/">Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do</a></h3>
+    <p class="dek">Ollama only runs the model, so the answer depends on which one you pull and your memory. What local models do well, where Claude wins, and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-ollama-good-for-coding/" aria-label="Read: Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-max-worth-it/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-max-worth-it/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-max-worth-it/">Is It Worth Paying for Claude Code Max?</a></h3>
+    <p class="dek">Who should pay for Claude Max 5x or 20x, who should stay on Pro or an API key, and the break even math to run on your own Claude Code usage.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-max-worth-it/" aria-label="Read: Is It Worth Paying for Claude Code Max?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-open-source/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-open-source/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-open-source/">Is Claude Code Open Source?</a></h3>
+    <p class="dek">No. Claude Code is proprietary under Anthropic&#39;s terms. What its GitHub repo holds, what the 2026 leak changed, and which open tools sit around it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-open-source/" aria-label="Read: Is Claude Code Open Source?">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

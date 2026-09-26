@@ -1,0 +1,116 @@
+---
+layout: base.njk
+title: The Munder Difflin Blog
+description: "Guides, deep dives, and comparisons on running multi-agent Claude Code: orchestration, agent memory, automation, and the tooling landscape."
+seoTitle: "Multi-agent & Claude Code blog — Munder Difflin"
+permalink: /index.html
+---
+{% block head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "{{ site.blogName }}",
+  "description": {{ site.description | dump | safe }},
+  "url": "{{ site.baseUrl }}",
+  {%- if collections.featured.length %}
+  "blogPost": [
+    {%- for f in collections.featured | limit(3) %}
+    { "@type": "BlogPosting", "headline": {{ f.data.title | dump | safe }}, "url": "{{ site.origin }}{{ f.url | u }}", "datePublished": "{{ f.date | isoDate }}"{% if f.fileSlug | heroReady %}, "image": "{{ site.origin }}{{ ('/' + (f.fileSlug | heroFile)) | u }}"{% endif %} }{% if not loop.last %},{% endif %}
+    {%- endfor %}
+  ],
+  {%- endif %}
+  "publisher": { "@type": "Organization", "name": "Munder Difflin", "logo": { "@type": "ImageObject", "url": "{{ site.origin }}/logo.png" } }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "{{ site.origin }}/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "{{ site.baseUrl }}" }
+  ]
+}
+</script>
+{% endblock %}
+{% block content %}
+{%- set posts = collections.posts -%}
+<header class="page-head wrap">
+  <p class="eyebrow">Notes from the office floor</p>
+  <h1>The Munder Difflin <span class="hl">Blog.</span></h1>
+  <p class="lead">Guides, deep dives, and comparisons on running <strong>multi-agent Claude
+  Code</strong> — orchestration, agent memory, automation, and the tooling landscape. From the team
+  building a self-coordinating hive of agents with a GOD orchestrator you talk to.</p>
+
+  <div class="filters" role="navigation" aria-label="Topics">
+    <a class="chip" aria-current="page">All<span class="ct">{{ posts.length }}</span></a>
+    {% for c in collections.categories %}
+    <a class="chip" href="{{ ('/topics/' + c.slug + '/') | u }}">{{ c.name }}<span class="ct">{{ c.posts.length }}</span></a>
+    {% endfor %}
+  </div>
+</header>
+
+{%- set lead = collections.featured[0] if collections.featured.length else false -%}
+{% if lead %}
+{%- set ld = lead.data -%}
+<section class="fhero wrap" aria-labelledby="fhero-title">
+  <div class="fhero-card t-{{ (ld.category | slug) if ld.category else 'default' }}">
+    <div class="fhero-text">
+      <p class="fhero-kicker"><span class="fhero-pill">Featured</span><span>{{ ld.categoryLabel or ld.category or "Notes" }}</span></p>
+      <h2 id="fhero-title"><a href="{{ lead.url | u }}">{{ ld.title }}</a></h2>
+      {% if ld.description %}<p class="fhero-dek">{{ ld.description }}</p>{% endif %}
+      <p class="fhero-meta">{{ ld.author.name if ld.author else site.author.name }} &middot; <time datetime="{{ lead.date | htmlDate }}">{{ lead.date | readableDate }}</time> &middot; {{ lead.content | readingTime }} min read</p>
+      <a class="btn primary" href="{{ lead.url | u }}">Read the story &rarr;</a>
+    </div>
+    <a class="fhero-art" href="{{ lead.url | u }}" tabindex="-1" aria-hidden="true">
+      {%- if lead.fileSlug | heroReady -%}
+      <img src="{{ ('/' + (lead.fileSlug | heroFile)) | u }}" alt="" width="1600" height="900" fetchpriority="high" decoding="async" />
+      {%- endif -%}
+    </a>
+  </div>
+  {% if collections.featured.length > 1 %}
+  <ul class="fhero-more" aria-label="More featured posts">
+    {% for f in collections.featured %}{% if not loop.first and loop.index <= 4 %}
+    <li><a href="{{ f.url | u }}">{{ f.data.title }}</a></li>
+    {% endif %}{% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if posts.length %}
+{%- set rest = collections.unpinned | excludeSelf(lead.url if lead else "") -%}
+{% if collections.pinned.length %}
+<section class="wrap pinned" aria-labelledby="pinned-title">
+  <h2 class="pinned-title" id="pinned-title">Start here</h2>
+  <div class="post-grid">
+    {% for p in collections.pinned %}{% include "card.njk" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if rest.length %}
+<div class="wrap featured">
+  {%- set p = rest[0] -%}
+  {% include "card.njk" %}
+</div>
+{% endif %}
+
+{% if rest.length > 1 %}
+<section class="wrap">
+  <div class="post-grid">
+    {% for p in rest %}{% if not loop.first %}{% include "card.njk" %}{% endif %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+{% else %}
+<div class="center-stage wrap">
+  <div>
+    <p class="eyebrow">Coming soon</p>
+    <h1 style="font-size:clamp(28px,5vw,44px)">The first dispatch is in the oven.</h1>
+    <p>New posts land here. Subscribe via <a href="{{ site.baseUrl }}feed.xml">RSS</a>.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

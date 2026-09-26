@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Claude Squad vs Munder Difflin: Which Should You Use? — Munder Difflin Blog</title>
+<meta name="description" content="Claude Squad vs Munder Difflin: a lean terminal session manager against a memory-backed, orchestrated, visual hive. Feature table and an honest verdict." />
+<link rel="canonical" href="https://munderdiffl.in/blog/claude-squad-vs-munder-difflin/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Claude Squad vs Munder Difflin: Which Should You Use? — Munder Difflin Blog" />
+<meta property="og:description" content="Claude Squad vs Munder Difflin: a lean terminal session manager against a memory-backed, orchestrated, visual hive. Feature table and an honest verdict." />
+<meta property="og:url" content="https://munderdiffl.in/blog/claude-squad-vs-munder-difflin/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/claude-squad-vs-munder-difflin/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Claude Squad vs Munder Difflin: Which Should You Use?" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-04T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Comparisons" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Claude Code" />
+<meta property="article:tag" content="Tools" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Claude Squad vs Munder Difflin: Which Should You Use? — Munder Difflin Blog" />
+<meta name="twitter:description" content="Claude Squad vs Munder Difflin: a lean terminal session manager against a memory-backed, orchestrated, visual hive. Feature table and an honest verdict." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/claude-squad-vs-munder-difflin/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Claude Squad vs Munder Difflin: Which Should You Use?" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Claude Squad vs Munder Difflin: Which Should You Use?",
+  "description": "Claude Squad vs Munder Difflin: a lean terminal session manager against a memory-backed, orchestrated, visual hive. Feature table and an honest verdict.",
+  "image": ["https://munderdiffl.in/blog/assets/media/claude-squad-vs-munder-difflin/hero.png"],
+  "datePublished": "2026-06-04T00:00:00.000Z",
+  "dateModified": "2026-06-04T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/claude-squad-vs-munder-difflin/" },
+  "keywords": "claude squad vs munder difflin, claude squad vs munder difflin, claude code multi-agent tool, claude squad alternative",
+  "articleSection": "Comparisons",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/claude-squad-vs-munder-difflin/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Claude Squad vs Munder Difflin: Which Should You Use?", "item": "https://munderdiffl.in/blog/claude-squad-vs-munder-difflin/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What's the main difference between Claude Squad and Munder Difflin?", "acceptedAnswer": { "@type": "Answer", "text": "Claude Squad is a lightweight terminal session manager that runs agents in parallel using tmux and git worktrees. Munder Difflin is a coordinated hive that adds shared long-term memory, inter-agent messaging, a GOD orchestrator, and a visual office floor — so the agents act as one team, not just parallel sessions." } },
+    { "@type": "Question", "name": "Is Munder Difflin heavier than Claude Squad?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Claude Squad is a minimal terminal tool; Munder Difflin is a desktop app with a visual floor and a coordination layer. For one or two quick parallel tasks, Claude Squad is less to think about. For a real team of agents that need to coordinate, Munder Difflin's extra weight earns its keep." } },
+    { "@type": "Question", "name": "Are both free and open source?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — both are open source. Munder Difflin is MIT-licensed and runs on macOS, Windows, and Linux. Always check each project's current license before you rely on it." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-comparisons">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/comparisons/">Comparisons</a>
+    </nav>
+    <h1>Claude Squad vs Munder Difflin: Which Should You Use?</h1>
+    <p class="dek">Claude Squad vs Munder Difflin: a lean terminal session manager against a memory-backed, orchestrated, visual hive. Feature table and an honest verdict.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>3 min read</span>
+      <span class="tag kind">Comparisons</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/claude-squad-vs-munder-difflin/hero.png" alt="Illustration: Claude Squad vs Munder Difflin: Which Should You Use?" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p><strong>Claude Squad</strong> wins on
+minimalism — a fast, terminal-native way to run parallel Claude Code agents. <strong>Munder
+Difflin</strong> wins on coordination — shared memory, inter-agent messaging, an orchestrator, and a
+visual floor. Choose Claude Squad for a few independent tasks in the terminal; choose Munder Difflin
+when coordination, not just parallelism, is the problem.</p></div>
+<p>These two tools are often compared, but they’re solving different problems. This is the honest
+head-to-head: where each is genuinely better, and how to decide.</p>
+<h2 id="the-one-line-difference" tabindex="-1">The one-line difference <a class="anchor" href="#the-one-line-difference" aria-hidden="true">#</a></h2>
+<ul>
+<li><strong>Claude Squad</strong> runs agents <em>in parallel</em>. It’s a terminal session manager.</li>
+<li><strong>Munder Difflin</strong> runs agents <em>as a team</em>. It’s a <a href="/#what">multi-agent harness</a>.</li>
+</ul>
+<p>Everything below is detail on that distinction.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/claude-squad-vs-munder-difflin/note-1.png" alt="Hand-drawn sketch from “Claude Squad vs Munder Difflin: Which Should You Use?”" loading="lazy" decoding="async" /></figure>
+<h2 id="feature-comparison" tabindex="-1">Feature comparison <a class="anchor" href="#feature-comparison" aria-hidden="true">#</a></h2>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Claude Squad</th>
+<th>Munder Difflin</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Form factor</td>
+<td>Terminal UI (TUI)</td>
+<td>Desktop app (Electron)</td>
+</tr>
+<tr>
+<td>Parallelism</td>
+<td>tmux sessions + git worktrees</td>
+<td>Roles + mailboxes + orchestrator</td>
+</tr>
+<tr>
+<td>Shared long-term memory</td>
+<td>No</td>
+<td>Yes — semantic MemPalace</td>
+</tr>
+<tr>
+<td>Inter-agent messaging</td>
+<td>No</td>
+<td>Yes — mailboxes + router</td>
+</tr>
+<tr>
+<td>Orchestrator</td>
+<td>No (you assign)</td>
+<td>Yes — GOD agent you talk to</td>
+</tr>
+<tr>
+<td>Visibility</td>
+<td>TUI session list</td>
+<td>Live office floor (avatars)</td>
+</tr>
+<tr>
+<td>Footprint</td>
+<td>Featherweight</td>
+<td>Heavier (GUI + viz)</td>
+</tr>
+<tr>
+<td>SSH / remote</td>
+<td>Excellent</td>
+<td>Local desktop app</td>
+</tr>
+<tr>
+<td>Platforms</td>
+<td>Terminal (cross-platform)</td>
+<td>macOS, Windows, Linux</td>
+</tr>
+<tr>
+<td>License</td>
+<td>Open source</td>
+<td>Open source (MIT)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>No row makes one “win” outright — they reflect two philosophies. Claude Squad optimizes for <em>less</em>;
+Munder Difflin optimizes for <em>coordination</em>.</p>
+<h2 id="where-claude-squad-is-the-better-pick" tabindex="-1">Where Claude Squad is the better pick <a class="anchor" href="#where-claude-squad-is-the-better-pick" aria-hidden="true">#</a></h2>
+<ul>
+<li><strong>You live in the terminal.</strong> No GUI, no Electron — it’s fast and it stays out of the way.</li>
+<li><strong>You work over SSH.</strong> Driving a fleet of agents on a remote box from one connection is Claude
+Squad’s home turf.</li>
+<li><strong>Your tasks are independent.</strong> Three unrelated jobs in three worktrees don’t need a memory layer
+or an orchestrator — they need isolation, which Claude Squad gives you cleanly.</li>
+<li><strong>You want minimal moving parts.</strong> Fewer features can be a feature.</li>
+</ul>
+<p>If that’s you, Claude Squad is the right tool and the visual floor would just be overhead. Be honest
+about your workload before you reach for more.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/claude-squad-vs-munder-difflin/note-2.png" alt="Hand-drawn sketch from “Claude Squad vs Munder Difflin: Which Should You Use?”" loading="lazy" decoding="async" /></figure>
+<h2 id="where-munder-difflin-is-the-better-pick" tabindex="-1">Where Munder Difflin is the better pick <a class="anchor" href="#where-munder-difflin-is-the-better-pick" aria-hidden="true">#</a></h2>
+<ul>
+<li><strong>Your agents need to share what they learn.</strong> <a href="/blog/give-claude-code-long-term-memory/">Long-term
+memory</a> (MemPalace) means knowledge compounds instead of
+resetting every session.</li>
+<li><strong>Agents need to hand work to each other.</strong> Mailboxes + a router let agent A pass a result to agent
+B without you relaying it.</li>
+<li><strong>You don’t want to assign every task.</strong> A <a href="/#how">GOD orchestrator</a> you talk to in plain language
+decomposes intent and routes work for you.</li>
+<li><strong>Seeing the work matters.</strong> A live office floor turns “what’s everyone doing?” into a glance —
+useful for trust and for catching problems early.</li>
+</ul>
+<p>In short: when <em>coordination</em> is the cost, the coordination layer pays for itself.</p>
+<h2 id="the-verdict" tabindex="-1">The verdict <a class="anchor" href="#the-verdict" aria-hidden="true">#</a></h2>
+<p>There’s no universal winner — there’s a right tool for your workload:</p>
+<ul>
+<li><strong>A few independent tasks, terminal-first, minimal:</strong> Claude Squad.</li>
+<li><strong>A coordinated team that remembers, messages, and routes:</strong> Munder Difflin.</li>
+</ul>
+<p>Many people start on Claude Squad and move to a hive exactly when they hit the coordination wall —
+the same arc as <a href="/blog/from-one-terminal-to-a-team/">going from one terminal to a team</a>. If you’re
+still scoping the field, read <a href="/blog/best-claude-code-multi-agent-tools/">the best tools to run multiple Claude Code
+agents</a>, or if you’ve already outgrown a session manager,
+<a href="/blog/claude-squad-alternative/">looking for a Claude Squad alternative</a> goes deeper on the gap.</p>
+<hr>
+<blockquote>
+<p>Both tools evolve quickly — check each project’s repo for current details. Munder Difflin is our own
+tool; we’ve tried to give Claude Squad a fair shake.</p>
+</blockquote>
+<p>Curious how a coordinated hive feels? <a href="/#install">Download Munder Difflin</a> — free, open source, and
+local-first.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What&#39;s the main difference between Claude Squad and Munder Difflin?</p>
+          <p class="a">Claude Squad is a lightweight terminal session manager that runs agents in parallel using tmux and git worktrees. Munder Difflin is a coordinated hive that adds shared long-term memory, inter-agent messaging, a GOD orchestrator, and a visual office floor — so the agents act as one team, not just parallel sessions.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is Munder Difflin heavier than Claude Squad?</p>
+          <p class="a">Yes. Claude Squad is a minimal terminal tool; Munder Difflin is a desktop app with a visual floor and a coordination layer. For one or two quick parallel tasks, Claude Squad is less to think about. For a real team of agents that need to coordinate, Munder Difflin&#39;s extra weight earns its keep.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Are both free and open source?</p>
+          <p class="a">Yes — both are open source. Munder Difflin is MIT-licensed and runs on macOS, Windows, and Linux. Always check each project&#39;s current license before you rely on it.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/comparisons/">Comparisons</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/claude-code/">Claude Code</a><a class="tag" href="/blog/tags/tools/">Tools</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-one-line-difference">The one-line difference</a></li><li class="lvl-2"><a href="#feature-comparison">Feature comparison</a></li><li class="lvl-2"><a href="#where-claude-squad-is-the-better-pick">Where Claude Squad is the better pick</a></li><li class="lvl-2"><a href="#where-munder-difflin-is-the-better-pick">Where Munder Difflin is the better pick</a></li><li class="lvl-2"><a href="#the-verdict">The verdict</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/context-engineering-for-ai-agents/"><span class="k">← Older</span><span class="t">Context Engineering for AI Agents: Budgeting the Window</span></a>
+      <a class="pn next" href="/blog/claude-code-orchestration-tools-compared/"><span class="k">Newer →</span><span class="t">Claude Code Orchestration Tools, Compared</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Comparisons</h2>
+      <div class="post-grid">
+        <article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-pricing/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/grok-bot-pricing/">Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy</a></h3>
+    <p class="dek">Grok Bot has no plan of its own. It comes bundled with SuperGrok and Cursor plans from $20 to $300 a month. Here is what each one gets you, what the free trial is, and the $0 route for work agents.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-pricing/" aria-label="Read: Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-alternatives/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-alternatives/">Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse</a></h3>
+    <p class="dek">Meta Muse is US only and trains on your chats by default. Seven alternatives, from open source agents that run on your own computer to hosted ones from OpenAI, Google and SpaceXAI.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-alternatives/" aria-label="Read: Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-grok-bot-privacy/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-grok-bot-privacy/">Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both ask for your logins. We read both companies&#39; security docs: who sees your passwords, what trains on your chats, and how to keep AI agents on your own computer instead.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-grok-bot-privacy/" aria-label="Read: Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

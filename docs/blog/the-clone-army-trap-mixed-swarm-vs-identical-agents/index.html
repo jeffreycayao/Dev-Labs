@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents — Munder Difflin Blog</title>
+<meta name="description" content="Spinning up tens of identical top-tier CLI agents feels powerful and burns tokens on work a cheaper agent could do. A mixed-capability swarm with shared memory wins on cost — and often on quality." />
+<link rel="canonical" href="https://munderdiffl.in/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents — Munder Difflin Blog" />
+<meta property="og:description" content="Spinning up tens of identical top-tier CLI agents feels powerful and burns tokens on work a cheaper agent could do. A mixed-capability swarm with shared memory wins on cost — and often on quality." />
+<meta property="og:url" content="https://munderdiffl.in/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/the-clone-army-trap-mixed-swarm-vs-identical-agents/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-10T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Cost" />
+<meta property="article:tag" content="Orchestration" />
+<meta property="article:tag" content="Model Routing" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents — Munder Difflin Blog" />
+<meta name="twitter:description" content="Spinning up tens of identical top-tier CLI agents feels powerful and burns tokens on work a cheaper agent could do. A mixed-capability swarm with shared memory wins on cost — and often on quality." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/the-clone-army-trap-mixed-swarm-vs-identical-agents/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents",
+  "description": "Spinning up tens of identical top-tier CLI agents feels powerful and burns tokens on work a cheaper agent could do. A mixed-capability swarm with shared memory wins on cost — and often on quality.",
+  "image": ["https://munderdiffl.in/blog/assets/media/the-clone-army-trap-mixed-swarm-vs-identical-agents/hero.png"],
+  "datePublished": "2026-06-10T00:00:00.000Z",
+  "dateModified": "2026-06-10T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/" },
+  "keywords": "mixed-capability agent swarm, multi-agent token efficiency, agent specialization, orchestrator delegation, identical vs mixed agents",
+  "articleSection": "Concepts",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents", "item": "https://munderdiffl.in/blog/the-clone-army-trap-mixed-swarm-vs-identical-agents/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Why not just run tens of identical top-tier agents on a problem?", "acceptedAnswer": { "@type": "Answer", "text": "Because most tasks are a mix of cheap and hard subtasks, and identical premium agents pay frontier prices for the cheap majority too. You also pay a hidden tax: identical agents with no shared state each re-derive the same context, and without an owner they duplicate work and collide. You get a big bill for redundant effort, not more capability." } },
+    { "@type": "Question", "name": "Is a mixed-capability swarm actually as capable as an all-premium fleet?", "acceptedAnswer": { "@type": "Answer", "text": "On most real workloads, yes — and sometimes more, because specialization and a clean division of labor beat raw horsepower applied uniformly. The frontier model still does the hard reasoning; it just isn't wasted on formatting and lookups. Quality only drops if you route a genuinely hard task to a model that can't handle it, which is a routing mistake, not a swarm one." } },
+    { "@type": "Question", "name": "What makes a swarm token-efficient rather than just cheaper per agent?", "acceptedAnswer": { "@type": "Answer", "text": "Three structural things: an orchestrator that routes each subtask to the right capability tier, shared memory so no agent re-derives context that another already established, and scoped contracts so each agent carries only what its task needs. Specialization plus delegation plus shared state is the lever — not the per-token price of any one model." } },
+    { "@type": "Question", "name": "Doesn't an orchestrator add overhead that eats the savings?", "acceptedAnswer": { "@type": "Answer", "text": "It adds a little — one premium agent reasoning about the whole job — but it removes far more: the redundant re-derivation, the colliding work, and the frontier-priced busywork that a leaderless clone army generates. The orchestrator's cost is a fixed overhead; the savings scale with every routine subtask it routes away from the expensive tier." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-concepts">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/concepts/">Concepts</a>
+    </nav>
+    <h1>The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents</h1>
+    <p class="dek">Spinning up tens of identical top-tier CLI agents feels powerful and burns tokens on work a cheaper agent could do. A mixed-capability swarm with shared memory wins on cost — and often on quality.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>7 min read</span>
+      <span class="tag kind">Concepts</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/the-clone-army-trap-mixed-swarm-vs-identical-agents/hero.png" alt="Illustration: The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>Throwing <strong>tens of identical
+top-tier CLI agents</strong> at a problem feels like brute-forcing your way to a great answer. It's
+mostly brute-forcing your way to a big bill. Real tasks are a <strong>mix</strong> of cheap and hard
+subtasks, and a clone army pays frontier prices for the cheap majority — while quietly re-deriving the
+same context N times and colliding with itself because no one owns the plan. A <strong>mixed-capability
+swarm</strong> — an orchestrator routing each subtask to the right tier, <strong>shared memory</strong>
+so nobody re-derives context, scoped contracts, and real parallelism — gets comparable or better results
+at a <strong>fraction of the tokens</strong>. The lever is specialization, delegation, and shared state —
+not horsepower applied uniformly.</p></div>
+<p>There’s a seductive move when a problem looks big: spin up <em>more of the best agent</em>. Ten identical
+top-tier CLI agents, all on the frontier model, all pointed at the same repo. It looks like a force
+multiplier. It feels safe — every agent is maximally capable, so surely the swarm is too.</p>
+<p>It’s a trap. Not because the agents are bad, but because the <em>shape of the work</em> doesn’t reward
+sameness. We’ve argued before that <a href="/blog/do-more-with-less-model-routing/">a hive shouldn’t all run the biggest
+model</a> and laid out the <a href="/blog/the-multi-agent-cost-playbook/">five levers that cut a fleet’s
+bill</a>. This post is the head-to-head those posts imply: <strong>the
+clone army versus the mixed swarm</strong> — why uniform top-tier agents burn tokens on work a cheaper agent
+could do, and why a swarm of mixed-capability agents is both leaner <em>and</em>, surprisingly often, better.</p>
+<h2 id="most-tasks-are-not-uniform-theyre-lumpy" tabindex="-1">Most tasks are not uniform — they’re lumpy <a class="anchor" href="#most-tasks-are-not-uniform-theyre-lumpy" aria-hidden="true">#</a></h2>
+<p>Pick any real job an agent team gets handed. “Add this feature.” “Audit this codebase.” “Triage these
+issues.” Now look inside it. You’ll find a handful of genuinely hard subtasks — the architecture call,
+the subtle bug, the ambiguous spec that needs judgment — surrounded by a <em>much larger</em> pile of routine
+ones: reading files, reformatting, renaming, classifying, summarizing logs, writing boilerplate tests,
+checking a convention.</p>
+<p>That lumpiness is the whole game. The hard subtasks genuinely reward a frontier model. The routine ones
+don’t — a small, fast model does them just as well. So when you run <em>every</em> agent on the top tier, you’re
+not buying ten units of capability. You’re buying one unit of capability you needed and nine units you’re
+paying frontier prices for routine work you’d have gotten for a tenth the cost. The capability you bought
+on the easy subtasks was never the bottleneck.</p>
+<h2 id="the-clone-armys-three-hidden-taxes" tabindex="-1">The clone army’s three hidden taxes <a class="anchor" href="#the-clone-armys-three-hidden-taxes" aria-hidden="true">#</a></h2>
+<p>The per-token waste is the obvious cost. The structural ones are worse.</p>
+<p><strong>Tax 1 — Re-derivation.</strong> Ten identical agents with no shared state each rebuild the same understanding
+from scratch. Each one reads the same files, re-infers the same architecture, re-discovers the same
+constraint that “auth lives in the middleware layer.” That context-building is real tokens, paid N times,
+to arrive at knowledge one agent already had. Without <a href="/blog/markdown-first-agent-memory/">shared memory</a>,
+the swarm is N strangers who refuse to talk.</p>
+<p><strong>Tax 2 — Collision.</strong> Identical agents with no owner have no division of labor. Two of them pick the
+same subtask; a third refactors a file a fourth is mid-edit on; their outputs contradict and someone (you)
+has to reconcile them. A leaderless clone army doesn’t parallelize a problem — it parallelizes <em>confusion</em>,
+and then you pay again to merge it. This is exactly the <a href="/blog/coordinating-ai-coding-agents/">coordinate-without-colliding
+problem</a>, made worse by sameness: when every agent is interchangeable,
+nothing tells them who does what.</p>
+<p><strong>Tax 3 — No escalation ceiling, no floor.</strong> Because every agent is already maxed out, there’s nowhere to
+<em>escalate</em> a truly nasty subtask (everyone’s already on the best model) and nowhere to <em>de-escalate</em> the
+easy follow-ups (everyone stays expensive). You’ve flattened the one dimension that lets a team be
+efficient: the ability to spend big where it matters and small where it doesn’t.</p>
+<p>So the clone army’s bill isn’t “10× one agent.” It’s 10× <em>plus</em> re-derivation <em>plus</em> collision-cleanup —
+for a result that a smaller, better-organized team would have produced with less drama.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/the-clone-army-trap-mixed-swarm-vs-identical-agents/note-1.png" alt="Hand-drawn sketch from “The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents”" loading="lazy" decoding="async" /></figure>
+<h2 id="what-a-mixed-swarm-does-differently" tabindex="-1">What a mixed swarm does differently <a class="anchor" href="#what-a-mixed-swarm-does-differently" aria-hidden="true">#</a></h2>
+<p>A mixed-capability swarm isn’t “the same idea, but cheaper agents.” It’s a different <em>structure</em>, and the
+structure is where the wins come from.</p>
+<ul>
+<li><strong>An orchestrator that routes by tier.</strong> Instead of ten peers, you have one lead that sees the whole job,
+decomposes it, and sends each subtask to the <a href="/blog/do-more-with-less-model-routing/">right capability tier</a>:
+routine work to fast cheap workers, the hard reasoning to a frontier worker, and itself reserved for
+planning and integration. The expensive model still does the expensive thinking — it just stops doing the
+cheap thinking.</li>
+<li><strong>Shared memory so nobody re-derives.</strong> The context one agent establishes — the architecture, the
+decision, the gotcha — is written once to a shared board and read by everyone. Re-derivation tax: gone.
+This is why a hive leans on <a href="/blog/how-agents-remember-semantic-memory/">compact, markdown-first memory and semantic
+recall</a> instead of stuffing the whole world into ten separate
+context windows.</li>
+<li><strong>Scoped contracts.</strong> Each worker gets a <em>narrow</em> assignment with a clear input and expected output — not
+the whole problem. Narrow scope means a small model can handle it, the context window stays tiny (so the
+<a href="/blog/the-multi-agent-cost-playbook/">per-turn cost you pay N times</a> stays small), and there’s no ambiguity
+about who owns what. Collision tax: gone.</li>
+<li><strong>Real parallelism, not redundant parallelism.</strong> The independent subtasks run at once because the
+orchestrator knows they’re independent — a genuine <a href="/blog/multi-agent-orchestration-patterns/">fan-out</a>,
+not ten agents racing to do the same thing.</li>
+</ul>
+<p>Specialization, delegation, shared state. That’s the lever. Each one removes a tax the clone army pays.</p>
+<h2 id="but-is-it-as-capable" tabindex="-1">“But is it as <em>capable</em>?” <a class="anchor" href="#but-is-it-as-capable" aria-hidden="true">#</a></h2>
+<p>Here’s the part that surprises people: the mixed swarm often produces <em>better</em> output, not just cheaper.</p>
+<p>Two reasons. First, a clean division of labor beats raw horsepower applied uniformly — the same reason a
+real team doesn’t put its most senior engineer on every ticket. A frontier agent that’s <em>only</em> doing hard
+reasoning, with the routine noise handled elsewhere, is a frontier agent that isn’t drowning the hard
+problem in busywork. You concentrate capability where it changes the outcome.</p>
+<p>Second, the structure adds a quality dimension the clone army lacks: you can route risky output through a
+<a href="/blog/how-ai-agents-verify-their-own-work/">maker-checker pass</a> — a cheap worker produces, a stronger
+agent verifies — which catches more than ten parallel agents independently being confident. Capability
+isn’t just the model; it’s the <em>organization</em> around the model.</p>
+<p>The honest caveat — and we <a href="/blog/multi-agent-orchestration-patterns/">keep this one honest</a> — is that
+quality drops the moment you route a genuinely hard subtask to a model that can’t handle it. But that’s a
+<em>routing</em> mistake, not a swarm one. Default lean, escalate the hard minority on signal, and the capability
+gap to an all-premium fleet closes to roughly nothing — at a fraction of the tokens.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/the-clone-army-trap-mixed-swarm-vs-identical-agents/note-2.png" alt="Hand-drawn sketch from “The Clone Army Is a Trap: Why a Mixed Swarm Beats Ten Identical Agents”" loading="lazy" decoding="async" /></figure>
+<h2 id="what-fraction-of-the-tokens-actually-means" tabindex="-1">What “fraction of the tokens” actually means <a class="anchor" href="#what-fraction-of-the-tokens-actually-means" aria-hidden="true">#</a></h2>
+<p>We won’t fabricate a benchmark number, but the direction is not subtle, and it comes from three
+multiplying sources. The price gap between a small and a frontier model is large per token. The routine
+subtasks vastly outnumber the hard ones in most workloads. And shared memory plus scoped contracts erase
+the re-derivation and collision the clone army pays on top. Multiply those together and the mixed swarm
+isn’t a little cheaper — it’s <em>categorically</em> cheaper, for output that holds up. The real denominator is
+<strong>cost per completed task</strong>, and a leaderless clone army that needs a human to merge its contradictions
+isn’t cheap on that measure at all.</p>
+<h2 id="how-munder-difflin-is-built-around-this" tabindex="-1">How Munder Difflin is built around this <a class="anchor" href="#how-munder-difflin-is-built-around-this" aria-hidden="true">#</a></h2>
+<p>This isn’t just a thesis — it’s the architecture of the product. <a href="https://munderdiffl.in">Munder Difflin</a>
+runs a virtual office where a <a href="/blog/how-the-god-orchestrator-works/">god orchestrator</a> decomposes your
+intent and delegates to Office-themed worker agents of <em>varying</em> capability. The cheap workers handle the
+routine; the orchestrator and any escalated workers handle the hard reasoning — <a href="/blog/the-multi-agent-cost-playbook/">per-agent model
+selection</a> is a real setting, not advice. A shared board, inboxes,
+and memory mean no agent re-derives what another already established. And a token budget with a <em>steward</em>
+model keeps the whole swarm inside a spend ceiling you set — so the structure that makes it efficient is
+also the structure that makes the cost predictable. It supports Claude Code, Codex, and Antigravity CLIs,
+runs <a href="/blog/why-local-first-matters-for-ai-agents/">local-first</a>, and you can <a href="/blog/observability-for-agent-fleets/">watch every agent
+work</a>.</p>
+<h2 id="the-bottom-line" tabindex="-1">The bottom line <a class="anchor" href="#the-bottom-line" aria-hidden="true">#</a></h2>
+<p>The clone army feels powerful because every soldier is elite. But a problem isn’t won by ten identical
+elites re-deriving the same context and stepping on each other — it’s won by the <em>right</em> capability on
+each subtask, a shared brain so nobody repeats anyone, and a lead who owns the plan. A mixed-capability
+swarm is leaner because it stops paying frontier prices for routine work, and it’s often <em>better</em> because
+specialization and delegation beat undifferentiated horsepower. Don’t buy more of the best agent. Build a
+team out of the right ones.</p>
+<p>Want to run a swarm that routes by capability instead of brute-forcing with clones? <a href="https://munderdiffl.in/#install">Download Munder
+Difflin</a> — a local, 24/7 virtual office of AI agents. It’s free and open
+source.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">Why not just run tens of identical top-tier agents on a problem?</p>
+          <p class="a">Because most tasks are a mix of cheap and hard subtasks, and identical premium agents pay frontier prices for the cheap majority too. You also pay a hidden tax: identical agents with no shared state each re-derive the same context, and without an owner they duplicate work and collide. You get a big bill for redundant effort, not more capability.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is a mixed-capability swarm actually as capable as an all-premium fleet?</p>
+          <p class="a">On most real workloads, yes — and sometimes more, because specialization and a clean division of labor beat raw horsepower applied uniformly. The frontier model still does the hard reasoning; it just isn&#39;t wasted on formatting and lookups. Quality only drops if you route a genuinely hard task to a model that can&#39;t handle it, which is a routing mistake, not a swarm one.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">What makes a swarm token-efficient rather than just cheaper per agent?</p>
+          <p class="a">Three structural things: an orchestrator that routes each subtask to the right capability tier, shared memory so no agent re-derives context that another already established, and scoped contracts so each agent carries only what its task needs. Specialization plus delegation plus shared state is the lever — not the per-token price of any one model.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Doesn&#39;t an orchestrator add overhead that eats the savings?</p>
+          <p class="a">It adds a little — one premium agent reasoning about the whole job — but it removes far more: the redundant re-derivation, the colliding work, and the frontier-priced busywork that a leaderless clone army generates. The orchestrator&#39;s cost is a fixed overhead; the savings scale with every routine subtask it routes away from the expensive tier.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/cost/">Cost</a><a class="tag" href="/blog/tags/orchestration/">Orchestration</a><a class="tag" href="/blog/tags/model-routing/">Model Routing</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#most-tasks-are-not-uniform-theyre-lumpy">Most tasks are not uniform — they’re lumpy</a></li><li class="lvl-2"><a href="#the-clone-armys-three-hidden-taxes">The clone army’s three hidden taxes</a></li><li class="lvl-2"><a href="#what-a-mixed-swarm-does-differently">What a mixed swarm does differently</a></li><li class="lvl-2"><a href="#but-is-it-as-capable">“But is it as capable?”</a></li><li class="lvl-2"><a href="#what-fraction-of-the-tokens-actually-means">What “fraction of the tokens” actually means</a></li><li class="lvl-2"><a href="#how-munder-difflin-is-built-around-this">How Munder Difflin is built around this</a></li><li class="lvl-2"><a href="#the-bottom-line">The bottom line</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/trigger-ai-agents-from-github-webhook/"><span class="k">← Older</span><span class="t">How to Trigger Your AI Agent Hive from a GitHub Webhook</span></a>
+      <a class="pn next" href="/blog/run-ai-agent-hive-from-slack-setup/"><span class="k">Newer →</span><span class="t">Run Your AI Agent Hive from Slack: The Complete Setup</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Concepts</h2>
+      <div class="post-grid">
+        <article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-ollama-good-for-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-ollama-good-for-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-ollama-good-for-coding/">Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do</a></h3>
+    <p class="dek">Ollama only runs the model, so the answer depends on which one you pull and your memory. What local models do well, where Claude wins, and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-ollama-good-for-coding/" aria-label="Read: Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-max-worth-it/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-max-worth-it/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-max-worth-it/">Is It Worth Paying for Claude Code Max?</a></h3>
+    <p class="dek">Who should pay for Claude Max 5x or 20x, who should stay on Pro or an API key, and the break even math to run on your own Claude Code usage.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-max-worth-it/" aria-label="Read: Is It Worth Paying for Claude Code Max?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-open-source/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-open-source/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-open-source/">Is Claude Code Open Source?</a></h3>
+    <p class="dek">No. Claude Code is proprietary under Anthropic&#39;s terms. What its GitHub repo holds, what the 2026 leak changed, and which open tools sit around it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-open-source/" aria-label="Read: Is Claude Code Open Source?">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work — Munder Difflin Blog</title>
+<meta name="description" content="CLI agents are powerful because they have terminal-level access: they run builds, tests, and git, and verify their own work by executing it. Here&#39;s why that matters — and the concrete ways Munder Difflin cuts token consumption while doing it." />
+<link rel="canonical" href="https://munderdiffl.in/blog/why-cli-agents-are-powerful/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work — Munder Difflin Blog" />
+<meta property="og:description" content="CLI agents are powerful because they have terminal-level access: they run builds, tests, and git, and verify their own work by executing it. Here&#39;s why that matters — and the concrete ways Munder Difflin cuts token consumption while doing it." />
+<meta property="og:url" content="https://munderdiffl.in/blog/why-cli-agents-are-powerful/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/why-cli-agents-are-powerful/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-10T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Concepts" />
+<meta property="article:tag" content="Multi-Agent" />
+<meta property="article:tag" content="Local-First" />
+<meta property="article:tag" content="Cost" />
+<meta property="article:tag" content="CLI Agents" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work — Munder Difflin Blog" />
+<meta name="twitter:description" content="CLI agents are powerful because they have terminal-level access: they run builds, tests, and git, and verify their own work by executing it. Here&#39;s why that matters — and the concrete ways Munder Difflin cuts token consumption while doing it." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/why-cli-agents-are-powerful/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work",
+  "description": "CLI agents are powerful because they have terminal-level access: they run builds, tests, and git, and verify their own work by executing it. Here's why that matters — and the concrete ways Munder Difflin cuts token consumption while doing it.",
+  "image": ["https://munderdiffl.in/blog/assets/media/why-cli-agents-are-powerful/hero.png"],
+  "datePublished": "2026-06-10T00:00:00.000Z",
+  "dateModified": "2026-06-10T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/why-cli-agents-are-powerful/" },
+  "keywords": "cli agents, why cli agents are powerful, terminal-level ai agents, reduce agent token consumption, local-first ai agents, shared agent memory",
+  "articleSection": "Concepts",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/why-cli-agents-are-powerful/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work", "item": "https://munderdiffl.in/blog/why-cli-agents-are-powerful/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Why are CLI agents more powerful than chat-only assistants?", "acceptedAnswer": { "@type": "Answer", "text": "Because a CLI agent has terminal-level access to the machine it runs on. It can read and write real files, run the build, run the tests, use git, and call any tool you have installed — then read the actual output and react to it. A chat assistant can only suggest a change; a CLI agent makes the change and proves it works by executing it. That closes the loop between proposing and verifying, which is the whole game in autonomous work." } },
+    { "@type": "Question", "name": "Why does running CLI agents locally matter?", "acceptedAnswer": { "@type": "Answer", "text": "Local execution is what makes the terminal-level access real. The agent operates on your actual filesystem, your installed toolchain, and your git history — no upload, no sandbox copy, no round-trip to a vendor's environment. You also get privacy (code and data never leave the machine), and the agents can run 24/7 on hardware you already own instead of metered cloud compute." } },
+    { "@type": "Question", "name": "How does Munder Difflin reduce token consumption?", "acceptedAnswer": { "@type": "Answer", "text": "Four structural levers. A shared memory layer and board so agents read context once instead of re-deriving it per turn. Scoped task contracts so each agent only loads what its job needs, not the whole project. A token-budget steward that paces and caps spend across the hive. And capability routing — sending routine work to a cheaper-tier agent and reserving the expensive orchestrator for reasoning — instead of one giant always-on context carrying everything." } },
+    { "@type": "Question", "name": "Does a shared memory layer actually save tokens?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, because the expensive part of an agent isn't the model — it's the context it re-reads every turn, multiplied across a whole team. When agents share a board and a memory layer, the project's facts, decisions, and state are derived once and recalled compactly, instead of each agent re-discovering them by re-reading files into its own window. In a fleet you pay context N times, so removing redundant re-derivation compounds." } },
+    { "@type": "Question", "name": "Is Munder Difflin local-first and open source?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Munder Difflin is a local, 24/7 multi-agent CLI harness that runs as an Electron desktop app on your own computer. It drives the CLIs you already have — Claude Code, Codex, Antigravity — so there's no API key and no per-seat platform tax on top of model tokens. It's free and open source." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-concepts">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/concepts/">Concepts</a>
+    </nav>
+    <h1>Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work</h1>
+    <p class="dek">CLI agents are powerful because they have terminal-level access: they run builds, tests, and git, and verify their own work by executing it. Here&#39;s why that matters — and the concrete ways Munder Difflin cuts token consumption while doing it.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-10">Jun 10, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>7 min read</span>
+      <span class="tag kind">Concepts</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/why-cli-agents-are-powerful/hero.png" alt="Illustration: Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p><strong>CLI agents are powerful for one
+reason: terminal-level access.</strong> They don't just <em>suggest</em> edits — they read and write
+real files, run builds and tests, use git, call any installed tool, and <strong>verify their own work by
+actually executing it</strong>. Running them <strong>locally</strong> (as Munder Difflin does) is what
+makes that access real: your filesystem, your toolchain, your git history, private and on 24/7. And
+because a whole hive of these agents could get expensive, Munder Difflin cuts token consumption with four
+structural levers: a <strong>shared memory layer + board</strong>, <strong>scoped task contracts</strong>,
+a <strong>token-budget steward</strong>, and <strong>capability routing</strong> — so agents stop
+re-deriving context and stop paying frontier prices for routine work.</p></div>
+<p>There’s a quiet line that separates a <em>chat assistant</em> from an <em>agent</em>, and almost everyone draws it in
+the wrong place. It’s not “how smart is the model.” It’s a much more boring question: <strong>can the thing
+actually touch the machine?</strong></p>
+<p>A chat assistant lives behind a glass wall. You describe a problem, it describes a solution, and the
+handoff back to reality — applying the diff, running the build, reading the error, trying again — is
+<em>your</em> job. A CLI agent lives on the other side of that wall. It has a terminal. And a terminal changes
+everything.</p>
+<h2 id="the-whole-argument-terminal-level-access-closes-the-loop" tabindex="-1">The whole argument: terminal-level access closes the loop <a class="anchor" href="#the-whole-argument-terminal-level-access-closes-the-loop" aria-hidden="true">#</a></h2>
+<p>Give an AI a terminal on a real machine and a short, specific list of unlocks falls out:</p>
+<ul>
+<li><strong>It reads and writes real files</strong> — not a pasted snippet, the actual file on disk, in the actual
+project, with the actual surrounding code.</li>
+<li><strong>It runs the build and the tests</strong> — and then <em>reads the output</em>. A failing test isn’t a
+hypothetical; it’s a stack trace the agent can see and respond to.</li>
+<li><strong>It uses git</strong> — branches, diffs, commits, blame. It can inspect history to understand <em>why</em> code is
+the way it is, and leave an audit trail of what it changed.</li>
+<li><strong>It calls any tool you have installed</strong> — your linter, your formatter, your package manager, your
+deploy script, <code>curl</code>, <code>jq</code>, the CLI for your database. If it’s on your <code>PATH</code>, it’s in the agent’s
+hands.</li>
+</ul>
+<p>Each bullet is useful on its own. Together they do something a chat assistant structurally cannot:
+<strong>they close the loop between proposing a change and verifying it.</strong></p>
+<p>This is the part worth slowing down on. A language model is extremely good at producing a <em>plausible</em>
+answer — “this should fix it, the build will pass now.” Plausible is cheap. Plausible is also, often,
+wrong. The difference between a toy and a tool is whether the system can <em>check itself</em>, and checking
+requires execution. You can’t verify a build is green by reasoning about it; you verify it by running it
+and reading the output. A CLI agent can do that. A chat assistant can only assert it. (We wrote a whole
+piece on this discipline: <a href="/blog/how-ai-agents-verify-their-own-work/">how AI agents verify their own work before saying
+“done.”</a>)</p>
+<p>So the headline isn’t “CLI agents can type commands.” It’s that <strong>a terminal turns a generator into a
+worker</strong> — something that can act, observe the consequence, and correct, in a tight loop, without a human
+shuttling output back and forth across the glass.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/why-cli-agents-are-powerful/note-1.png" alt="Hand-drawn sketch from “Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work”" loading="lazy" decoding="async" /></figure>
+<h2 id="local-is-what-makes-the-access-real" tabindex="-1">Local is what makes the access <em>real</em> <a class="anchor" href="#local-is-what-makes-the-access-real" aria-hidden="true">#</a></h2>
+<p>Here’s the catch people miss. Terminal-level access is only as powerful as the machine the terminal is
+attached to. And there’s a real difference between an agent running in some vendor’s ephemeral container
+and an agent running <strong>on your own computer.</strong></p>
+<p>Run it locally and the access stops being a sandbox approximation and becomes the genuine article:</p>
+<ul>
+<li><strong>Real filesystem.</strong> The agent works on <em>your</em> repo, in place — not an uploaded copy, not a snapshot
+that drifts out of sync. The file it edits is the file you ship.</li>
+<li><strong>Real toolchain.</strong> It uses the exact versions of the exact tools you have installed. The build that
+passes for the agent is the build that passes for you, because it’s the same build.</li>
+<li><strong>Privacy.</strong> Your code, your data, and your secrets never leave the machine to make this work. For a
+lot of teams that’s not a nice-to-have; it’s the difference between “allowed” and “not allowed.”</li>
+<li><strong>24/7 on hardware you already own.</strong> A local agent doesn’t clock out and doesn’t bill you for idle
+compute. Close the lid, open it tomorrow, and the floor is still there.</li>
+</ul>
+<p>This is the bet <strong>Munder Difflin</strong> makes. It’s a local, 24/7 multi-agent CLI harness — an Electron
+desktop app that runs a whole <em>virtual office</em> of Office-themed agents on your computer, collaborating
+through a shared board, inboxes, and memory. It doesn’t replace your CLI agents; it <strong>drives the ones you
+already have</strong> — Claude Code, Codex, Antigravity — so the terminal-level access is real, local, and
+private by construction. (For the deeper case, see <a href="/blog/why-local-first-matters-for-ai-agents/">why local-first matters for AI
+agents</a>.)</p>
+<h2 id="but-a-hive-of-agents-could-get-expensive-so-heres-how-munder-difflin-doesnt" tabindex="-1">But a hive of agents could get expensive — so here’s how Munder Difflin doesn’t <a class="anchor" href="#but-a-hive-of-agents-could-get-expensive-so-heres-how-munder-difflin-doesnt" aria-hidden="true">#</a></h2>
+<p>Everything above is the upside. The honest downside of “run a whole office of agents” is the obvious one:
+<strong>N agents, each running a powerful model, each carrying its own context, is N times the token bill.</strong>
+Power that you can’t afford isn’t power.</p>
+<p>The naive design — one giant, always-on context that every agent shares and everyone re-reads on every
+turn — is exactly the design that bankrupts you. Munder Difflin is built the other way, around four
+structural levers that cut token consumption without dumbing the agents down. None of these are
+benchmark claims; they’re architectural choices, and you can reason about why each one bends the curve.</p>
+<p><strong>1. A shared memory layer and board — so agents don’t re-derive context.</strong> The expensive part of an
+agent isn’t the model call; it’s the <em>context</em> it re-reads every turn, paid again for every agent in the
+fleet. When the hive shares a board and a <a href="/blog/markdown-first-agent-memory/">memory layer</a>, the
+project’s facts, decisions, and current state are derived <strong>once</strong> and recalled compactly — instead of
+each agent independently re-discovering them by dragging files back into its own window. Redundant
+re-derivation is the single biggest avoidable cost in a multi-agent system, and shared memory is the
+direct fix.</p>
+<p><strong>2. Scoped task contracts — so each agent loads only what its job needs.</strong> Instead of handing every
+agent the whole project and hoping it stays focused, work arrives as a <em>scoped contract</em>: here’s the
+task, here’s the slice of context that’s relevant, here’s what “done” looks like. The agent’s window
+stays small because its job is small. This is <a href="/blog/context-engineering-for-ai-agents/">context discipline</a>
+made structural — the harness scopes the context for you rather than relying on the model to ignore the
+parts it doesn’t need (it won’t, and you’d pay for them anyway).</p>
+<p><strong>3. A token-budget steward — so spend is paced and capped, not unbounded.</strong> Autonomy without a budget is
+how you wake up to a surprise bill. Munder Difflin runs the hive against a token budget: a steward that
+paces work and caps consumption across the floor, so a long-running mission grinds along <em>within a
+ceiling</em> instead of sprinting until the meter screams. Predictable, attributable cost is part of what
+makes 24/7 operation safe to leave running.</p>
+<p><strong>4. Capability routing — so the right agent does the work, not the most expensive one.</strong> The price
+spread between a small model and a frontier one is large, and most agent work is routine. So you route:
+the cheap-tier worker handles the routine majority, and the expensive orchestrator is reserved for the
+reasoning that actually needs it. One always-on giant context paying frontier rates for file-shuffling is
+pure waste; <a href="/blog/do-more-with-less-model-routing/">routing work to the right-capability agent</a> is how a
+fleet costs <em>less</em> than the single over-powered agent it replaces.</p>
+<p>These compound. Shared memory removes the re-derivation, scoped contracts shrink each window, the steward
+caps the total, and routing keeps frontier prices off routine work. (For the full unified treatment, see
+<a href="/blog/the-multi-agent-cost-playbook/">the multi-agent cost playbook</a>.) The point isn’t a magic discount
+— it’s that a hive is only worth running if it’s <em>engineered</em> to be affordable, and these are the
+mechanics that make it so.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/why-cli-agents-are-powerful/note-2.png" alt="Hand-drawn sketch from “Why CLI Agents Are So Powerful — and How Munder Difflin Spends Fewer Tokens Doing the Same Work”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-bottom-line" tabindex="-1">The bottom line <a class="anchor" href="#the-bottom-line" aria-hidden="true">#</a></h2>
+<p>CLI agents are powerful because a terminal turns a model from a thing that <em>talks about</em> work into a
+thing that <em>does</em> work — reading files, running builds, using git, calling your tools, and verifying
+itself by execution. Local-first is what makes that access real, private, and always-on. And a
+shared-memory, scoped-contract, budgeted, capability-routed hive is what makes a <em>floor</em> of those agents
+something you can actually afford to leave running.</p>
+<p>That’s Munder Difflin: a virtual office of CLI agents on your own computer — real access, real
+verification, fewer tokens. <a href="https://munderdiffl.in/#install">Download it</a> — it’s free, open source, and
+local-first.</p>
+<h2 id="faq" tabindex="-1">FAQ <a class="anchor" href="#faq" aria-hidden="true">#</a></h2>
+<p><strong>Why are CLI agents more powerful than chat-only assistants?</strong> Terminal-level access. A CLI agent makes
+the change and proves it works by running it; a chat assistant can only suggest one. Execution closes the
+loop between proposing and verifying.</p>
+<p><strong>Why run them locally?</strong> Local execution is what makes the access real — your actual filesystem,
+toolchain, and git history — plus privacy and 24/7 operation on hardware you own.</p>
+<p><strong>How does Munder Difflin cut token use?</strong> Shared memory and a board (don’t re-derive context), scoped
+task contracts (load only what the job needs), a token-budget steward (pace and cap spend), and
+capability routing (right agent, not the priciest one).</p>
+<p>Sources: <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-caching">Anthropic — Prompt caching</a>;
+<a href="https://platform.claude.com/docs/en/about-claude/pricing">Anthropic — Pricing</a>.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">Why are CLI agents more powerful than chat-only assistants?</p>
+          <p class="a">Because a CLI agent has terminal-level access to the machine it runs on. It can read and write real files, run the build, run the tests, use git, and call any tool you have installed — then read the actual output and react to it. A chat assistant can only suggest a change; a CLI agent makes the change and proves it works by executing it. That closes the loop between proposing and verifying, which is the whole game in autonomous work.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Why does running CLI agents locally matter?</p>
+          <p class="a">Local execution is what makes the terminal-level access real. The agent operates on your actual filesystem, your installed toolchain, and your git history — no upload, no sandbox copy, no round-trip to a vendor&#39;s environment. You also get privacy (code and data never leave the machine), and the agents can run 24/7 on hardware you already own instead of metered cloud compute.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">How does Munder Difflin reduce token consumption?</p>
+          <p class="a">Four structural levers. A shared memory layer and board so agents read context once instead of re-deriving it per turn. Scoped task contracts so each agent only loads what its job needs, not the whole project. A token-budget steward that paces and caps spend across the hive. And capability routing — sending routine work to a cheaper-tier agent and reserving the expensive orchestrator for reasoning — instead of one giant always-on context carrying everything.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Does a shared memory layer actually save tokens?</p>
+          <p class="a">Yes, because the expensive part of an agent isn&#39;t the model — it&#39;s the context it re-reads every turn, multiplied across a whole team. When agents share a board and a memory layer, the project&#39;s facts, decisions, and state are derived once and recalled compactly, instead of each agent re-discovering them by re-reading files into its own window. In a fleet you pay context N times, so removing redundant re-derivation compounds.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is Munder Difflin local-first and open source?</p>
+          <p class="a">Yes. Munder Difflin is a local, 24/7 multi-agent CLI harness that runs as an Electron desktop app on your own computer. It drives the CLIs you already have — Claude Code, Codex, Antigravity — so there&#39;s no API key and no per-seat platform tax on top of model tokens. It&#39;s free and open source.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/concepts/">Concepts</a><a class="tag" href="/blog/tags/multi-agent/">Multi-Agent</a><a class="tag" href="/blog/tags/local-first/">Local-First</a><a class="tag" href="/blog/tags/cost/">Cost</a><a class="tag" href="/blog/tags/cli-agents/">CLI Agents</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-whole-argument-terminal-level-access-closes-the-loop">The whole argument: terminal-level access closes the loop</a></li><li class="lvl-2"><a href="#local-is-what-makes-the-access-real">Local is what makes the access real</a></li><li class="lvl-2"><a href="#but-a-hive-of-agents-could-get-expensive-so-heres-how-munder-difflin-doesnt">But a hive of agents could get expensive — so here’s how Munder Difflin doesn’t</a></li><li class="lvl-2"><a href="#the-bottom-line">The bottom line</a></li><li class="lvl-2"><a href="#faq">FAQ</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/launching-munder-difflin-v0-2-4/"><span class="k">← Older</span><span class="t">Launching Munder Difflin v0.2.4</span></a>
+      <a class="pn next" href="/blog/trigger-ai-agents-from-github-webhook/"><span class="k">Newer →</span><span class="t">How to Trigger Your AI Agent Hive from a GitHub Webhook</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Concepts</h2>
+      <div class="post-grid">
+        <article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-ollama-good-for-coding/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-ollama-good-for-coding/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-15">Sep 15, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-ollama-good-for-coding/">Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do</a></h3>
+    <p class="dek">Ollama only runs the model, so the answer depends on which one you pull and your memory. What local models do well, where Claude wins, and a verdict.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-ollama-good-for-coding/" aria-label="Read: Is Ollama Good for Coding? What Local Models Can and Can&#39;t Do">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-max-worth-it/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-max-worth-it/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-max-worth-it/">Is It Worth Paying for Claude Code Max?</a></h3>
+    <p class="dek">Who should pay for Claude Max 5x or 20x, who should stay on Pro or an API key, and the break even math to run on your own Claude Code usage.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-max-worth-it/" aria-label="Read: Is It Worth Paying for Claude Code Max?">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-concepts">
+  <a class="thumb t-concepts" href="/blog/is-claude-code-open-source/" aria-hidden="true" tabindex="-1"><img src="/blog/assets/media/is-claude-code-open-source/hero.png" alt="" loading="lazy" decoding="async" /></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-14">Sep 14, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/is-claude-code-open-source/">Is Claude Code Open Source?</a></h3>
+    <p class="dek">No. Claude Code is proprietary under Anthropic&#39;s terms. What its GitHub repo holds, what the 2026 leak changed, and which open tools sit around it.</p>
+    <div class="foot">
+      <span class="tag kind">Concepts</span>
+      <a class="more" href="/blog/is-claude-code-open-source/" aria-label="Read: Is Claude Code Open Source?">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

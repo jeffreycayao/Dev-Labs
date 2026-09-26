@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js), Google Ads AW-18388216863. Loaded only when Do Not Track is
+     off, so it follows the same rule as the PostHog block on this site. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  if (navigator.doNotTrack !== '1') {
+    var gtagScript = document.createElement('script');
+    gtagScript.async = true;
+    gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=AW-18388216863';
+    document.head.appendChild(gtagScript);
+    gtag('js', new Date());
+    gtag('config', 'AW-18388216863');
+  }
+</script>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Local-First vs Cloud Agent SDKs: Which Wins in 2026? — Munder Difflin Blog</title>
+<meta name="description" content="Local-first agent hives vs the 2026 cloud agent SDK wave (OpenAI, Google ADK, Microsoft, MCP/A2A): what each optimizes for, and when to pick which." />
+<link rel="canonical" href="https://munderdiffl.in/blog/local-first-vs-cloud-agent-sdks/" />
+
+<link rel="icon" type="image/png" href="https://munderdiffl.in/logo.png" />
+<link rel="apple-touch-icon" href="https://munderdiffl.in/logo.png" />
+<meta name="theme-color" content="#F5F2E8" />
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="Munder Difflin Blog" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Local-First vs Cloud Agent SDKs: Which Wins in 2026? — Munder Difflin Blog" />
+<meta property="og:description" content="Local-first agent hives vs the 2026 cloud agent SDK wave (OpenAI, Google ADK, Microsoft, MCP/A2A): what each optimizes for, and when to pick which." />
+<meta property="og:url" content="https://munderdiffl.in/blog/local-first-vs-cloud-agent-sdks/" />
+<meta property="og:image" content="https://munderdiffl.in/blog/assets/media/local-first-vs-cloud-agent-sdks/hero.png" />
+<meta property="og:image:width" content="1600" />
+<meta property="og:image:height" content="900" />
+<meta property="og:image:alt" content="Illustration: Local-First vs Cloud Agent SDKs: Which Wins in 2026?" />
+<meta property="og:locale" content="en_US" />
+<meta property="article:published_time" content="2026-06-04T00:00:00.000Z" />
+<meta property="article:author" content="Chaitanya Giri" />
+<meta property="article:tag" content="Comparisons" />
+<meta property="article:tag" content="Local-First" />
+<meta property="article:tag" content="Cloud Agents" />
+<meta property="article:tag" content="MCP" />
+
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Local-First vs Cloud Agent SDKs: Which Wins in 2026? — Munder Difflin Blog" />
+<meta name="twitter:description" content="Local-first agent hives vs the 2026 cloud agent SDK wave (OpenAI, Google ADK, Microsoft, MCP/A2A): what each optimizes for, and when to pick which." />
+<meta name="twitter:image" content="https://munderdiffl.in/blog/assets/media/local-first-vs-cloud-agent-sdks/hero.png" />
+<meta name="twitter:image:alt" content="Illustration: Local-First vs Cloud Agent SDKs: Which Wins in 2026?" />
+
+<link rel="alternate" type="application/atom+xml" title="Munder Difflin Blog" href="https://munderdiffl.in/blog/feed.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/blog/assets/blog-press.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Local-First vs Cloud Agent SDKs: Which Wins in 2026?",
+  "description": "Local-first agent hives vs the 2026 cloud agent SDK wave (OpenAI, Google ADK, Microsoft, MCP/A2A): what each optimizes for, and when to pick which.",
+  "image": ["https://munderdiffl.in/blog/assets/media/local-first-vs-cloud-agent-sdks/hero.png"],
+  "datePublished": "2026-06-04T00:00:00.000Z",
+  "dateModified": "2026-06-04T00:00:00.000Z",
+  "author": { "@type": "Person", "name": "Chaitanya Giri" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Munder Difflin",
+    "logo": { "@type": "ImageObject", "url": "https://munderdiffl.in/logo.png" }
+  },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "https://munderdiffl.in/blog/local-first-vs-cloud-agent-sdks/" },
+  "keywords": "local-first vs cloud agent sdks, cloud agent sdk, mcp a2a interop, local ai agents vs cloud",
+  "articleSection": "Comparisons",
+  "inLanguage": "en-US",
+  "url": "https://munderdiffl.in/blog/local-first-vs-cloud-agent-sdks/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://munderdiffl.in/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://munderdiffl.in/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "Local-First vs Cloud Agent SDKs: Which Wins in 2026?", "item": "https://munderdiffl.in/blog/local-first-vs-cloud-agent-sdks/" }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What's the difference between a local-first agent hive and a cloud agent SDK?", "acceptedAnswer": { "@type": "Answer", "text": "A local-first hive runs the orchestration, files, and memory on your own machine; a cloud agent SDK runs the control plane as a managed service. Both call the same models — they differ in where coordination, data, and cost live." } },
+    { "@type": "Question", "name": "Do MCP and A2A only work in the cloud?", "acceptedAnswer": { "@type": "Answer", "text": "No. MCP (tool integration) and A2A (agent-to-agent) are open interop standards, not cloud features — a local-first hive can speak MCP to your tools too. The standards are about interoperability, not where agents run." } },
+    { "@type": "Question", "name": "When should I choose a cloud agent SDK over a local hive?", "acceptedAnswer": { "@type": "Answer", "text": "Choose cloud SDKs for distributed teams, enterprise governance, cross-vendor agent meshes, and elastic managed scale; choose a local-first hive for solo/small-team work on your own code, privacy, predictable cost, and no platform lock-in." } },
+    { "@type": "Question", "name": "Is local-first cheaper than cloud agents?", "acceptedAnswer": { "@type": "Answer", "text": "Often, and more predictably. With platforms moving to usage-based billing — GitHub Copilot switched all plans to metered AI Credits in June 2026 — you pay a platform meter on top of model usage; a local hive adds no platform tax beyond the model calls you'd make anyway." } }
+    
+  ]
+}
+</script>
+
+
+<script>
+  // Anonymous blog analytics (PostHog) — same posture as the main site and the
+  // app's TELEMETRY.md: public write-only token ('' = inert), anonymous-only
+  // (person_profiles 'never'), no autocapture/recording, DNT respected.
+  (function () {
+    var PH_KEY = 'phc_qJzsokwcbtTGHemnvywR3nSqivNNgMjHeNVEWkZNydFB';
+    if (!PH_KEY || navigator.doNotTrack === '1') return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://us-assets.i.posthog.com/static/array.js';
+    s.onload = function () {
+      if (!window.posthog) return;
+      window.posthog.init(PH_KEY, {
+        api_host: 'https://us.i.posthog.com',
+        person_profiles: 'never',
+        autocapture: false,
+        before_send: function (event) {
+          // PostHog fills $ip from the connection unless the event carries one.
+          // Null it here and disable the GeoIP lookup so no IP, city, postal
+          // code or lat/long is ever derived or stored for this page view.
+          if (event && event.properties) {
+            event.properties.$ip = null;
+            event.properties.$geoip_disable = true;
+          }
+          return event;
+        },
+        disable_session_recording: true,
+        respect_dnt: true
+      });
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</head>
+<body class="theme-press">
+<a class="skip-link" href="#main">Skip to content</a>
+<nav id="nav">
+  <a class="brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+    <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+  </a>
+  <span class="spacer"></span>
+  <div class="links">
+    <a href="/blog/">Latest</a>
+    <a href="/blog/topics/">Topics</a>
+    <a href="/blog/about/">About</a>
+    <a href="https://munderdiffl.in">↗ Product</a>
+  </div>
+  <div class="nav-actions">
+    <a class="btn sm" href="https://munderdiffl.in/blog/feed.xml" aria-label="RSS feed">⤵ RSS</a>
+    <a class="btn sm primary" href="https://munderdiffl.in/#install">⤓ Download</a>
+  </div>
+</nav>
+
+<main id="main">
+
+<article class="t-comparisons">
+  <header class="post-head wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/blog/">Blog</a>
+      <span>/</span>
+      <a href="/blog/topics/comparisons/">Comparisons</a>
+    </nav>
+    <h1>Local-First vs Cloud Agent SDKs: Which Wins in 2026?</h1>
+    <p class="dek">Local-first agent hives vs the 2026 cloud agent SDK wave (OpenAI, Google ADK, Microsoft, MCP/A2A): what each optimizes for, and when to pick which.</p>
+    <div class="byline">
+      <span class="av" aria-hidden="true">CG</span>
+      <strong>Chaitanya Giri</strong>
+      <span class="dot" aria-hidden="true">·</span>
+      <time datetime="2026-06-04">Jun 4, 2026</time>
+      <span class="dot" aria-hidden="true">·</span>
+      <span>5 min read</span>
+      <span class="tag kind">Comparisons</span>
+    </div>
+  </header>
+
+  <div class="hero-wrap wrap"><figure class="fig fig-hero"><img src="/blog/assets/media/local-first-vs-cloud-agent-sdks/hero.png" alt="Illustration: Local-First vs Cloud Agent SDKs: Which Wins in 2026?" loading="lazy" decoding="async" /></figure></div>
+
+  <div class="post-wrap wrap">
+    <div class="prose">
+      <div class="callout tldr"><span class="ic">TL;DR</span><p>2026 is the year the big labs shipped
+<strong>cloud agent SDKs</strong> — OpenAI's Agents SDK, Google's ADK, Microsoft's Agent Framework —
+and the interop standards <strong>MCP</strong> and <strong>A2A</strong> consolidated underneath them.
+Meanwhile, <strong>local-first hives</strong> run the whole control plane on your own machine. They're
+not really enemies: both call the same models and can speak the same standards. The real question is
+<em>where the control plane, your data, and your cost live</em>. This is the honest decision guide for
+which to pick.</p></div>
+<p>If you’ve been picking an approach for running AI agents in 2026, you’ve felt the whiplash: every major
+lab now ships an agent SDK, two interop protocols are consolidating fast, and billing is going metered —
+while a quieter movement says “just run the whole thing on your own machine.” Both camps are right about
+different things. Here’s what each actually optimizes for, grounded in what shipped this year.</p>
+<h2 id="the-2026-cloud-agent-sdk-wave" tabindex="-1">The 2026 cloud agent SDK wave <a class="anchor" href="#the-2026-cloud-agent-sdk-wave" aria-hidden="true">#</a></h2>
+<p>The platform story moved quickly. OpenAI replaced its experimental Swarm with a production-grade
+<strong>Agents SDK</strong>; Google shipped <strong>ADK</strong> across multiple languages; Anthropic renamed its SDK to the
+<strong>Claude Agent SDK</strong> to signal broader ambitions; and Microsoft merged Semantic Kernel and AutoGen into
+a unified <strong>Agent Framework</strong>, which <a href="https://visualstudiomagazine.com/articles/2026/04/06/microsoft-ships-production-ready-agent-framework-1-0-for-net-and-python.aspx">shipped 1.0 GA on April 3, 2026</a>
+with graph workflows, checkpointing, streaming, and human-in-the-loop built in.</p>
+<p>Underneath the SDKs, the protocol layer is converging on a two-layer stack: <strong>MCP</strong> (Model Context
+Protocol) for vertical <em>tool</em> integration and <strong>A2A</strong> (Agent-to-Agent) for horizontal <em>agent</em>
+coordination. Per a <a href="https://zylos.ai/research/2026-03-26-agent-interoperability-protocols-mcp-a2a-acp-convergence">2026 survey of interop protocols</a>,
+ACP folded into A2A under the Linux Foundation and MCP crossed 200 server implementations — the combo is
+<a href="https://www.morphllm.com/ai-agent-framework">becoming the enterprise default</a>. The pitch is coherent:
+managed scale, cross-vendor agent meshes, and governance you can hand to a platform team.</p>
+<h2 id="the-local-first-hive" tabindex="-1">The local-first hive <a class="anchor" href="#the-local-first-hive" aria-hidden="true">#</a></h2>
+<p>The other model keeps the coordination on your machine. A <strong>local-first hive</strong> runs the orchestrator,
+the agents, their files, and their memory as local processes — only the model inference call leaves the
+box. There’s no control-plane server: agents coordinate through files, and the
+<a href="/blog/local-first-ai-agent-orchestration/">architecture is mechanically simple</a> precisely because it
+isn’t distributed across a vendor’s infrastructure. The case for it — control, privacy, predictable
+cost — is <a href="/blog/why-local-first-matters-for-ai-agents/">made in full here</a>.</p>
+<p>The crucial nuance people miss: <strong>local-first doesn’t mean cut off from the standards.</strong> A local hive
+can speak MCP to your tools just like a cloud SDK does — <a href="/blog/mcp-and-skills-in-a-hive/">bringing your MCP servers and skills into the
+hive</a> is a feature, not a contradiction. Interop is about protocols,
+not about where the agents run.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/local-first-vs-cloud-agent-sdks/note-1.png" alt="Hand-drawn sketch from “Local-First vs Cloud Agent SDKs: Which Wins in 2026?”" loading="lazy" decoding="async" /></figure>
+<h2 id="theyre-not-opposites-pick-the-axis-that-matters" tabindex="-1">They’re not opposites — pick the axis that matters <a class="anchor" href="#theyre-not-opposites-pick-the-axis-that-matters" aria-hidden="true">#</a></h2>
+<p>It’s tempting to frame this as local <em>versus</em> cloud, but most of the headline features (MCP, A2A,
+HITL, streaming) are available to both. The decisions that actually differ come down to three axes:</p>
+<ul>
+<li><strong>Where the control plane runs</strong> — a vendor’s service, or a process on your laptop.</li>
+<li><strong>Where your data lives</strong> — your code, memory, and message history on someone’s servers, or on your
+disk.</li>
+<li><strong>How you pay</strong> — a platform meter on top of model usage, or just the model usage.</li>
+</ul>
+<p>Frame your choice around those, not around a local-vs-cloud team jersey.</p>
+<h2 id="when-cloud-agent-sdks-win" tabindex="-1">When cloud agent SDKs win <a class="anchor" href="#when-cloud-agent-sdks-win" aria-hidden="true">#</a></h2>
+<p>Be honest about where the managed approach is the right call:</p>
+<ul>
+<li><strong>Distributed teams</strong> that need always-on, shared agent state across many people and locations.</li>
+<li><strong>Cross-vendor agent meshes</strong> — if you’re wiring agents from several frameworks together, native A2A
+(strongest today in Google ADK and CrewAI) earns its keep.</li>
+<li><strong>Enterprise governance</strong> — centralized policy, audit, and identity that a security org can own.</li>
+<li><strong>Elastic scale</strong> — bursty, large fan-out workloads where you’d rather rent compute than provision it.</li>
+</ul>
+<p>If that’s your situation, the cloud SDK wave is genuinely built for you.</p>
+<h2 id="when-a-local-first-hive-wins" tabindex="-1">When a local-first hive wins <a class="anchor" href="#when-a-local-first-hive-wins" aria-hidden="true">#</a></h2>
+<p>And where the local model is the better fit:</p>
+<ul>
+<li><strong>Solo developers and small teams</strong> working against their own repositories, where the agents should
+edit your real working tree, not a synced sandbox.</li>
+<li><strong>Privacy-sensitive work</strong> — client code, regulated environments, or anything where your codebase and
+its accumulated <a href="/blog/semantic-memory-for-ai-agents/">memory</a> shouldn’t sit on a third party’s
+servers.</li>
+<li><strong>Predictable cost</strong> — no per-seat or per-run platform tax layered on top of model spend.</li>
+<li><strong>No lock-in</strong> — files and markdown you own, on standards you can take elsewhere.</li>
+</ul>
+<p>For one person or a handful of developers shipping against their own code, the control and cost story
+usually outweighs managed convenience.</p>
+<figure class="fig fig-inline"><img src="/blog/assets/media/local-first-vs-cloud-agent-sdks/note-2.png" alt="Hand-drawn sketch from “Local-First vs Cloud Agent SDKs: Which Wins in 2026?”" loading="lazy" decoding="async" /></figure>
+<h2 id="the-cost-axis-is-shifting-in-local-firsts-favor" tabindex="-1">The cost axis is shifting — in local-first’s favor <a class="anchor" href="#the-cost-axis-is-shifting-in-local-firsts-favor" aria-hidden="true">#</a></h2>
+<p>Cost deserves its own note, because 2026 changed the math. GitHub Copilot
+<a href="https://github.blog/news-insights/company-news/github-copilot-is-moving-to-usage-based-billing/">moved all plans to usage-based billing on June 1, 2026</a>,
+replacing flat premium-request units with metered <strong>AI Credits</strong> consumed by token usage. That’s the
+broader direction of travel for cloud agent platforms: a meter on top of the model calls. A local-first
+hive adds <strong>no platform tax</strong> — you pay for the inference you’d pay for anyway, and the orchestration is
+free because it’s just code running on your machine. As you scale from two agents to a dozen, that gap
+compounds. (Related: <a href="/blog/do-more-with-less-model-routing/">doing more with less via model routing</a>.)</p>
+<h2 id="the-decision-table" tabindex="-1">The decision table <a class="anchor" href="#the-decision-table" aria-hidden="true">#</a></h2>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th>If you need…</th>
+<th>Lean toward</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Always-on shared state for a distributed team</td>
+<td>Cloud agent SDK</td>
+</tr>
+<tr>
+<td>Cross-vendor agent mesh (multiple frameworks)</td>
+<td>Cloud SDK with native A2A</td>
+</tr>
+<tr>
+<td>Centralized enterprise governance / audit</td>
+<td>Cloud agent SDK</td>
+</tr>
+<tr>
+<td>Editing your own real codebase, privately</td>
+<td>Local-first hive</td>
+</tr>
+<tr>
+<td>Predictable cost with no platform meter</td>
+<td>Local-first hive</td>
+</tr>
+<tr>
+<td>Standards (MCP) without lock-in</td>
+<td>Either — both can speak MCP</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="the-bottom-line" tabindex="-1">The bottom line <a class="anchor" href="#the-bottom-line" aria-hidden="true">#</a></h2>
+<p>The 2026 cloud agent SDKs are a real, well-built answer to <em>distributed, governed, elastic</em> agent work.
+A local-first hive is the right answer to <em>private, predictable, own-your-code</em> agent work. The
+standards — MCP and A2A — belong to neither camp, which is the most useful thing to internalize: you can
+adopt the interoperability without surrendering the control plane. Pick based on where your data and
+cost should live, not on the hype cycle. If you’re still weighing options,
+<a href="/blog/how-to-choose-a-multi-agent-tool/">how to choose a multi-agent tool</a> is the buyer’s checklist.</p>
+<hr>
+<p>Munder Difflin is the <a href="/#why">local-first</a> end of this spectrum — a hive where the orchestrator, agents,
+and memory run on your machine and still speak MCP to your tools. <a href="/#install">Download Munder Difflin</a>
+to run agents on your own terms — free and open source.</p>
+<p style="font-size:0.85em;opacity:0.7;margin-top:2rem">Sources: <a href="https://visualstudiomagazine.com/articles/2026/04/06/microsoft-ships-production-ready-agent-framework-1-0-for-net-and-python.aspx">Visual Studio Magazine — Microsoft Agent Framework 1.0 GA</a>; <a href="https://zylos.ai/research/2026-03-26-agent-interoperability-protocols-mcp-a2a-acp-convergence">Zylos — Agent Interoperability Protocols 2026 (MCP/A2A/ACP)</a>; <a href="https://www.morphllm.com/ai-agent-framework">Morph — AI Agent Frameworks in 2026</a>; <a href="https://github.blog/news-insights/company-news/github-copilot-is-moving-to-usage-based-billing/">GitHub Blog — Copilot usage-based billing</a>.</p>
+
+
+      
+      <section class="faq" aria-label="Frequently asked questions">
+        <h2 id="faq">FAQ</h2>
+        
+        <div class="qa">
+          <p class="q">What&#39;s the difference between a local-first agent hive and a cloud agent SDK?</p>
+          <p class="a">A local-first hive runs the orchestration, files, and memory on your own machine; a cloud agent SDK runs the control plane as a managed service. Both call the same models — they differ in where coordination, data, and cost live.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Do MCP and A2A only work in the cloud?</p>
+          <p class="a">No. MCP (tool integration) and A2A (agent-to-agent) are open interop standards, not cloud features — a local-first hive can speak MCP to your tools too. The standards are about interoperability, not where agents run.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">When should I choose a cloud agent SDK over a local hive?</p>
+          <p class="a">Choose cloud SDKs for distributed teams, enterprise governance, cross-vendor agent meshes, and elastic managed scale; choose a local-first hive for solo/small-team work on your own code, privacy, predictable cost, and no platform lock-in.</p>
+        </div>
+        
+        <div class="qa">
+          <p class="q">Is local-first cheaper than cloud agents?</p>
+          <p class="a">Often, and more predictably. With platforms moving to usage-based billing — GitHub Copilot switched all plans to metered AI Credits in June 2026 — you pay a platform meter on top of model usage; a local hive adds no platform tax beyond the model calls you&#39;d make anyway.</p>
+        </div>
+        
+      </section>
+      
+
+      
+      <hr />
+      <div class="share">
+        <span class="lbl">Tags</span>
+        <a class="tag" href="/blog/tags/comparisons/">Comparisons</a><a class="tag" href="/blog/tags/local-first/">Local-First</a><a class="tag" href="/blog/tags/cloud-agents/">Cloud Agents</a><a class="tag" href="/blog/tags/mcp/">MCP</a>
+      </div>
+      
+    </div>
+
+    
+    <aside class="toc-rail" aria-label="Table of contents">
+      <div class="tt">On this page</div>
+      <ol>
+        <li class="lvl-2"><a href="#the-2026-cloud-agent-sdk-wave">The 2026 cloud agent SDK wave</a></li><li class="lvl-2"><a href="#the-local-first-hive">The local-first hive</a></li><li class="lvl-2"><a href="#theyre-not-opposites-pick-the-axis-that-matters">They’re not opposites — pick the axis that matters</a></li><li class="lvl-2"><a href="#when-cloud-agent-sdks-win">When cloud agent SDKs win</a></li><li class="lvl-2"><a href="#when-a-local-first-hive-wins">When a local-first hive wins</a></li><li class="lvl-2"><a href="#the-cost-axis-is-shifting-in-local-firsts-favor">The cost axis is shifting — in local-first’s favor</a></li><li class="lvl-2"><a href="#the-decision-table">The decision table</a></li><li class="lvl-2"><a href="#the-bottom-line">The bottom line</a></li>
+      </ol>
+    </aside>
+    
+  </div>
+
+  <footer class="post-foot wrap"><div class="prevnext">
+      <a class="pn prev" href="/blog/long-running-agents-the-2026-shift/"><span class="k">← Older</span><span class="t">Long-Running Agents: The 2026 Shift from Minutes to Hours</span></a>
+      <a class="pn next" href="/blog/local-first-ai-agent-orchestration/"><span class="k">Newer →</span><span class="t">Local-First AI Agent Orchestration: How a Hive Runs Without a Cloud</span></a>
+    </div>
+    <section class="related">
+      <h2>Related in Comparisons</h2>
+      <div class="post-grid">
+        <article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/grok-bot-pricing/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>4 min</span>
+    </div>
+    <h3><a href="/blog/grok-bot-pricing/">Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy</a></h3>
+    <p class="dek">Grok Bot has no plan of its own. It comes bundled with SuperGrok and Cursor plans from $20 to $300 a month. Here is what each one gets you, what the free trial is, and the $0 route for work agents.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/grok-bot-pricing/" aria-label="Read: Grok Bot Pricing: What $20, $30, $100 and $300 a Month Actually Buy">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-alternatives/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>5 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-alternatives/">Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse</a></h3>
+    <p class="dek">Meta Muse is US only and trains on your chats by default. Seven alternatives, from open source agents that run on your own computer to hosted ones from OpenAI, Google and SpaceXAI.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-alternatives/" aria-label="Read: Meta Muse Alternatives: 7 Picks for People Who Can&#39;t (or Won&#39;t) Use Muse">Read →</a>
+    </div>
+  </div>
+</article>
+<article class="card t-comparisons">
+  <a class="thumb t-comparisons" href="/blog/meta-muse-grok-bot-privacy/" aria-hidden="true" tabindex="-1"><span class="thumb-ph"><em class="ph-glyph" aria-hidden="true">✶</em><span>COMPARISONS</span></span></a>
+  <div class="body">
+    <div class="meta">
+      <time datetime="2026-09-26">Sep 26, 2026</time>
+      <span class="dot" aria-hidden="true"></span>
+      <span>6 min</span>
+    </div>
+    <h3><a href="/blog/meta-muse-grok-bot-privacy/">Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them</a></h3>
+    <p class="dek">Meta Muse and Grok Bot both ask for your logins. We read both companies&#39; security docs: who sees your passwords, what trains on your chats, and how to keep AI agents on your own computer instead.</p>
+    <div class="foot">
+      <span class="tag kind">Comparisons</span>
+      <a class="more" href="/blog/meta-muse-grok-bot-privacy/" aria-label="Read: Muse and Grok Bot Want Your Passwords. Here Is Who Can See Them">Read →</a>
+    </div>
+  </div>
+</article>
+
+      </div>
+    </section>
+    
+  </footer>
+</article>
+
+</main>
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="foot-brand brand" href="https://munderdiffl.in" aria-label="Munder Difflin home">
+        <img class="brand-logo" src="https://munderdiffl.in/logo.png" width="1318" height="840" alt="Munder Difflin, Inc. — Multi-Agent Harness" />
+      </a>
+      <div class="foot-links">
+        <a href="/blog/">Latest</a>
+        <a href="/blog/topics/">Topics</a>
+        <a href="/blog/about/">About</a>
+        <a href="https://munderdiffl.in/blog/feed.xml">RSS</a>
+        <a href="https://github.com/chaitanyagiri/munder-difflin">GitHub</a>
+        <a href="https://munderdiffl.in">munderdiffl.in ↗</a>
+      </div>
+    </div>
+    <div class="foot-meta">
+      © 2026 Munder Difflin · Local-first · MIT-licensed ·
+      Built on <a href="https://munderdiffl.in">Electron, React, Pixi.js, xterm.js &amp; node-pty</a>.
+      Run an office of agents while you sleep.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // sticky-nav border on scroll
+  (function () {
+    var nav = document.getElementById('nav');
+    if (!nav) return;
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+  })();
+  // YouTube click-to-load: thumbnail button → youtube-nocookie iframe
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.yt-load');
+      if (!btn) return;
+      var box = btn.closest('.yt');
+      var id = box && box.getAttribute('data-yt');
+      if (!id) return;
+      var frame = document.createElement('iframe');
+      frame.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      frame.title = box.getAttribute('data-title') || 'YouTube video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      frame.setAttribute('allowfullscreen', '');
+      box.replaceChildren(frame);
+    });
+  })();
+</script>
+
+</body>
+</html>

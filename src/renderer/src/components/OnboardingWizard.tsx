@@ -111,7 +111,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [busy, setBusy] = useState(false);
 
   // Which engine CLIs are actually on this machine. The picker used to record the
-  // choice blind; the first check happened when Michael spawned, and for a
+  // choice blind; the first check happened when Ramon spawned, and for a
   // provider with no installer that meant a first run where nothing ever booted.
   // `undefined` = probe not back yet (or failed): rows show no badge and nothing
   // is blocked, because a broken probe must not lock a new user out.
@@ -415,8 +415,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                         Each option is a <strong>CLI engine</strong> (Claude Code, Codex,
                         Antigravity/Gemini, or a local proxy like Qwen). Engines marked
                         INSTALLED are already on this machine; INSTALLS ON FIRST RUN means the app
-                        sets it up when Michael first starts.
-                        <strong> Your clone</strong> (Michael) is the engine that orchestrates the whole
+                        sets it up when Ramon first starts.
+                        <strong> Your clone</strong> (Ramon) is the engine that orchestrates the whole
                         hive. Recommended: Claude Code · Opus 4.8 · 1M. Other providers can be wired
                         per agent later.
                       </Trans>
@@ -490,7 +490,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                       </label>
                     );
                   })}
-                  {/* Engines a WORKER can run but Michael cannot (issue #355): shown
+                  {/* Engines a WORKER can run but Ramon cannot (issue #355): shown
                       disabled instead of hidden, so "Copilot is missing" reads as the
                       real constraint — no inbox drain path — not as "unsupported". */}
                   {onboardingEngineChoices().workersOnly.map((p) => (
@@ -771,7 +771,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                       }
                       // Same idea for the engine: refuse here, with the reason on
                       // screen, instead of letting a pick that cannot boot through
-                      // to a Michael that never starts.
+                      // to a Ramon that never starts.
                       if (step === 'orchestrator' && engineBlocked) {
                         setError(`${providerPreset(godProvider).label} is not installed. Install it and press "check again", or pick another engine.`);
                         return;

@@ -1,5 +1,5 @@
 /**
- * Realtime Michael — read-tools (rt-4, Realtime Michael Phase 1).
+ * Realtime Ramon — read-tools (rt-4, Realtime Ramon Phase 1).
  *
  * The real function-tools that replace rt-2's placeholder no-op. Each one is a
  * thin, READ-ONLY wrapper over a window.cth bridge that already powers the office
@@ -602,20 +602,20 @@ export function realtimeReadTools(): ReturnType<typeof tool>[] {
     tool({
       name: 'get_app_info',
       description:
-        'About the Munder Difflin app itself: the running version and the latest release notes (changelog). Use for "what version is this" or "what is new in this release".',
+        'About the ATMT LAB app itself: the running version and the latest release notes (changelog). Use for "what version is this" or "what is new in this release".',
       parameters: { type: 'object', properties: {}, required: [], additionalProperties: false },
       execute: () =>
         spoken(async () => {
           const info = await window.cth.appInfo();
           const notes = despan(info.changelog || '');
-          return `This is Munder Difflin version ${info.version}. ${notes ? `Latest release notes: ${clip(notes, 1600)}` : 'No release notes are bundled with this build.'}`;
+          return `This is ATMT LAB version ${info.version}. ${notes ? `Latest release notes: ${clip(notes, 1600)}` : 'No release notes are bundled with this build.'}`;
         }, 'app info')
     })
   ];
 }
 
 /**
- * A short, preloaded orientation Michael can open the session with — the hive
+ * A short, preloaded orientation Ramon can open the session with — the hive
  * size, who god is, and how many tasks are in flight — so the first answer is
  * grounded without a tool round-trip. Best-effort: returns '' if reads fail, so
  * the caller can safely concatenate it onto the agent instructions.

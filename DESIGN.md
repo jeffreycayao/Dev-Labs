@@ -1,4 +1,4 @@
-# Munder Difflin — Design System
+# ATMT LAB — Design System
 
 > The aesthetic is **Animal Crossing × Earthbound × SNES menu UI**. Pixel-snapped, chunky, friendly. Every UI element should feel like it could appear in a Nintendo game from 1995–2005. This document is canonical: any new component must derive from these tokens.
 

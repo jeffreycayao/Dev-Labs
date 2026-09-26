@@ -12,7 +12,7 @@ const {
   hireQueueProgress
 } = loadTs('src/shared/hireQueue.ts');
 
-const hire = (name) => ({ spec: 'munder-difflin/hire@1', name });
+const hire = (name) => ({ spec: 'atmt-lab/hire@1', name });
 
 test('queued hires preserve arrival order across batches instead of overwriting', () => {
   const first = enqueueHires(EMPTY_HIRE_QUEUE, [hire('Jim'), hire('Pam')]);

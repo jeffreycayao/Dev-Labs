@@ -57,7 +57,7 @@ const node = (x, y, label, side, i) => {
 const subs = ['Claude Code', 'Codex', 'Gemini CLI', 'Copilot'].map((l, i) => node(8, 70 + i * 74, l, 'l', i)).join('');
 const tools = ['GitHub', 'Linear', 'Telegram', 'Webhooks'].map((l, i) => node(482, 70 + i * 74, l, 'r', i)).join('');
 const cam = (n, x) => `<image href="${cast[n].portrait}" x="${x}" y="158" width="27" height="42" class="pix"/><rect x="${x - 6}" y="196" width="39" height="8" rx="2" class="mdesk"/>`;
-const machineSvg = `<svg viewBox="0 0 640 420" role="img" aria-label="Munder Difflin on your laptop, driving Claude Code, Codex, Gemini CLI and Copilot, woken by GitHub, Linear, Telegram and webhooks">
+const machineSvg = `<svg viewBox="0 0 640 420" role="img" aria-label="ATMT LAB on your laptop, driving Claude Code, Codex, Gemini CLI and Copilot, woken by GitHub, Linear, Telegram and webhooks">
 <text x="83" y="50" class="colh" text-anchor="middle">YOUR SUBSCRIPTIONS</text><text x="557" y="50" class="colh" text-anchor="middle">YOUR TOOLS</text>
 ${subs}${tools}
 <rect x="206" y="118" width="228" height="150" rx="16" class="glow"/>
@@ -73,13 +73,13 @@ ${cam('michael', 240)}${cam('pam', 306)}${cam('dwight', 372)}
 </svg>`;
 
 const faq = [
-  ['What is Munder Difflin?', 'A free and open source multi agent harness for macOS, Windows and Linux. It runs Claude Code, Codex, Gemini CLI, Copilot, Cursor and seven more coding agents as one team of clones on your own machine, on the subscriptions you already pay for.'],
-  ['Does it work with my Claude Code subscription?', 'Yes. Munder Difflin drives the Claude Code CLI you already use, so your plan and its hourly limits do the work. The same goes for Codex, Gemini CLI and the other providers.'],
+  ['What is ATMT LAB?', 'A free and open source multi agent harness for macOS, Windows and Linux. It runs Claude Code, Codex, Gemini CLI, Copilot, Cursor and seven more coding agents as one team of clones on your own machine, on the subscriptions you already pay for.'],
+  ['Does it work with my Claude Code subscription?', 'Yes. ATMT LAB drives the Claude Code CLI you already use, so your plan and its hourly limits do the work. The same goes for Codex, Gemini CLI and the other providers.'],
   ['Which coding agents does it support?', 'Twelve: Claude Code, Codex, Grok, Kimi Code, Antigravity, Qwen, Gemini CLI, OpenCode, Crush, Pi, Copilot and Cursor. New models show up in the pickers without a new version.'],
   ['Can I run agents on more than one project at once?', 'Yes. Each project gets its own floor: File, New Floor opens a second office in its own window, on its own folder, with its own agents, board and memory. Floors run side by side, one folder only ever opens in one floor, and one licence covers every floor on your machine.'],
   ['Does my code ever leave my laptop?', 'No. Your node runs on your machine. Code, keys and personal context stay there. The only thing that travels is clone to clone messages, sealed on your machine and opened only on your teammate\'s.'],
   ['Can the Stapler replace Granola and Wispr Flow?', 'That is what it is built for. It takes dictation in any app and writes down your meetings, both sides of the call, with transcription running on your machine. Then it hands the text to your agents.'],
-  ['Is the Stapler free?', 'The Stapler is part of Pro, with a 14 day trial. Dictation in the Munder Difflin message box works in the free version too.'],
+  ['Is the Stapler free?', 'The Stapler is part of Pro, with a 14 day trial. Dictation in the ATMT LAB message box works in the free version too.'],
   ['What does it cost?', 'Free is free, forever. Pro is $150 a year with the launch offer, down from $200, or $20 a month. The annual price is adjusted for purchasing power in different countries and can be as low as $100 a year. Teams is priced with you on a call.'],
   ['How do I get Teams?', 'On a call. Teams is set up with us, one team at a time. Book a thirty minute slot, and on the call we size the team with you, make the organisation and hand you the invite codes.'],
   ['Does my laptop need to stay on?', 'Yes. The clone runs on your machine and stops when the machine does. Sandboxes on machines we host, so a job keeps running after the lid closes, are coming.'],
@@ -88,35 +88,35 @@ const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const faqHtml = faq.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('\n      ');
 
 const ld = [
-  { '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'Munder Difflin', applicationCategory: 'DeveloperApplication', operatingSystem: 'macOS, Windows, Linux', softwareVersion: '0.5.3', url: 'https://munderdiffl.in/', downloadUrl: 'https://harnessmd.com/download', license: 'https://github.com/chaitanyagiri/munder-difflin/blob/main/LICENSE', description: 'Free and open source multi agent harness that runs Claude Code, Codex, Gemini CLI and nine more coding agents as an office of clones on your own machine.', offers: [{ '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' }, { '@type': 'Offer', name: 'Pro, annual', price: '150', priceCurrency: 'USD' }] },
-  { '@context': 'https://schema.org', '@type': 'VideoObject', name: 'Munder Difflin 0.5.3 launch video', description: 'An office of coding agents that coordinate on their own, a memory layer, local first, and the Stapler for dictation and meetings.', thumbnailUrl: 'https://munderdiffl.in/media/munder-difflin-053-poster.jpg', contentUrl: 'https://munderdiffl.in/media/munder-difflin-053.mp4', uploadDate: '2026-09-25', duration: 'PT54S' },
+  { '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'ATMT LAB', applicationCategory: 'DeveloperApplication', operatingSystem: 'macOS, Windows, Linux', softwareVersion: '0.5.3', url: 'https://automatika.ph/', downloadUrl: 'https://harnessmd.com/download', license: 'https://github.com/automatika/atmt-lab/blob/main/LICENSE', description: 'Free and open source multi agent harness that runs Claude Code, Codex, Gemini CLI and nine more coding agents as an office of clones on your own machine.', offers: [{ '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' }, { '@type': 'Offer', name: 'Pro, annual', price: '150', priceCurrency: 'USD' }] },
+  { '@context': 'https://schema.org', '@type': 'VideoObject', name: 'ATMT LAB 0.5.3 launch video', description: 'An office of coding agents that coordinate on their own, a memory layer, local first, and the Stapler for dictation and meetings.', thumbnailUrl: 'https://automatika.ph/media/atmt-lab-053-poster.jpg', contentUrl: 'https://automatika.ph/media/atmt-lab-053.mp4', uploadDate: '2026-09-25', duration: 'PT54S' },
   { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
 ];
 
-const TITLE = 'Munder Difflin · Multi agent harness for Claude Code, Codex and ten more';
+const TITLE = 'ATMT LAB · Multi agent harness for Claude Code, Codex and ten more';
 const DESC = 'Free and open source multi agent harness. Run Claude Code, Codex, Gemini CLI and nine more coding agents as an office of clones on your own machine, on the subscriptions you already pay for. Now with the Stapler for local dictation and meeting notes.';
 const head = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${TITLE}</title>
 <meta name="description" content="${DESC}">
-<link rel="canonical" href="https://munderdiffl.in/">
+<link rel="canonical" href="https://automatika.ph/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${TITLE}">
 <meta property="og:description" content="${DESC}">
-<meta property="og:image" content="https://munderdiffl.in/media/og.png">
-<meta property="og:url" content="https://munderdiffl.in/">
-<meta property="og:video" content="https://munderdiffl.in/media/munder-difflin-053.mp4">
+<meta property="og:image" content="https://automatika.ph/media/og.png">
+<meta property="og:url" content="https://automatika.ph/">
+<meta property="og:video" content="https://automatika.ph/media/atmt-lab-053.mp4">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${TITLE}">
 <meta name="twitter:description" content="${DESC}">
-<link rel="preload" as="image" href="./media/munder-difflin-053-poster.jpg">
+<link rel="preload" as="image" href="./media/atmt-lab-053-poster.jpg">
 ${ld.map((o) => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join('\n')}
 ${L[28]}
 <!--
-  Munder Difflin landing page, 0.5.3 story cut, 25 Sep 2026 (Pam). One file, opens with file://, no server, no build step.
+  ATMT LAB landing page, 0.5.3 story cut, 25 Sep 2026 (Pam). One file, opens with file://, no server, no build step.
   The page is one workday: a clock runs from 08:59 to 18:00 as you scroll, each chapter is one core feature, the page goes dark after hours.
   Built by the scratchpad build.cjs from the previous page: fonts, tokens, blobatar and the interactive Stapler are carried over verbatim.
-  Media: ./media/munder-difflin-053.mp4 (the launch video, remuxed with faststart so it streams) and ./media/munder-difflin-053-poster.jpg.
+  Media: ./media/atmt-lab-053.mp4 (the launch video, remuxed with faststart so it streams) and ./media/atmt-lab-053-poster.jpg.
   The two old loops (hero-demo.mp4 and pro-stapler.gif) are no longer used here. The pixel cast is the app's own portraitArt.ts, rendered to PNG.
 -->`;
 

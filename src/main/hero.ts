@@ -10,10 +10,10 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { getText } from './fetchText';
+import { rawRepoUrl } from '../shared/brand';
 import { parseHeroPayload, DEFAULT_HERO, type HeroPayload } from '../shared/heroPayload';
 
-const HERO_URL =
-  'https://raw.githubusercontent.com/chaitanyagiri/munder-difflin/main/docs/hero.json';
+const HERO_URL = rawRepoUrl('docs/hero.json');
 /** Plan copy and sponsors change on a human timescale. */
 const TTL_MS = 6 * 60 * 60 * 1000;
 

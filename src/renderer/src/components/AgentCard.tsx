@@ -63,7 +63,7 @@ export function AgentCard({
   const [hover, setHover] = useState(false);
   const typing = useHasTerminalDraft(ptyId);
   // IDENTITY and SELECTION are two different things, and conflating them is why
-  // selecting Michael appeared to do nothing.
+  // selecting Ramon appeared to do nothing.
   //
   // The card used to pass `isGod || selected` into PixelPanel's 'active' variant,
   // whose frame is `inset 1px + 3px accent + 5px ink` — five pixels of border in

@@ -1,4 +1,6 @@
-// The Office cast — roster metadata + sprite frames.
+// Office cast — roster metadata + sprite frames. Internal `name` ids are kept
+// from the original roster (sprites + saved teams key on them); only the
+// user-facing displayName/blurb are localized to Filipino names.
 //
 // Both the static portraits (cards / picker) and the in-scene walking sprites are
 // now fully custom-drawn from the same per-character recipes in portraitArt.ts:
@@ -25,21 +27,21 @@ export interface CastMember {
 
 /** Selectable roster, in display order. */
 export const OFFICE_CAST: CastMember[] = [
-  { name: 'michael',  displayName: 'Michael',  shirt: '#5a6b8c', blurb: "World's best boss" },
-  { name: 'jim',      displayName: 'Jim',      shirt: '#6fa8dc', blurb: 'Salesman, prankster' },
-  { name: 'pam',      displayName: 'Pam',      shirt: '#9caf88', blurb: 'Receptionist, artist' },
-  { name: 'dwight',   displayName: 'Dwight',   shirt: '#b89b3e', blurb: 'Assistant (to the) RM' },
-  { name: 'kevin',    displayName: 'Kevin',    shirt: '#4a7ab5', blurb: 'Accounting' },
-  { name: 'angela',   displayName: 'Angela',   shirt: '#8a86a6', blurb: 'Head of accounting' },
-  { name: 'oscar',    displayName: 'Oscar',    shirt: '#7a4b6b', blurb: 'Accountant' },
-  { name: 'stanley',  displayName: 'Stanley',  shirt: '#8c5a4b', blurb: 'Sales, crossword' },
-  { name: 'phyllis',  displayName: 'Phyllis',  shirt: '#b08bbf', blurb: 'Sales' },
-  { name: 'andy',     displayName: 'Andy',     shirt: '#6fae6f', blurb: 'Cornell, a cappella' },
-  { name: 'kelly',    displayName: 'Kelly',    shirt: '#d16ba5', blurb: 'Customer service' },
-  { name: 'ryan',     displayName: 'Ryan',     shirt: '#3a3a44', blurb: 'The temp' },
-  { name: 'toby',     displayName: 'Toby',     shirt: '#9a8c5a', blurb: 'Human resources' },
-  { name: 'creed',    displayName: 'Creed',    shirt: '#6b7a4b', blurb: 'Quality assurance' },
-  { name: 'meredith', displayName: 'Meredith', shirt: '#b5544a', blurb: 'Supplier relations' },
+  { name: 'michael',  displayName: 'Ramon',  shirt: '#5a6b8c', blurb: 'Office head, the boss' },
+  { name: 'jim',      displayName: 'Paolo',      shirt: '#6fa8dc', blurb: 'Sales lead, prankster' },
+  { name: 'pam',      displayName: 'Maricel',      shirt: '#9caf88', blurb: 'Front desk, artist' },
+  { name: 'dwight',   displayName: 'Rodel',   shirt: '#b89b3e', blurb: 'Assistant (to the) manager' },
+  { name: 'kevin',    displayName: 'Bong',    shirt: '#4a7ab5', blurb: 'Accounting' },
+  { name: 'angela',   displayName: 'Rowena',   shirt: '#8a86a6', blurb: 'Head of accounting' },
+  { name: 'oscar',    displayName: 'Carlo',    shirt: '#7a4b6b', blurb: 'Accountant' },
+  { name: 'stanley',  displayName: 'Ernesto',  shirt: '#8c5a4b', blurb: 'Sales, crossword' },
+  { name: 'phyllis',  displayName: 'Lorna',  shirt: '#b08bbf', blurb: 'Sales' },
+  { name: 'andy',     displayName: 'Miguel',     shirt: '#6fae6f', blurb: 'Sales, choir singer' },
+  { name: 'kelly',    displayName: 'Kristine',    shirt: '#d16ba5', blurb: 'Customer service' },
+  { name: 'ryan',     displayName: 'Jomar',     shirt: '#3a3a44', blurb: 'The intern' },
+  { name: 'toby',     displayName: 'Rogelio',     shirt: '#9a8c5a', blurb: 'Human resources' },
+  { name: 'creed',    displayName: 'Lito',    shirt: '#6b7a4b', blurb: 'Quality assurance' },
+  { name: 'meredith', displayName: 'Divina', shirt: '#b5544a', blurb: 'Supplier relations' },
 ];
 
 export const CAST_BY_NAME: Record<OfficeCharacterName, CastMember> =

@@ -1,5 +1,5 @@
 /**
- * Realtime Michael — main-process ephemeral-token mint (card rt-1, Phase 1).
+ * Realtime Ramon — main-process ephemeral-token mint (card rt-1, Phase 1).
  *
  * The voice orchestrator (OpenAI `gpt-realtime-2`, speech-to-speech over WebRTC)
  * connects from the RENDERER. The renderer must NEVER hold the real OpenAI key, so
@@ -43,7 +43,7 @@ export type MintResult =
   | { ok: false; error: string; code?: string };
 
 /** Whether a BYOK OpenAI key is stored (presence only — no decryption). Gates the
- *  Realtime Michael voice toggle in the renderer, the way `hasGroqKey` gates the
+ *  Realtime Ramon voice toggle in the renderer, the way `hasGroqKey` gates the
  *  Free Flow mic button. */
 export function hasOpenAiKey(): boolean {
   return hasSecret(OPENAI_KEY_REF);

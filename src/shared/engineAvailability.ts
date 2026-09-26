@@ -1,7 +1,7 @@
 /**
  * Can the engine a user is about to pick actually boot on this machine?
  *
- * The onboarding wizard records Michael's engine and nothing checks it until the
+ * The onboarding wizard records Ramon's engine and nothing checks it until the
  * first spawn. spawnAgentCore then runs the install ladder (cliInstall.ts), and
  * for a provider with no `installCommand` and no `nativeInstallCommand` that
  * ladder ends at the `manual` rung: a hint is printed in a terminal and the
@@ -73,6 +73,6 @@ export function engineAvailabilityBadge(a: EngineAvailability): string | null {
 export function engineAvailabilityMessage(a: EngineAvailability, label: string): string | null {
   if (a.state !== 'not-installable') return null;
   return `${label} is not installed on this computer and the app has no installer for it, ` +
-    `so Michael could not start. Install it first, then press "check again". ` +
+    `so Ramon could not start. Install it first, then press "check again". ` +
     `Or pick Claude Code, which installs itself on first run.`;
 }

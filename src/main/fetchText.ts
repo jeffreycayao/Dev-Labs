@@ -13,8 +13,10 @@ import { request as httpsRequest } from 'node:https';
 
 export function getText(url: string, opts: { timeoutMs?: number } = {}): Promise<string> {
   const timeoutMs = opts.timeoutMs ?? 12000;
+  // Empty URL = remote source disabled (no GITHUB_REPO in shared/brand.ts); callers fall back.
+  if (!url) return Promise.reject(new Error('remote source disabled'));
   return new Promise((resolve, reject) => {
-    const req = httpsRequest(url, { method: 'GET', headers: { 'user-agent': 'munder-difflin' } }, (res) => {
+    const req = httpsRequest(url, { method: 'GET', headers: { 'user-agent': 'atmt-lab' } }, (res) => {
       // Follow a redirect once per hop; raw.githubusercontent does this for
       // branch aliases and the request just fails without it.
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {

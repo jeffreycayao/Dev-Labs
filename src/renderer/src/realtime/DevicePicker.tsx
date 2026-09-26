@@ -1,8 +1,8 @@
 /**
- * Realtime Michael — microphone & speaker device picker (card rt-8, Phase 1).
+ * Realtime Ramon — microphone & speaker device picker (card rt-8, Phase 1).
  *
  * Lets the user choose WHICH microphone the voice loop captures and WHICH speaker
- * it plays Michael's voice through. Selections are held in the realtime session
+ * it plays Ramon's voice through. Selections are held in the realtime session
  * store via `setDeviceId()` / `setOutputDeviceId()` (see session.ts): the mic is
  * applied on the next connect() (getUserMedia `{ deviceId: { exact } }`), the
  * speaker is applied immediately to the live `<audio>` sink via `setSinkId()` (and

@@ -308,7 +308,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
         <span style={{
           fontFamily: 'var(--cth-font-display)', fontSize: 12, lineHeight: '20px',
           color: 'var(--cth-ink-900)'
-        }}>MUNDER DIFFLIN · FOCUS MODE</span>
+        }}>ATMT LAB · FOCUS MODE</span>
         {/* Same top-right controls as the main title bar — fullscreen covers
             it, so theme / exit-fullscreen / IDE must live here too. */}
         <div className="cth-titlebar-nodrag" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -566,7 +566,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
           padding: 12, gap: 10
         }}>
           {agent.isGod ? (
-            // Michael runs the floor from the command center — its tabs (tasks,
+            // Ramon runs the floor from the command center — its tabs (tasks,
             // ask me, triggers, memory, graph…) are the whole point of selecting
             // him, and fullscreen used to drop them for a bare terminal.
             // Column so the panel's `height: 100%` resolves against a definite
@@ -938,7 +938,7 @@ function Header({ agent, onEdit }: { agent: Agent; onEdit: () => void }) {
 
   /** Kill + archive, mirroring AgentDetailPanel. Confirmed, because it ends a
    *  running process. God is exempt: the floor respawns it immediately, so the
-   *  button would read as "restart Michael" while looking like "close". */
+   *  button would read as "restart Ramon" while looking like "close". */
   const onKill = async () => {
     if (!agent.ptyId) return;
     if (!confirm(t('agentDetail.killConfirm', { name: agent.name }))) return;
@@ -1004,10 +1004,10 @@ function Header({ agent, onEdit }: { agent: Agent; onEdit: () => void }) {
             <Icon name="code" /> {t('commandCenter.ide')}
           </span>
         </PixelButton>
-        {/* Voice toggle is ALWAYS reachable in fullscreen — it controls Michael (the
+        {/* Voice toggle is ALWAYS reachable in fullscreen — it controls Ramon (the
             god orchestrator) globally, not the agent in view, so users can start a
             voice session even while a worker's terminal fills the screen. The cost
-            HUD stays Michael-only (it belongs to his card). */}
+            HUD stays Ramon-only (it belongs to his card). */}
         <RealtimeMichaelToggle />
         {agent.isGod && <CostHud compact />}
         <PixelButton variant="secondary" size="sm" onClick={openTerminal} disabled={openState === 'opening'}>

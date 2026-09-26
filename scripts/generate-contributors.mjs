@@ -16,7 +16,7 @@
 
 import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 
-const REPO = process.env.GITHUB_REPOSITORY || 'chaitanyagiri/munder-difflin';
+const REPO = process.env.GITHUB_REPOSITORY || 'automatika/atmt-lab';
 const TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
 const OUT = 'CONTRIBUTORS.md';
 const EXTRA = '.github/contributors-extra.json';
@@ -27,7 +27,7 @@ async function gh(path) {
     headers: {
       accept: 'application/vnd.github+json',
       ...(TOKEN ? { authorization: `Bearer ${TOKEN}` } : {}),
-      'user-agent': 'munder-difflin-contributors'
+      'user-agent': 'atmt-lab-contributors'
     }
   });
   if (!res.ok) throw new Error(`${path} -> ${res.status} ${await res.text()}`);
@@ -96,7 +96,7 @@ const row = (p) => {
 
 const body = `# Contributors
 
-Everyone on this list has code in Munder Difflin. If that is you, this file is yours to point at.
+Everyone on this list has code in ATMT LAB. If that is you, this file is yours to point at.
 
 It is generated from the pull requests themselves rather than from commit metadata, so nobody is
 dropped because their git email does not happen to match their GitHub account. It is regenerated

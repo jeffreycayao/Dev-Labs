@@ -1,6 +1,6 @@
 /**
  * Default MCP server catalog (Workstream 3). A dependency-free, importable-by-both
- * (main + renderer) registry of the MCP servers Munder Difflin can wire into each
+ * (main + renderer) registry of the MCP servers ATMT LAB can wire into each
  * agent's per-session `settings.json`. Keep it free of electron/UI/node imports.
  *
  * Tiers gate consent:
@@ -26,7 +26,7 @@ export type McpTier = 'safe-readonly' | 'write' | 'secret';
 
 export interface McpCatalogEntry {
   /** Stable catalog id (also the consent key in `config.mcpDefaults`). The merge
-   *  step namespaces the written server id (e.g. `munder-<id>`) to avoid clobbering
+   *  step namespaces the written server id (e.g. `atmt-<id>`) to avoid clobbering
    *  a user's own `~/.claude` MCP server of the same name. */
   id: string;
   /** Human label for the consent UI. */

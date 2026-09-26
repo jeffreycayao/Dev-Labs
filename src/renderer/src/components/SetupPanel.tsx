@@ -10,7 +10,7 @@
  * tool actually buys you.
  *
  * The primary action delegates rather than executes: installing software touches
- * the user's machine and can need a password, so the button SEEDS Michael's
+ * the user's machine and can need a password, so the button SEEDS Ramon's
  * dispatch box with an exact, verified-by-him contract instead of shelling out
  * from the renderer. The user still presses dispatch. That keeps a real
  * confirmation step in front of anything that writes outside the app.
@@ -131,7 +131,7 @@ export function SetupPanel({ onDone }: { onDone?: () => void } = {}) {
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
 
-  // Only ESSENTIALS are handed to Michael. Installing all eight engine CLIs
+  // Only ESSENTIALS are handed to Ramon. Installing all eight engine CLIs
   // because they happen to be listed would be a wild overreach of one click.
   const missingEssential = useMemo(
     () => (tools ?? []).filter((t) => !t.found && t.essential),

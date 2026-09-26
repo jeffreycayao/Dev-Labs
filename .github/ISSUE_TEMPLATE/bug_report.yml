@@ -66,8 +66,8 @@ body:
   - type: input
     id: app-version
     attributes:
-      label: Munder Difflin version
-      description: Settings → the version is on the hero card. Or `Munder Difflin → About`.
+      label: ATMT LAB version
+      description: Settings → the version is on the hero card. Or `ATMT LAB → About`.
       placeholder: e.g. 0.4.5
     validations:
       required: true

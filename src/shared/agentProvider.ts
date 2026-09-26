@@ -105,8 +105,8 @@ export interface AgentProviderPreset {
    *  derives `{kind:'hooks'}` from their `hookBridge`. claude/custom leave it
    *  undefined (no bridge). Prefer `bridgeOf(provider)` over reading this directly. */
   bridge?: BridgeDescriptor;
-  /** The model the GOD orchestrator ("Michael") defaults to when this provider
-   *  powers it — surfaced as the picker default and the advisory "give Michael a
+  /** The model the GOD orchestrator ("Ramon") defaults to when this provider
+   *  powers it — surfaced as the picker default and the advisory "give Ramon a
    *  longer-context, higher-capability model". `modelForRole` resolves the GOD
    *  model as `config.godModel ?? preset.recommendedOrchestratorModel ?? MODEL_GOD`.
    *  Advisory + user-overridable. */
@@ -179,7 +179,7 @@ export const AGENT_PROVIDER_PRESETS: AgentProviderPreset[] = [
     autoFlag: '--permission-mode bypassPermissions',
     hiveAware: true,
     canReceiveInbox: true,
-    // Longest-context Claude variant — matches the "give Michael a bigger model"
+    // Longest-context Claude variant — matches the "give Ramon a bigger model"
     // advisory and the Recommended tag on the orchestrator picker.
     recommendedOrchestratorModel: 'claude-opus-4-8[1m]',
     resumeFlag: '--resume',
@@ -271,14 +271,14 @@ export const AGENT_PROVIDER_PRESETS: AgentProviderPreset[] = [
     defaultCommand: 'kimi',
     commandGroups: [],
     // Kimi --auto handles every approval and does not stop to ask questions,
-    // matching Munder Difflin's autonomous Claude/Codex default.
+    // matching ATMT LAB's autonomous Claude/Codex default.
     autoModeFlag: '--auto',
     autoFlag: '--auto',
     supportsModel: true,
     modelFlag: '--model',
     hiveAware: false,
     // Kimi's interactive TUI has no positional initial-prompt form. It supports
-    // lifecycle hooks, but Munder Difflin does not yet install a Kimi hook bridge,
+    // lifecycle hooks, but ATMT LAB does not yet install a Kimi hook bridge,
     // so mail must bounce rather than being delivered with no drain path.
     canReceiveInbox: false
   },
@@ -531,7 +531,7 @@ export const AGENT_PROVIDER_PRESETS: AgentProviderPreset[] = [
     // TUI by default (no `-p`), so the session stays alive for hive mail via the
     // renderer idle / work-order path — same class as Crush. Print mode (`-p`) is
     // available for scripts but exits per turn; this preset intentionally does
-    // NOT use `-p` so Michael and workers remain god-eligible / inbox-capable.
+    // NOT use `-p` so Ramon and workers remain god-eligible / inbox-capable.
     // Models (including cheap gpt-5.6-luna-*) bill against Cursor credits via the
     // logged-in CLI — there is no separate "plain OpenAI API" path for Luna.
     id: 'cursor',

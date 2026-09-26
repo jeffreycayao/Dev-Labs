@@ -40,13 +40,13 @@ test('the default alias root yields a socket within sun_path', () => {
 });
 
 test('an over-long alias root is rejected instead of failing at bind time', () => {
-  const tmpdirStyle = '/var/folders/v6/9f10q5d148z7bxdzhr22xl7r0000gn/T/munder-codex';
+  const tmpdirStyle = '/var/folders/v6/9f10q5d148z7bxdzhr22xl7r0000gn/T/atmt-codex';
   assert.equal(codexRemoteSocketFits(codexRemoteAliasPath('/h/.codex', 'a', tmpdirStyle)), false);
   assert.equal(codexRemoteSocketFits(codexRemoteAliasPath('/h/.codex', 'a')), true);
 });
 
 test('remote endpoint precedes both fresh and resumed Codex invocations', () => {
-  const endpoint = 'unix:///tmp/munder-codex/a/app-server-control/app-server-control.sock';
+  const endpoint = 'unix:///tmp/atmt-codex/a/app-server-control/app-server-control.sock';
   assert.deepEqual(
     withCodexRemoteArgs(['--model', 'gpt-5.6-sol', 'hello'], endpoint),
     ['--remote', endpoint, '--model', 'gpt-5.6-sol', 'hello']

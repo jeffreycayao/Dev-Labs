@@ -1,7 +1,7 @@
 /**
- * Realtime Michael — voice ACTION tools (card rt-5, Phase 2).
+ * Realtime Ramon — voice ACTION tools (card rt-5, Phase 2).
  *
- * The write-side function-tools that turn voice-Michael into an orchestrator: ping
+ * The write-side function-tools that turn voice-Ramon into an orchestrator: ping
  * / dispatch / steer / task CRUD / spawn-hire / kill / pause / halt / edit-schedule.
  * These are THIN — every tool just forwards a {verb, ...args} to the main process
  * (src/main/realtimeActions.ts), which owns the entire safety spine: the soft-vs-

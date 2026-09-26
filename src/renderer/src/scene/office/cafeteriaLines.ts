@@ -1,6 +1,6 @@
 // Cafeteria small-talk — The Office edition.
 //
-// The cast ARE Dunder Mifflin (see cast.ts), so an agent's coffee break is an
+// The cast ARE ATMT LAB (see cast.ts), so an agent's coffee break is an
 // excuse for a one-liner in character. Two kinds of line:
 //   • solo  — one quip shown above a single agent at a break spot
 //   • pair  — a two-beat exchange between two agents at the same table
@@ -51,7 +51,7 @@ const TABLE: readonly string[] = [
   'did you see the standup notes?',
   'pretending to read my notes',
   'I needed this break, honestly',
-  'do NOT tell Michael I’m in here',
+  'do NOT tell Ramon I’m in here',
 ];
 
 const SPOT_POOL: Record<BreakSpot, readonly string[]> = {
@@ -63,8 +63,8 @@ const SPOT_POOL: Record<BreakSpot, readonly string[]> = {
 const BY_CHARACTER: Partial<Record<OfficeCharacterName, readonly string[]>> = {
   michael:  ['I DECLARE… BANKRUPTCY!', "that's what she said", "I'm not superstitious. just a little stitious.", 'no meetings before coffee. that’s the rule.'],
   dwight:   ['FALSE.', 'identity theft is not a joke', 'that mug is regulation', 'this fridge needs a beet drawer', 'Schrute Farms has better coffee'],
-  jim:      ["...that's what she said", 'bears. beets. Battlestar Galactica.', 'I moved Dwight’s stapler again', 'just here for the gossip'],
-  pam:      ['Dunder Mifflin, this is Pam', 'sketching the vending machine', 'the watercolor of the break room'],
+  jim:      ["...that's what she said", 'bears. beets. Battlestar Galactica.', 'I moved Rodel’s stapler again', 'just here for the gossip'],
+  pam:      ['ATMT LAB, this is Maricel', 'sketching the vending machine', 'the watercolor of the break room'],
   kevin:    ['the chili is NOT ready', 'why waste time say lot word', 'me want snack', 'cookie? cookie.'],
   angela:   ['this break room is filthy', 'party planning committee, 3pm', 'I’m judging the fridge'],
   oscar:    ['actually, it’s “espresso”', 'well, actually…', 'the budget for snacks is concerning'],
@@ -96,7 +96,7 @@ export function pickSoloLine(character: OfficeCharacterName, spot: BreakSpot, se
 
 type Exchange = readonly string[];
 
-// Generic banter — works between any two agents (they're all Dunder Mifflin).
+// Generic banter — works between any two agents (they're all ATMT LAB).
 const EXCHANGES: readonly Exchange[] = [
   ['world’s best boss.', 'you are. I had the mug made.', 'and I cherish it.'],
   ['would an idiot do this?', '...if yes, I don’t.', 'that’s my boy.'],
@@ -108,7 +108,7 @@ const EXCHANGES: readonly Exchange[] = [
   ['what’s Schrute Farms smell like?', 'victory. and beets.'],
   ['did you just throw your phone?', 'didn’t like what it said.', 'cool.'],
   ['is a hot dog a sandwich?', 'it is.', 'I know, right?'],
-  ['three-hole-punch Jim returns.', 'never gets old.'],
+  ['three-hole-punch Paolo returns.', 'never gets old.'],
   ['why few word when lot word?', '...genuinely profound.', 'I know.'],
   ['I am not a bad person.', '...', 'not a great person either.', 'there it is.'],
   ['I love my cats more than people.', 'including us?', 'especially you.'],
@@ -138,7 +138,7 @@ const EXCHANGES: readonly Exchange[] = [
   ['that’s what she said.', '...every time.', 'come on.'],
   ['I started the fire.', 'no you didn’t.', 'in our hearts, I did.'],
   ['is today a day ending in Y?', 'yes.', 'then no.'],
-  ['Bob Vance.', 'Phyllis Vance.', 'Vance Refrigeration.'],
+  ['Bob Vance.', 'Lorna Vance.', 'Vance Refrigeration.'],
   ['you look beautiful today.', '...I know.'],
   ['I’m better than you in every way.', 'probably.', 'definitely.', 'sure.'],
   ['I’m a nice guy.', 'you’re okay.', 'nicest thing you’ve said.'],
@@ -187,8 +187,8 @@ const TWSS_EXCHANGES: readonly Exchange[] = [
   ['I can hold it a really long time.', 'that’s what she said.', 'my breath!', 'still.'],
   ['why is it taking so long?', 'that’s what she said.', 'I hate you.', 'then why set me up?'],
   ['I can’t do it with people watching.', 'that’s what she said.', 'the presentation!', 'sure.'],
-  ['it’s deeper than it looks.', 'that’s what she said.', 'the pothole, Michael!', 'doesn’t matter.'],
-  ['so much longer than last time.', 'that’s what she said.', 'the report, Michael.', 'right, right.'],
+  ['it’s deeper than it looks.', 'that’s what she said.', 'the pothole, Ramon!', 'doesn’t matter.'],
+  ['so much longer than last time.', 'that’s what she said.', 'the report, Ramon.', 'right, right.'],
   ['oh my god, it went on FOREVER.', 'that’s what she said.', 'the Twilight movie!', 'classic.'],
   ['can’t believe how thick this is.', 'that’s what she said.', 'the folder. *stares*'],
   ['I fit all THAT in one day?', 'that’s what she said.', 'that’s actually what I said!', 'meta.'],
@@ -196,12 +196,12 @@ const TWSS_EXCHANGES: readonly Exchange[] = [
   ['someone help me finish this off.', 'that’s what she said.', 'the leftover cake!', 'still works.'],
   ['get in, do my thing, get out.', 'that’s what she said.', '*doesn’t look up from crossword*'],
   ['can’t believe it took this long.', 'that’s what she said.', 'the raise. eight years.', 'that one’s on me.'],
-  ['do it slower, it’ll hurt less.', 'that’s what she said.', 'for the quarterly review.', 'sure, Oscar.'],
+  ['do it slower, it’ll hurt less.', 'that’s what she said.', 'for the quarterly review.', 'sure, Carlo.'],
   ['didn’t realize how big it’d be.', 'that’s what she said.', 'the calzone, it’s enormous!', 'I love this office.'],
   ['*to no one* that’s what she said.', 'nobody said anything.', 'just thinking about earlier.'],
   ['*on the phone* that’s what she said.', 'who was that?', 'my mother. about a sandwich.'],
   ['too hot in here! that’s what she said.', 'you said both parts.', 'I contain multitudes.'],
-  ['*at the TV* that’s what she said.', 'you’re alone, Michael.', 'she doesn’t know that.'],
+  ['*at the TV* that’s what she said.', 'you’re alone, Ramon.', 'she doesn’t know that.'],
   ['you need to be more professional.', 'that’s what she said.', 'I am she.', '...that’s what she said.'],
   ['stop. just stop. every time—', 'that’s what she said.', '*leaves the room*', '*whispers* that’s what she said.'],
   ['as you can see, it’s going up.', 'that’s what she said.', '*everyone groans*', 'set that one up myself.'],
@@ -217,13 +217,13 @@ const PAIR_POOL: readonly Exchange[] = [...EXCHANGES, ...TWSS_EXCHANGES];
 // to open with their signature bit.
 const KEYED_EXCHANGES: Partial<Record<OfficeCharacterName, Exchange>> = {
   michael:  ['that’s what she said.', '...there it is.'],
-  dwight:   ['identity theft is not a joke.', 'nobody touched your stapler, Dwight.'],
-  kevin:    ['why few word when lot word?', '...just use the words, Kevin.'],
+  dwight:   ['identity theft is not a joke.', 'nobody touched your stapler, Rodel.'],
+  kevin:    ['why few word when lot word?', '...just use the words, Bong.'],
   kelly:    ['okay don’t freak out, but—', 'I’m already freaking out.'],
   oscar:    ['well, actually—', '...here we go.'],
-  angela:   ['this table is filthy.', 'it’s a break room, Angela.'],
+  angela:   ['this table is filthy.', 'it’s a break room, Rowena.'],
   creed:    ['which one are you again?', '...we sit next to each other.'],
-  stanley:  ['is it Pretzel Day?', 'no, Stanley.', '...did I stutter?'],
+  stanley:  ['is it Pretzel Day?', 'no, Ernesto.', '...did I stutter?'],
   andy:     ['I went to Cornell.', 'nobody cares.', '...I went to Cornell.'],
   jim:      ['question.', 'yes.', 'nothing. just checking.'],
 };

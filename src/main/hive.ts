@@ -139,7 +139,7 @@ export interface AgentMeta {
   capabilities?: string[];
   cwd: string;
   isGod?: boolean;
-  /** Michael's prep assistant — enriches prompts and forwards them to Michael.
+  /** Ramon's prep assistant — enriches prompts and forwards them to Ramon.
    *  Send-only: excluded from broadcast fan-out so it never drains an inbox. */
   isAssistant?: boolean;
 }
@@ -151,7 +151,7 @@ export interface RegistryAgent extends AgentMeta {
    *  (not deleted) so its history/memory survive; only agents with a live PTY
    *  are 'active'. Broadcast fan-out + roster reads skip archived agents. */
   archived?: boolean;
-  /** The human has this agent 1:1 and Michael must leave it alone until they
+  /** The human has this agent 1:1 and Ramon must leave it alone until they
    *  flip it back. Held agents stay ACTIVE and keep their terminal — this is
    *  "do not dispatch to them", not "they are gone", which is why it is its own
    *  flag rather than a reuse of `archived` or a breaker level. */
@@ -428,7 +428,7 @@ export class HiveManager {
     if (!root) return null;
     if (process.platform === 'win32') {
       const id = createHash('sha1').update(root).digest('hex').slice(0, 12);
-      return `\\\\.\\pipe\\munder-difflin-${id}`;
+      return `\\\\.\\pipe\\atmt-lab-${id}`;
     }
     return join(root, 'hooks.sock');
   }
@@ -613,7 +613,7 @@ export class HiveManager {
     const log = join(root, 'log.jsonl');
     if (!existsSync(log)) writeFileSync(log, '', 'utf8');
 
-    // The Claude Code command reference Michael consults (refreshed each bootstrap
+    // The Claude Code command reference Ramon consults (refreshed each bootstrap
     // so it tracks the bundled list).
     writeFileSync(join(root, 'COMMANDS.md'), COMMANDS_MD, 'utf8');
 
@@ -1022,7 +1022,7 @@ export class HiveManager {
    * the new name immediately rather than waiting for the periodic fleet refresh.
    */
   /**
-   * Put an agent on hold, or take it off, and tell Michael immediately.
+   * Put an agent on hold, or take it off, and tell Ramon immediately.
    *
    * `fleet.json` is patched in the same operation for the same reason
    * `renameAgent` does it: god's roster is injected from that file on its next
@@ -1211,7 +1211,7 @@ export class HiveManager {
   /**
    * W3 — build the per-agent `mcpServers` map from the default catalog. Includes a
    * server only when it's enabled (catalog ∩ consent), scopes filesystem/git to the
-   * agent cwd (never whole-disk), and namespaces every id `munder-<id>` so a server
+   * agent cwd (never whole-disk), and namespaces every id `atmt-<id>` so a server
    * of the same name in the user's own ~/.claude is never clobbered. A write/secret
    * server is included ONLY on an explicit `enabled:true` consent — never via a
    * default — so a malformed/partial config can't silently arm a keyed server.
@@ -1232,7 +1232,7 @@ export class HiveManager {
       // Replace the `<cwd>` placeholder (filesystem/git) with the agent cwd at merge
       // time so these stay strictly workspace-scoped.
       const args = e.spec.args.map((a) => (a === '<cwd>' ? cwd : a));
-      out[`munder-${e.id}`] = {
+      out[`atmt-${e.id}`] = {
         command: e.spec.command,
         args,
         ...(e.spec.env ? { env: e.spec.env } : {})
@@ -1470,7 +1470,7 @@ export class HiveManager {
     // us) was invisible to every investigation.
     const rt = this.runtimeInfo();
     const runtimeLine = rt
-      ? `RUNNING BUILD: Munder Difflin v${rt.version}, ${rt.packaged ? 'packaged app' : 'local dev build'}${rt.appPath ? `, from ${rt.appPath}` : ''}. Say this version if asked which one is running, and do not assume behaviour from an older one. A local dev build inherits the launching shell's environment (umask included) where a packaged app does not, so file modes and inherited env can legitimately differ between the two. \`log.jsonl\` records an \`app-start\` event on every launch, which is how you spot a restart or a build switch.`
+      ? `RUNNING BUILD: ATMT LAB v${rt.version}, ${rt.packaged ? 'packaged app' : 'local dev build'}${rt.appPath ? `, from ${rt.appPath}` : ''}. Say this version if asked which one is running, and do not assume behaviour from an older one. A local dev build inherits the launching shell's environment (umask included) where a packaged app does not, so file modes and inherited env can legitimately differ between the two. \`log.jsonl\` records an \`app-start\` event on every launch, which is how you spot a restart or a build switch.`
       : '';
     // Item 11: god could not find the spawn queue. The mechanism has worked since
     // v0.4.4, but nothing told him it existed — the prompt said "spawn" without
@@ -1948,7 +1948,7 @@ export class HiveManager {
     try { return readdirSync(dir).filter((f) => f.endsWith('.json')).length; } catch { return 0; }
   }
   /** Install the Antigravity (`agy`) lifecycle-hook bridge: write the normalizer
-   *  shim and merge a `munder-hive` hook group into agy's global hooks.json so a
+   *  shim and merge a `atmt-hive` hook group into agy's global hooks.json so a
    *  Gemini worker reports PreToolUse/PostToolUse/Stop/PreInvocation/PostInvocation
    *  to this HookServer (live status + guarded idle delivery), reusing the Claude pipeline.
    *
@@ -1991,7 +1991,7 @@ export class HiveManager {
         if (existsSync(p)) {
           try { existing = JSON.parse(readFileSync(p, 'utf8')) as Record<string, unknown>; } catch { existing = {}; }
         }
-        existing['munder-hive'] = group;
+        existing['atmt-hive'] = group;
         writeFileSync(p, JSON.stringify(existing, null, 2), 'utf8');
       } catch { /* best-effort per file */ }
     }
@@ -2015,7 +2015,7 @@ export class HiveManager {
         ...(matcher ? { matcher } : {}),
         sequential: true,
         hooks: [{
-          name: `munder-hive-${name}`,
+          name: `atmt-hive-${name}`,
           type: 'command',
           command: process.platform === 'win32'
             ? this.nodeRunUnquoted(shim)
@@ -2122,7 +2122,7 @@ export class HiveManager {
         const command = process.platform === 'win32'
           ? this.nodeRunUnquoted(shim)
           : this.nodeRun(shim);
-        config += '\n# --- munder-hive lifecycle hooks (auto-generated; do not edit) ---\n';
+        config += '\n# --- atmt-hive lifecycle hooks (auto-generated; do not edit) ---\n';
         for (const ev of events) {
           config += `\n[[hooks.${ev}]]\n[[hooks.${ev}.hooks]]\ntype = "command"\ncommand = ${JSON.stringify(command)}\ntimeout = 30\n`;
         }
@@ -2166,7 +2166,7 @@ export class HiveManager {
       throw new Error(`invalid agent id: ${agentId}`);
     }
     const source = join(home, kind);
-    const scanRoot = join(userHome, kind, 'munder-difflin');
+    const scanRoot = join(userHome, kind, 'atmt-lab');
     const hiveId = createHash('sha1').update(root).digest('hex').slice(0, 12);
     const target = join(scanRoot, hiveId, agentId);
 
@@ -2229,7 +2229,7 @@ export class HiveManager {
         try {
           if (!lstatSync(source).isSymbolicLink()) continue;
           const target = realpathSync(source);
-          const scanRoot = realpathSync(join(userHome, kind, 'munder-difflin'));
+          const scanRoot = realpathSync(join(userHome, kind, 'atmt-lab'));
           const rel = relative(scanRoot, target);
           const scope = dirname(rel);
           if (!rel || rel.startsWith('..') || isAbsolute(rel)
@@ -2266,7 +2266,7 @@ export class HiveManager {
       writeFileSync(join(extDir, 'hive-bridge.js'), PI_EXTENSION, 'utf8');
       // A manifest so Pi auto-loads the extension on start (best-effort; harmless if
       // Pi ignores it). Kept minimal and hive-authored.
-      const manifest = { name: 'munder-hive-bridge', version: '0.3.1', main: 'extensions/hive-bridge.js', auto: true };
+      const manifest = { name: 'atmt-hive-bridge', version: '0.3.1', main: 'extensions/hive-bridge.js', auto: true };
       writeFileSync(join(home, 'extensions.json'), JSON.stringify(manifest, null, 2), 'utf8');
 
       const userPiDir = join(homedir(), '.pi', 'agent');
@@ -2406,14 +2406,14 @@ export class HiveManager {
       const hookDir = join(homedir(), '.grok', 'hooks');
       mkdirSync(hookDir, { recursive: true });
       writeFileSync(
-        join(hookDir, 'munder-hive.json'),
+        join(hookDir, 'atmt-hive.json'),
         JSON.stringify({ hooks }, null, 2),
         'utf8'
       );
     } catch (e) { console.error('[hive] installGrokHooks failed:', e); }
   }
 
-  /** Write the live fleet snapshot Michael reads (`fleet.json`, gitignored).
+  /** Write the live fleet snapshot Ramon reads (`fleet.json`, gitignored).
    *  Best-effort — called from a timer, must never throw. */
   writeFleetSnapshot(snapshot: unknown): void {
     const root = this.root();
@@ -2550,7 +2550,7 @@ export class HiveManager {
    * `{kind:'archive', agentId, archived:true}` and NOTHING else — no exit code,
    * no signal, no output. A two-second SIGILL death and a completed agent were
    * indistinguishable in the only record the hive keeps, and the crash banner
-   * lived solely in a UI terminal pane. Observed live 2026-08-24: Michael's
+   * lived solely in a UI terminal pane. Observed live 2026-08-24: Ramon's
    * `claude` CLI panicked 923ms into startup and left no trace on disk.
    *
    * Split by design:
@@ -3424,7 +3424,7 @@ process.stdin.on('end', () => {
 // payload is camelCase and uses snake_case event values. Normalize the input for
 // HookServer and translate its Claude-style permission denial into Grok's direct
 // decision form. Scoped by AGENT_ID so the trusted global hook is inert outside
-// Munder-spawned workers.
+// ATMT LAB-spawned workers.
 const GROK_HOOK_SHIM = `#!/usr/bin/env node
 'use strict';
 const net = require('net');

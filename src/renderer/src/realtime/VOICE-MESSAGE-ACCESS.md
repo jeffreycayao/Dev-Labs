@@ -1,6 +1,6 @@
 # Voice read-layer — hive activity & message content
 
-How Realtime "Michael" (the voice agent in the renderer) reads recent hive
+How Realtime "Ramon" (the voice agent in the renderer) reads recent hive
 activity and message bodies to brief the operator, and the privacy boundary that
 keeps it safe. Card: `enable-voice-agent-acces-cnzlfs`.
 

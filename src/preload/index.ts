@@ -54,7 +54,7 @@ export interface HiveAgentMeta {
   capabilities?: string[];
   cwd: string;
   isGod?: boolean;
-  /** Michael's prep assistant — send-only; enriches prompts and forwards them. */
+  /** Ramon's prep assistant — send-only; enriches prompts and forwards them. */
   isAssistant?: boolean;
 }
 
@@ -269,7 +269,7 @@ export interface HarnessConfig {
   autoMode: boolean;
   defaultCommand: string;
   defaultModel?: string;
-  /** Which provider+model powers the GOD orchestrator ("Michael"). Default
+  /** Which provider+model powers the GOD orchestrator ("Ramon"). Default
    *  'claude' / 'claude-opus-4-8'. Mirrors src/main/config.ts. */
   godProvider?: AgentProvider;
   godModel?: string;
@@ -304,12 +304,12 @@ export interface HarnessConfig {
   freeflowEnabled?: boolean;
   groqApiKey?: string;
   freeflowModel?: string;
-  /** Realtime Michael voice loop — true ONLY while a session holds the mic
+  /** Realtime Ramon voice loop — true ONLY while a session holds the mic
    *  (renderer session sets it at start()/stop()); the main mic permission gate
    *  reads it. Default off. */
   realtimeVoiceEnabled?: boolean;
   /** Realtime voice idle auto-disconnect (ms); default 180000 (3 min), 0 = never.
-   *  Tuned in Settings → Realtime Michael; the cost cap stays the runaway guard. */
+   *  Tuned in Settings → Realtime Ramon; the cost cap stays the runaway guard. */
   realtimeIdleDisconnectMs?: number;
   costCapUsd?: number;
   costCapTokens?: number;
@@ -756,7 +756,7 @@ const api = {
   hiveRenameAgent: (id: string, name: string): Promise<{ ok: boolean; name?: string; error?: string }> =>
     ipcRenderer.invoke('hive:renameAgent', id, name),
   /** Put an agent on hold (the human has them 1:1) or take it off. Held agents
-   *  keep running; Michael is told to stop routing work to them. */
+   *  keep running; Ramon is told to stop routing work to them. */
   hiveSetAgentHold: (id: string, hold: boolean): Promise<{ ok: boolean; onHold?: boolean; error?: string }> =>
     ipcRenderer.invoke('hive:setAgentHold', id, hold),
   hiveBoard: (): Promise<string> => ipcRenderer.invoke('hive:board'),
@@ -766,12 +766,12 @@ const api = {
   hiveInbox: (id: string): Promise<HiveMessage[]> => ipcRenderer.invoke('hive:inbox', id),
   /** Voice read-layer: recent message CONTENT (inbox/outbox bodies), REDACTED in
    *  main. Pass { id } for one message, { agentId } to scope to one mailbox, or
-   *  {} for the whole floor. Backs Realtime Michael's get_messages. The renderer
+   *  {} for the whole floor. Backs Realtime Ramon's get_messages. The renderer
    *  never sees a raw body or a secret — stripping happens main-side. */
   hiveMessages: (opts?: { agentId?: string; id?: string; limit?: number; includeArchived?: boolean }): Promise<VoiceMessage[]> =>
     ipcRenderer.invoke('hive:messages', opts ?? {}),
   /** Consolidated per-agent directory (registry + telemetry + context), incl.
-   *  archived agents. Backs Realtime Michael's get_agent_detail / list_agents. */
+   *  archived agents. Backs Realtime Ramon's get_agent_detail / list_agents. */
   hiveAgentDirectory: (): Promise<AgentDirectory> => ipcRenderer.invoke('hive:agentDirectory'),
 
   // ─── Ephemeral workers (P4 — Slack-triggered isolated workers) ───────────
@@ -922,7 +922,7 @@ const api = {
   },
 
   // ─── Shareable hires (deep link / file import) ────────────────────────────
-  /** Fired when a validated hire manifest arrives via the munderdifflin://
+  /** Fired when a validated hire manifest arrives via the atmtlab://
    *  deep link. The renderer opens the Add-Agent modal pre-filled — import
    *  never spawns anything by itself. */
   onHireImport: (cb: (manifest: HireManifest) => void): (() => void) => {
@@ -1140,7 +1140,7 @@ const api = {
   hiveSetArchived: (id: string, archived: boolean): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('hive:setArchived', id, archived),
 
-  // ─── Slack integration (Slack message → Michael's queue) ─────────────────────
+  // ─── Slack integration (Slack message → Ramon's queue) ─────────────────────
   /** Register a listener for inbound Slack messages; returns an unsubscribe fn.
    *  The message carries the thread coordinates needed to reply in-thread. */
   onSlackMessage: (cb: (msg: { text: string; channel: string; ts: string; thread_ts: string; autonomyPreamble?: string; files?: { path: string; name: string; mimetype: string }[] }) => void): (() => void) => {
@@ -1299,7 +1299,7 @@ const api = {
     ipcRenderer.invoke('providerKey:has', backend),
   providerKeyClear: (backend: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('providerKey:clear', backend),
-  // Realtime Michael (voice orchestrator) — MAIN mints a short-lived EPHEMERAL token
+  // Realtime Ramon (voice orchestrator) — MAIN mints a short-lived EPHEMERAL token
   // from the BYOK OpenAI key; the real key NEVER crosses IPC. `realtimeHasOpenAiKey`
   // is a presence boolean only (gates the voice toggle, like providerKeyHas).
   realtimeHasOpenAiKey: (): Promise<boolean> =>
@@ -1324,7 +1324,7 @@ const api = {
   realtimeActionCancel: (): Promise<{ ok: boolean; spoken: string; needsConfirm?: boolean }> =>
     ipcRenderer.invoke('realtime:action:cancel'),
   // rt-12 completion seam — a voice-dispatched task finished. `summary` is the
-  // human-speakable line Michael relays; the rest is context for a toast/log.
+  // human-speakable line Ramon relays; the rest is context for a toast/log.
   onRealtimeCompletion: (
     cb: (evt: { correlationId: string; kind: string; targetAgentId: string; taskId?: string; summary: string; completedAt: number; objective?: string }) => void
   ): (() => void) => {

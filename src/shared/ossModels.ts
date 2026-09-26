@@ -71,6 +71,6 @@ export function hasOssQuickPicks(provider: AgentProvider): boolean {
 
 /** Canonical blog URLs the local-setup UI hyperlinks to (ondev-c part-3). */
 export const OSS_BLOG_LINKS = {
-  openModels: 'https://munderdiffl.in/blog/run-munder-difflin-on-open-models/',
-  macMini: 'https://munderdiffl.in/blog/run-munder-difflin-on-a-mac-mini/'
+  openModels: 'https://opencode.ai/docs/models/',
+  macMini: 'https://ollama.com/download'
 } as const;

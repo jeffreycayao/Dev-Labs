@@ -28,10 +28,11 @@ import { PixelButton } from './PixelButton';
 import { Icon } from './Icon';
 import { DEFAULT_HERO, type HeroPayload } from '@shared/heroPayload';
 import { manualDownloadUrl, pendingVersion, reduceStatus, type UpdateStatus } from '@shared/updateState';
+import { GITHUB_REPO_URL } from '@shared/brand';
 
-const GITHUB_REPO_URL = 'https://github.com/chaitanyagiri/munder-difflin';
-const FOUNDERS_WALL_URL = 'https://munderdiffl.in/wall.html';
-const DISCORD_URL = 'https://discord.gg/SEDzP5ZPk5';
+// Upstream community links were removed on rebrand; set these to re-enable the buttons.
+const FOUNDERS_WALL_URL = '';
+const DISCORD_URL = '';
 
 export function SettingsHeroCard() {
   const { t } = useTranslation();
@@ -92,7 +93,7 @@ export function SettingsHeroCard() {
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
             <span style={{
               fontFamily: 'var(--cth-font-display)', fontSize: 13, lineHeight: '20px', color: INK
-            }}>MUNDER DIFFLIN</span>
+            }}>ATMT LAB</span>
             {version && (
               <span style={{
                 fontFamily: MONO, fontSize: 15, fontWeight: 700, color: INK
@@ -150,6 +151,7 @@ export function SettingsHeroCard() {
         </div>
 
         {/* Founders' Wall offer. */}
+        {FOUNDERS_WALL_URL && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
           padding: '12px 14px',
@@ -180,6 +182,7 @@ export function SettingsHeroCard() {
             </PixelButton>
           )}
         </div>
+        )}
 
         {/* Sponsor — only when there is one. */}
         {SPONSOR && (
@@ -212,27 +215,35 @@ export function SettingsHeroCard() {
               <Icon name="sparkle" /> {t('settingsHero.whatsNew')}
             </span>
           </PixelButton>
+          {GITHUB_REPO_URL && (
           <PixelButton variant="secondary" size="sm" onClick={() => void window.cth.openExternal(GITHUB_REPO_URL)}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               ⭐ {t('settingsHero.starOnGitHub')}
             </span>
           </PixelButton>
+          )}
+          {DISCORD_URL && (
           <PixelButton variant="secondary" size="sm" onClick={() => void window.cth.openExternal(DISCORD_URL)}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               💬 {t('settingsHero.joinDiscord')}
             </span>
           </PixelButton>
+          )}
+          {GITHUB_REPO_URL && (
           <PixelButton
             variant="ghost"
             size="sm"
             onClick={() => void window.cth.openExternal(`${GITHUB_REPO_URL}/issues/new`)}
           >{t('settingsHero.reportProblem')}</PixelButton>
+          )}
           <span style={{ flex: 1 }} />
+          {GITHUB_REPO_URL && (
           <a
             href={`${GITHUB_REPO_URL}/blob/main/CHANGELOG.md`}
             onClick={(e) => { e.preventDefault(); void window.cth.openExternal(`${GITHUB_REPO_URL}/blob/main/CHANGELOG.md`); }}
             style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}
           >{t('settingsHero.fullChangelog')}</a>
+          )}
         </div>
       </div>
     </div>

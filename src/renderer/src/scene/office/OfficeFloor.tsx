@@ -299,7 +299,7 @@ export function OfficeFloor() {
 
       // ─── The boss's wall calendar → TRIGGERS ───────────────────────────────
       // A little tear-off month page hangs on the CEO office wall. Clicking it
-      // selects Michael (the god) and opens the Command Center's TRIGGERS tab —
+      // selects Ramon (the god) and opens the Command Center's TRIGGERS tab —
       // everything that wakes the hive without you, schedules first among them.
       const calTs = mapRenderer.tileSize;
       const calG = new Graphics();
@@ -375,7 +375,7 @@ export function OfficeFloor() {
       }
       if (waitTiles.length === 0) waitTiles.push(entrance);
 
-      // Seat 0 is desk-ceo — "Michael's room" — reserved for the god agent.
+      // Seat 0 is desk-ceo — "Ramon's room" — reserved for the god agent.
       // All other workers claim seats from 1 onward.
       const GOD_SEAT = 0;
       const claimSeat = (agent: Agent): number | null => {
@@ -893,7 +893,7 @@ export function OfficeFloor() {
         if (free.length === 0) return;
         const idx = free[Math.floor(Math.random() * free.length)];
         const spot = ERRAND_SPOTS[idx];
-        // Pick the performer. The CEO office's spots belong to Michael alone —
+        // Pick the performer. The CEO office's spots belong to Ramon alone —
         // and unlike workers he runs his errands FROM his desk (he's seated
         // while idle, so the sitting check doesn't apply to him).
         let agent: Agent | undefined;
@@ -936,10 +936,10 @@ export function OfficeFloor() {
         });
       };
 
-      // ─── The boss aura: performative excellence in Michael's presence ──────
+      // ─── The boss aura: performative excellence in Ramon's presence ──────
       // When the god's avatar wanders close to a worker, the worker bursts
       // into suck-up mode — including REAL stats ("already shipped N tasks,
-      // Michael. raise?" with N from the actual ledger). What they say once
+      // Ramon. raise?" with N from the actual ledger). What they say once
       // he's out of earshot is a different story (see emitQuip's gossip).
       const lastSuckUp = new Map<string, number>();
       let doneByAssignee = new Map<string, number>();
@@ -1020,7 +1020,7 @@ export function OfficeFloor() {
       // assignee) literally TAKES THE NOTE ALONG: it leaves the boards and
       // sticks to that worker's desk instead. Finished tasks archive as a green
       // stack on the little table at the end. Clicking any of it selects
-      // Michael and opens the Command Center's tasks tab.
+      // Ramon and opens the Command Center's tasks tab.
       const BOARD_TILE: Tile = theme.anchors.boards;
       // The ensemble (two boards + archive table) is 82px wide; the wall run
       // between the two doorways spans tiles 6..12 (112px) — center it.
@@ -1115,7 +1115,7 @@ export function OfficeFloor() {
       drawTaskBoard([]);
 
       // ─── The office clock: clicking it is CLOCKING OUT ─────────────────────
-      // The wall clock beside Michael's window doubles as the quit entry:
+      // The wall clock beside Ramon's window doubles as the quit entry:
       // a click runs the real close flow (window.close() → the main process
       // intercepts while agents run → the "Quitting now?" dialog with its
       // closing-time option). The office clock literally opens quitting time.
@@ -1179,7 +1179,7 @@ export function OfficeFloor() {
       drawAskBoard(0);
 
       // ─── Board choreography: every ledger move is ACTED on the floor ───────
-      // Michael walks over and pins fresh cards; an assigned worker walks to
+      // Ramon walks over and pins fresh cards; an assigned worker walks to
       // the TODO board, takes its note and carries it home; finishing carries
       // the note to the archive table; a card going blocked gets walked to the
       // red board. While a move is in flight, the boards keep showing the OLD

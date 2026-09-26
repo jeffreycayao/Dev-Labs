@@ -103,7 +103,7 @@ export function AgentControlStrip({ agentId }: { agentId: string }) {
         </PixelButton>
         {/* Sits with them at the founder's call. It is a different KIND of
             control — the two above restrain the agent, this one restrains
-            Michael — so the tooltip carries that distinction now that the
+            Ramon — so the tooltip carries that distinction now that the
             grouping no longer does. */}
         <AgentHoldButton agentId={agentId} />
         {/* v0.3.4: the auto-delivery switch moved to the god's Command Center

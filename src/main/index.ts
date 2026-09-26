@@ -274,7 +274,7 @@ const breaker = new CircuitBreaker(() => {
   return { ...(c.circuitBreaker ?? {}), costCapUsd: c.costCapUsd, costCapTokens: c.costCapTokens, agentTokenCaps: c.agentTokenCaps };
 });
 // Always-on beats (decoupled from the optional heartbeat): the live fleet snapshot
-// Michael reads + the breaker beat, so guardrails + monitoring work even when the
+// Ramon reads + the breaker beat, so guardrails + monitoring work even when the
 // heartbeat mission is disabled (it ships off).
 let fleetTimer: ReturnType<typeof setInterval> | null = null;
 let breakerBeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -1281,7 +1281,7 @@ function runBreakerBeat(progressWindowMs: number): void {
  *  it cannot answer "what has this agent cost us". See costLifetime.ts. */
 const costTotals = new CostLedgerTotals();
 
-/** Build + write the live fleet snapshot Michael reads (`<hive>/fleet.json`).
+/** Build + write the live fleet snapshot Ramon reads (`<hive>/fleet.json`).
  *  Always-on (independent of the heartbeat) since `claude agents` can't see the
  *  hive's sibling sessions. PII-free; never throws (called from a timer). */
 function writeFleetSnapshot(): void {
@@ -1378,7 +1378,7 @@ function liveWebContents(): Electron.WebContents | null {
   return null;
 }
 
-// ─── Slack webhook server (Slack message → Michael's queue) ──────────────────
+// ─── Slack webhook server (Slack message → Ramon's queue) ──────────────────
 /** The running Slack ingestion server, or null when disabled/stopped. */
 let slackServer: SlackWebhookServer | null = null;
 /** The loopback-only reply endpoint (lets the bundled helper post back to Slack
@@ -1404,7 +1404,7 @@ function buildAutonomousRequestProtocol(channel: string, threadTs: string, helpe
 2. DELEGATE WITH THE REPLY HANDLE — tell that agent to do the work autonomously AND to post its result back to THIS Slack thread itself when done, using exactly: "${hive.nodeCommand()}" "${helperPath}" --channel ${channel} --thread ${threadTs} --text "<substantive result>" (that first path is the harness's bundled Node, already resolved for this machine — pass it verbatim; bare "node" is not on the hook/agent PATH on many machines.)
 3. AUTONOMOUS EXECUTION — no interactive questions. PAUSE/ask ONLY for high-severity actions: pushing to main or any remote; buying or spawning infrastructure or paid services; deleting an existing repo, file, or folder it did not create. Stay READ-ONLY at critical infrastructure and git-push-type changes unless explicitly approved.
 4. DIRECT, SUBSTANTIVE REPLY — the agent posts a real Slack-mrkdwn answer (short *bold* headline + the actual outcome/specifics/links), NEVER a bare "done"/":white_check_mark:".
-5. REPORT TO GOD — the agent then tells you (Michael) what it did.
+5. REPORT TO GOD — the agent then tells you (Ramon) what it did.
 6. ASYNC QUESTIONS — if a decision is genuinely needed, don't block: post the question + numbered OPTIONS to the thread via that reply command, and record {q, options, askedAt (ISO + day & time), thread_ts ${threadTs}} so the threaded human reply correlates back and resumes.
 The user's message starts now: `;
 }
@@ -2183,7 +2183,7 @@ function floorCascade(): WindowBounds | null {
   return clampBounds({ x: b.x + OFFSET, y: b.y + OFFSET, width: b.width, height: b.height });
 }
 
-// ─── Shareable hires: munderdifflin:// deep link + file import ──────────────
+// ─── Shareable hires: atmtlab:// deep link + file import ──────────────
 // A hire manifest NEVER auto-spawns: it is validated, then handed to the
 // renderer, which pre-fills the Add-Agent modal for human review. See
 // src/shared/hire.ts for the spec + security model.
@@ -2228,10 +2228,10 @@ async function handleHireLink(link: string): Promise<void> {
 // exe+args form or the registration points at electron.exe with no entry.
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient('munderdifflin', process.execPath, [resolve(process.argv[1])]);
+    app.setAsDefaultProtocolClient('atmtlab', process.execPath, [resolve(process.argv[1])]);
   }
 } else {
-  app.setAsDefaultProtocolClient('munderdifflin');
+  app.setAsDefaultProtocolClient('atmtlab');
 }
 
 // Deep links on Windows/Linux arrive as the argv of a SECOND process — take the
@@ -2248,7 +2248,7 @@ if (!gotInstanceLock) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }
-    const link = argv.find((a) => a.startsWith('munderdifflin://'));
+    const link = argv.find((a) => a.startsWith('atmtlab://'));
     if (link) void handleHireLink(link);
   });
 }
@@ -2308,7 +2308,7 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
     ...(geom && geom.x !== undefined && geom.y !== undefined ? { x: geom.x, y: geom.y } : {}),
     minWidth: MIN_WIN.width,
     minHeight: MIN_WIN.height,
-    title: isFloor ? 'Munder Difflin — Floor' : 'Munder Difflin',
+    title: isFloor ? 'ATMT LAB — Floor' : 'ATMT LAB',
     backgroundColor: '#FFF8E7',
     titleBarStyle: 'hiddenInset',
     show: false,
@@ -2344,7 +2344,7 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
   // Permission gate for the renderer (our own trusted, local content). The only
   // permission we constrain is microphone capture: it's allowed ONLY while a mic
   // feature is actually live — Free Flow dictation (`freeflowEnabled`) OR a
-  // Realtime Michael voice session (`realtimeVoiceEnabled`, flipped on by the
+  // Realtime Ramon voice session (`realtimeVoiceEnabled`, flipped on by the
   // session at start() before getUserMedia, off at stop()). With both flags off,
   // there's zero mic access even at the Electron layer. We deliberately do NOT
   // gate on OpenAI-key presence: that key (`apikey:openai`) is shared with the CLI
@@ -2836,7 +2836,7 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
         : cfg.defaultModel ?? modelForRole(opts.hive, cfg);
       if (m) args.push('--model', m);
     }
-    // Name the Remote Control session after the agent (Michael, Jim, Dev1…) so it
+    // Name the Remote Control session after the agent (Ramon, Jim, Dev1…) so it
     // is identifiable in claude.ai / the mobile app. Otherwise Claude defaults the
     // prefix to the machine hostname (e.g. "vyapaks-macbook-pro-…"), which is
     // opaque when several agents run at once — especially with remoteControlAtStartup
@@ -3842,7 +3842,7 @@ ipcMain.handle('app:resetAll', () => {
   try { persist.close(); } catch (e) { console.error('[reset] persist.close:', e); }
   try { ptyManager.killAll(); } catch (e) { console.error('[reset] killAll:', e); }
   try { hive.removeExposedCodexData(); } catch (e) { console.error('[reset] removeExposedCodexData:', e); }
-  // Erase the hive (Michael's + every agent's memory, inboxes, tasks, board,
+  // Erase the hive (Ramon's + every agent's memory, inboxes, tasks, board,
   // git history) and the semantic-memory palace. Only these harness-created
   // subdirs are removed — never the user's whole harnessHome folder.
   for (const dir of [hive.root(), memory.palacePath()]) {
@@ -3881,12 +3881,12 @@ ipcMain.handle('hive:agentContext', (_evt, agentId: unknown) => {
 });
 
 // A consolidated, NON-SENSITIVE per-agent directory for the voice read-layer
-// (Realtime Michael's get_agent_detail / list_agents). One read that joins
+// (Realtime Ramon's get_agent_detail / list_agents). One read that joins
 // everything the office-floor sidebar + telemetry know per agent: the registry
 // record (name/role/provider/cwd/status/archived/isGod/isAssistant/sessionId/
 // cwdValid), live token + breaker + last-tool telemetry, and the current context
 // window fill. Includes ARCHIVED agents (unlike the heartbeat's fleet.json, which
-// is live-only) so Michael can speak to inactive agents — their cwd and memory
+// is live-only) so Ramon can speak to inactive agents — their cwd and memory
 // stay reachable. PII-free: no secrets, env, or API keys ever leave main; cost is
 // carried as tokens (+ a usd field the voice layer deliberately never speaks).
 ipcMain.handle('hive:agentDirectory', () => {
@@ -4417,23 +4417,23 @@ ipcMain.handle('freeflow:transcribe', async (_evt, arg: unknown) => {
   return out;
 });
 
-// ─── IPC: Realtime Michael (voice orchestrator — ephemeral token mint, rt-1) ──
+// ─── IPC: Realtime Ramon (voice orchestrator — ephemeral token mint, rt-1) ──
 // MAIN owns the BYOK OpenAI key (encrypted broker, apikey:openai) and mints a
 // short-lived EPHEMERAL client secret; the real key never crosses IPC. All wiring
 // lives in ./realtime so this stays a single registration line.
 registerRealtimeIpc();
 
-// ─── IPC: Realtime Michael voice ACTIONS (rt-5, Phase 2) ─────────────────────
+// ─── IPC: Realtime Ramon voice ACTIONS (rt-5, Phase 2) ─────────────────────
 // Thin adapters over the SAME main fns the god PTY already uses. ALL of the safety
 // spine — soft-vs-destructive tiering, the two-step verbal echo-back confirm, the
 // distinct-token rule, the hard allowlist (kill-god / mass-ops forbidden), and the
 // michael-voice attribution — lives in ./realtimeActions. This site only injects
 // the existing functions; it adds NO new orchestration logic.
-// ─── IPC: Realtime Michael completion watcher (rt-12, Phase 2) ───────────────
+// ─── IPC: Realtime Ramon completion watcher (rt-12, Phase 2) ───────────────
 // Jim's net-new engine (realtimeCompletionWatcher.ts) detects a voice-dispatched
 // task finishing (card→done OR a done-reply in michael-voice's inbox) and EMITS it;
 // I own the seam — inject the hive read deps, push completions to the live session
-// (so Michael speaks them unprompted), and bridge waitFor / queue-drain over IPC.
+// (so Ramon speaks them unprompted), and bridge waitFor / queue-drain over IPC.
 const completionWatcher = initCompletionWatcher({
   readTasks: () => { const t = hive.tasks() as { tasks?: TaskCard[] }; return Array.isArray(t?.tasks) ? t.tasks : []; },
   // Voice dispatches go out as from:michael-voice, so assignee done-replies land here.
@@ -5188,7 +5188,7 @@ function runWorkerWakeBeat(): void {
 }
 
 /** (Re)arm the always-on beats (decoupled from the optional heartbeat): the live
- *  fleet snapshot Michael reads (~8s) + the breaker/cost-ledger beat (~30s).
+ *  fleet snapshot Ramon reads (~8s) + the breaker/cost-ledger beat (~30s).
  *  Guarded (clear-then-set) so a re-bootstrap (changeHome recovery) OR a
  *  powerMonitor resume can't stack duplicate timers — these are setInterval
  *  handles that freeze during true system sleep and must be re-armed on wake. */
@@ -5285,7 +5285,7 @@ function onSystemResume(reason: string): void {
 }
 
 app.whenReady().then(() => {
-  // Realtime Michael mic-gate hygiene (rt-8 / Pam rt-10 nit): the voice session
+  // Realtime Ramon mic-gate hygiene (rt-8 / Pam rt-10 nit): the voice session
   // opens the mic permission gate by persisting realtimeVoiceEnabled=true and
   // closes it on disconnect — but a hard crash/reload mid-session skips that
   // teardown, leaving the flag stuck true so the gate would boot PRE-OPEN with no
@@ -5309,7 +5309,7 @@ app.whenReady().then(() => {
   void loadModelCatalog(MODEL_CATALOG_CACHE()).catch(() => { /* never fatal */ });
 
   // A cold-start deep link (Windows/Linux) rides in on OUR argv.
-  const startupHireLink = process.argv.find((a) => a.startsWith('munderdifflin://'));
+  const startupHireLink = process.argv.find((a) => a.startsWith('atmtlab://'));
   if (startupHireLink) void handleHireLink(startupHireLink);
 
   // Hand every spawned agent the path to the Slack reply discovery file via the

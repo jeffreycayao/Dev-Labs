@@ -1,17 +1,17 @@
 <div align="center">
 
-<img src="./docs/logo.png" alt="Munder Difflin, the agent harness to run an office of your clones" width="180">
+<img src="./docs/logo.png" alt="ATMT LAB, the agent harness to run an office of your clones" width="180">
 
-# Munder Difflin
+# ATMT LAB
 
 ### Agent harness to run an office of your clones
 
 <p>
   <a href="https://trendshift.io/repositories/46562" target="_blank" rel="noopener noreferrer"><img alt="GitHub Trending: #1 Repository of the Day" src="./docs/badge-github-trending.png" width="250" height="54"></a>
-  <a href="https://www.producthunt.com/products/munder-difflin?embed=true&utm_source=badge-top-post-badge&utm_medium=badge&utm_campaign=badge-munder-difflin" target="_blank" rel="noopener noreferrer"><img alt="Munder Difflin, #5 Product of the Day on Product Hunt" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1221363&theme=light&period=daily" width="250" height="54"></a>
+  <a href="https://www.producthunt.com/products/atmt-lab?embed=true&utm_source=badge-top-post-badge&utm_medium=badge&utm_campaign=badge-atmt-lab" target="_blank" rel="noopener noreferrer"><img alt="ATMT LAB, #5 Product of the Day on Product Hunt" src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1221363&theme=light&period=daily" width="250" height="54"></a>
 </p>
 
-<img src="./docs/media/floor.png" alt="The Munder Difflin office floor: agents at desks working in parallel, with the Command Center and a live agent terminal on the right" width="1240">
+<img src="./docs/media/floor.png" alt="The ATMT LAB office floor: agents at desks working in parallel, with the Command Center and a live agent terminal on the right" width="1240">
 
 **Free, open source and performant.** A multi-agent harness that works with the
 subscriptions you already pay for, on their hourly limits. It turns the terminal coding CLI
@@ -31,19 +31,19 @@ visualized as avatars at work on a shared office floor.
 <p>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-F4D35E.svg?style=flat-square&labelColor=6E1423"></a>
   <a href="./CHANGELOG.md"><img alt="Version: 0.5.3" src="https://img.shields.io/badge/version-0.5.3-F4D35E.svg?style=flat-square&labelColor=6E1423"></a>
-  <a href="https://github.com/chaitanyagiri/munder-difflin/releases"><img alt="Downloads across all releases" src="https://img.shields.io/github/downloads/chaitanyagiri/munder-difflin/total?style=flat-square&label=downloads&color=F4D35E&labelColor=6E1423"></a>
+  <a href="https://github.com/automatika/atmt-lab/releases"><img alt="Downloads across all releases" src="https://img.shields.io/github/downloads/automatika/atmt-lab/total?style=flat-square&label=downloads&color=F4D35E&labelColor=6E1423"></a>
   <img alt="Status: pre-release" src="https://img.shields.io/badge/status-pre--release-F4F1EA.svg?style=flat-square&labelColor=6E1423">
   <img alt="Platform: macOS | Windows | Linux" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-F4F1EA.svg?style=flat-square&labelColor=6E1423">
   <a href="./CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-F4D35E.svg?style=flat-square&labelColor=6E1423"></a>
-  <a href="https://munderdiffl.in/blog/"><img alt="Blog" src="https://img.shields.io/badge/blog-guides%20%26%20postmortems-F4D35E.svg?style=flat-square&labelColor=6E1423"></a>
+  <a href="https://automatika.ph/blog/"><img alt="Blog" src="https://img.shields.io/badge/blog-guides%20%26%20postmortems-F4D35E.svg?style=flat-square&labelColor=6E1423"></a>
   <a href="https://discord.gg/SEDzP5ZPk5"><img alt="Discord" src="https://img.shields.io/badge/Discord-join%20the%20office-F4D35E.svg?style=flat-square&labelColor=6E1423"></a>
 </p>
 
 <br>
 
 <!-- Inline player renders on github.com (raw URL required; relative paths only link). -->
-<video src="https://github.com/chaitanyagiri/munder-difflin/raw/main/docs/media/hero.mp4" controls muted loop playsinline width="820">
-  <a href="https://github.com/chaitanyagiri/munder-difflin/raw/main/docs/media/hero.mp4">▶ Watch the floor: Munder Difflin running a hive of Claude Code agents</a>
+<video src="https://github.com/automatika/atmt-lab/raw/main/docs/media/hero.mp4" controls muted loop playsinline width="820">
+  <a href="https://github.com/automatika/atmt-lab/raw/main/docs/media/hero.mp4">▶ Watch the floor: ATMT LAB running a hive of Claude Code agents</a>
 </video>
 
 <br><br>
@@ -51,7 +51,7 @@ visualized as avatars at work on a shared office floor.
 **[⬇ Download 0.5.3 for macOS, Windows or Linux](https://harnessmd.com/download)**
 
 <sub>macOS builds are signed and notarized. You do not need to build from source to use it.
-The open source build is on the <a href="https://github.com/chaitanyagiri/munder-difflin/releases/tag/v0.5.3">GitHub releases page</a>.</sub>
+The open source build is on the <a href="https://github.com/automatika/atmt-lab/releases/tag/v0.5.3">GitHub releases page</a>.</sub>
 
 **Cancel your Granola and Wispr Flow subscriptions.** 0.5.3 dictates into any app and transcribes your
 meetings, all running locally.
@@ -65,7 +65,7 @@ countries and as low as $100 a year. <a href="https://app.harnessmd.com/console/
 
 > [!NOTE]
 > **The world's best agents. The world's worst paper company.**
-> Munder Difflin takes the terminal-agent CLIs you already run (`claude`, `agy`, `codex`, `grok`,
+> ATMT LAB takes the terminal-agent CLIs you already run (`claude`, `agy`, `codex`, `grok`,
 > `kimi`, `qwen`, `opencode`, `crush`, `pi`, and `copilot`) and turns them
 > into a self-coordinating team: each agent gets long-term memory, a mailbox, and a desk on a 2D
 > office floor, and **your clone** (Michael) routes work between them while you watch. He's the
@@ -111,7 +111,7 @@ Plus **bring your own keys** and **local models** through Ollama, LM Studio or v
 
 ## What it is
 
-Munder Difflin is a desktop app that wraps **real terminal-agent CLIs** as fully-capable agents,
+ATMT LAB is a desktop app that wraps **real terminal-agent CLIs** as fully-capable agents,
 wires them into a **hive mind**, and puts **your clone** in charge. Michael is the one agent *you*
 talk to in order to get things done. Under the hood it runs the **fastest memory layer in the
 world** so every agent remembers what it learns and recalls it instantly.
@@ -168,7 +168,7 @@ terminal/event plane, and [`DESIGN.md`](./DESIGN.md) for the visual system.
 
 **Dictate into any app.** Hold Option on the Mac, or Control+Alt+Space on Windows and Linux (X11),
 talk, and let go. The words land in whatever field is in front of you, and in every text box inside
-Munder Difflin. The message box mic works in the free build too.
+ATMT LAB. The message box mic works in the free build too.
 
 **Meetings hear both sides**, in Stapler, part of Pro. Your microphone is written as You and the
 call's audio as Them, on Mac, Windows and Linux. Shift+Command+Space starts and stops a meeting on
@@ -208,7 +208,7 @@ escalates the few things that actually need you.
 
 </td>
 <td width="50%">
-  <a href="https://github.com/chaitanyagiri/munder-difflin/raw/main/docs/media/demo/orchestrator.mp4"><img src="./docs/media/demo/orchestrator-poster.jpg" alt="Briefing Michael, the orchestrator agent, from the Command Center" width="100%"></a>
+  <a href="https://github.com/automatika/atmt-lab/raw/main/docs/media/demo/orchestrator.mp4"><img src="./docs/media/demo/orchestrator-poster.jpg" alt="Briefing Michael, the orchestrator agent, from the Command Center" width="100%"></a>
 </td>
 </tr>
 <tr>
@@ -217,7 +217,7 @@ escalates the few things that actually need you.
 ### Hire an agent in a few clicks
 
 Pick the CLI, the model and the autonomy, give it a desk, and it starts working. Import a
-ready made role from the [Agent Gallery](https://munderdiffl.in/hires/) if you would rather not
+ready made role from the [Agent Gallery](https://automatika.ph/hires/) if you would rather not
 start from scratch.
 
 </td>
@@ -261,7 +261,7 @@ Click any desk to read that terminal live, and type straight back into it.
 
 </td>
 <td width="50%">
-  <a href="https://github.com/chaitanyagiri/munder-difflin/raw/main/docs/media/demo/agents.mp4"><img src="./docs/media/demo/agents-poster.jpg" alt="Agents working in parallel on the office floor" width="100%"></a>
+  <a href="https://github.com/automatika/atmt-lab/raw/main/docs/media/demo/agents.mp4"><img src="./docs/media/demo/agents-poster.jpg" alt="Agents working in parallel on the office floor" width="100%"></a>
 </td>
 </tr>
 <tr>
@@ -274,7 +274,7 @@ than sending you to a docs page.
 
 </td>
 <td width="50%">
-  <a href="https://github.com/chaitanyagiri/munder-difflin/raw/main/docs/media/demo/setup.mp4"><img src="./docs/media/demo/setup-poster.jpg" alt="The first run setup wizard" width="100%"></a>
+  <a href="https://github.com/automatika/atmt-lab/raw/main/docs/media/demo/setup.mp4"><img src="./docs/media/demo/setup-poster.jpg" alt="The first run setup wizard" width="100%"></a>
 </td>
 </tr>
 </table>
@@ -304,7 +304,7 @@ than sending you to a docs page.
 
 **Getting work in and out**
 - **Slack & webhooks**: message a channel or POST a webhook; Michael can spawn an ephemeral worker, reply in-thread, and tear it down.
-- **Shareable hires + Agent Gallery**: import a role from a `munderdifflin://hire` link; import only pre-fills the form, a human still spawns it. Browse roles at the [Agent Gallery](https://munderdiffl.in/hires/).
+- **Shareable hires + Agent Gallery**: import a role from a `atmtlab://hire` link; import only pre-fills the form, a human still spawns it. Browse roles at the [Agent Gallery](https://automatika.ph/hires/).
 - **Local transcription and dictation** (0.5.3): dictate into any app (Option on the Mac,
   Control+Alt+Space on Windows and Linux X11), and Stapler in Pro transcribes meetings with You and
   Them on Mac, Windows and Linux. A bundled Whisper model is the default engine; Apple's on device
@@ -312,7 +312,7 @@ than sending you to a docs page.
   technical names keeps Anthropic, Claude, Kubernetes and ARR spelled right, and you can add your own.
 - **Tell an agent from the Stapler** (Pro): Record message, several screenshots per message, PDFs,
   videos and folders, and a To menu that remembers who you picked.
-- **BYOK keys + local LLMs**: per-provider keys in a write-only secret broker, plus Ollama / LM Studio / vLLM base URLs. Guides: [open models](https://munderdiffl.in/blog/run-munder-difflin-on-open-models/) · [Mac Mini](https://munderdiffl.in/blog/run-munder-difflin-on-a-mac-mini/).
+- **BYOK keys + local LLMs**: per-provider keys in a write-only secret broker, plus Ollama / LM Studio / vLLM base URLs. Guides: [open models](https://automatika.ph/blog/run-atmt-lab-on-open-models/) · [Mac Mini](https://automatika.ph/blog/run-atmt-lab-on-a-mac-mini/).
 - **Updates in one click**: the title-bar badge runs the real update. It downloads the build for your machine, then restarts and installs it, and it reads `latest` once a check confirms you are current. A manual download is the fallback for when the updater cannot fetch the build itself. The first run afterwards opens that release's notes as a designed page rather than a version number.
 - **Your language**: English, Simplified Chinese and Arabic, with right to left layout for Arabic. English is the default and nothing changes until you pick another one in Settings. The app does not read your OS locale. All three app fonts ship inside the bundle, so nothing is fetched at boot.
 - **Prerequisites**: one Settings page showing which supporting tools (uv, git, Node, MemPalace, each agent CLI) you have, what each is for, and a button that asks Michael to install what is missing.
@@ -361,17 +361,17 @@ than sending you to a docs page.
 > and it has been removed entirely.
 > macOS (signed & notarized), Windows, and Linux builds are on the
 > [download page](https://harnessmd.com/download). The open source build is on the
-> [releases page](https://github.com/chaitanyagiri/munder-difflin/releases/tag/v0.5.3).
+> [releases page](https://github.com/automatika/atmt-lab/releases/tag/v0.5.3).
 
-<div align="right">(<a href="#munder-difflin">↑ back to top</a>)</div>
+<div align="right">(<a href="#atmt-lab">↑ back to top</a>)</div>
 
 ## Getting started
 
 ### Download the app
 
-**Most people want this one.** Munder Difflin is free and open source. Signed and notarized macOS
+**Most people want this one.** ATMT LAB is free and open source. Signed and notarized macOS
 builds of 0.5.3, plus Windows and Linux, are on the [download page](https://harnessmd.com/download).
-The open source build is on the [latest GitHub release](https://github.com/chaitanyagiri/munder-difflin/releases/tag/v0.5.3). Install it,
+The open source build is on the [latest GitHub release](https://github.com/automatika/atmt-lab/releases/tag/v0.5.3). Install it,
 open it, and the wizard takes you the rest of the way. You do not need Node, a toolchain, or this
 repository.
 
@@ -407,8 +407,8 @@ Everything below is for contributors and for people who want to run an unrelease
 ### Install & run
 
 ```bash
-git clone https://github.com/chaitanyagiri/munder-difflin.git
-cd munder-difflin
+git clone https://github.com/automatika/atmt-lab.git
+cd atmt-lab
 npm install        # postinstall rebuilds node-pty against Electron's ABI
 npm run dev        # launches the Electron app with hot reload
 ```
@@ -439,7 +439,7 @@ the product rather than the codebase. Also see [`HIVE.md`](./HIVE.md) for the mu
 [`SPEC.md`](./SPEC.md) for the terminal and event plane, and [`DESIGN.md`](./DESIGN.md) for the
 visual system.
 
-<div align="right">(<a href="#munder-difflin">↑ back to top</a>)</div>
+<div align="right">(<a href="#atmt-lab">↑ back to top</a>)</div>
 
 ## Roadmap
 
@@ -465,7 +465,7 @@ Next up:
 - [ ] **Fuller avatar coverage**: drive the remaining station visits and tool-bubbles entirely from real hook events.
 - [ ] **Durable layout & command history**: extend persistence to agent layout and per-session history.
 
-<div align="right">(<a href="#munder-difflin">↑ back to top</a>)</div>
+<div align="right">(<a href="#atmt-lab">↑ back to top</a>)</div>
 
 ## Contributing
 
@@ -484,17 +484,17 @@ first areas: wiring real hook events, the add-agent flow, the config drawer, and
 Questions, bugs, or want to show off your office? Join the Discord: **<https://discord.gg/SEDzP5ZPk5>**. Add your Discord handle to a PR and you'll get the `employee of the month` role when it merges.
 
 **Looking for somewhere to start?** The
-[`good first issue`](https://github.com/chaitanyagiri/munder-difflin/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+[`good first issue`](https://github.com/automatika/atmt-lab/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 list is kept stocked with small, self contained work that has a clear finish line.
 
-**Everyone whose code is in Munder Difflin is listed in [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).**
+**Everyone whose code is in ATMT LAB is listed in [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).**
 If that is you, it is yours to point at. The list is generated from the pull requests themselves and
 updates on its own, so you appear without having to ask. It also names the contributions that are in
 `main` but that GitHub shows as closed rather than merged, because that was our mistake to record
 and not theirs to explain.
 
 <a href="./CONTRIBUTORS.md">
-  <img src="https://contrib.rocks/image?repo=chaitanyagiri/munder-difflin" alt="Munder Difflin contributors">
+  <img src="https://contrib.rocks/image?repo=automatika/atmt-lab" alt="ATMT LAB contributors">
 </a>
 
 ## Telemetry
@@ -517,8 +517,8 @@ source, forks compile with no key and send nothing) are documented in
 
 The **source code** is licensed under the **MIT License**. See [`LICENSE`](./LICENSE). The MIT grant
 covers the code only; the bundled pixel art is licensed separately from LimeZu and is carved out in
-[`LICENSE-ASSETS`](./LICENSE-ASSETS). *Munder Difflin* is an affectionate parody and is not affiliated with NBC's *The Office* or
-Dunder Mifflin.
+[`LICENSE-ASSETS`](./LICENSE-ASSETS). *ATMT LAB* is an affectionate parody and is not affiliated with NBC's *The Office* or
+ATMT LAB.
 
 ## Acknowledgements
 
@@ -526,4 +526,4 @@ Dunder Mifflin.
 - [`shahar061/the-office`](https://github.com/shahar061/the-office) for the office tileset/map vendoring.
 - [Pixi.js](https://pixijs.com/) · [xterm.js](https://xtermjs.org/) · [node-pty](https://github.com/microsoft/node-pty) · [electron-vite](https://electron-vite.org/) · [CodeMirror](https://codemirror.net/) for the libraries this is built on.
 - [Remotion](https://www.remotion.dev/) for the landing page's animated "how it works" clips (`landing-remotion/`).
-- *The Office* (US) for Munder Difflin, Inc.
+- *The Office* (US) for ATMT LAB, Inc.

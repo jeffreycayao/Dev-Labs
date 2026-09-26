@@ -1,4 +1,4 @@
-# Munder Difflin — Spec
+# ATMT LAB — Spec
 
 A desktop control room for the Claude Code agents you already run in terminals. Each agent is a Sims-style avatar in a shared 2D workspace; you can watch them work, send them commands, and configure their goals/skills/MCP from one place.
 

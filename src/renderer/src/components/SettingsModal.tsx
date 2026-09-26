@@ -90,10 +90,10 @@ const slackLabelStyle: CSSProperties = {
 /** The exact connect walkthrough shown behind the i icon. Steps 6 & 7 spell out
  *  the both-lists requirement: subscribe to message.channels / message.groups in
  *  BOTH "Subscribe to bot events" AND "Subscribe to events on behalf of users". */
-const SLACK_CONNECT_STEPS = `Connect Munder Difflin to Slack
+const SLACK_CONNECT_STEPS = `Connect ATMT LAB to Slack
 
 1. api.slack.com/apps -> Create New App -> From scratch. Name it
-   "Munder Difflin" and pick your workspace.
+   "ATMT LAB" and pick your workspace.
 2. Basic Information -> Signing Secret -> copy it into the
    "Signing secret" field here.
 3. OAuth & Permissions -> Bot Token Scopes: add
@@ -115,7 +115,7 @@ const SLACK_CONNECT_STEPS = `Connect Munder Difflin to Slack
      message.channels
      message.groups
 8. Save Changes, reinstall if Slack prompts, then invite the bot
-   to your channel:  /invite @MunderDifflin`;
+   to your channel:  /invite @ATMTLAB`;
 
 /** The request/response contract shown behind the webhook i icon. Every webhook
  *  shares one server and one tunnel and is told apart by its id in the path, so
@@ -499,8 +499,8 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
   // --- Free Flow (voice dictation → message queue) ---
   const setFreeflowEnabledStore = useStore((s) => s.setFreeflowEnabled);
   const setHasGroqKeyStore = useStore((s) => s.setHasGroqKey);
-  // Talk (Realtime Michael) is gated on the OpenAI key — read the live presence
-  // boolean so the Realtime Michael section can show its enabled/disabled status.
+  // Talk (Realtime Ramon) is gated on the OpenAI key — read the live presence
+  // boolean so the Realtime Ramon section can show its enabled/disabled status.
   const hasOpenAiKey = useStore((s) => s.hasOpenAiKey);
   // Voice-tab entry for the SAME broker slot Agents & Models writes (apikey:openai).
   // Mirroring presence into the store on save is what makes the Talk button light up
@@ -1895,7 +1895,7 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                     </>
                   )}
 
-                  {/* VOICE — Free Flow dictation + Realtime Michael (v0.3.4: its own tab) */}
+                  {/* VOICE — Free Flow dictation + Realtime Ramon (v0.3.4: its own tab) */}
                   {activeSection === 'Voice' && (
                     <>
                       {/* Free Flow (voice dictation) */}
@@ -1972,7 +1972,7 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
 
                       <div style={sectionRule} />
 
-                      {/* Realtime Michael — voice device selection (rt-8) */}
+                      {/* Realtime Ramon — voice device selection (rt-8) */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         <div style={sectionHeadTight}>
                           {t('settings.voice.realtime')}

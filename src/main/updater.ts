@@ -4,6 +4,7 @@ import { request as httpsRequest } from 'node:https';
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readConfig } from './config';
+import { GITHUB_REPO } from '../shared/brand';
 import { DEFAULT_DROP_HTML } from '../shared/releaseDrop';
 import { reduceStatus, clampPercent, isNewer, installerUrl, shouldShowReleaseDrop, type UpdateStatus } from '../shared/updateState';
 
@@ -44,7 +45,7 @@ import { reduceStatus, clampPercent, isNewer, installerUrl, shouldShowReleaseDro
  *      downgrade is per-check, not a permanent latch.
  */
 
-const REPO = 'chaitanyagiri/munder-difflin';
+const REPO = GITHUB_REPO;
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h
 const FALLBACK_CACHE_MS = 60 * 60 * 1000;     // 1h between releases/latest polls
 
@@ -123,6 +124,7 @@ function emit(status: UpdateStatus): void {
 }
 
 function autoUpdateEnabled(): boolean {
+  if (!REPO) return false; // no release repo configured (shared/brand.ts)
   try {
     return readConfig().autoUpdate !== false; // default ON
   } catch {
@@ -188,13 +190,14 @@ export function pickDownloadAsset(
 
 /** Body of the release tagged v{version}, or undefined. Never throws. */
 function fetchReleaseBody(version: string, done: (notes: string | undefined) => void): void {
+  if (!REPO) { done(undefined); return; }
   try {
     const req = httpsRequest(
       {
         hostname: 'api.github.com',
         path: `/repos/${REPO}/releases/tags/v${version}`,
         method: 'GET',
-        headers: { 'User-Agent': 'munder-difflin-updater', Accept: 'application/vnd.github+json' },
+        headers: { 'User-Agent': 'atmt-lab-updater', Accept: 'application/vnd.github+json' },
         timeout: 10_000
       },
       (res) => {
@@ -217,6 +220,7 @@ function fetchReleaseBody(version: string, done: (notes: string | undefined) => 
 
 /** Notify-only check against releases/latest (no download). Never throws. */
 function fallbackCheck(reason: string | undefined, force = false): void {
+  if (!REPO) return;
   const now = Date.now();
   if (!force && now - lastFallbackCheck < FALLBACK_CACHE_MS) return;
   lastFallbackCheck = now;
@@ -226,7 +230,7 @@ function fallbackCheck(reason: string | undefined, force = false): void {
         hostname: 'api.github.com',
         path: `/repos/${REPO}/releases/latest`,
         method: 'GET',
-        headers: { 'User-Agent': 'munder-difflin-updater', Accept: 'application/vnd.github+json' },
+        headers: { 'User-Agent': 'atmt-lab-updater', Accept: 'application/vnd.github+json' },
         timeout: 10_000
       },
       (res) => {
@@ -290,6 +294,7 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
  * single blip no longer costs the session its ability to self-update.
  */
 async function runCheck(): Promise<{ ok: boolean; error?: string }> {
+  if (!REPO) { emit({ state: 'not-available' }); return { ok: true }; }
   emit({ state: 'checking' });
   try {
     // Hard-capped so a stalled feed request cannot leave the badge on 'checking'
@@ -343,10 +348,10 @@ async function runDownload(): Promise<{ ok: boolean; error?: string }> {
  *  shape instead (bold lead paragraph, then `### Fixed`) it returns ONE bullet —
  *  the lead paragraph, clipped mid-sentence. Verified against the published
  *  v0.4.4-rc.1 body: this shape yields the same 3 bullets the real toast shows. */
-const SIMULATED_NOTES = `# Munder Difflin v9.9.9
+const SIMULATED_NOTES = `# ATMT LAB v9.9.9
 
 **A local hive of Claude Code, Antigravity, Codex, Grok & Copilot agents that run themselves** —
-messaging, routing, and remembering, coordinated by your clone, Michael, who you talk to.
+messaging, routing, and remembering, coordinated by your clone, Ramon, who you talk to.
 
 ---
 

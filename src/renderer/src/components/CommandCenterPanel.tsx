@@ -38,7 +38,7 @@ import { canReceiveInbox } from '@shared/agentProvider';
 import { isComposingKey } from '@shared/imeGuard';
 import { useRtl } from '@/i18n/useDirection';
 
-/** Michael's control surface. Shown instead of the plain terminal/files panel
+/** Ramon's control surface. Shown instead of the plain terminal/files panel
  *  when the god agent is selected: terminal + queue, the floor roster (with
  *  per-agent model + dispatch + assistant access), a memory view, and a live
  *  activity feed / board / usage meter. */
@@ -364,11 +364,11 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
   const [engineProvider, setEngineProvider] = useState<AgentProvider>('claude');
   const [engineModel, setEngineModel] = useState<string | undefined>(undefined);
   const [restartErrors, setRestartErrors] = useState<Record<string, string>>({});
-  // The harness's own default model (Settings → default model). Michael and every
+  // The harness's own default model (Settings → default model). Ramon and every
   // new agent spawn on this, so the picker marks it — otherwise the only entry
   // reading "default" was the CLI's, which is a different thing entirely.
   const [defaultModel, setDefaultModel] = useState<string | undefined>(undefined);
-  const [dispatchTo, setDispatchTo] = useState<string>(''); // '' = Michael decides
+  const [dispatchTo, setDispatchTo] = useState<string>(''); // '' = Ramon decides
   const [dispatchText, setDispatchText] = useState('');
   const [dispatchMsg, setDispatchMsg] = useState<string | null>(null);
   // ── ISSUES section state ──
@@ -603,7 +603,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
   const assignIssue = (issue: GHIssue) => {
     const body = (issue.body ?? '').slice(0, 200);
     setDispatchText(`GitHub Issue #${issue.number}: ${issue.title}\n\n${body}\n\nURL: ${issue.url}`);
-    setDispatchTo(''); // Michael decomposes and assigns — no more broadcast blasts
+    setDispatchTo(''); // Ramon decomposes and assigns — no more broadcast blasts
   };
 
   // Set/clear one agent's token limit atomically in main. Renderer config objects

@@ -2,7 +2,7 @@
 
 ## Scope
 
-Munder Difflin is a **local-first desktop app**. It spawns local processes in PTYs and
+ATMT LAB is a **local-first desktop app**. It spawns local processes in PTYs and
 reads/writes files under directories you register. It opens **no network listeners
 beyond a local Unix domain socket** used for the in-app hook server, and has no auth or
 remote surface by design.
@@ -21,8 +21,8 @@ This is an early prototype. Security fixes target the `main` branch only.
 Please **do not** open a public issue for security problems.
 
 - Use GitHub's **private vulnerability reporting**: the *Security → Report a
-  vulnerability* tab on https://github.com/chaitanyagiri/munder-difflin, **or**
-- Email **girichaitanya11@gmail.com** with a description, reproduction steps, and
+  vulnerability* tab on https://github.com/automatika/atmt-lab, **or**
+- Email **hello@automatika.ph** with a description, reproduction steps, and
   impact.
 
 You can expect an acknowledgement within a few days. Once a fix is available we'll

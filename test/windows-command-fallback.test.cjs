@@ -83,7 +83,7 @@ test('Antigravity fallback preserves spaces and Unicode in LOCALAPPDATA', () => 
 });
 
 test('resolveCommand finds agy in its Windows LOCALAPPDATA install location', { skip: process.platform !== 'win32' }, (t) => {
-  const localAppData = fs.mkdtempSync(path.join(os.tmpdir(), 'munder-agy-'));
+  const localAppData = fs.mkdtempSync(path.join(os.tmpdir(), 'atmt-agy-'));
   const executable = path.join(localAppData, 'agy', 'bin', 'agy.exe');
   const previousLocalAppData = process.env.LOCALAPPDATA;
   const previousPath = process.env.PATH;

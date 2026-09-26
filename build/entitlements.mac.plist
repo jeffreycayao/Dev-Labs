@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <!-- Munder Difflin is NOT App-Sandboxed: it spawns `claude` agents and other
+  <!-- ATMT LAB is NOT App-Sandboxed: it spawns `claude` agents and other
        child processes that must read/write the user's own project folders.
        These hardened-runtime entitlements let Electron + node-pty run and let
        the spawned agents inherit this app's TCC responsibility, so the user is

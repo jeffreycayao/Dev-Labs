@@ -8,7 +8,7 @@
  * The chrome follows the landing site (docs/DESIGN.md), not the app's pixel
  * idiom and not a generic rounded sheet: warm paper, square corners, a thick
  * ink border, a hard offset shadow with no blur, and a dark mono title bar with
- * three square dots. It is the `.win` window from munderdiffl.in, so the moment
+ * three square dots. It is the `.win` window from automatika.ph, so the moment
  * a user opens the drop it reads as the same product they downloaded from.
  *
  * There is NO chrome button here, on purpose. The app frames the drop and gets
@@ -110,7 +110,7 @@ export function ReleaseDrop({ version, html, onDismiss }: ReleaseDropProps) {
     >
       <div
         role="dialog"
-        aria-label={`What's new in Munder Difflin ${version}`}
+        aria-label={`What's new in ATMT LAB ${version}`}
         onClick={(e) => e.stopPropagation()}
         style={{
           margin: 'auto',
@@ -148,7 +148,7 @@ export function ReleaseDrop({ version, html, onDismiss }: ReleaseDropProps) {
             textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden',
             textOverflow: 'ellipsis'
           }}>
-            Munder Difflin <span style={{ color: YELLOW }}>v{version.replace(/^v/, '')}</span>
+            ATMT LAB <span style={{ color: YELLOW }}>v{version.replace(/^v/, '')}</span>
             <span style={{ color: INK_FAINT, fontWeight: 500, marginLeft: 10, letterSpacing: '.12em' }}>
               / release notes
             </span>

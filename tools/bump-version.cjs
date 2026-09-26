@@ -1,0 +1,103 @@
+#!/usr/bin/env node
+/*
+ * Semver bump for releases: node tools/bump-version.cjs <patch|minor|major|auto> [--dry-run] [--no-git]
+ *
+ *   patch  0.0.1 -> 0.0.2   fixes only
+ *   minor  0.0.1 -> 0.1.0   new features, backwards compatible
+ *   major  0.0.1 -> 1.0.0   breaking changes
+ *   auto   picks from Conventional Commits since the last v* tag:
+ *          "BREAKING CHANGE" or "type!:" -> major, "feat:" -> minor, anything else -> patch
+ *
+ * Updates package.json + package-lock.json, prepends a CHANGELOG.md section
+ * (commit subjects since the last tag), then commits and tags vX.Y.Z when run
+ * inside a git repo. Tag push is left to you: git push --follow-tags
+ */
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..');
+const args = process.argv.slice(2);
+const kind = args.find((a) => !a.startsWith('--')) || 'patch';
+const dryRun = args.includes('--dry-run');
+const noGit = args.includes('--no-git');
+
+if (!['patch', 'minor', 'major', 'auto'].includes(kind)) {
+  console.error(`Unknown bump "${kind}". Use patch | minor | major | auto.`);
+  process.exit(1);
+}
+
+const git = (...a) => execFileSync('git', a, { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+let inGit = false;
+try { inGit = !noGit && git('rev-parse', '--is-inside-work-tree') === 'true'; } catch { /* not a repo */ }
+
+function lastTag() {
+  try { return git('describe', '--tags', '--abbrev=0', '--match', 'v[0-9]*'); } catch { return ''; }
+}
+
+function commitsSince(tag) {
+  if (!inGit) return [];
+  try {
+    const range = tag ? `${tag}..HEAD` : 'HEAD';
+    const out = git('log', range, '--format=%s%x1f%b%x1e');
+    return out.split('\x1e').map((c) => c.trim()).filter(Boolean).map((c) => {
+      const [subject, body = ''] = c.split('\x1f');
+      return { subject: subject.trim(), body };
+    });
+  } catch { return []; }
+}
+
+function detect(commits) {
+  if (commits.some((c) => /BREAKING[ -]CHANGE/.test(c.body) || /^\w+(\(.+\))?!:/.test(c.subject))) return 'major';
+  if (commits.some((c) => /^feat(\(.+\))?:/.test(c.subject))) return 'minor';
+  return 'patch';
+}
+
+function bump(version, level) {
+  const [maj, min, pat] = version.split('-')[0].split('.').map(Number);
+  if ([maj, min, pat].some(Number.isNaN)) throw new Error(`package.json version "${version}" is not semver`);
+  if (level === 'major') return `${maj + 1}.0.0`;
+  if (level === 'minor') return `${maj}.${min + 1}.0`;
+  return `${maj}.${min}.${pat + 1}`;
+}
+
+const pkgPath = path.join(root, 'package.json');
+const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+const tag = lastTag();
+const commits = commitsSince(tag);
+const level = kind === 'auto' ? detect(commits) : kind;
+const next = bump(pkg.version, level);
+
+console.log(`${pkg.version} -> ${next} (${level}${kind === 'auto' ? `, from ${commits.length} commit(s) since ${tag || 'start'}` : ''})`);
+if (dryRun) process.exit(0);
+
+pkg.version = next;
+fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+
+const lockPath = path.join(root, 'package-lock.json');
+if (fs.existsSync(lockPath)) {
+  const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
+  lock.version = next;
+  if (lock.packages && lock.packages['']) lock.packages[''].version = next;
+  fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + '\n');
+}
+
+const changelogPath = path.join(root, 'CHANGELOG.md');
+const date = new Date().toISOString().slice(0, 10);
+const bullets = commits.length
+  ? commits.filter((c) => !/^chore\(release\)/.test(c.subject)).map((c) => `- ${c.subject}`).join('\n')
+  : '- Maintenance release.';
+const section = `## v${next} — ${date}\n\n${bullets}\n\n`;
+const existing = fs.existsSync(changelogPath) ? fs.readFileSync(changelogPath, 'utf8') : '# Changelog\n\n';
+const headerEnd = existing.indexOf('\n## ');
+fs.writeFileSync(
+  changelogPath,
+  headerEnd === -1 ? existing.trimEnd() + '\n\n' + section : existing.slice(0, headerEnd + 1) + section + existing.slice(headerEnd + 1)
+);
+
+if (inGit) {
+  git('add', 'package.json', 'package-lock.json', 'CHANGELOG.md');
+  git('commit', '-m', `chore(release): v${next}`);
+  git('tag', '-a', `v${next}`, '-m', `v${next}`);
+  console.log(`Committed and tagged v${next}. Push with: git push --follow-tags`);
+}

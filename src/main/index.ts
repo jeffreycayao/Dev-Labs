@@ -85,6 +85,7 @@ import { toolCatalog, type ToolStatus } from '../shared/toolCatalog';
 import { listLocalSkills, loadCatalog, installSkill, uninstallSkill, type LocalSkill } from './skills';
 import { loadHero } from './hero';
 import { loadModelCatalog } from './modelCatalog';
+import { listLiveModels } from './cliModels';
 import {
   CODEX_REMOTE_SOCKET_RELATIVE,
   codexRemoteAliasPath,
@@ -3547,6 +3548,8 @@ ipcMain.handle('hero:payload', async (_evt, force: unknown) =>
 const MODEL_CATALOG_CACHE = () => join(app.getPath('userData'), 'model-catalog.json');
 ipcMain.handle('models:catalog', async (_evt, force: unknown) =>
   loadModelCatalog(MODEL_CATALOG_CACHE(), { force: force === true }));
+/** Models the installed CLIs report for the user's own credentials (see cliModels). */
+ipcMain.handle('models:live', async (_evt, force: unknown) => listLiveModels(force === true));
 
 // ─── IPC: skills (installed locally, and the browsable catalog) ─────────────
 /** Skills the CLIs on this machine can already use. Scans the registered repos

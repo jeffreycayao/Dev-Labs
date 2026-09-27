@@ -242,6 +242,35 @@ const BAKED: ModelCatalog = modelCatalog;
  *  function call, so a refresh reaches the next render with no plumbing. */
 let CATALOG: ModelCatalog = BAKED;
 
+/** Models the installed CLIs report live (main → cliModels.ts), per provider.
+ *  Appended after the curated entries; never replaces them. */
+let LIVE: Record<string, CatalogModel[]> = {};
+
+function withLive(providers: Record<string, CatalogModel[]>): Record<string, CatalogModel[]> {
+  const out: Record<string, CatalogModel[]> = { ...providers };
+  for (const [p, live] of Object.entries(LIVE)) {
+    const base = out[p] ?? [];
+    const ids = new Set(base.map((m) => m.id));
+    out[p] = [...base, ...live.filter((m) => m.id && !ids.has(m.id))];
+  }
+  return out;
+}
+
+/** Ask main for live CLI models and fire MODEL_CATALOG_EVENT when they change. */
+export async function refreshLiveModels(force = false): Promise<boolean> {
+  try {
+    const bridge = (globalThis as { cth?: { modelsLive?: (force?: boolean) => Promise<Record<string, CatalogModel[]>> } }).cth;
+    if (!bridge?.modelsLive) return false;
+    const next = await bridge.modelsLive(force);
+    if (JSON.stringify(next) === JSON.stringify(LIVE)) return false;
+    LIVE = next;
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(MODEL_CATALOG_EVENT));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Merge a validated remote catalog over the baked one.
  *
  *  Per PROVIDER, not per model: a provider present in the remote copy replaces
@@ -292,7 +321,7 @@ export async function refreshModelCatalog(force = false): Promise<boolean> {
 // the usual case — main pre-warmed the cache at startup, this resolves in a few
 // ms, no modal is open yet — needs no subscription at all. A catalog that lands
 // while a picker is already open reaches it on that picker's next render.
-if (typeof window !== 'undefined') void refreshModelCatalog();
+if (typeof window !== 'undefined') { void refreshModelCatalog(); void refreshLiveModels(); }
 
 declare const __APP_VERSION__: string | undefined;
 
@@ -323,7 +352,7 @@ function offeredAtVersion(model: CatalogModel, appVersion: string): boolean {
 export function modelsForProviderAtVersion(
   provider: AgentProvider,
   appVersion: string,
-  providers: Record<string, CatalogModel[]> = CATALOG.providers
+  providers: Record<string, CatalogModel[]> = withLive(CATALOG.providers)
 ): ModelOption[] {
   // An unknown provider falls back to the Claude list, as the hardcoded dispatch
   // did. 'custom' is a real key holding an empty list, not a missing one.

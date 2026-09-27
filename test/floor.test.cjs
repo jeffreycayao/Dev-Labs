@@ -204,3 +204,10 @@ test('connectors a floor asks for are shown, never enabled', () => {
   assert.doesNotMatch(modal, /mcpDefaults\s*:/, 'import never writes consent');
   assert.doesNotMatch(modal, /setMcpSecret|mcpSecret:/);
 });
+
+test('a building holds at most 200 open floors, the first floor included', () => {
+  assert.equal(fl.BUILDING_MAX_FLOORS, 200);
+  assert.equal(fl.canAddFloor(1), true);
+  assert.equal(fl.canAddFloor(199), true, 'the 200th floor can open');
+  assert.equal(fl.canAddFloor(200), false, 'the 201st cannot');
+});

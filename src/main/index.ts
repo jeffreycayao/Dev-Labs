@@ -73,7 +73,7 @@ import { inboxNudgeText } from '../shared/hiveNudge';
 import { resolveGodName } from '../shared/godIdentity';
 import { fetchHireManifest, readHireManifestFiles, fetchFloorManifest, readFloorManifestFile, type FloorResult } from './hire';
 import { parseHireDeepLink, type HireManifest } from '../shared/hire';
-import { parseFloorDeepLink, validateFloorManifest, floorFileName, FLOOR_MAX_BYTES } from '../shared/floor';
+import { parseFloorDeepLink, validateFloorManifest, floorFileName, FLOOR_MAX_BYTES, BUILDING_MAX_FLOORS, canAddFloor } from '../shared/floor';
 import { ClosingTimeController } from './closingTime';
 import {
   argsWithAutoModeFlag,
@@ -2647,11 +2647,21 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
   return win;
 }
 
-/** Open a new floor window — gated by the multiWindow flag. Returns the window,
- *  or null when the feature is off (the entry points are hidden in that case,
- *  but the IPC stays defensive). */
+/** Open a new floor window — gated by the multiWindow flag and capped at
+ *  BUILDING_MAX_FLOORS open floors. Returns the window, or null when the
+ *  feature is off (the entry points are hidden in that case, but the IPC
+ *  stays defensive) or the building is full. */
 function openFloor(): BrowserWindow | null {
   if (!readConfig().multiWindow) return null;
+  const open = [...allWindows].filter((w) => !w.isDestroyed()).length;
+  if (!canAddFloor(open)) {
+    void dialog.showMessageBox({
+      type: 'info',
+      message: 'Your building is full',
+      detail: `ATMT Labs runs up to ${BUILDING_MAX_FLOORS} floors at once. Close a floor you no longer need, then open a new one.`
+    });
+    return null;
+  }
   return createWindow({ floor: true });
 }
 

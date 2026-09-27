@@ -6,7 +6,8 @@ import { SpritePortrait } from './SpritePortrait';
 import { Icon } from './Icon';
 import { ProviderLogo } from './ProviderLogo';
 import { useStore, type Agent } from '@/store/store';
-import { OFFICE_CAST, DEFAULT_CHARACTER, type OfficeCharacterName } from '@/scene/office/cast';
+import { OFFICE_CAST, CAST_BY_NAME, DEFAULT_CHARACTER, type OfficeCharacterName } from '@/scene/office/cast';
+import { templatesFor, type TemplateTrack } from '@shared/agentTemplates';
 import { type AccentColorName } from '@/design/tokens';
 import type { HireManifest } from '@shared/hire';
 import { hireQueueProgress } from '@shared/hireQueue';
@@ -91,7 +92,7 @@ Return EXACTLY this shape (omit optional fields you don't need; keep the spec st
 
 {
   "spec": "atmt-labs/hire@1",
-  "name": "Jim",
+  "name": "Paolo",
   "description": "one-line role — what this agent is for",
   "goal": "standing directive injected on every prompt — specific and outcome-oriented",
   "provider": "claude",
@@ -188,7 +189,11 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
   const initialProvider = inferAgentProvider(config.defaultCommand);
   const initialModel = isClaudeProvider(initialProvider) ? config.defaultModel : undefined;
 
-  const [name, setName] = useState(pendingHire?.name ?? 'Jim');
+  const [name, setName] = useState(pendingHire?.name ?? CAST_BY_NAME[DEFAULT_CHARACTER].displayName);
+  // Role templates: default tab follows the onboarding audience; both tracks stay available.
+  const floorTrack: TemplateTrack = config.audience === 'non-technical' ? 'non-technical' : 'technical';
+  const [templateTrack, setTemplateTrack] = useState<TemplateTrack>(floorTrack);
+  const [templateId, setTemplateId] = useState<string | null>(null);
   const [character, setCharacter] = useState<OfficeCharacterName>(knownCharacter(pendingHire?.character));
   const [accent, setAccent] = useState<AccentColorName>(knownAccent(pendingHire?.accent));
   const [cwd, setCwd] = useState<string>(config.registeredRepos[0] ?? '');
@@ -541,7 +546,7 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
               }}>
                 <span>
                   📋 {tr('addAgent.hireImported')} <strong>{hireMeta.name}</strong>
-                  {hireMeta.author ? <> · {tr('addAgent.byAuthor', { author: hireMeta.author })}</> : null}
+                  {hireMeta.author ? <>{tr('addAgent.byAuthor', { author: hireMeta.author })}</> : null}
                   {reviewProgress ? <> · {tr('addAgent.hireProgress', { current: reviewProgress.current, total: reviewProgress.total })}</> : null}
                 </span>
                 <span>{tr('addAgent.reviewFields')}</span>
@@ -1138,6 +1143,61 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
                 </div>
               )}
             </div>
+
+            {/* Role templates — ready-made hires by role (technical + non-technical) */}
+            {!pendingHire && (
+              <div style={{
+                padding: '8px 10px',
+                background: 'var(--cth-cream-100)',
+                boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
+                display: 'flex', flexDirection: 'column', gap: 8
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: 'var(--cth-font-display)', fontSize: 9, letterSpacing: '.08em', color: 'var(--cth-ink-900)' }}>
+                    {tr('addAgent.templatesTitle')}
+                  </span>
+                  <div style={{ flex: 1 }} />
+                  {(['technical', 'non-technical'] as const).map((track) => (
+                    <button
+                      key={track}
+                      onClick={() => setTemplateTrack(track)}
+                      style={{
+                        padding: '2px 8px 1px', border: 'none', cursor: 'pointer',
+                        background: templateTrack === track ? 'var(--cth-lemon)' : 'var(--cth-cream-200)',
+                        color: templateTrack === track ? 'var(--cth-on-accent)' : 'var(--cth-ink-900)',
+                        boxShadow: 'inset 0 0 0 1px var(--cth-ink-100)',
+                        fontFamily: 'var(--cth-font-ui)', fontSize: 12
+                      }}
+                    >
+                      {tr(track === 'technical' ? 'addAgent.templatesTechnical' : 'addAgent.templatesNonTechnical')}
+                      {track === floorTrack ? ` · ${tr('addAgent.templatesYourFloor')}` : ''}
+                    </button>
+                  ))}
+                </div>
+                <span style={{ fontSize: 12, color: 'var(--cth-ink-500)', lineHeight: '16px' }}>
+                  {tr('addAgent.templatesHint')}
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {templatesFor(templateTrack).map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      onClick={() => { applyManifest(tpl.manifest); setTemplateId(tpl.id); }}
+                      title={tpl.manifest.goal}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '3px 8px 3px 4px', border: 'none', cursor: 'pointer',
+                        background: templateId === tpl.id ? 'var(--cth-lemon-light)' : 'var(--cth-paper-100)',
+                        boxShadow: templateId === tpl.id ? 'inset 0 0 0 1px var(--cth-lemon)' : 'inset 0 0 0 1px var(--cth-ink-100)',
+                        fontFamily: 'var(--cth-font-ui)', fontSize: 12, color: 'var(--cth-ink-900)'
+                      }}
+                    >
+                      <SpritePortrait character={knownCharacter(tpl.manifest.character)} scale={1} />
+                      {tpl.role}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
               <PixelButton

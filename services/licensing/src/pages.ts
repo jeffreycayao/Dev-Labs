@@ -12,7 +12,7 @@ export const PAGE_HEADERS: Record<string, string> = {
   'content-type': 'text/html; charset=utf-8',
   'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; base-uri 'none'",
   'x-content-type-options': 'nosniff',
-  'referrer-policy': 'no-referrer',
+  'referrer-policy': 'same-origin',
   'cache-control': 'no-store'
 };
 

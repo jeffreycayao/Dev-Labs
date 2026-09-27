@@ -37,7 +37,7 @@ export function rawRepoUrl(path: string): string {
  * `enabled` is true while `publicKeys` is empty.
  */
 export const LICENSING = {
-  enabled: false,
+  enabled: true,
   siteOrigin: 'https://labs.atmt.dev',
   authOrigin: 'https://auth.labs.atmt.dev',
   apiOrigin: 'https://api.labs.atmt.dev',
@@ -53,5 +53,9 @@ export const LICENSING = {
    * rotate its signing key without stranding installed builds: ship the new
    * key here one release BEFORE the server starts signing with it.
    */
-  publicKeys: {} as Record<string, string>
+  publicKeys: {
+    k20260927: `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAWe0WtYpoCG5kHxb7xxECITj0BAcx2qChmUmcolYXJfY=
+-----END PUBLIC KEY-----`
+  } as Record<string, string>
 } as const;

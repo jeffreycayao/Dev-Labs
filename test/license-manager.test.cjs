@@ -56,6 +56,7 @@ function backend(clock) {
     const authz = init.headers?.authorization?.replace(/^Bearer /, '');
     if (u.href === 'https://auth.test/oauth/token') {
       if (form.grant_type === 'authorization_code') {
+        s.exchangeRedirect = form.redirect_uri;
         const challenge = s.codes.get(form.code);
         s.codes.delete(form.code);
         const ok = challenge && createHash('sha256').update(form.code_verifier).digest('base64url') === challenge;
@@ -99,13 +100,14 @@ function backend(clock) {
   return s;
 }
 
-function harness({ enforced = true, keys = { k1: PEM }, stored = {}, machine = 'machine-A' } = {}) {
+function harness({ enforced = true, keys = { k1: PEM }, stored = {}, machine = 'machine-A', loopback } = {}) {
   const clock = { now: T0 };
   const api = backend(clock);
   const disk = { data: { ...stored } };
   const opened = [];
   const timers = [];
   const m = new LicenseManager({
+    ...(loopback ? { listenLoopback: loopback } : {}),
     enforced,
     endpoints: {
       siteOrigin: 'https://site.test', authOrigin: 'https://auth.test', apiOrigin: 'https://api.test',
@@ -175,6 +177,81 @@ test('browser sign-in with PKCE ends licensed with the refresh token persisted',
   assert.equal(new URL(h.opened[0]).searchParams.get('screen_hint'), 'signup');
   assert.deepEqual(seen.slice(0, 1), ['signing_in']);
   assert.equal(seen.at(-1), 'licensed');
+});
+
+// ── RFC 8252 loopback sign-in ────────────────────────────────────────────────
+
+/** A fake loopback listener: records the callback handler and closes. */
+function fakeLoopback(port = 50123) {
+  const l = { handler: null, closed: 0, started: 0 };
+  l.listen = async (onCallback) => {
+    l.started++;
+    l.handler = onCallback;
+    return { redirectUri: `http://127.0.0.1:${port}/callback`, close: () => { l.closed++; } };
+  };
+  return l;
+}
+
+test('loopback sign-in: authorize + exchange use the 127.0.0.1 redirect, listener closes', async () => {
+  const lb = fakeLoopback();
+  const h = harness({ loopback: lb.listen });
+  h.m.init();
+  await h.m.beginSignIn();
+  const auth = new URL(h.opened.at(-1));
+  assert.equal(auth.searchParams.get('redirect_uri'), 'http://127.0.0.1:50123/callback');
+  h.api.codes.set('code-1', auth.searchParams.get('code_challenge'));
+  const status = await lb.handler(`http://127.0.0.1:50123/callback?code=code-1&state=${auth.searchParams.get('state')}`);
+  assert.equal(status.state, 'licensed');
+  assert.equal(h.api.exchangeRedirect, 'http://127.0.0.1:50123/callback', 'the code is redeemed with the URI it was issued for');
+  assert.equal(lb.closed, 1);
+});
+
+test('loopback listener failing to start falls back to atmtlabs://', async () => {
+  const h = harness({ loopback: async () => { throw new Error('EACCES'); } });
+  h.m.init();
+  assert.equal(await signIn(h), true);
+  assert.equal(new URL(h.opened[0]).searchParams.get('redirect_uri'), 'atmtlabs://auth/callback');
+  assert.equal(h.api.exchangeRedirect, 'atmtlabs://auth/callback');
+  assert.equal(h.m.getStatus().state, 'licensed');
+});
+
+test('loopback: a wrong-state request is dropped and the listener stays open', async () => {
+  const lb = fakeLoopback();
+  const h = harness({ loopback: lb.listen });
+  h.m.init();
+  await h.m.beginSignIn();
+  const status = await lb.handler('http://127.0.0.1:50123/callback?code=x&state=forged');
+  assert.equal(status.state, 'signing_in');
+  assert.equal(lb.closed, 0);
+  assert.equal(h.api.calls.length, 0, 'a forged callback must not reach the token endpoint');
+});
+
+test('loopback: cancel, restart and timeout all close the listener', async () => {
+  const lb = fakeLoopback();
+  const h = harness({ loopback: lb.listen });
+  h.m.init();
+  await h.m.beginSignIn();
+  h.m.cancelSignIn();
+  assert.equal(lb.closed, 1);
+  await h.m.beginSignIn();
+  await h.m.beginSignIn(); // pressing Sign in again replaces the first listener
+  assert.equal(lb.closed, 2);
+  await h.runTimers(T0 + SIGN_IN_TIMEOUT_MS + 1);
+  assert.equal(lb.closed, 3);
+  assert.equal(h.m.getStatus().error, 'sign_in_timeout');
+});
+
+test('loopback: the old atmtlabs:// link still completes a loopback sign-in only with the right state', async () => {
+  const lb = fakeLoopback();
+  const h = harness({ loopback: lb.listen });
+  h.m.init();
+  await h.m.beginSignIn();
+  const auth = new URL(h.opened.at(-1));
+  h.api.codes.set('code-1', auth.searchParams.get('code_challenge'));
+  // The server only ever sends this sign-in's code to the loopback URI; a
+  // scheme callback with the right state is still exchanged with that URI.
+  await h.m.handleCallback(`atmtlabs://auth/callback?code=code-1&state=${auth.searchParams.get('state')}`);
+  assert.equal(h.api.exchangeRedirect, 'http://127.0.0.1:50123/callback');
 });
 
 test('a callback with the wrong state is dropped and the sign-in keeps waiting', async () => {

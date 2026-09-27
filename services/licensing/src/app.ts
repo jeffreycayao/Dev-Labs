@@ -107,34 +107,53 @@ export function createApp(deps: AppDeps): Hono {
   }
 
   // ─── desktop OAuth: authorize ───────────────────────────────────────────
-  interface AuthzFlow { state: string; challenge: string }
+  interface AuthzFlow { state: string; challenge: string; redirectUri?: string }
+
+  /** The registered custom scheme, or a loopback redirect on any port
+   *  (RFC 8252 §7.3). The loopback one is what the app uses: a plain http
+   *  navigation needs no OS scheme registration, which browsers are
+   *  unreliable about. Only the literal 127.0.0.1 — never "localhost", which
+   *  DNS or a hosts file could point elsewhere. */
+  function allowedRedirect(uri: string | undefined): uri is string {
+    if (!uri) return false;
+    if (uri === cfg.desktop.redirectUri) return true;
+    const m = /^http:\/\/127\.0\.0\.1:(\d{4,5})\/callback$/.exec(uri);
+    return !!m && Number(m[1]) >= 1024 && Number(m[1]) <= 65535;
+  }
+
+  const isLoopback = (uri: string) => uri.startsWith('http://127.0.0.1:');
 
   async function issueCodeAndReturn(c: Context, accountId: string, flow: AuthzFlow) {
+    const redirectUri = flow.redirectUri ?? cfg.desktop.redirectUri;
     const code = randomToken();
     await store.createAuthCode({
       codeHash: sha256(code),
       accountId,
       clientId: cfg.desktop.clientId,
-      redirectUri: cfg.desktop.redirectUri,
+      redirectUri,
       codeChallenge: flow.challenge,
       expiresAt: new Date(now() + CODE_TTL_MS)
     });
     deleteCookie(c, AUTHZ_COOKIE, cookieOpts);
-    const url = `${cfg.desktop.redirectUri}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(flow.state)}`;
-    return html(c, returnToAppPage(url));
+    const url = `${redirectUri}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(flow.state)}`;
+    // Loopback: a plain redirect; the app's one-shot listener shows the
+    // "you're signed in" page. Custom scheme: a page with a button, because
+    // browsers may ask before handing a scheme to an app.
+    return isLoopback(redirectUri) ? c.redirect(url, 302) : html(c, returnToAppPage(url));
   }
 
   app.get('/oauth/authorize', async (c) => {
     const q = c.req.query();
-    if (q.client_id !== cfg.desktop.clientId || q.redirect_uri !== cfg.desktop.redirectUri) {
+    if (q.client_id !== cfg.desktop.clientId || !allowedRedirect(q.redirect_uri)) {
       // Never redirect to an unregistered URI.
       return html(c, messagePage('Invalid sign-in request', 'Open ATMT Labs and press Sign in again.'), 400);
     }
-    const back = (error: string) => c.redirect(`${cfg.desktop.redirectUri}?error=${error}&state=${encodeURIComponent(q.state ?? '')}`, 302);
+    const redirectUri = q.redirect_uri;
+    const back = (error: string) => c.redirect(`${redirectUri}?error=${error}&state=${encodeURIComponent(q.state ?? '')}`, 302);
     if (q.response_type !== 'code') return back('unsupported_response_type');
     if (q.code_challenge_method !== 'S256' || !/^[A-Za-z0-9_-]{43}$/.test(q.code_challenge ?? '')) return back('invalid_request');
     if (!q.state || q.state.length > 512) return back('invalid_request');
-    const flow: AuthzFlow = { state: q.state, challenge: q.code_challenge };
+    const flow: AuthzFlow = { state: q.state, challenge: q.code_challenge, redirectUri };
     const acct = await sessionAccount(c);
     if (acct) return issueCodeAndReturn(c, acct.id, flow);
     await writeFlow(c, AUTHZ_COOKIE, flow);
@@ -165,7 +184,8 @@ export function createApp(deps: AppDeps): Hono {
     const f = (await c.req.parseBody()) as Record<string, string>;
     if (f.client_id !== cfg.desktop.clientId) return oauthJson(c, { error: 'invalid_client' }, 401);
     if (f.grant_type === 'authorization_code') {
-      if (!f.code || !f.code_verifier || f.redirect_uri !== cfg.desktop.redirectUri) return oauthJson(c, { error: 'invalid_request' }, 400);
+      // The code row pins the exact redirect_uri it was issued for (below).
+      if (!f.code || !f.code_verifier || !allowedRedirect(f.redirect_uri)) return oauthJson(c, { error: 'invalid_request' }, 400);
       const row = await store.consumeAuthCode(sha256(f.code), new Date(now()));
       if (!row || row.client_id !== f.client_id || row.redirect_uri !== f.redirect_uri || pkceS256(f.code_verifier) !== row.code_challenge) {
         return oauthJson(c, { error: 'invalid_grant' }, 400);

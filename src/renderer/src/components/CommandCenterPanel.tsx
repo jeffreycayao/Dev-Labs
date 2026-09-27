@@ -12,7 +12,8 @@ import { TriggersTab } from './triggers/TriggersTab';
 import { TriggerHistoryTab } from './triggers/TriggerHistoryTab';
 import { WorkersTab } from './WorkersTab';
 import { SkillsTab } from './SkillsTab';
-import { acquireTerminal, disposeTerminal, resetTerminal } from './terminalPool';
+import { acquireTerminal, armTerminalStartupGuard, disposeTerminal, resetTerminal } from './terminalPool';
+import { spawnAndObservePty } from './ptyStartup';
 import { terminalInstanceKey } from './terminalRecovery';
 import { Icon } from './Icon';
 import { MemoryGraphPanel } from './MemoryGraphPanel';
@@ -319,7 +320,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
             <Centered>{t('commandCenter.noTerminal', { name: agent.name })}</Centered>
           )
         )}
-        {tab === 'floor' && <FloorTab seed={dispatchSeed} />}
+        {tab === 'floor' && <FloorTab seed={dispatchSeed} onOpenTerminal={() => setTab('terminal')} />}
         {tab === 'tasks' && <TasksKanban />}
         {tab === 'human' && <AskMeTab />}
         {tab === 'triggers' && <TriggersTab />}
@@ -343,7 +344,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
 
 // ─── Floor tab — roster, model, dispatch, dirs, assistant ────────────────────
 
-function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
+function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number }; onOpenTerminal: () => void }) {
   const { t } = useTranslation();
   const rtl = useRtl();
   const agents = useStore((s) => s.agents);
@@ -415,9 +416,20 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
       resumeOptional?: boolean;
     } = {}
   ) => {
-    if (!a.ptyId) return;
+    const ptyId = a.ptyId;
+    if (!ptyId) return;
     setRestarting(a.id);
     setRestartErrors((errors) => ({ ...errors, [a.id]: '' }));
+    let previous: {
+      provider: AgentProvider;
+      command: string;
+      model: string | undefined;
+      sessionId: string | undefined;
+      cols: number;
+      rows: number;
+      wasRunning: boolean;
+      stopped: boolean;
+    } | undefined;
     try {
       const cfg = await window.cth.getConfig();
       // Respawn on the same CLI this agent already runs on (inferred from its
@@ -426,10 +438,21 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
       // opts.provider overrides the inferred provider — used when changing GOD's engine.
       const previousProvider = inferAgentProvider(a.command, a.provider);
       const provider = opts.provider ?? previousProvider;
+      const command = buildSpawnCommand(cfg, model, provider);
+      const [exe, ...args] = tokenizeCommand(command.trim());
+      if (!exe) throw new Error('No command configured for this engine.');
+      if (!(await window.cth.isPtyCommandAvailable(exe))) {
+        throw new Error(`${providerPreset(provider).label} is not installed. Install its CLI before switching this agent.`);
+      }
+      if (a.isGod && opts.provider !== undefined && model
+        && !modelsForProvider(provider).some((option) => option.id === model)) {
+        throw new Error(`${providerPreset(provider).label} model "${model}" is no longer offered. Choose a model from the list.`);
+      }
       let resume = opts.resume === true && provider === previousProvider;
       if (opts.resume && !resume && !opts.resumeOptional) {
         throw new Error('Cannot resume a session through a different provider.');
       }
+      const registry = await window.cth.hiveRegistry();
       let resumeSessionId: string | undefined;
       if (resume) {
         // A precondition miss is fatal for an explicit "continue", and merely
@@ -439,7 +462,6 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
           resume = false;
           resumeSessionId = undefined;
         };
-        const registry = await window.cth.hiveRegistry();
         resumeSessionId = registry.agents[a.id]?.sessionId;
         if (!resumeSessionId) {
           giveUpOnResume('No recorded session ID; current process was left running.');
@@ -450,7 +472,7 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
       // Capture the live grid before replacing anything. Restart & Continue
       // recreates only this agent's xterm; model changes retain the old
       // in-place reset behavior.
-      const oldEntry = acquireTerminal(a.ptyId);
+      const oldEntry = acquireTerminal(ptyId);
       let cols = oldEntry.term.cols || 100;
       let rows = oldEntry.term.rows || 30;
       try {
@@ -458,8 +480,18 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
         cols = oldEntry.term.cols;
         rows = oldEntry.term.rows;
       } catch { /* host not sized yet */ }
+      previous = {
+        provider: previousProvider,
+        command: a.command?.trim() || buildSpawnCommand(cfg, a.model, previousProvider),
+        model: a.model,
+        sessionId: registry.agents[a.id]?.sessionId,
+        cols,
+        rows,
+        wasRunning: (await window.cth.listPtys()).some((pty) => pty.id === ptyId),
+        stopped: false
+      };
 
-      const killed = await window.cth.killPty(a.ptyId);
+      const killed = await window.cth.killPty(ptyId);
       // A pty that is ALREADY gone is the state this kill was trying to reach, so
       // it is not a failure. This is the single most common way to arrive at
       // "Restart & Continue": the session died on its own — a crash, or Ctrl-C
@@ -469,11 +501,13 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
       if (!killed.ok && !/^no pty:/.test(killed.error ?? '')) {
         throw new Error(killed.error ?? 'Could not stop the current process.');
       }
+      previous.stopped = true;
+      // Queue delivery ends with Enter. Hold it while a new CLI starts: that
+      // Enter could otherwise answer Codex's folder-trust question.
+      updateAgent(a.id, { status: 'waiting', action: 'starting engine…' });
       if (!resume) {
-        resetTerminal(a.ptyId);
+        resetTerminal(ptyId);
       }
-      const command = buildSpawnCommand(cfg, model, provider);
-      const [exe, ...args] = tokenizeCommand(command.trim());
       const hive = {
         id: a.id,
         name: a.name,
@@ -483,8 +517,9 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
         isAssistant: a.isAssistant,
         role: roleForHiveSpawn(a)
       };
-      const res = await window.cth.spawnPty({
-        id: a.ptyId,
+      if (provider === 'codex') armTerminalStartupGuard(ptyId);
+      const { result: res, startup } = await spawnAndObservePty(ptyId, window.cth, () => window.cth.spawnPty({
+        id: ptyId,
         cwd: a.cwd,
         command: exe,
         args,
@@ -494,13 +529,27 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
         hive,
         resume,
         resumeSessionId,
-        requireResume: resume
-      });
+        requireResume: resume,
+        noAutoInstall: true
+      }));
       if (!res.ok) throw new Error(res.error ?? 'Restart failed.');
+      if (res.setup) {
+        throw new Error(`${providerPreset(provider).label} is not installed. Install its CLI, then try again.`);
+      }
       if (resume && res.resumed !== true) {
         throw new Error('Resume was refused; no replacement session was accepted.');
       }
-      if (resume) {
+      if (startup?.kind === 'exited') {
+        const detail = startup.output.split('\n').map((line) => line.trim())
+          .filter((line) => /error|failed|not supported|sign in/i.test(line)).at(-1);
+        throw new Error(`${providerPreset(provider).label} exited during startup${startup.exitCode === undefined ? '' : ` (code ${startup.exitCode})`}.${detail ? ` ${detail.slice(0, 220)}` : ''}`);
+      }
+      if (a.isGod && opts.provider !== undefined) {
+        await window.cth.updateConfig({ godProvider: provider, godModel: model });
+      }
+      // Keep an interactive startup menu on the existing terminal: recreating
+      // xterm here would discard the very first frame the person must answer.
+      if (resume && startup?.kind !== 'needs-input') {
         // The replacement is accepted, so NOW it is safe to throw the old
         // terminal away. (It used to run BEFORE spawnPty, so one of the throws
         // above left a fresh blank xterm in the pool with the scrollback gone
@@ -509,8 +558,11 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
         // renderer/DOM/subscription state even after its PTY is healthy, which
         // is why the resume path replaces it at all; the spawn answer beat the
         // CLI's first frame, so no startup output can be missed.
-        disposeTerminal(a.ptyId);
-        acquireTerminal(a.ptyId);
+        disposeTerminal(ptyId);
+        // Re-arm the Codex menu guard on the replacement xterm. A first-run
+        // trust/sign-in prompt can arrive after the six-second spawn check.
+        if (provider === 'codex') armTerminalStartupGuard(ptyId);
+        else acquireTerminal(ptyId);
         // Bump the key so React remounts only this agent's terminal card; the
         // remount's attach re-requests a PTY redraw for anything it raced.
         updateAgent(a.id, {
@@ -532,22 +584,84 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
               command: command.trim(),
               provider,
               model,
-              status: 'idle' as const,
-              action: 'continuing…'
+              status: startup?.kind === 'needs-input' ? (a.isGod ? 'blocked' as const : 'waiting' as const) : 'idle' as const,
+              action: startup?.kind === 'needs-input' ? 'Complete engine setup in Terminal' : 'continuing…'
             }
           : {
               command: command.trim(),
               provider,
               model,
-              status: 'idle' as const,
-              action: provider === previousProvider ? 'restarting…' : `switching to ${providerPreset(provider).label}…`
+              status: startup?.kind === 'needs-input' ? (a.isGod ? 'blocked' as const : 'waiting' as const) : 'idle' as const,
+              action: startup?.kind === 'needs-input'
+                ? 'Complete engine setup in Terminal'
+                : provider === previousProvider ? 'restarting…' : `switching to ${providerPreset(provider).label}…`
             };
         updateAgent(a.id, patch);
       }
+      if (res.setup || provider === 'codex' || provider !== previousProvider || startup?.kind === 'needs-input') {
+        if (a.isGod) onOpenTerminal();
+        else select(a.id);
+      }
     } catch (error) {
+      let restoreError = '';
+      const prior = previous;
+      if (prior?.stopped && prior.wasRunning) {
+        try {
+          await window.cth.killPty(ptyId);
+          resetTerminal(ptyId);
+          const [oldExe, ...oldArgs] = tokenizeCommand(prior.command);
+          if (prior.provider === 'codex') armTerminalStartupGuard(ptyId);
+          const { result: restored, startup: restoredStartup } = await spawnAndObservePty(ptyId, window.cth, () => window.cth.spawnPty({
+            id: ptyId,
+            cwd: a.cwd,
+            command: oldExe,
+            args: oldArgs,
+            provider: prior.provider,
+            cols: prior.cols,
+            rows: prior.rows,
+            hive: {
+              id: a.id,
+              name: a.name,
+              cwd: a.cwd,
+              provider: prior.provider,
+              isGod: a.isGod,
+              isAssistant: a.isAssistant,
+              role: roleForHiveSpawn(a)
+            },
+            resume: !!prior.sessionId,
+            resumeSessionId: prior.sessionId,
+            noAutoInstall: true
+          }));
+          if (!restored.ok) throw new Error(restored.error ?? 'previous engine could not restart');
+          if (restoredStartup?.kind === 'exited') throw new Error('previous engine exited during startup');
+          const resumedPrevious = !!prior.sessionId && restored.resumed === true;
+          if (!resumedPrevious) {
+            restoreError = ' The previous engine restarted in a new conversation because its session could not be resumed.';
+          }
+          if (a.isGod) await window.cth.updateConfig({ godProvider: prior.provider, godModel: prior.model });
+          updateAgent(a.id, {
+            command: prior.command,
+            provider: prior.provider,
+            model: prior.model,
+            status: restoredStartup?.kind === 'needs-input' ? (a.isGod ? 'blocked' : 'waiting') : 'idle',
+            action: restoredStartup?.kind === 'needs-input'
+              ? 'Complete engine setup in Terminal'
+              : resumedPrevious ? 'restored previous engine' : 'restored previous engine · new conversation'
+          });
+          if (restoredStartup?.kind === 'needs-input') {
+            if (a.isGod) onOpenTerminal();
+            else select(a.id);
+          }
+        } catch (restoreFailure) {
+          restoreError = ` Could not restore the previous engine: ${restoreFailure instanceof Error ? restoreFailure.message : String(restoreFailure)}`;
+          updateAgent(a.id, { status: 'ghost', action: 'engine failed to start' });
+        }
+      } else if (prior?.stopped) {
+        updateAgent(a.id, { status: 'ghost', action: 'engine failed to start' });
+      }
       setRestartErrors((errors) => ({
         ...errors,
-        [a.id]: error instanceof Error ? error.message : String(error)
+        [a.id]: `${error instanceof Error ? error.message : String(error)}${restoreError}`
       }));
     } finally {
       setRestarting(null);
@@ -912,7 +1026,6 @@ function FloorTab({ seed }: { seed: { text: string; seq: number } }) {
                     if (engineProvider !== currentProvider) {
                       if (!window.confirm(t('commandCenter.confirmRestartEngine', { name: a.name }))) return;
                     }
-                    await window.cth.updateConfig({ godProvider: engineProvider, godModel: engineModel });
                     await restartWithModel(a, engineModel, { provider: engineProvider, resume: false });
                   }}
                 >

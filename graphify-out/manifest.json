@@ -930,15 +930,15 @@
     "semantic_hash": ""
   },
   "src/renderer/src/App.tsx": {
-    "mtime": 1790537896.3014052,
-    "seen": 1790537921.0207307,
-    "ast_hash": "70086f5e74ab8c8831819c4da1bdd7a8",
+    "mtime": 1790540589.3636248,
+    "seen": 1790541986.5155833,
+    "ast_hash": "675d9d3363299da4140d93490f1ef96a",
     "semantic_hash": ""
   },
   "src/renderer/src/main.tsx": {
-    "mtime": 1790470852.8562644,
-    "seen": 1790471079.4769258,
-    "ast_hash": "3e6773e343a425515d341174d7200d13",
+    "mtime": 1790540589.4921062,
+    "seen": 1790541986.5157056,
+    "ast_hash": "e77b89fd45822590c9d79af923ab4ff3",
     "semantic_hash": ""
   },
   "src/renderer/src/components/AddAgentModal.tsx": {
@@ -1992,9 +1992,9 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1790537896.0212796,
-    "seen": 1790537921.0661666,
-    "ast_hash": "0653e810ebbd05ef830157ca6497be0d",
+    "mtime": 1790541846.7483296,
+    "seen": 1790541986.5159822,
+    "ast_hash": "a142f30747d6d8bfb83dc94e3f3c1e10",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
@@ -2046,9 +2046,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790537896.024279,
-    "seen": 1790537921.0673583,
-    "ast_hash": "aa11ce7a7d238822cdce544510186be6",
+    "mtime": 1790541850.6582553,
+    "seen": 1790541986.515993,
+    "ast_hash": "d7308b84f652803513d4e03477446dab",
     "semantic_hash": ""
   },
   "RELEASE-CHECKLIST.md": {
@@ -2532,8 +2532,8 @@
     "semantic_hash": ""
   },
   "src/shared/brand.ts": {
-    "mtime": 1790539108.2104275,
-    "seen": 1790540483.8677719,
+    "mtime": 1790541846.7768726,
+    "seen": 1790541986.5157564,
     "ast_hash": "f543aa4c7df70adc95d7c23a5da92f49",
     "semantic_hash": ""
   },
@@ -3341,12 +3341,6 @@
     "ast_hash": "452e79a7bed69cd424d23e688eaa2ddb",
     "semantic_hash": ""
   },
-  ".vercel/project.json": {
-    "mtime": 1790537299.3989413,
-    "seen": 1790537920.9945612,
-    "ast_hash": "eee8feca8a82789c71c86df41e9c0777",
-    "semantic_hash": ""
-  },
   "services/licensing/api/index.ts": {
     "mtime": 1790536089.756175,
     "seen": 1790537921.0135005,
@@ -3390,8 +3384,8 @@
     "semantic_hash": ""
   },
   "services/licensing/src/app.ts": {
-    "mtime": 1790540163.6765163,
-    "seen": 1790540483.8672252,
+    "mtime": 1790541846.7708485,
+    "seen": 1790541986.5154917,
     "ast_hash": "365b9bc13a2ad8a16eb235ed5e1f75aa",
     "semantic_hash": ""
   },
@@ -3420,9 +3414,9 @@
     "semantic_hash": ""
   },
   "services/licensing/src/pages.ts": {
-    "mtime": 1790537896.2904048,
-    "seen": 1790537921.0135162,
-    "ast_hash": "c050615c4065c9254db98c71ccad6cce",
+    "mtime": 1790541846.7728527,
+    "seen": 1790541986.5154994,
+    "ast_hash": "308ea86bc3c5760ba2750d70458d66d3",
     "semantic_hash": ""
   },
   "services/licensing/src/store.ts": {
@@ -3438,15 +3432,15 @@
     "semantic_hash": ""
   },
   "services/licensing/test/harness.ts": {
-    "mtime": 1790540177.9572997,
-    "seen": 1790540483.8672338,
+    "mtime": 1790541846.773357,
+    "seen": 1790541986.5155036,
     "ast_hash": "f483d8e64ab187bcca7340e1730c4905",
     "semantic_hash": ""
   },
   "services/licensing/test/licensing.test.ts": {
-    "mtime": 1790540187.1952524,
-    "seen": 1790540483.8672347,
-    "ast_hash": "c7d9e05ec4567d963effc73c1db00b6b",
+    "mtime": 1790541846.773357,
+    "seen": 1790541986.5155046,
+    "ast_hash": "de781d9d850aa0d8de01fe03b2efcc40",
     "semantic_hash": ""
   },
   "services/licensing/test/unlock-codes.test.ts": {
@@ -3474,20 +3468,20 @@
     "semantic_hash": ""
   },
   "src/main/license.ts": {
-    "mtime": 1790540359.6235762,
-    "seen": 1790540483.867271,
+    "mtime": 1790541846.7748656,
+    "seen": 1790541986.515543,
     "ast_hash": "bcffd1b5a947623917c3b10da85d913b",
     "semantic_hash": ""
   },
   "src/main/licenseCore.ts": {
-    "mtime": 1790540288.2404027,
-    "seen": 1790540483.867272,
+    "mtime": 1790541846.7753654,
+    "seen": 1790541986.5155447,
     "ast_hash": "49db89867cf613cfc2dd33cd4575de75",
     "semantic_hash": ""
   },
   "src/main/licenseManager.ts": {
-    "mtime": 1790540308.508393,
-    "seen": 1790540483.8672748,
+    "mtime": 1790541846.7763686,
+    "seen": 1790541986.5155482,
     "ast_hash": "d03f4360f676fab707ce9c41e30560b6",
     "semantic_hash": ""
   },
@@ -3504,9 +3498,9 @@
     "semantic_hash": ""
   },
   "src/renderer/src/components/LicenseGate.tsx": {
-    "mtime": 1790537896.3034055,
-    "seen": 1790537921.023906,
-    "ast_hash": "56d85d66e51fab6f3cfe6a93eaaff9da",
+    "mtime": 1790540589.4271822,
+    "seen": 1790541986.515611,
+    "ast_hash": "487bc9fb4298b4fed422832d3346ee28",
     "semantic_hash": ""
   },
   "src/renderer/src/components/floorSpawn.ts": {
@@ -3564,8 +3558,8 @@
     "semantic_hash": ""
   },
   "test/license-manager.test.cjs": {
-    "mtime": 1790540386.6684535,
-    "seen": 1790540483.867932,
+    "mtime": 1790541846.7778723,
+    "seen": 1790541986.5158715,
     "ast_hash": "7577a68a1e30048543cdd6c44a478576",
     "semantic_hash": ""
   },
@@ -3605,12 +3599,6 @@
     "ast_hash": "cb43fed273338fab538416119f5bdefa",
     "semantic_hash": ""
   },
-  ".vercel/README.txt": {
-    "mtime": 1790537299.3994393,
-    "seen": 1790537921.0661623,
-    "ast_hash": "2b13c79d37d6ed82a3255b83b6815034",
-    "semantic_hash": ""
-  },
   "AGENTS.md": {
     "mtime": 1790537896.0102756,
     "seen": 1790537921.0661645,
@@ -3636,9 +3624,9 @@
     "semantic_hash": ""
   },
   "docs/licensing/API.md": {
-    "mtime": 1790540431.1642244,
-    "seen": 1790540483.868158,
-    "ast_hash": "24d04038be362857bc5d6e2becdc3918",
+    "mtime": 1790541846.7633467,
+    "seen": 1790541986.5160103,
+    "ast_hash": "cff544b3fcd8df7e4ee760acf90c4295",
     "semantic_hash": ""
   },
   "docs/licensing/DESIGN.md": {
@@ -3660,14 +3648,14 @@
     "semantic_hash": ""
   },
   "src/main/licenseLoopback.ts": {
-    "mtime": 1790540348.6585052,
-    "seen": 1790540483.8672736,
+    "mtime": 1790541846.7753654,
+    "seen": 1790541986.5155463,
     "ast_hash": "4bd64e8433802d93c6bf94f528b7ff5c",
     "semantic_hash": ""
   },
   "test/license-loopback.test.cjs": {
-    "mtime": 1790540398.128768,
-    "seen": 1790540483.8679302,
+    "mtime": 1790541846.7773721,
+    "seen": 1790541986.51587,
     "ast_hash": "e4a3bd270ef885c8776d251ff45e83e3",
     "semantic_hash": ""
   },

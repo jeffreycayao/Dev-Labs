@@ -1,16 +1,16 @@
 # Graph Report - 1. ATMT_OFFICE (munder-difflin-main)  (2026-09-28)
 
 ## Corpus Check
-- 577 files · ~1,145,444 words
+- 576 files · ~1,145,495 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5497 nodes · 8907 edges · 366 communities (327 shown, 34 thin omitted)
+- 5533 nodes · 8942 edges · 368 communities (327 shown, 36 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 142 edges (avg confidence: 0.83)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ce41e2df`
+- Built from commit: `abbaab9b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -27,7 +27,7 @@
 - SettingsModal.tsx
 - atmtSkills.ts
 - licenseCore.ts
-- main/integrations.ts
+- integrationBroker.ts
 - Character
 - preload/index.ts
 - licensing/package.json
@@ -47,8 +47,8 @@
 - ATMT Labs — Spec
 - git.ts
 - Agent Gallery
-- OfficeFloor
-- PixelButton.tsx
+- TiledMapRenderer
+- react
 - gen-b99-map.cjs
 - voice-messages.test.cjs
 - breaker.ts
@@ -66,9 +66,9 @@
 - properties
 - KnowledgeManager
 - TasksKanban.tsx
-- electron
+- PersistStore
 - useHive.ts
-- HireManifest
+- Automatika™ Design System v2
 - hooks.ts
 - bump-version.cjs
 - TriggerHistoryTab.tsx
@@ -82,7 +82,7 @@
 - scripts
 - hive.ts
 - recorder.ts
-- hiddenClaude.ts
+- pty.ts
 - mcpCatalog.ts
 - MemoryManager
 - harness.ts
@@ -91,7 +91,7 @@
 - store/config.ts
 - ControlRegistry
 - CommandCenterPanel.tsx
-- glRecovery.ts
+- OfficeFloor.tsx
 - Billing
 - PtyManager
 - telemetry.ts
@@ -103,23 +103,23 @@
 - claude-permissions-config.test.cjs
 - telemetry-message-count.test.cjs
 - Knowledge Graph — Enterprise Multimodal Context for Agents (Design, v1)
-- Accounts, licensing & billing — design
-- shared/hire.ts
+- GO_LIVE.md
+- main/integrations.ts
 - electron.vite.config.ts
 - HiveManager
 - triggerHistory.ts
 - cafeteriaLines.ts
-- weeklySchedule.ts
+- realtime.ts
 - skills.ts
 - capabilities
-- createWindow
+- spawnAndObservePty
 - Contributing to ATMT Labs
 - devDependencies
 - RealtimeFloorWatcher
 - AddAgentModal.tsx
 - OnboardingWizard.tsx
 - verify-keepalive-catchup.mjs
-- .agentDir
+- GitTab.tsx
 - processSpawnRequest
 - commandFlags
 - check-release-links.cjs
@@ -137,10 +137,10 @@
 - hive-windows-prompt.test.cjs
 - README.md
 - 7. Components
-- pty.ts
+- hiddenClaude.ts
 - windows-command-fallback.test.cjs
 - IntegrationsRegistry.tsx
-- TiledMapRenderer.ts
+- shared/integrations.ts
 - atmt-skills.test.cjs
 - The Hive — autonomous multi-agent layer
 - hive-roster-injection.test.cjs
@@ -154,7 +154,7 @@
 - model
 - name
 - tokenCap
-- react
+- usePtyParser.ts
 - author
 - description
 - goal
@@ -164,16 +164,16 @@
 - CONTRIBUTORS.md
 - restart-terminal-preserve.test.cjs
 - model-catalog.test.cjs
-- WorkersTab.tsx
+- Accounts, licensing & billing — design
 - ATMT Labs
 - update-applied.test.cjs
 - load-ts.cjs
-- OfficeFloor.tsx
+- themeRegistry.ts
 - 基础结构类型
 - 8. Avatar sprites
 - ATMT Labs — Go-Live Checklist (Licensing & Payments)
 - 12. Motion
-- theme.ts
+- MessageQueueComposer.tsx
 - Integration Templates — first-wave YC tools
 - pages.ts
 - 9. Stations (the workshop)
@@ -204,7 +204,7 @@
 - useStore
 - releaseNotes.ts
 - mcp-connectors.test.cjs
-- handleDeepLink
+- CharacterSprite
 - arabic-ui.test.cjs
 - floor.test.cjs
 - generate-contributors.mjs
@@ -212,7 +212,7 @@
 - webhook-endpoints.test.cjs
 - Contributor Covenant Code of Conduct
 - licenseManager.ts
-- floor.ts
+- MessageEnvelope
 - mockEvents.ts
 - auto-mode-sandbox.test.cjs
 - breaker.test.cjs
@@ -221,7 +221,7 @@
 - worktree-deps.test.cjs
 - compilerOptions
 - usage.ts
-- knowledge.ts
+- cliModels.ts
 - CommitGraph.tsx
 - grok-usage-ledger.test.cjs
 - ide-image.test.cjs
@@ -231,8 +231,8 @@
 - telemetry-session-fallback.test.cjs
 - compilerOptions
 - Go-live runbook
-- cli-models.test.cjs
-- legacyUserData.ts
+- github.ts
+- electron
 - hero-payload.test.cjs
 - useTelemetry.ts
 - agent-exit-record.test.cjs
@@ -272,6 +272,8 @@
 - freeflow.ts
 - worker-permission-parity.test.cjs
 - 3. Color system
+- .commit
+- license-loopback.test.cjs
 - arabic-terminal.test.cjs
 - Security Policy
 - bundled-fonts.test.cjs
@@ -280,6 +282,7 @@
 - 小黑 IP
 - ATMT Labs — Privacy Policy (DRAFT)
 - vercel.json
+- god-identity.test.cjs
 - arabicSpacingFix.ts
 - compact-latch.test.cjs
 - engine-availability.test.cjs
@@ -294,10 +297,11 @@
 - Handoff — continue on your computer
 - Release checklist: verifying the updater
 - FilesTab.tsx
+- hive-nudge.test.cjs
 - ansi-text.test.cjs
 - cli-install-ladder.test.cjs
 - commit-graph.test.cjs
-- focus-mode.test.cjs
+- osc-color-reply.test.cjs
 - UpdateToast.tsx
 - Voice read-layer — hive activity & message content
 - hire-queue.test.cjs
@@ -323,7 +327,7 @@
 - kg.cjs
 - Worker Capability Catalog
 - codex-remote.test.cjs
-- terminal-selection.test.cjs
+- terminal-automation.test.cjs
 - SeatPool
 - rosterSource.ts
 - agent-exit-signal-e2e.test.cjs
@@ -340,9 +344,7 @@
 - worker-wake.test.cjs
 - patch-node-pty-conpty.cjs
 - /temporal — concrete date ranges, relative to now
-- Asset attribution
 - Per-agent environment metadata
-- agent-role.test.cjs
 - control.test.cjs
 - mempalace-device.test.cjs
 - copy-main-assets.cjs
@@ -386,25 +388,25 @@
 6. `PixelButton()` - 38 edges
 7. `Store` - 37 edges
 8. `spawnAgentCore()` - 36 edges
-9. `createApp()` - 33 edges
-10. `LicenseManager` - 33 edges
+9. `LicenseManager` - 33 edges
+10. `createApp()` - 33 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `order()` --indirect_call--> `compareByNewestAsk()`  [INFERRED]
   test/askme-order.test.cjs → src/renderer/src/components/askMeOrder.ts
 - `load()` --indirect_call--> `LS_KEY()`  [INFERRED]
   src/renderer/src/design/theme.ts → src/renderer/src/components/PromptLibraryPanel.tsx
-- `getApp()` --calls--> `createApp()`  [EXTRACTED]
-  services/licensing/api/index.ts → services/licensing/src/app.ts
-- `createApp()` --calls--> `Billing`  [EXTRACTED]
-  services/licensing/src/app.ts → services/licensing/src/billing.ts
-- `createApp()` --calls--> `loginPage()`  [EXTRACTED]
-  services/licensing/src/app.ts → services/licensing/src/pages.ts
+- `IntegrationBrokerDeps` --references--> `IntegrationRecord`  [EXTRACTED]
+  src/main/integrationBroker.ts → src/shared/integrations.ts
+- `HarnessConfig` --references--> `IntegrationRecord`  [EXTRACTED]
+  src/main/config.ts → src/shared/integrations.ts
+- `Character` --references--> `CharacterSprite`  [EXTRACTED]
+  src/renderer/src/scene/office/Character.ts → src/renderer/src/scene/office/CharacterSprite.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (366 total, 34 thin omitted)
+## Communities (368 total, 36 thin omitted)
 
 ### Community 0 - "ui.tsx"
 Cohesion: 0.09
@@ -412,19 +414,19 @@ Nodes (48): deleteWebhook(), fillRule(), generateWebhookSecret(), getContextTrig
 
 ### Community 1 - "main/index.ts"
 Cohesion: 0.04
-Nodes (79): CIRun, GHIssue, listCIRuns(), listIssues(), RawCIRun, RawGHIssue, AgentSpawnOptions, allWindows (+71 more)
+Nodes (76): AgentSpawnOptions, allWindows, BACKEND_KEY_ENV, closingTime, contextTimers, control, costTotals, DEFAULT_WIN (+68 more)
 
 ### Community 2 - "realtimeActions.ts"
-Cohesion: 0.07
-Nodes (50): ScheduledMission, HiveMessage, HiveTask, ActionResult, attribute(), BARE_AFFIRMATIONS, buildArchive(), buildClearContext() (+42 more)
+Cohesion: 0.06
+Nodes (52): ScheduledMission, HiveMessage, HiveTask, ActionResult, attribute(), BARE_AFFIRMATIONS, buildArchive(), buildClearContext() (+44 more)
 
 ### Community 3 - "updater.ts"
 Cohesion: 0.13
 Nodes (32): abortPendingRestart(), autoUpdateEnabled(), AutoUpdater, emit(), errText(), failPendingRestart(), fallbackCheck(), fetchReleaseBody() (+24 more)
 
 ### Community 4 - "portraitArt.ts"
-Cohesion: 0.07
-Nodes (57): paintCastPortrait(), alphaAt(), bodyShape(), Brow, Buf, bufCache, clamp(), Cloth (+49 more)
+Cohesion: 0.08
+Nodes (56): alphaAt(), bodyShape(), Brow, Buf, bufCache, clamp(), Cloth, collarNeck() (+48 more)
 
 ### Community 5 - "MemoryGraphPanel.tsx"
 Cohesion: 0.07
@@ -439,8 +441,8 @@ Cohesion: 0.06
 Nodes (36): assert, b64(), brand, CFG, claims(), core, fs, { generateKeyPairSync, sign } (+28 more)
 
 ### Community 8 - "liveWebContents"
-Cohesion: 0.11
-Nodes (30): Registry, archiveOrphanedAgents(), armAlwaysOnBeats(), armHeartbeat(), bootstrapHiveServices(), breakerToast(), buildHeartbeatDigest(), completionWatcher (+22 more)
+Cohesion: 0.07
+Nodes (44): Registry, archiveOrphanedAgents(), armAlwaysOnBeats(), armHeartbeat(), bootstrapHiveServices(), breakerToast(), buildHeartbeatDigest(), clearContextTimers() (+36 more)
 
 ### Community 9 - "SettingsModal.tsx"
 Cohesion: 0.09
@@ -454,9 +456,9 @@ Nodes (31): actualFilesMatch(), ATMT_CATALOG_URL, CachedCatalog, CatalogDocument
 Cohesion: 0.13
 Nodes (30): RFC-6749, RFC-7009, RFC-7636, AuthCallback, AuthorizeParams, b64urlDecode(), bearer(), call() (+22 more)
 
-### Community 12 - "main/integrations.ts"
-Cohesion: 0.06
-Nodes (48): Capability, HOP_BY_HOP, IntegrationBroker, IntegrationBrokerDeps, isLoopback(), pipeWebStream(), readBodyCapped(), STRIP_REQUEST (+40 more)
+### Community 12 - "integrationBroker.ts"
+Cohesion: 0.13
+Nodes (12): Capability, HOP_BY_HOP, IntegrationBroker, IntegrationBrokerDeps, isLoopback(), pipeWebStream(), readBodyCapped(), STRIP_REQUEST (+4 more)
 
 ### Community 13 - "Character"
 Cohesion: 0.06
@@ -472,11 +474,11 @@ Nodes (31): @electric-sql/pglite, hono, tsx, dependencies, hono, jose, @neondata
 
 ### Community 16 - "api/index.ts"
 Cohesion: 0.10
-Nodes (21): jose, stripe, DELETE, GET, getApp(), handler(), OPTIONS, POST (+13 more)
+Nodes (21): jose, @neondatabase/serverless, DELETE, GET, getApp(), handler(), OPTIONS, POST (+13 more)
 
 ### Community 17 - "app.ts"
-Cohesion: 0.12
-Nodes (26): AppDeps, createApp(), bearerAccount(), issueCodeAndReturn(), issueTokens(), renderAccount(), sessionAccount(), ENTITLED (+18 more)
+Cohesion: 0.13
+Nodes (25): AppDeps, createApp(), issueCodeAndReturn(), issueTokens(), renderAccount(), sessionAccount(), ENTITLED, html() (+17 more)
 
 ### Community 18 - "Store"
 Cohesion: 0.07
@@ -499,12 +501,12 @@ Cohesion: 0.10
 Nodes (20): compilerOptions, baseUrl, esModuleInterop, isolatedModules, jsx, lib, module, moduleResolution (+12 more)
 
 ### Community 23 - "main/hire.ts"
-Cohesion: 0.16
-Nodes (19): RFC-1918, assertPublicTarget(), embeddedV4(), fetchHireManifest(), fetchManifestJson(), finish(), FloorResult, HireResult (+11 more)
+Cohesion: 0.06
+Nodes (52): RFC-1918, assertPublicTarget(), embeddedV4(), fetchFloorManifest(), fetchHireManifest(), fetchManifestJson(), finish(), finishFloor() (+44 more)
 
 ### Community 24 - "main/config.ts"
 Cohesion: 0.06
-Nodes (53): ClaudeConfig, ClaudeProjectConfig, COMPACT_MAINTENANCE_MISSION, configPath(), ConfigWriteListener, configWriteListeners, DEFAULTS, ensureClaudeGlobalPermissions() (+45 more)
+Nodes (51): ClaudeConfig, ClaudeProjectConfig, COMPACT_MAINTENANCE_MISSION, configPath(), ConfigWriteListener, configWriteListeners, DEFAULTS, ensureClaudeGlobalPermissions() (+43 more)
 
 ### Community 25 - "app.js"
 Cohesion: 0.19
@@ -528,19 +530,19 @@ Nodes (32): 10. Risks & open questions, 11. Milestones, 12. Decisions captured s
 
 ### Community 31 - "git.ts"
 Cohesion: 0.10
-Nodes (40): canonicalize(), DirEntry, hasSymlinkComponent(), lexicalJoin(), listDir(), openForRead(), readFileBinary(), readFileText() (+32 more)
+Nodes (39): canonicalize(), DirEntry, hasSymlinkComponent(), lexicalJoin(), listDir(), openForRead(), readFileBinary(), readFileText() (+31 more)
 
 ### Community 32 - "Agent Gallery"
 Cohesion: 0.12
 Nodes (14): Add your hire, Agent Gallery, Deploy, How importing works, License, Model suggestions, Run it locally, Conventions (+6 more)
 
-### Community 33 - "OfficeFloor"
+### Community 33 - "TiledMapRenderer"
 Cohesion: 0.12
-Nodes (4): Camera, OfficeFloor(), MonitorConfig, TiledMapRenderer
+Nodes (5): DEFAULT_ON_GIDS, MONITOR_OFF_TOPLEFT_GID, SCREEN, MonitorConfig, TiledMapRenderer
 
-### Community 34 - "PixelButton.tsx"
-Cohesion: 0.06
-Nodes (34): AgentControlStrip(), Snapshot, AgentHoldButton(), AgentStripProps, BlockedBannerProps, CommandBarProps, Mode, GitCommit (+26 more)
+### Community 34 - "react"
+Cohesion: 0.05
+Nodes (34): react, Snapshot, AgentHoldButton(), AgentStripProps, BlockedBannerProps, CommandBarProps, Mode, DirEntry (+26 more)
 
 ### Community 35 - "gen-b99-map.cjs"
 Cohesion: 0.08
@@ -552,11 +554,11 @@ Nodes (11): A, assert, B, BENIGN, C, LOG, redactSecrets(), SECRETS (+3 more)
 
 ### Community 37 - "breaker.ts"
 Cohesion: 0.11
-Nodes (15): actionFor(), AgentBreakerState, BreakerAction, BreakerDecision, BreakerInput, BreakerLevel, BreakerState, CircuitBreaker (+7 more)
+Nodes (16): bearerAccount(), actionFor(), AgentBreakerState, BreakerAction, BreakerDecision, BreakerInput, BreakerLevel, BreakerState (+8 more)
 
 ### Community 38 - "agentProvider.ts"
-Cohesion: 0.12
-Nodes (27): buildWorkerLaunch(), WorkerLaunch, usesHookStandingGoal(), AgentProviderPreset, argsWithAutoModeFlag(), autoModeFlagForProvider(), BridgeDescriptor, bridgeOf() (+19 more)
+Cohesion: 0.13
+Nodes (24): buildWorkerLaunch(), WorkerLaunch, AgentProviderPreset, argsWithAutoModeFlag(), autoModeFlagForProvider(), BridgeDescriptor, commandBinary(), commandGroupsForProvider() (+16 more)
 
 ### Community 39 - "analytics.ts"
 Cohesion: 0.10
@@ -579,16 +581,21 @@ Cohesion: 0.22
 Nodes (9): 11. Terminal (xterm.js) theme, 13. Sound (deferred — spec only), 16. Token files, 17. Accessibility notes, 18. Open design decisions (revisit), 1. Principles, 2. References (study these), ATMT Labs — Design System (+1 more)
 
 ### Community 44 - "FullscreenTerminal.tsx"
-Cohesion: 0.09
-Nodes (34): basename(), FullscreenTerminal(), FullscreenTerminalProps, groupKey(), Header(), repoKeyOf(), repoLabelOf(), repoLookupsInFlight (+26 more)
+Cohesion: 0.08
+Nodes (36): react-dom, AgentControlStrip(), basename(), FullscreenTerminal(), FullscreenTerminalProps, groupKey(), repoKeyOf(), repoLabelOf() (+28 more)
 
 ### Community 46 - "terminalPool.ts"
 Cohesion: 0.06
-Nodes (54): Attachment, EMPTY_QUEUE, MessageQueueComposer(), MessageQueueComposerProps, useDeliveryPaused(), useTerminalBlock(), isDarkBackground(), oscColorBody() (+46 more)
+Nodes (53): FloorTab(), terminalNeedsStartupInput(), isDarkBackground(), oscColorBody(), parseHexColor(), canAutomateTerminal(), INTERACTIVE_COMMANDS, isStaleTerminalDraft() (+45 more)
 
 ### Community 47 - "slack.ts"
 Cohesion: 0.09
-Nodes (17): tunnelmole, errMsg(), _IActivatedThreads, _ISeenEvents, isLoopback(), postSlackReply(), TODO: optional persistent domain — pass `domain` here when config carries one., NOTE: `tunnelmole` is an ESM-only package. The Electron main process is bundled (+9 more)
+Nodes (16): errMsg(), _IActivatedThreads, _ISeenEvents, isLoopback(), postSlackReply(), TODO: optional persistent domain — pass `domain` here when config carries one., NOTE: `tunnelmole` is an ESM-only package. The Electron main process is bundled, {
+  shouldTrigger: _shouldTrigger,
+  ActivatedThreads: _ActivatedThreads,
+  SeenEvents: _SeenEvents,
+  dedupKey: _dedupKey,
+} (+8 more)
 
 ### Community 48 - "MarkdownPreview.tsx"
 Cohesion: 0.12
@@ -598,25 +605,29 @@ Nodes (20): react-markdown, remark-gfm, AUTO_DIR_PLUGINS, CARD_PLUGINS, DOC_PLUG
 Cohesion: 0.20
 Nodes (10): description, type, properties, isolate, provider, spec, description, enum (+2 more)
 
+### Community 50 - "KnowledgeManager"
+Cohesion: 0.13
+Nodes (7): core, KgCore, KgHit, KgIngestInput, KgMeta, KnowledgeManager, KnowledgeStatus
+
 ### Community 51 - "TasksKanban.tsx"
 Cohesion: 0.14
 Nodes (21): askedAtMs(), AskLike, compareByNewestAsk(), AskMeTab(), dependentsTree(), parse(), TaskDetailOverlay(), COLUMNS (+13 more)
 
-### Community 52 - "electron"
-Cohesion: 0.16
-Nodes (6): better-sqlite3, electron, clampLimit(), CommandHistoryRow, MIGRATIONS, PersistStore
+### Community 52 - "PersistStore"
+Cohesion: 0.13
+Nodes (11): clampLimit(), PersistStore, clampBounds(), contextLastRunAt(), contextRunMap(), createWindow(), debounce(), ensureDefaultMissions() (+3 more)
 
 ### Community 53 - "useHive.ts"
 Cohesion: 0.08
 Nodes (36): canDeliverToAgent(), checkPrecondition(), deliverWithAcknowledgement(), DeliveryGateMessage, PreconditionVerdict, contextFillPct(), INITIAL_GOD_PROMPT, passesContextPressure() (+28 more)
 
-### Community 54 - "HireManifest"
-Cohesion: 0.13
-Nodes (10): FloorImportPayload, AGENT_TEMPLATES, AgentTemplate, t(), TemplateTrack, FloorManifest, HIRE_SPEC_V1, HireManifest (+2 more)
+### Community 54 - "Automatika™ Design System v2"
+Cohesion: 0.05
+Nodes (36): Allowed, Attention Layer (10%), Automatika™ Design System v2, Avoid, Base Layer (70%), Block Spacing, Body, Border (+28 more)
 
 ### Community 55 - "hooks.ts"
-Cohesion: 0.20
-Nodes (5): HookPayload, HookServer, HookEvent, OPTIONAL_STRING_FIELDS, validateHookEvent()
+Cohesion: 0.13
+Nodes (12): HookPayload, HookServer, estimateCostUsd(), HAIKU, ModelPrice, OPUS, priceFor(), SONNET (+4 more)
 
 ### Community 56 - "bump-version.cjs"
 Cohesion: 0.10
@@ -635,12 +646,12 @@ Cohesion: 0.09
 Nodes (22): 10. SEO / meta, 11. Asset inventory, 12. Lineage note, 1. Design principles, 2. Color, 3. Typography, 4. Spacing, radius, depth, 5. Components (+14 more)
 
 ### Community 60 - "TelemetryCollector"
-Cohesion: 0.13
-Nodes (5): flattenAttrs(), numAttr(), pointValue(), TelemetryCollector, truthy()
+Cohesion: 0.12
+Nodes (7): normalizeModel(), errMsg(), flattenAttrs(), numAttr(), pointValue(), TelemetryCollector, truthy()
 
 ### Community 61 - "keygen.mjs"
 Cohesion: 0.11
-Nodes (17): @neondatabase/serverless, ENV_FILE, readEnv(), writeEnv(), env, privatePem, publicPem, set (+9 more)
+Nodes (16): ENV_FILE, readEnv(), writeEnv(), env, privatePem, publicPem, set, env (+8 more)
 
 ### Community 62 - "IdePanel.tsx"
 Cohesion: 0.06
@@ -652,63 +663,63 @@ Nodes (8): IntegrationRecordView, IntegrationsBridge, integrationsClient, mockCl
 
 ### Community 64 - "billing.ts"
 Cohesion: 0.13
-Nodes (16): authOrigin, [cmd, ...rest], env, sql, store, formatPrice(), PriceInfo, StripeLike (+8 more)
+Nodes (17): stripe, authOrigin, [cmd, ...rest], env, sql, store, formatPrice(), PriceInfo (+9 more)
 
 ### Community 65 - "scripts"
 Cohesion: 0.10
 Nodes (20): scripts, build, check:links, copy:main-assets, dev, dist, dist:linux, dist:mac (+12 more)
 
 ### Community 66 - "hive.ts"
-Cohesion: 0.09
-Nodes (22): AgentMeta, COMMANDS_MD, ensureMineIgnore(), HumanQA, MessageAct, MINE_IGNORE_LINES, PROXY_BIND_BACKOFF_MS, NOTE: hooks fire in INTERACTIVE codex sessions (how hive workers run), (+14 more)
+Cohesion: 0.08
+Nodes (22): AgentMeta, COMMANDS_MD, HumanQA, MessageAct, MINE_IGNORE_LINES, PROXY_BIND_BACKOFF_MS, NOTE: hooks fire in INTERACTIVE codex sessions (how hive workers run),, NOTE: `node` only — deliberately no `npm`/`npx`. Electron bundles the Node (+14 more)
 
 ### Community 67 - "recorder.ts"
 Cohesion: 0.16
 Nodes (19): isOptionKey(), useHoldOptionToTalk(), chunks, deliverTranscript(), finish(), freeflowRecorder, FreeflowState, FreeflowStatus (+11 more)
 
-### Community 68 - "hiddenClaude.ts"
-Cohesion: 0.14
-Nodes (21): listLiveModels(), OPENROUTER_FAMILIES, parseOpencodeModels(), PROVIDER_LABELS, runOpencodeModels(), toOpencodeEntries(), extractLastAssistantText(), HiddenClaudeOptions (+13 more)
+### Community 68 - "pty.ts"
+Cohesion: 0.16
+Nodes (16): NpmShimTarget, PtyExitInfo, PtySession, SHIM_INTERPRETERS, SpawnOptions, buildPtyEnv(), CLAUDE_CONFIG_KEEP, captureFromLoginShell() (+8 more)
 
 ### Community 69 - "mcpCatalog.ts"
 Cohesion: 0.13
 Nodes (19): integrationBroker, mcpBrokerRecord(), buildMcpServers(), BuildMcpServersInput, defaultMcpDefaults(), enabledHttpEntries(), isHttpSpec(), MCP_CATALOG (+11 more)
 
 ### Community 71 - "harness.ts"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (13): API, AUTH, CardError, harness(), browser(), completeTrialCheckout(), desktopSignIn(), license() (+5 more)
 
 ### Community 72 - "spawnAgentCore"
-Cohesion: 0.11
-Nodes (25): buildMissingCliScript(), chooseInstallRung(), InstallRungKind, modelForRole(), findCodexHomeForSession(), providerKeyRef(), skillsResourceDir(), spawnAgentCore() (+17 more)
+Cohesion: 0.10
+Nodes (27): buildMissingCliScript(), chooseInstallRung(), InstallRungKind, modelForRole(), isRepo(), findCodexHomeForSession(), providerKeyRef(), skillsResourceDir() (+19 more)
 
 ### Community 73 - "webhook.ts"
-Cohesion: 0.11
-Nodes (16): errMsg(), json(), LEGACY_ENDPOINT_ID, parseSchema(), TODO: optional persistent domain — pass `domain` here when config carries one., NOTE: `tunnelmole` is an ESM-only package. The Electron main process is bundled, readEndpointId(), readToken() (+8 more)
+Cohesion: 0.10
+Nodes (17): tunnelmole, errMsg(), json(), LEGACY_ENDPOINT_ID, parseSchema(), TODO: optional persistent domain — pass `domain` here when config carries one., NOTE: `tunnelmole` is an ESM-only package. The Electron main process is bundled, readEndpointId() (+9 more)
 
 ### Community 74 - "store/config.ts"
 Cohesion: 0.11
 Nodes (17): agentModels(), applyRemoteModelCatalog(), ASSISTANT_MODEL, CircuitBreakerConfig, HarnessConfig, KnowledgeGraphConfig, LIVE, MODEL_CATALOG_EVENT (+9 more)
 
 ### Community 76 - "CommandCenterPanel.tsx"
-Cohesion: 0.07
-Nodes (23): CatalogSkill, LocalSkill, createAnsiStripper(), MAX_CARRY, stripAnsi(), CCTab, FloorTab(), fmtTokens() (+15 more)
+Cohesion: 0.06
+Nodes (22): CatalogSkill, LocalSkill, CCTab, fmtTokens(), GHIssue, LogEntry, TABS, textareaStyle (+14 more)
 
-### Community 77 - "glRecovery.ts"
-Cohesion: 0.22
-Nodes (9): CONTEXT_UNAVAILABLE, DEFAULT_MAX_INIT_RETRIES, DEFAULT_MAX_REBUILDS, DEFAULT_REBUILD_DELAY_MS, GlRecoveryOptions, InitFailurePlan, installContextLossRecovery(), isContextUnavailableError() (+1 more)
+### Community 77 - "OfficeFloor.tsx"
+Cohesion: 0.07
+Nodes (31): BreakSpot, Camera, hexToNumber(), DeskScreen, CONTEXT_UNAVAILABLE, DEFAULT_MAX_INIT_RETRIES, DEFAULT_MAX_REBUILDS, DEFAULT_REBUILD_DELAY_MS (+23 more)
 
 ### Community 78 - "Billing"
 Cohesion: 0.23
 Nodes (3): Billing, AccountRow, LicenseRow
 
 ### Community 79 - "PtyManager"
-Cohesion: 0.13
-Nodes (4): buildCmdCommandLine(), parseNpmCmdShim(), PtyManager, withHiveRuntimeFallback()
+Cohesion: 0.14
+Nodes (5): runCodexDaemonCommand(), buildCmdCommandLine(), parseNpmCmdShim(), PtyManager, withHiveRuntimeFallback()
 
 ### Community 80 - "telemetry.ts"
-Cohesion: 0.11
-Nodes (16): AgentUsageSample, ATTR_ALLOWLIST, BreakerState, errMsg(), OtelAnyValue, OtelDataPoint, OtelKV, OtelLogRecord (+8 more)
+Cohesion: 0.12
+Nodes (15): AgentUsageSample, ATTR_ALLOWLIST, BreakerState, OtelAnyValue, OtelDataPoint, OtelKV, OtelLogRecord, OtelMetric (+7 more)
 
 ### Community 81 - "Memory Graph Visualization — Spec (Phase 1)"
 Cohesion: 0.11
@@ -721,10 +732,6 @@ Nodes (7): additionalProperties, description, $id, required, $schema, title, typ
 ### Community 83 - "hive-hook-node.test.cjs"
 Cohesion: 0.13
 Nodes (14): assert, fs, { HiveManager }, hookCommandsUnder(), isolatedHomes(), loadTs, net, os (+6 more)
-
-### Community 84 - "ThoughtBubble"
-Cohesion: 0.07
-Nodes (12): pixi.js, ACT_COLOR, easeInOut(), MessageAct, MessageEnvelope, SpriteAdapter, SpriteSheetConfig, BubbleState (+4 more)
 
 ### Community 85 - "merge-i18n-fragments.cjs"
 Cohesion: 0.07
@@ -742,33 +749,29 @@ Nodes (13): { Analytics, MESSAGE_SURFACES, isRendererMessageSurface }, assert, c
 Cohesion: 0.11
 Nodes (17): 1. Goal & shape, 2.1 Access mechanism — **CLI via Bash**, not MCP, not a built-in tool, not a skill file, 2.2 Retrieval — **keyword (BM25-ish term scoring)**, not embeddings, for v1, 2.3 Store — **file-backed** (`index.jsonl` + per-doc folders), not SQLite, for v1, 2. Why these choices (the three load-bearing decisions), 3.1 On-disk layout, 3.2 Chunk record (one line of `index.jsonl`), 3.3 Doc metadata (`meta.json`) (+9 more)
 
-### Community 89 - "Accounts, licensing & billing — design"
-Cohesion: 0.13
-Nodes (14): api.labs.atmt.dev, auth.labs.atmt.dev, Desktop OAuth 2.0 (public client, PKCE S256 required), Licensing service contract, Web, 1. The product rules, 2. Domains, 3. Funnels (+6 more)
+### Community 89 - "GO_LIVE.md"
+Cohesion: 0.31
+Nodes (5): api.labs.atmt.dev, auth.labs.atmt.dev, Desktop OAuth 2.0 (public client, PKCE S256 required), Licensing service contract, Web
 
-### Community 90 - "shared/hire.ts"
-Cohesion: 0.18
-Nodes (13): secretEntry(), BUNDLED_SKILL_IDS, capped(), HIRE_MAX_BYTES, HireProvider, HireValidation, isSafeFlag(), PROVIDERS (+5 more)
+### Community 90 - "main/integrations.ts"
+Cohesion: 0.29
+Nodes (16): writeConfig(), deleteSecret(), enabledIds(), getRecord(), hasSecret(), listRecords(), listRecordsRedacted(), readSecretBlob() (+8 more)
 
 ### Community 91 - "electron.vite.config.ts"
 Cohesion: 0.29
 Nodes (5): define, defineMain, pkg, electron-vite, @vitejs/plugin-react
 
-### Community 92 - "HiveManager"
-Cohesion: 0.09
-Nodes (3): HiveManager, repairLiteralLineBreaksInJsonStrings(), sleepSync()
-
 ### Community 93 - "triggerHistory.ts"
 Cohesion: 0.12
-Nodes (28): dispatchWebhookWork(), enabledWebhookEndpoints(), handleWebhookMessage(), hashWebhookToken(), heldTokenHashFor(), heldTokens(), lookupWebhookStatus(), persistHeldTokens() (+20 more)
+Nodes (29): dispatchWebhookWork(), enabledWebhookEndpoints(), handleWebhookMessage(), hashWebhookToken(), heldTokenHashFor(), heldTokens(), lookupWebhookStatus(), persistHeldTokens() (+21 more)
 
 ### Community 94 - "cafeteriaLines.ts"
-Cohesion: 0.12
-Nodes (17): BreakSpot, BY_CHARACTER, CHISMIS_EXCHANGES, COFFEE, Exchange, HUGOT_EXCHANGES, KEYED_EXCHANGES, LINGO_EXCHANGES (+9 more)
+Cohesion: 0.09
+Nodes (25): BY_CHARACTER, CHISMIS_EXCHANGES, COFFEE, Exchange, HUGOT_EXCHANGES, KEYED_EXCHANGES, LINGO_EXCHANGES, OFFICE_EXCHANGES (+17 more)
 
-### Community 95 - "weeklySchedule.ts"
-Cohesion: 0.30
-Nodes (11): formatMinute(), formatWeekly(), nextWeeklyFireMs(), normalizeWeekly(), previousWeeklyFireMs(), slotAt(), WEEKDAY_INITIALS, WEEKDAY_LABELS (+3 more)
+### Community 95 - "realtime.ts"
+Cohesion: 0.21
+Nodes (12): getSecret(), hasOpenAiKey(), mintRealtimeToken(), MintResult, registerRealtimeIpc(), computeRealtimeUsd(), formatUsd(), normalizeRealtimeUsage() (+4 more)
 
 ### Community 96 - "skills.ts"
 Cohesion: 0.21
@@ -778,9 +781,9 @@ Nodes (16): getText(), CatalogSkill, getJson(), GhEntry, installSkill(), listLoc
 Cohesion: 0.33
 Nodes (6): description, items, maxItems, type, maxLength, capabilities
 
-### Community 98 - "createWindow"
-Cohesion: 0.25
-Nodes (9): clampBounds(), contextLastRunAt(), contextRunMap(), createWindow(), debounce(), ensureDefaultMissions(), floorCascade(), stampContextRun() (+1 more)
+### Community 98 - "spawnAndObservePty"
+Cohesion: 0.31
+Nodes (6): createAnsiStripper(), MAX_CARRY, stripAnsi(), PtyStartup, PtyStartupBridge, spawnAndObservePty()
 
 ### Community 99 - "Contributing to ATMT Labs"
 Cohesion: 0.14
@@ -795,8 +798,8 @@ Cohesion: 0.21
 Nodes (3): FloorWatcherDeps, RealtimeFloorWatcher, RegistryLike
 
 ### Community 102 - "AddAgentModal.tsx"
-Cohesion: 0.08
-Nodes (32): ACCENTS, AddAgentModal(), AddAgentModalProps, basename(), DESCRIPTION_TEMPLATES, inputStyle, ossChip(), ossGroupHead (+24 more)
+Cohesion: 0.09
+Nodes (30): ACCENTS, AddAgentModal(), AddAgentModalProps, basename(), DESCRIPTION_TEMPLATES, inputStyle, ossChip(), ossGroupHead (+22 more)
 
 ### Community 103 - "OnboardingWizard.tsx"
 Cohesion: 0.07
@@ -806,9 +809,13 @@ Nodes (25): AiEnginesSettings(), BACKENDS, CLIS, headStyle, inputStyle, labelSty
 Cohesion: 0.19
 Nodes (14): clearMissionTimers(), clr(), m, missionTimers, onSystemResume(), reset(), resumeNew(), routeOnce() (+6 more)
 
+### Community 105 - "GitTab.tsx"
+Cohesion: 0.24
+Nodes (8): GitCommit, GitStatus, GitStatusEntry, GitTab(), GitTabProps, statusColor(), StatusGroup(), statusLabelKey()
+
 ### Community 106 - "processSpawnRequest"
-Cohesion: 0.15
-Nodes (19): removeWorktree(), archiveRequest(), ephemeralWorkerTick(), finalizeWorkerWorktree(), gcPreservedWorktrees(), informGod(), processSpawnRequest(), removeWorkerScratch() (+11 more)
+Cohesion: 0.13
+Nodes (22): removeWorktree(), worktreeIsGcSafe(), archiveRequest(), buildAutonomousRequestProtocol(), ephemeralWorkerTick(), finalizeWorkerWorktree(), gcPreservedWorktrees(), informGod() (+14 more)
 
 ### Community 107 - "commandFlags"
 Cohesion: 0.33
@@ -823,8 +830,8 @@ Cohesion: 0.16
 Nodes (8): ActivatedThreads, dedupKey(), SeenEvents, shouldTrigger(), assert, ev(), fileEv(), { shouldTrigger, ActivatedThreads, SeenEvents, dedupKey, ACTIVATED_THREADS_MAX, SEEN_EVENTS_MAX, MAX_FILES_PER_MESSAGE }
 
 ### Community 110 - "react-i18next"
-Cohesion: 0.10
-Nodes (25): react-dom, react-i18next, AgentCard(), AgentCardProps, fmtK(), AgentDetailPanel(), AgentDetailPanelProps, AgentNameEditor() (+17 more)
+Cohesion: 0.11
+Nodes (23): react-i18next, AgentCard(), AgentCardProps, fmtK(), AgentDetailPanel(), AgentDetailPanelProps, AgentNameEditor(), AgentNameEditorProps (+15 more)
 
 ### Community 111 - "prompt-library.test.cjs"
 Cohesion: 0.29
@@ -863,16 +870,16 @@ Cohesion: 0.17
 Nodes (9): { argsToCommandLine }, assert, fs, { HiveManager }, KG_CLI, loadTs, os, path (+1 more)
 
 ### Community 121 - "README.md"
-Cohesion: 0.16
+Cohesion: 0.17
 Nodes (4): graphify, Repo orientation, Enabling auto-update, Releasing ATMT Labs
 
 ### Community 122 - "7. Components"
 Cohesion: 0.18
 Nodes (11): 7.10 `<Modal>`, 7.1 `<PixelPanel>`, 7.2 `<PixelButton>`, 7.3 `<PixelBadge>` (status chip), 7.4 `<AgentCard>` (bottom strip), 7.5 `<CommandBar>`, 7.6 `<TerminalView>`, 7.7 `<Toast>` (notification) (+3 more)
 
-### Community 123 - "pty.ts"
-Cohesion: 0.16
-Nodes (13): node-pty, ensureKilled(), groupMembers(), hardKillTree(), KILL_GRACE_MS, shouldSweep(), NpmShimTarget, PtyExitInfo (+5 more)
+### Community 123 - "hiddenClaude.ts"
+Cohesion: 0.20
+Nodes (10): node-pty, extractLastAssistantText(), HiddenClaudeOptions, HiddenClaudeResult, runHiddenClaude(), ensureKilled(), groupMembers(), hardKillTree() (+2 more)
 
 ### Community 124 - "windows-command-fallback.test.cjs"
 Cohesion: 0.18
@@ -882,9 +889,9 @@ Nodes (9): assert, fs, loadTs, os, path, { PtyManager }, { resolveCommand, windo
 Cohesion: 0.15
 Nodes (16): AUTH_LABEL, CUSTOM_AUTH, dispLabel, Draft, draftFromRecord(), draftFromTemplate(), fieldLabel, GLYPH (+8 more)
 
-### Community 126 - "TiledMapRenderer.ts"
-Cohesion: 0.12
-Nodes (11): DEFAULT_ON_GIDS, DeskScreen, MONITOR_OFF_TOPLEFT_GID, SCREEN, Point, TILE_LAYERS, TiledLayer, TiledMap (+3 more)
+### Community 126 - "shared/integrations.ts"
+Cohesion: 0.20
+Nodes (9): ALL_AUTH_TYPES, ALL_KINDS, HEADER_NAME_RE, INTEGRATION_SLUG_RE, INTEGRATION_TEMPLATES, IntegrationAuthType, IntegrationKind, IntegrationTemplate (+1 more)
 
 ### Community 127 - "atmt-skills.test.cjs"
 Cohesion: 0.12
@@ -905,12 +912,12 @@ Cohesion: 0.12
 Nodes (13): assert, CONFIG, electron, floor(), fs, { HiveManager }, { HookServer }, loadTs (+5 more)
 
 ### Community 131 - "Character.ts"
-Cohesion: 0.10
-Nodes (13): CharacterAnimation, CharacterOptions, StatusGlyph, ANIM_FRAMES, AnimState, CharacterSprite, Direction, DIRECTION_ROW (+5 more)
+Cohesion: 0.07
+Nodes (26): pixi.js, CharacterAnimation, CharacterOptions, StatusGlyph, ANIM_FRAMES, AnimState, Direction, DIRECTION_ROW (+18 more)
 
 ### Community 132 - "PixelPanel.tsx"
-Cohesion: 0.09
-Nodes (20): LicenseGateProps, MemoryStatus, ModelId, MODELS, OfficeThemePicker(), THEME_META, ThemeMeta, VictimAgent (+12 more)
+Cohesion: 0.08
+Nodes (21): Header(), LicenseGateProps, MemoryStatus, ModelId, MODELS, OfficeThemePicker(), THEME_META, ThemeMeta (+13 more)
 
 ### Community 133 - "bug-17.repro.cjs"
 Cohesion: 0.13
@@ -940,9 +947,9 @@ Nodes (5): description, maxLength, minLength, type, name
 Cohesion: 0.40
 Nodes (5): tokenCap, description, maximum, minimum, type
 
-### Community 140 - "react"
-Cohesion: 0.07
-Nodes (13): react, DirEntry, FileTreeProps, HIDE_PATTERNS, NodeState, SidebarSplitterProps, BLOCK_HINTS, NOTE: `progress` deliberately untouched — it's the context gauge now (+5 more)
+### Community 140 - "usePtyParser.ts"
+Cohesion: 0.33
+Nodes (4): BLOCK_HINTS, NOTE: `progress` deliberately untouched — it's the context gauge now, TOOL_TO_STATION, TOOLKIND_BY_NAME
 
 ### Community 141 - "author"
 Cohesion: 0.50
@@ -973,9 +980,9 @@ Nodes (8): { AGENT_PROVIDER_PRESETS }, assert, {
   runningAppVersion
 }, BOUNDED, catalog, loadTs, SHIPPED, test
 
-### Community 151 - "WorkersTab.tsx"
+### Community 151 - "Accounts, licensing & billing — design"
 Cohesion: 0.22
-Nodes (9): card, fmtTokens(), metaRow, PreservedWorktreeSnapshot, relAge(), sectionHead, WorkersData, WorkerSnapshot (+1 more)
+Nodes (9): 1. The product rules, 2. Domains, 3. Funnels, 4. License lifecycle, 5. The license token, 6. Plain truths about "never check again", 7. Code map, 8. Scaling (+1 more)
 
 ### Community 152 - "ATMT Labs"
 Cohesion: 0.25
@@ -986,12 +993,16 @@ Cohesion: 0.12
 Nodes (11): assert, captured, FakePostHog, fs, L, loadTs, os, path (+3 more)
 
 ### Community 154 - "load-ts.cjs"
-Cohesion: 0.06
-Nodes (27): assert, { DEFAULT_GOD_NAME, resolveGodName }, loadTs, test, assert, { inboxNudgeText, isInboxNudge }, loadTs, test (+19 more)
+Cohesion: 0.07
+Nodes (23): assert, {
+  isDurableRole,
+  preferredAgentRole,
+  roleForHiveSpawn
+}, loadTs, test, assert, loadTs, { parseOpencodeModels, toOpencodeEntries }, SAMPLE (+15 more)
 
-### Community 155 - "OfficeFloor.tsx"
-Cohesion: 0.06
-Nodes (47): bufToTexture(), CAST_BY_NAME, CastMember, DEFAULT_CHARACTER, frameCache, getCastFrames(), hexToNumber(), OFFICE_CAST (+39 more)
+### Community 155 - "themeRegistry.ts"
+Cohesion: 0.11
+Nodes (21): CAST_BY_NAME, CastMember, DEFAULT_CHARACTER, isThemeRenderable(), loadTheme(), resolveThemeMap(), themeTilesetUrls(), AnchorConfig (+13 more)
 
 ### Community 156 - "基础结构类型"
 Cohesion: 0.12
@@ -1009,9 +1020,9 @@ Nodes (16): 10. Legal, 11. Unlock codes (free lifetime licenses), 12. App releas
 Cohesion: 0.50
 Nodes (4): 12.1 Durations, 12.2 Forbidden motion, 12.3 Particles, 12. Motion
 
-### Community 160 - "theme.ts"
-Cohesion: 0.22
-Nodes (11): LS_KEY(), PromptLibraryPanel(), readOverride(), writeOverride(), apply(), appTheme, load(), setAppTheme() (+3 more)
+### Community 160 - "MessageQueueComposer.tsx"
+Cohesion: 0.12
+Nodes (18): Attachment, EMPTY_QUEUE, MessageQueueComposer(), MessageQueueComposerProps, useDeliveryPaused(), useTerminalBlock(), LS_KEY(), PromptLibraryPanel() (+10 more)
 
 ### Community 161 - "Integration Templates — first-wave YC tools"
 Cohesion: 0.12
@@ -1068,7 +1079,7 @@ Nodes (12): EmbeddingModel, ensureMineIgnore(), MemorySettings, MemoryStatus, ME
 
 ### Community 173 - "terminalPaths.ts"
 Cohesion: 0.19
-Nodes (11): extensionOf(), imageMimeForPath(), isImagePath(), isSvgPath(), MIME_BY_EXT, classifyPathToken(), EDIT_EXTS, extOf() (+3 more)
+Nodes (10): extensionOf(), isImagePath(), isSvgPath(), MIME_BY_EXT, classifyPathToken(), EDIT_EXTS, extOf(), isPathToken() (+2 more)
 
 ### Community 174 - "agent-templates.test.cjs"
 Cohesion: 0.33
@@ -1103,8 +1114,8 @@ Cohesion: 0.14
 Nodes (10): hookServer, classifyHook(), HookClass, WORKER_WAKE_BOOT_GRACE_MS, WORKER_WAKE_COOLDOWN_MS, WORKER_WAKE_HITL_REARM_MS, WORKER_WAKE_IDLE_MS, WORKER_WAKE_NUDGE (+2 more)
 
 ### Community 182 - "transcript.ts"
-Cohesion: 0.13
-Nodes (24): sanitizeContextRule(), estimateCostUsd(), HAIKU, ModelPrice, normalizeModel(), OPUS, priceFor(), SONNET (+16 more)
+Cohesion: 0.21
+Nodes (16): sanitizeContextRule(), AgentUsage, FileUsageEntry, legacyProjectKey(), num(), parseUsageLines(), projectDir(), projectKey() (+8 more)
 
 ### Community 183 - "roster.ts"
 Cohesion: 0.26
@@ -1119,8 +1130,8 @@ Cohesion: 0.25
 Nodes (5): OSS_BLOG_LINKS, OSS_LOCAL_PICKS, OSS_PROVIDER_PICKS, OssLocalPick, OssProviderPick
 
 ### Community 186 - "brand.ts"
-Cohesion: 0.13
-Nodes (18): CATALOG_URL, loadModelCatalog(), RemoteCatalogResult, APP_NAME, APP_SLUG, ARTIFACT_PREFIX, GITHUB_REPO, GITHUB_REPO_URL (+10 more)
+Cohesion: 0.12
+Nodes (19): CATALOG_URL, loadModelCatalog(), RemoteCatalogResult, APP_NAME, APP_SLUG, ARTIFACT_PREFIX, GITHUB_REPO, GITHUB_REPO_URL (+11 more)
 
 ### Community 187 - "Telemetry"
 Cohesion: 0.29
@@ -1137,10 +1148,6 @@ Nodes (14): bulletPrefix(), clip(), collectItems(), firstSection(), isHeadingLin
 ### Community 190 - "mcp-connectors.test.cjs"
 Cohesion: 0.13
 Nodes (12): assert, broker, cat, fs, { HiveManager }, http, { IntegrationBroker }, loadTs (+4 more)
-
-### Community 191 - "handleDeepLink"
-Cohesion: 0.33
-Nodes (7): deliverHire(), handleDeepLink(), handleFloorLink(), handleHireLink(), handleLicenseLink(), parseFloorDeepLink(), parseHireDeepLink()
 
 ### Community 192 - "arabic-ui.test.cjs"
 Cohesion: 0.16
@@ -1163,16 +1170,16 @@ Cohesion: 0.15
 Nodes (10): assert, endpoints(), { EventEmitter }, loadTs, makeServer(), SCHEMA, SECRET_A, SECRET_B (+2 more)
 
 ### Community 197 - "Contributor Covenant Code of Conduct"
-Cohesion: 0.15
-Nodes (12): 1. Correction, 2. Warning, 3. Temporary Ban, 4. Permanent Ban, Attribution, Contributor Covenant Code of Conduct, Enforcement, Enforcement Guidelines (+4 more)
+Cohesion: 0.11
+Nodes (16): 1. Correction, 2. Warning, 3. Temporary Ban, 4. Permanent Ban, Attribution, Contributor Covenant Code of Conduct, Enforcement, Enforcement Guidelines (+8 more)
 
 ### Community 198 - "licenseManager.ts"
 Cohesion: 0.12
 Nodes (17): b64url(), buildAuthorizeUrl(), createPkce(), DeviceInfo, FetchLike, LicensingEndpoints, pkceChallenge(), randomState() (+9 more)
 
-### Community 199 - "floor.ts"
-Cohesion: 0.20
-Nodes (12): fetchFloorManifest(), finishFloor(), readFloorManifestFile(), buildFloorExport(), capped(), ExportableAgent, FLOOR_MAX_HIRES, FLOOR_SPEC_V1 (+4 more)
+### Community 199 - "MessageEnvelope"
+Cohesion: 0.31
+Nodes (4): ACT_COLOR, easeInOut(), MessageAct, MessageEnvelope
 
 ### Community 200 - "mockEvents.ts"
 Cohesion: 0.21
@@ -1210,9 +1217,9 @@ Nodes (11): compilerOptions, esModuleInterop, isolatedModules, module, moduleRes
 Cohesion: 0.20
 Nodes (5): CumulativeSampleGate, normalizeModel(), StubUsageProvider, UsageProvider, UsageResolver
 
-### Community 208 - "knowledge.ts"
-Cohesion: 0.33
-Nodes (5): core, KgHit, KgIngestInput, KgMeta, KnowledgeStatus
+### Community 208 - "cliModels.ts"
+Cohesion: 0.39
+Nodes (7): listLiveModels(), OPENROUTER_FAMILIES, parseOpencodeModels(), PROVIDER_LABELS, runOpencodeModels(), toOpencodeEntries(), userShellPath()
 
 ### Community 209 - "CommitGraph.tsx"
 Cohesion: 0.24
@@ -1250,13 +1257,13 @@ Nodes (11): compilerOptions, esModuleInterop, isolatedModules, module, moduleRes
 Cohesion: 0.18
 Nodes (11): 1. Vercel project, 2. Database: Neon via the Vercel Marketplace (Singapore), 3. Google sign-in, 4. Yahoo sign-in, 5. Stripe, 6. Push and switch on, 7. Landing page (labs.atmt.dev), ATMT Labs licensing service (+3 more)
 
-### Community 218 - "cli-models.test.cjs"
-Cohesion: 0.33
-Nodes (5): assert, loadTs, { parseOpencodeModels, toOpencodeEntries }, SAMPLE, test
+### Community 218 - "github.ts"
+Cohesion: 0.29
+Nodes (6): CIRun, GHIssue, listCIRuns(), listIssues(), RawCIRun, RawGHIssue
 
-### Community 219 - "legacyUserData.ts"
-Cohesion: 0.50
-Nodes (4): hasData(), LEGACY_NAMES, migrateLegacyUserData(), SKIP
+### Community 219 - "electron"
+Cohesion: 0.22
+Nodes (8): better-sqlite3, electron, CommandHistoryRow, MIGRATIONS, hasData(), LEGACY_NAMES, migrateLegacyUserData(), SKIP
 
 ### Community 220 - "hero-payload.test.cjs"
 Cohesion: 0.40
@@ -1420,6 +1427,10 @@ Nodes (4): { argsWithAutoModeFlag }, assert, loadTs, test
 Cohesion: 0.29
 Nodes (7): 3.1 Base (panels, floors, surfaces), 3.2 Ink (text, outlines), 3.3 Agent accents (vibrant, character colors), 3.4 Status (system semantics), 3.5 World (the floor itself), 3.6 Gradient bans, 3. Color system
 
+### Community 260 - "license-loopback.test.cjs"
+Cohesion: 0.33
+Nodes (5): assert, RFC-8252, loadTs, { startLoopbackListener }, test
+
 ### Community 261 - "arabic-terminal.test.cjs"
 Cohesion: 0.22
 Nodes (7): { arabicJoinRanges, isArabicCp }, assert, fs, loadTs, path, root, test
@@ -1451,6 +1462,10 @@ Nodes (8): ATMT Labs — Privacy Policy (DRAFT), Changes, Children, Security, Th
 ### Community 268 - "vercel.json"
 Cohesion: 0.25
 Nodes (7): maxDuration, crons, functions, api/index.ts, regions, rewrites, $schema
+
+### Community 269 - "god-identity.test.cjs"
+Cohesion: 0.40
+Nodes (4): assert, { DEFAULT_GOD_NAME, resolveGodName }, loadTs, test
 
 ### Community 270 - "arabicSpacingFix.ts"
 Cohesion: 0.50
@@ -1516,6 +1531,10 @@ Nodes (6): Before the tag: mechanical gates (run these first), Release checklist
 Cohesion: 0.33
 Nodes (6): CodeEditor(), extensionsFor(), FilesTab(), FilesTabProps, joinAbs(), FileTree()
 
+### Community 284 - "hive-nudge.test.cjs"
+Cohesion: 0.40
+Nodes (4): assert, { inboxNudgeText, isInboxNudge }, loadTs, test
+
 ### Community 285 - "ansi-text.test.cjs"
 Cohesion: 0.29
 Nodes (5): assert, { createAnsiStripper, MAX_CARRY }, loadTs, { stripAnsi }, test
@@ -1528,9 +1547,9 @@ Nodes (5): assert, { chooseInstallRung, buildMissingCliScript }, { installInfoFo
 Cohesion: 0.29
 Nodes (4): assert, { layoutGraph, LANE_COLORS }, loadTs, test
 
-### Community 288 - "focus-mode.test.cjs"
-Cohesion: 0.29
-Nodes (4): assert, loadTs, { refocusAfterRemoval, focusOnLoad, restoreFocus }, test
+### Community 288 - "osc-color-reply.test.cjs"
+Cohesion: 0.40
+Nodes (4): assert, loadTs, { parseHexColor, oscColorBody, isDarkBackground }, test
 
 ### Community 289 - "UpdateToast.tsx"
 Cohesion: 0.53
@@ -1664,12 +1683,18 @@ Nodes (4): assert, {
   CODEX_REMOTE_SOCKET_RELATIVE
 }, loadTs, test
 
-### Community 314 - "terminal-selection.test.cjs"
+### Community 314 - "terminal-automation.test.cjs"
 Cohesion: 0.40
-Nodes (4): assert, loadTs, {
-  sanitizeTerminalSelection,
-  stripLeadingRail
-}, test
+Nodes (4): assert, {
+  canAutomateTerminal,
+  isStaleTerminalDraft,
+  opensInteractiveTerminalUi,
+  shouldFollowTerminalOutput,
+  terminalAutomationBlock,
+  isStaleTerminalPicker,
+  STALE_INPUT_MS,
+  STALE_PICKER_MS
+}, loadTs, test
 
 ### Community 317 - "rosterSource.ts"
 Cohesion: 0.40
@@ -1744,21 +1769,9 @@ Nodes (5): agent, { join }, out, { readFileSync, writeFileSync, existsSync }, sr
 Cohesion: 0.40
 Nodes (4): Output, Run it, /temporal — concrete date ranges, relative to now, Windows
 
-### Community 332 - "Asset attribution"
-Cohesion: 0.40
-Nodes (4): Asset attribution, Pixel art from LimeZu (licensed), The Office cast is *not* LimeZu art, Tiled map
-
 ### Community 333 - "Per-agent environment metadata"
 Cohesion: 0.25
 Nodes (7): 1. Spawn-time instrumentation — `cwdValid` (`src/main/hive.ts`), 2. Query helper — `tools/agent-env.cjs`, Per-agent environment metadata, Security, The problem, Two parts, Where it's stored
-
-### Community 334 - "agent-role.test.cjs"
-Cohesion: 0.40
-Nodes (4): assert, {
-  isDurableRole,
-  preferredAgentRole,
-  roleForHiveSpawn
-}, loadTs, test
 
 ### Community 335 - "control.test.cjs"
 Cohesion: 0.40
@@ -1773,7 +1786,7 @@ Cohesion: 0.40
 Nodes (4): { copyFileSync, mkdirSync, statSync }, { dirname, join }, MAIN_ASSETS, ROOT
 
 ### Community 342 - "The message queue — how anything gets typed into an agent's terminal"
-Cohesion: 0.25
+Cohesion: 0.29
 Nodes (7): 1. One gate, 2. What the drain checks, 3. The user owns the prompt, 4. Reading the prompt instead of modelling it, 5. Seeing why nothing is being delivered, 6. Where the code lives, The message queue — how anything gets typed into an agent's terminal
 
 ### Community 343 - "PULL_REQUEST_TEMPLATE.md"
@@ -1797,24 +1810,24 @@ Cohesion: 0.28
 Nodes (6): cAhead, gcSafe(), git(), gitOkExit(), repo, tmp
 
 ## Knowledge Gaps
-- **2392 isolated node(s):** `Desktop OAuth 2.0 (public client, PKCE S256 required)`, `Web`, `api.labs.atmt.dev`, `AppDeps`, `ENTITLED` (+2387 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2970 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **2418 isolated node(s):** `Supported agents`, `What's in it`, `Getting started`, `ATMT Skills Library`, `Docs` (+2413 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2996 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **36 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `electron` connect `electron` to `main/index.ts`, `realtimeActions.ts`, `updater.ts`, `bug-14-main.cjs`, `quit-sweep-main.cjs`, `main/license.ts`, `pty.ts`, `main/integrations.ts`, `preload/index.ts`, `knowledge.ts`, `quit-sweep.electron.test.cjs`, `package.json`, `hooks.ts`, `main/config.ts`, `closingTime.ts`, `legacyUserData.ts`, `triggerHistory.ts`?**
-  _High betweenness centrality (0.232) - this node is a cross-community bridge._
-- **Why does `react` connect `react` to `ui.tsx`, `PixelPanel.tsx`, `MemoryGraphPanel.tsx`, `SettingsModal.tsx`, `package.json`, `WorkersTab.tsx`, `FilesTab.tsx`, `OfficeFloor.tsx`, `session.ts`, `theme.ts`, `UpdateToast.tsx`, `PixelButton.tsx`, `FullscreenTerminal.tsx`, `terminalPool.ts`, `MarkdownPreview.tsx`, `TasksKanban.tsx`, `useHive.ts`, `TerminalView.tsx`, `TriggerHistoryTab.tsx`, `IdePanel.tsx`, `recorder.ts`, `CommandCenterPanel.tsx`, `CommitGraph.tsx`, `useTelemetry.ts`, `AddAgentModal.tsx`, `OnboardingWizard.tsx`, `useRestoreTeam.ts`, `react-i18next`, `arabicSetting.ts`, `releaseDrop.ts`, `IntegrationsRegistry.tsx`?**
-  _High betweenness centrality (0.143) - this node is a cross-community bridge._
-- **Why does `CircuitBreaker` connect `breaker.ts` to `main/config.ts`, `app.ts`, `main/index.ts`, `hooks.ts`?**
-  _High betweenness centrality (0.060) - this node is a cross-community bridge._
-- **What connects `Desktop OAuth 2.0 (public client, PKCE S256 required)`, `Web`, `api.labs.atmt.dev` to the rest of the system?**
-  _2392 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `electron` connect `electron` to `main/index.ts`, `realtimeActions.ts`, `updater.ts`, `pty.ts`, `main/integrations.ts`, `bug-14-main.cjs`, `quit-sweep-main.cjs`, `main/license.ts`, `preload/index.ts`, `quit-sweep.electron.test.cjs`, `KnowledgeManager`, `package.json`, `hooks.ts`, `main/config.ts`, `closingTime.ts`, `triggerHistory.ts`, `realtime.ts`?**
+  _High betweenness centrality (0.270) - this node is a cross-community bridge._
+- **Why does `react` connect `react` to `ui.tsx`, `PixelPanel.tsx`, `MemoryGraphPanel.tsx`, `SettingsModal.tsx`, `usePtyParser.ts`, `package.json`, `FilesTab.tsx`, `session.ts`, `MessageQueueComposer.tsx`, `UpdateToast.tsx`, `FullscreenTerminal.tsx`, `terminalPool.ts`, `MarkdownPreview.tsx`, `TasksKanban.tsx`, `useHive.ts`, `TerminalView.tsx`, `TriggerHistoryTab.tsx`, `IdePanel.tsx`, `recorder.ts`, `CommandCenterPanel.tsx`, `OfficeFloor.tsx`, `CommitGraph.tsx`, `useTelemetry.ts`, `AddAgentModal.tsx`, `OnboardingWizard.tsx`, `GitTab.tsx`, `useRestoreTeam.ts`, `react-i18next`, `arabicSetting.ts`, `releaseDrop.ts`, `IntegrationsRegistry.tsx`?**
+  _High betweenness centrality (0.176) - this node is a cross-community bridge._
+- **Why does `react-i18next` connect `react-i18next` to `ui.tsx`, `PixelPanel.tsx`, `MemoryGraphPanel.tsx`, `SettingsModal.tsx`, `package.json`, `session.ts`, `MessageQueueComposer.tsx`, `react`, `FullscreenTerminal.tsx`, `TasksKanban.tsx`, `TriggerHistoryTab.tsx`, `IdePanel.tsx`, `CommandCenterPanel.tsx`, `OfficeFloor.tsx`, `AddAgentModal.tsx`, `OnboardingWizard.tsx`, `GitTab.tsx`, `arabicSetting.ts`, `IntegrationsRegistry.tsx`?**
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+- **What connects `Supported agents`, `What's in it`, `Getting started` to the rest of the system?**
+  _2418 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ui.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.08771929824561403 - nodes in this community are weakly interconnected._
 - **Should `main/index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.03643843667352336 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.038623823433950016 - nodes in this community are weakly interconnected._
 - **Should `realtimeActions.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.06771929824561404 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06458941901979877 - nodes in this community are weakly interconnected._

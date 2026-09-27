@@ -2532,8 +2532,8 @@
     "semantic_hash": ""
   },
   "src/shared/brand.ts": {
-    "mtime": 1790539021.2191682,
-    "seen": 1790539034.5410953,
+    "mtime": 1790539108.2104275,
+    "seen": 1790540483.8677719,
     "ast_hash": "f543aa4c7df70adc95d7c23a5da92f49",
     "semantic_hash": ""
   },
@@ -3263,42 +3263,6 @@
     "ast_hash": "309c396975de63f5a017928e1d078924",
     "semantic_hash": ""
   },
-  "brand/icon128.png": {
-    "mtime": 1790438688.0,
-    "seen": 1790468290.2844465,
-    "ast_hash": "5edaa8e8df463180f56ea56db7a4f372",
-    "semantic_hash": ""
-  },
-  "brand/icon16.png": {
-    "mtime": 1790438688.0,
-    "seen": 1790468290.284449,
-    "ast_hash": "4a57afb26e410b3e2087d4236c24e434",
-    "semantic_hash": ""
-  },
-  "brand/icon32.png": {
-    "mtime": 1790438688.0,
-    "seen": 1790468290.2844508,
-    "ast_hash": "8b78a14e9f4802fb75023e12aad5517d",
-    "semantic_hash": ""
-  },
-  "brand/icon48.png": {
-    "mtime": 1790438688.0,
-    "seen": 1790468290.2844527,
-    "ast_hash": "cdbc0c3e2501bfc915e32724481b08d6",
-    "semantic_hash": ""
-  },
-  "brand/icon512.png": {
-    "mtime": 1790467866.550831,
-    "seen": 1790468290.2844548,
-    "ast_hash": "fd69c2922e238e959d6a5c2f4abdbab2",
-    "semantic_hash": ""
-  },
-  "brand/logo.png": {
-    "mtime": 1790467866.5289953,
-    "seen": 1790468290.2844572,
-    "ast_hash": "1dd87d147f1ef3a929854164d4511c3c",
-    "semantic_hash": ""
-  },
   "src/main/cliModels.ts": {
     "mtime": 1790469498.1830575,
     "seen": 1790469718.5382977,
@@ -3426,9 +3390,9 @@
     "semantic_hash": ""
   },
   "services/licensing/src/app.ts": {
-    "mtime": 1790537896.2894063,
-    "seen": 1790537921.0135105,
-    "ast_hash": "adaba54bfb19e8f38558336f3ea7ea89",
+    "mtime": 1790540163.6765163,
+    "seen": 1790540483.8672252,
+    "ast_hash": "365b9bc13a2ad8a16eb235ed5e1f75aa",
     "semantic_hash": ""
   },
   "services/licensing/src/billing.ts": {
@@ -3474,15 +3438,15 @@
     "semantic_hash": ""
   },
   "services/licensing/test/harness.ts": {
-    "mtime": 1790537896.2914064,
-    "seen": 1790537921.0135198,
-    "ast_hash": "39627e5ef7ca49851a9868983f506d4f",
+    "mtime": 1790540177.9572997,
+    "seen": 1790540483.8672338,
+    "ast_hash": "f483d8e64ab187bcca7340e1730c4905",
     "semantic_hash": ""
   },
   "services/licensing/test/licensing.test.ts": {
-    "mtime": 1790536089.7827249,
-    "seen": 1790537921.0135214,
-    "ast_hash": "b0059266cf70f03e6e83e597c2515f87",
+    "mtime": 1790540187.1952524,
+    "seen": 1790540483.8672347,
+    "ast_hash": "c7d9e05ec4567d963effc73c1db00b6b",
     "semantic_hash": ""
   },
   "services/licensing/test/unlock-codes.test.ts": {
@@ -3510,21 +3474,21 @@
     "semantic_hash": ""
   },
   "src/main/license.ts": {
-    "mtime": 1790537896.299405,
-    "seen": 1790537921.016388,
-    "ast_hash": "8ff72494e39ca0053f816de46e8547c5",
+    "mtime": 1790540359.6235762,
+    "seen": 1790540483.867271,
+    "ast_hash": "bcffd1b5a947623917c3b10da85d913b",
     "semantic_hash": ""
   },
   "src/main/licenseCore.ts": {
-    "mtime": 1790537896.299905,
-    "seen": 1790537921.0163898,
-    "ast_hash": "c05db50189a116e61f271c67ae8eea6e",
+    "mtime": 1790540288.2404027,
+    "seen": 1790540483.867272,
+    "ast_hash": "49db89867cf613cfc2dd33cd4575de75",
     "semantic_hash": ""
   },
   "src/main/licenseManager.ts": {
-    "mtime": 1790537896.300405,
-    "seen": 1790537921.0163918,
-    "ast_hash": "6c4ea888c9f64ea4b4fa070a3e654263",
+    "mtime": 1790540308.508393,
+    "seen": 1790540483.8672748,
+    "ast_hash": "d03f4360f676fab707ce9c41e30560b6",
     "semantic_hash": ""
   },
   "src/renderer/src/components/AccountSection.tsx": {
@@ -3600,9 +3564,9 @@
     "semantic_hash": ""
   },
   "test/license-manager.test.cjs": {
-    "mtime": 1790537896.3559275,
-    "seen": 1790537921.0537786,
-    "ast_hash": "0b5bf936683456a7f5f2e521349b630c",
+    "mtime": 1790540386.6684535,
+    "seen": 1790540483.867932,
+    "ast_hash": "7577a68a1e30048543cdd6c44a478576",
     "semantic_hash": ""
   },
   "test/mcp-connectors.test.cjs": {
@@ -3672,9 +3636,9 @@
     "semantic_hash": ""
   },
   "docs/licensing/API.md": {
-    "mtime": 1790537896.0312884,
-    "seen": 1790537921.069187,
-    "ast_hash": "47a90af213a54d84c3fdf83233e51795",
+    "mtime": 1790540431.1642244,
+    "seen": 1790540483.868158,
+    "ast_hash": "24d04038be362857bc5d6e2becdc3918",
     "semantic_hash": ""
   },
   "docs/licensing/DESIGN.md": {
@@ -3687,6 +3651,120 @@
     "mtime": 1790537896.2879004,
     "seen": 1790537921.0721526,
     "ast_hash": "b828d8b6371e0d064108b0779d47be84",
+    "semantic_hash": ""
+  },
+  "services/licensing/db/schema.sql": {
+    "mtime": 1790537896.2884061,
+    "seen": 1790540483.8672154,
+    "ast_hash": "69e15e6ccb152d6dd6e2fd51e4ed0595",
+    "semantic_hash": ""
+  },
+  "src/main/licenseLoopback.ts": {
+    "mtime": 1790540348.6585052,
+    "seen": 1790540483.8672736,
+    "ast_hash": "4bd64e8433802d93c6bf94f528b7ff5c",
+    "semantic_hash": ""
+  },
+  "test/license-loopback.test.cjs": {
+    "mtime": 1790540398.128768,
+    "seen": 1790540483.8679302,
+    "ast_hash": "e4a3bd270ef885c8776d251ff45e83e3",
+    "semantic_hash": ""
+  },
+  "brand/Automatika-Design-System-v2.md": {
+    "mtime": 1780110696.852527,
+    "seen": 1790540483.868144,
+    "ast_hash": "b0a4c81dce68a7f64d9291b9cb75d604",
+    "semantic_hash": ""
+  },
+  "brand/Horizontal logos/logo_rectangle-dark.png": {
+    "mtime": 1769972351.7726784,
+    "seen": 1790540483.8682444,
+    "ast_hash": "4d6142aa19eea6f8b28c743f810f6013",
+    "semantic_hash": ""
+  },
+  "brand/Horizontal logos/logo_rectangle-dark.webp": {
+    "mtime": 1769972718.1663494,
+    "seen": 1790540483.8682463,
+    "ast_hash": "42f87b210677c4363549e77f9c8e042f",
+    "semantic_hash": ""
+  },
+  "brand/Horizontal logos/logo_rectangle-white.png": {
+    "mtime": 1769972372.1465373,
+    "seen": 1790540483.8682477,
+    "ast_hash": "810b06b7d4ecd2875df3d3483ba1b35a",
+    "semantic_hash": ""
+  },
+  "brand/Horizontal logos/logo_rectangle-white.webp": {
+    "mtime": 1769972699.5761113,
+    "seen": 1790540483.8682492,
+    "ast_hash": "0aaf39452b664e21956b27f08683f790",
+    "semantic_hash": ""
+  },
+  "brand/Square logos/icon128.png": {
+    "mtime": 1790438688.0,
+    "seen": 1790540483.8682504,
+    "ast_hash": "5edaa8e8df463180f56ea56db7a4f372",
+    "semantic_hash": ""
+  },
+  "brand/Square logos/icon16.png": {
+    "mtime": 1790438688.0,
+    "seen": 1790540483.8682518,
+    "ast_hash": "4a57afb26e410b3e2087d4236c24e434",
+    "semantic_hash": ""
+  },
+  "brand/Square logos/icon32.png": {
+    "mtime": 1790438688.0,
+    "seen": 1790540483.8682532,
+    "ast_hash": "8b78a14e9f4802fb75023e12aad5517d",
+    "semantic_hash": ""
+  },
+  "brand/Square logos/icon48.png": {
+    "mtime": 1790438688.0,
+    "seen": 1790540483.8682544,
+    "ast_hash": "cdbc0c3e2501bfc915e32724481b08d6",
+    "semantic_hash": ""
+  },
+  "brand/Square logos/icon512.png": {
+    "mtime": 1790467866.550831,
+    "seen": 1790540483.8682554,
+    "ast_hash": "fd69c2922e238e959d6a5c2f4abdbab2",
+    "semantic_hash": ""
+  },
+  "brand/Square logos/logo.png": {
+    "mtime": 1790467866.5289953,
+    "seen": 1790540483.8682568,
+    "ast_hash": "1dd87d147f1ef3a929854164d4511c3c",
+    "semantic_hash": ""
+  },
+  "brand/favicon/android-chrome-192x192.png": {
+    "mtime": 1769954146.0,
+    "seen": 1790540483.8682578,
+    "ast_hash": "60fc31efcb8b92ed821d4dfb8e7bc97d",
+    "semantic_hash": ""
+  },
+  "brand/favicon/android-chrome-512x512.png": {
+    "mtime": 1769954146.0,
+    "seen": 1790540483.868259,
+    "ast_hash": "75d377c5cfc1990e9dc0992c727f32e8",
+    "semantic_hash": ""
+  },
+  "brand/favicon/apple-touch-icon.png": {
+    "mtime": 1769954146.0,
+    "seen": 1790540483.8682606,
+    "ast_hash": "ab75419bf4b5333a72142b45cb7ced64",
+    "semantic_hash": ""
+  },
+  "brand/favicon/favicon-16x16.png": {
+    "mtime": 1769954146.0,
+    "seen": 1790540483.8682616,
+    "ast_hash": "f4b77e7d97451e3f33d1f84f82dc79c2",
+    "semantic_hash": ""
+  },
+  "brand/favicon/favicon-32x32.png": {
+    "mtime": 1769954146.0,
+    "seen": 1790540483.868263,
+    "ast_hash": "ece8645f86500c2d7d8733f9fed7389c",
     "semantic_hash": ""
   }
 }

@@ -13,6 +13,7 @@ import { MemoryPanel } from '@/components/MemoryPanel';
 import { AgentDetailPanel } from '@/components/AgentDetailPanel';
 import { AgentStrip } from '@/components/AgentStrip';
 import { AddAgentModal } from '@/components/AddAgentModal';
+import { FloorImportModal, FloorExportModal, type FloorImportPayload } from '@/components/FloorModals';
 import { MichaelBooting } from '@/components/MichaelBooting';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { HivePicker } from '@/components/HivePicker';
@@ -171,6 +172,28 @@ export function App() {
     });
     return unsub;
   }, [enqueuePendingHires, setAddAgentOpen]);
+  // Shareable floors: a whole team from a file or atmtlabs://floor link. The
+  // review screen never spawns until the human clicks "Hire all".
+  // FIFO like the hire queue: two links clicked before launch both get reviewed.
+  const [floorQueue, setFloorQueue] = useState<FloorImportPayload[]>([]);
+  const floorImport = floorQueue[0];
+  const nextFloor = () => setFloorQueue(q => q.slice(1));
+  const [floorExportOpen, setFloorExportOpen] = useState(false);
+  const openFloorImport = (p: FloorImportPayload) => {
+    closeAddAgentReview();
+    setFloorQueue(q => [...q, p]);
+  };
+  useEffect(() => {
+    const unsub = window.cth.onFloorImport?.((p) => {
+      clearPendingHires();
+      setAddAgentOpen(false);
+      setFloorQueue(q => [...q, p]);
+    });
+    void window.cth.drainPendingFloors?.().then((queued) => {
+      if (queued && queued.length > 0) setFloorQueue(q => [...q, ...queued]);
+    });
+    return unsub;
+  }, [clearPendingHires, setAddAgentOpen]);
   useEffect(() => window.cth.onHireError?.((info) => {
     console.error('[hire] import failed:', info.error);
   }), []);
@@ -496,7 +519,28 @@ export function App() {
           onClose={closeAddAgentReview}
           config={config}
           onConfigChange={setConfig}
+          onImportFloor={openFloorImport}
+          onExportFloor={() => { closeAddAgentReview(); setFloorExportOpen(true); }}
         />
+      )}
+
+      {floorImport && (
+        <FloorImportModal
+          key={floorImport.floor.name + floorQueue.length}
+          payload={floorImport}
+          config={config}
+          onConfigChange={setConfig}
+          onClose={nextFloor}
+          onReviewOneByOne={(hires) => {
+            nextFloor();
+            enqueuePendingHires(hires);
+            setAddAgentOpen(true);
+          }}
+        />
+      )}
+
+      {floorExportOpen && (
+        <FloorExportModal config={config} onClose={() => setFloorExportOpen(false)} />
       )}
 
       {settingsOpen && (

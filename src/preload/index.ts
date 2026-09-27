@@ -6,6 +6,10 @@ import type { IntegrationRecord, IntegrationTemplate } from '../shared/integrati
 export type { IntegrationRecord, IntegrationTemplate } from '../shared/integrations';
 import type { UpdateStatus } from '../shared/updateState';
 import type { LicenseStatus } from '../shared/license';
+import type { FloorManifest } from '../shared/floor';
+export type { FloorManifest } from '../shared/floor';
+/** A validated floor plus the connector ids the human must be asked about. */
+export interface FloorImportPayload { floor: FloorManifest; consentRequired?: string[] }
 export type { UpdateStatus } from '../shared/updateState';
 import type { ToolStatus } from '../shared/toolCatalog';
 export type { ToolStatus } from '../shared/toolCatalog';
@@ -942,6 +946,20 @@ const api = {
     return () => ipcRenderer.removeListener('hire:import', listener);
   },
   /** Fired when a deep-linked manifest failed validation/fetch. */
+  // ─── Shareable floors (a team of hires; src/shared/floor.ts) ──────────────────
+  /** A validated floor from an atmtlabs://floor deep link. Never spawns. */
+  onFloorImport: (cb: (payload: FloorImportPayload) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, payload: FloorImportPayload) => cb(payload);
+    ipcRenderer.on('floor:import', listener);
+    return () => ipcRenderer.removeListener('floor:import', listener);
+  },
+  drainPendingFloors: (): Promise<FloorImportPayload[]> => ipcRenderer.invoke('floor:drainPending'),
+  /** Pick a floor file; main reads and validates it. */
+  importFloorFile: (): Promise<({ ok: true } & FloorImportPayload) | { ok: false; error: string }> =>
+    ipcRenderer.invoke('floor:openFile'),
+  /** Save a floor (main re-validates before writing). */
+  saveFloorFile: (floor: FloorManifest): Promise<{ ok: boolean; path?: string; error?: string }> =>
+    ipcRenderer.invoke('floor:save', { floor }),
   onHireError: (cb: (info: { error: string }) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, info: { error: string }) => cb(info);
     ipcRenderer.on('hire:error', listener);

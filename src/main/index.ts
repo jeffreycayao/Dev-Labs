@@ -71,8 +71,9 @@ import { ControlRegistry } from './control';
 import { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';
 import { inboxNudgeText } from '../shared/hiveNudge';
 import { resolveGodName } from '../shared/godIdentity';
-import { fetchHireManifest, readHireManifestFiles } from './hire';
+import { fetchHireManifest, readHireManifestFiles, fetchFloorManifest, readFloorManifestFile, type FloorResult } from './hire';
 import { parseHireDeepLink, type HireManifest } from '../shared/hire';
+import { parseFloorDeepLink, validateFloorManifest, floorFileName, FLOOR_MAX_BYTES } from '../shared/floor';
 import { ClosingTimeController } from './closingTime';
 import {
   argsWithAutoModeFlag,
@@ -2297,6 +2298,10 @@ function floorCascade(): WindowBounds | null {
  *  can't lose a deep link to a startup race. */
 const pendingHires: HireManifest[] = [];
 let rendererReadyForHires = false;
+/** Floors that arrived by deep link before the renderer subscribed (cold start).
+ *  Same readiness flag as hires: both are drained by the same App mount. */
+type FloorImport = Extract<FloorResult, { ok: true }>;
+const pendingFloors: FloorImport[] = [];
 
 function deliverHire(manifest: HireManifest): void {
   if (rendererReadyForHires && mainWindow && !mainWindow.isDestroyed()) {
@@ -2322,7 +2327,29 @@ async function handleDeepLink(link: string): Promise<void> {
     }
     return;
   }
+  if (parseFloorDeepLink(link)) { await handleFloorLink(link); return; }
   await handleHireLink(link);
+}
+
+/** atmtlabs://floor?src=<https-url> — fetch (same guards as hires), validate,
+ *  and open the floor review screen. Never spawns anything by itself. */
+async function handleFloorLink(link: string): Promise<void> {
+  const src = parseFloorDeepLink(link);
+  if (!src) return;
+  const res = await fetchFloorManifest(src);
+  if (!res.ok) {
+    console.error('[floor] deep link rejected:', res.error);
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('hire:error', { error: res.error });
+    return;
+  }
+  if (rendererReadyForHires && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('floor:import', { floor: res.floor, consentRequired: res.consentRequired });
+  } else {
+    pendingFloors.push(res);
+    if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.show(); mainWindow.focus(); }
+  }
 }
 
 async function handleHireLink(link: string): Promise<void> {
@@ -2387,6 +2414,45 @@ ipcMain.handle('hire:drainPending', () => {
 
 // IPC: "import hires…" file picker in the Add-Agent modal. Every selected file
 // is validated independently; valid neighbours survive an invalid manifest.
+ipcMain.handle('floor:drainPending', () => {
+  const out = pendingFloors.splice(0, pendingFloors.length);
+  return out.map((f) => ({ floor: f.floor, consentRequired: f.consentRequired }));
+});
+
+// IPC: "import floor…" — one floor file, validated in main; the renderer only
+// ever sees an already-validated FloorManifest.
+ipcMain.handle('floor:openFile', async () => {
+  const res = await dialog.showOpenDialog({
+    title: 'Import a floor',
+    filters: [{ name: 'ATMT Labs floor', extensions: ['json'] }],
+    properties: ['openFile']
+  });
+  if (res.canceled || res.filePaths.length === 0) return { ok: false, error: 'cancelled' };
+  return readFloorManifestFile(res.filePaths[0]);
+});
+
+// IPC: "export floor…" — the renderer builds the document from its roster; main
+// re-validates it (never writes something an importer would reject) and saves.
+ipcMain.handle('floor:save', async (_evt, payload: unknown) => {
+  const doc = (payload ?? {}) as { floor?: unknown };
+  const v = validateFloorManifest(doc.floor);
+  if (!v.ok || !v.floor) return { ok: false, error: `invalid floor: ${v.errors.join('; ')}` };
+  const text = JSON.stringify(v.floor, null, 2) + '\n';
+  if (Buffer.byteLength(text, 'utf8') > FLOOR_MAX_BYTES) return { ok: false, error: 'floor too large' };
+  const res = await dialog.showSaveDialog({
+    title: 'Export floor',
+    defaultPath: floorFileName(v.floor.name),
+    filters: [{ name: 'ATMT Labs floor', extensions: ['json'] }]
+  });
+  if (res.canceled || !res.filePath) return { ok: false, error: 'cancelled' };
+  try {
+    writeFileSync(res.filePath, text, 'utf8');
+    return { ok: true, path: res.filePath };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+});
+
 ipcMain.handle('hire:openFile', async () => {
   const res = await dialog.showOpenDialog({
     title: 'Import hire manifests',

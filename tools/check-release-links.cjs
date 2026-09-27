@@ -32,8 +32,11 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 const releaseMd = fs.readFileSync(path.join(root, 'RELEASE.md'), 'utf8');
+// Where releases are published (src/shared/brand.ts). Empty = no public release
+// repo yet: RELEASE.md is then a process doc with no download table, and there
+// is nothing advertised that could go stale.
 const brandTs = fs.readFileSync(path.join(root, 'src/shared/brand.ts'), 'utf8');
-const releaseRepo = /export const GITHUB_REPO = '([^']*)'/.exec(brandTs)?.[1] ?? '';
+const releaseRepo = (/export const GITHUB_REPO = '([^']*)'/.exec(brandTs) || [])[1] || '';
 
 const problems = [];
 
@@ -53,11 +56,7 @@ for (const m of releaseMd.matchAll(assetRe)) {
   }
   assets.add(`ATMT-Labs-${m[1]}-${m[2]}`);
 }
-// A fresh ATMT Labs checkout has no published installer or configured release
-// repository yet. Require the asset table once release publishing is enabled.
-if (assets.size === 0 && releaseRepo) {
-  problems.push('RELEASE.md advertises no download assets at all — did the table move?');
-}
+if (assets.size === 0 && releaseRepo) problems.push('RELEASE.md advertises no download assets at all — did the table move?');
 
 // — 2. source tarball tags too; a stale tag silently ships last release's source —
 for (const m of releaseMd.matchAll(/archive\/refs\/tags\/v(\d+\.\d+\.\d+)/g)) {
@@ -114,7 +113,11 @@ async function head(url, label) {
 }
 
 async function checkLive() {
-  const base = 'https://github.com/automatika/atmt-labs/releases/latest/download/';
+  if (!releaseRepo) {
+    problems.push('--live needs GITHUB_REPO set in src/shared/brand.ts (no release repo to check against)');
+    return;
+  }
+  const base = `https://github.com/${releaseRepo}/releases/latest/download/`;
   for (const name of [...assets, 'SHA256SUMS.txt']) await head(base + name, name);
   for (const url of siteAssets) await head(url, url);
 }
@@ -122,7 +125,7 @@ async function checkLive() {
 (async () => {
   if (process.argv.includes('--live')) {
     console.log(`Checking advertised downloads for v${version} against the live latest release…`);
-    if (assets.size > 0) await checkLive();
+    await checkLive();
   }
   if (problems.length) {
     console.error(`\n✗ release links are wrong (${problems.length}):`);

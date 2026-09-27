@@ -53,6 +53,16 @@ inside `node_modules/better-sqlite3`, then run `node tools/patch-node-pty-conpty
 | `npm run dist` | Build installers into `dist/` |
 | `npm run release:patch` / `:minor` / `:major` | Bump version, changelog, tag, build — see [RELEASE.md](RELEASE.md) |
 
+## ATMT Skills Library
+
+The Skills tab browses skills published from the separate public
+[ATMT Labs Floor Agent Skills repository](https://github.com/jeffreycayao/atmt_labs_floor_agentskills).
+The app checks each downloaded file against the catalog's pinned commit and SHA-256 hash before
+installing it. Installed skills update only when the user selects **Update**. The first release
+installs into Claude Code's user skills directory; other agent install targets are not yet supported.
+The published skills have their own ATMT-only use license. ATMT's bundled internal skills remain
+part of the desktop app.
+
 ## Docs
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the main process, hive and renderer fit together

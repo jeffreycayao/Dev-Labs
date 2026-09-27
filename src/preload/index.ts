@@ -5,6 +5,7 @@ export type { HireManifest } from '../shared/hire';
 import type { IntegrationRecord, IntegrationTemplate } from '../shared/integrations';
 export type { IntegrationRecord, IntegrationTemplate } from '../shared/integrations';
 import type { UpdateStatus } from '../shared/updateState';
+import type { LicenseStatus } from '../shared/license';
 export type { UpdateStatus } from '../shared/updateState';
 import type { ToolStatus } from '../shared/toolCatalog';
 export type { ToolStatus } from '../shared/toolCatalog';
@@ -15,8 +16,10 @@ export type { ModelCatalog, CatalogModel } from '../shared/modelCatalogPayload';
 import type { CatalogModel } from '../shared/modelCatalogPayload';
 import type { HookEvent } from '../shared/hookEvents';
 export type { HookEvent } from '../shared/hookEvents';
-import type { LocalSkill, CatalogSkill } from '../main/skills';
-export type { LocalSkill, CatalogSkill } from '../main/skills';
+import type { LocalSkill } from '../main/skills';
+import type { CatalogSkill } from '../main/atmtSkills';
+export type { LocalSkill } from '../main/skills';
+export type { CatalogSkill } from '../main/atmtSkills';
 import type {
   ContextRule, ContextTriggerConfig, OrgTriggerConfig, TriggerHistoryEntry, WebhookTrigger
 } from '../shared/triggers';
@@ -811,11 +814,10 @@ const api = {
   skillsCatalog: (force?: boolean): Promise<{
     skills: CatalogSkill[]; fetchedAt: number; stale: boolean; error?: string;
   }> => ipcRenderer.invoke('skills:catalog', force),
-  /** Install a catalog skill into ~/.claude/skills. `unsupported` distinguishes
-   *  "there is no downloadable source" from "the download failed". */
-  skillsInstall: (url: string, name: string): Promise<
-    { ok: true; path: string } | { ok: false; error: string; unsupported?: boolean }
-  > => ipcRenderer.invoke('skills:install', url, name),
+  /** Install or update a validated ATMT catalog ID into ~/.claude/skills. */
+  skillsInstall: (id: string, expectedVersion: string, expectedSourceCommit: string): Promise<
+    { ok: true; path: string } | { ok: false; error: string }
+  > => ipcRenderer.invoke('skills:install', id, expectedVersion, expectedSourceCommit),
   /** Delete an installed skill. Main refuses any path outside a skills root. */
   skillsUninstall: (path: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('skills:uninstall', path),
@@ -1389,6 +1391,25 @@ const api = {
    *  contents as a backup and refuses a first write that would empty a full file. */
   rosterWrite: (snap: RosterSnapshot): Promise<{ ok: boolean; skipped?: string; error?: string }> =>
     ipcRenderer.invoke('roster:write', snap),
+
+  // ─── Account + licensing (docs/licensing/DESIGN.md) ─────────────────────────
+  /** Push channel: every licensing state change (sign-in, renewal, expiry). */
+  onLicenseStatus: (cb: (status: LicenseStatus) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, payload: LicenseStatus) => cb(payload);
+    ipcRenderer.on('license:status', listener);
+    return () => ipcRenderer.removeListener('license:status', listener);
+  },
+  licenseCurrent: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:current'),
+  /** Open the system browser on auth.labs.atmt.dev. 'signup' opens on the
+   *  create-account screen (the free-trial path). */
+  licenseSignIn: (hint?: 'signin' | 'signup'): Promise<LicenseStatus> =>
+    ipcRenderer.invoke('license:signIn', hint),
+  licenseCancelSignIn: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:cancelSignIn'),
+  licenseRefresh: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:refresh'),
+  licenseSignOut: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:signOut'),
+  /** 'checkout' = start the 7-day trial (Stripe Checkout); 'portal' = manage billing. */
+  licenseOpenBilling: (kind: 'checkout' | 'portal'): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('license:openBilling', kind),
 
   // ─── Auto-update (v0.3.4; full state model v0.3.7) ──────────────────────────
   /** Push channel from main's updater — every stage of the pipeline, so the

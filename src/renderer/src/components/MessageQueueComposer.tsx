@@ -2,6 +2,8 @@ import { ClipboardEvent, DragEvent, KeyboardEvent, type MouseEvent as ReactMouse
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { PixelButton } from './PixelButton';
+import { PromptLibraryPanel } from './PromptLibraryPanel';
+import { firstPlaceholder, type PromptItem } from '@shared/promptLibrary';
 import { Icon } from './Icon';
 import { useStore, type Agent, type QueuedMessage } from '@/store/store';
 import { clearTerminalDraft, dismissTerminalPicker, terminalAutomationBlockFor } from './terminalPool';
@@ -44,6 +46,24 @@ export function MessageQueueComposer({ agent }: MessageQueueComposerProps) {
   const text = useStore((s) => s.drafts[agent.id] ?? '');
   const setDraft = useStore((s) => s.setDraft);
   const setText = (t: string) => setDraft(agent.id, t);
+
+  // Prompt Library: role-aware reusable prompts. Inserting selects the first
+  // {placeholder} so the user can type straight over it.
+  const [showPrompts, setShowPrompts] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const insertPrompt = (item: PromptItem) => {
+    const base = text.trim() ? `${text.replace(/\s+$/, '')}\n` : '';
+    setText(base + item.body);
+    setShowPrompts(false);
+    const slot = firstPlaceholder(item.body);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      if (slot) el.setSelectionRange(base.length + slot.start, base.length + slot.end);
+      else el.setSelectionRange(el.value.length, el.value.length);
+    });
+  };
 
   // Free Flow voice dictation (entry point A). The mic button shows only when the
   // feature is enabled in Settings; a transcript is appended to this draft for
@@ -345,7 +365,9 @@ export function MessageQueueComposer({ agent }: MessageQueueComposerProps) {
       {/* Composer — full-width input above a single tidy control bar (cc-ui-polish),
           with file/image attachment chips + paste-to-attach (rich-composer). */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {showPrompts && <PromptLibraryPanel agent={agent} onPick={insertPrompt} />}
         <textarea
+          ref={inputRef}
           dir={rtl ? 'auto' : undefined}
           className="cth-input"
           value={text}
@@ -381,6 +403,11 @@ export function MessageQueueComposer({ agent }: MessageQueueComposerProps) {
             pushing Send off-screen. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, rowGap: 6, flexWrap: 'wrap', minWidth: 0 }}>
           <span style={{ flex: 1 }} />
+          <PixelButton variant={showPrompts ? 'primary' : 'secondary'} size="sm" onClick={() => setShowPrompts((v) => !v)} title={t('queueComposer.promptsButtonTitle')}>
+            <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+              <Icon name="sparkle" /> {t('queueComposer.prompts')}
+            </span>
+          </PixelButton>
           <PixelButton variant="secondary" size="sm" onClick={pickFiles}>
             <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
               <Icon name="plus" /> {t('queueComposer.files')}

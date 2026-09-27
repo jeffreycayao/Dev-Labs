@@ -1,16 +1,16 @@
 # Graph Report - 1. ATMT_OFFICE (munder-difflin-main)  (2026-09-27)
 
 ## Corpus Check
-- 517 files · ~1,074,676 words
+- 521 files · ~1,078,072 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3667 nodes · 5500 edges · 278 communities (218 shown, 49 thin omitted)
+- 3695 nodes · 5533 edges · 277 communities (222 shown, 45 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 63 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9008924b`
+- Built from commit: `75bcd4aa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -41,7 +41,6 @@
 - app.js
 - WebhooksSection.tsx
 - dependencies
-- HiveManager
 - session.ts
 - ATMT Labs — Spec
 - bug-14.renderer.js
@@ -59,7 +58,7 @@
 - ATMT Labs — Design System
 - FullscreenTerminal.tsx
 - ControlRegistry
-- CircuitBreaker
+- MessageQueueComposer.tsx
 - slack.ts
 - PixelButton.tsx
 - properties
@@ -85,26 +84,27 @@
 - EditAgentModal.tsx
 - TasksKanban.tsx
 - App.tsx
-- RealtimeMichaelToggle.tsx
+- spawnAgentCore
 - MarkdownPreview.tsx
 - store/config.ts
 - react
 - CommandCenterPanel.tsx
 - OfficeFloor.tsx
-- MessageQueueComposer.tsx
+- bootstrapHiveServices
 - Knowledge Graph — Enterprise Multimodal Context for Agents (Design, v1)
 - TriggerHistoryTab.tsx
 - Memory Graph Visualization — Spec (Phase 1)
 - hire.schema.json
 - hive-hook-node.test.cjs
 - ThoughtBubble
-- 3. Registering an agent
+- promptLibrary.ts
 - recorder.ts
 - 5. Components
 - CharacterSprite
 - TiledMapRenderer
 - KnowledgeManager
 - electron.vite.config.ts
+- HiveManager
 - handleWebhookMessage
 - cafeteriaLines.ts
 - realtimePricing.ts
@@ -117,13 +117,14 @@
 - AddAgentModal.tsx
 - OnboardingWizard.tsx
 - verify-keepalive-catchup.mjs
+- .commit
 - ephemeralWorkerTick
 - commandFlags
 - check-release-links.cjs
 - telemetry.ts
-- pty.ts
-- closingTime.ts
-- terminalPaths.ts
+- RealtimeMichaelToggle.tsx
+- prompt-library.test.cjs
+- electron
 - skills.ts
 - CodeEditor.tsx
 - when.mjs
@@ -137,13 +138,13 @@
 - Icon.tsx
 - windows-command-fallback.test.cjs
 - HookServer
-- hiddenClaude.ts
+- pty.ts
 - transcript.ts
 - The Hive — autonomous multi-agent layer
 - pathfinding.ts
 - fs.ts
 - Character.ts
-- pricing.ts
+- MemoryPanel.tsx
 - WorkersTab.tsx
 - accent
 - character
@@ -151,7 +152,7 @@
 - model
 - name
 - tokenCap
-- MemoryPanel.tsx
+- CompletionToast.tsx
 - author
 - description
 - goal
@@ -159,7 +160,6 @@
 - build-data.py
 - validator.js
 - CONTRIBUTORS.md
-- .agentDir
 - model-catalog.test.cjs
 - cliModels.ts
 - ATMT Labs
@@ -168,7 +168,6 @@
 - themeRegistry.ts
 - terminalRecovery.ts
 - 8. Avatar sprites
-- ClosingTimeController
 - 12. Motion
 - design/theme.ts
 - CostLedgerTotals
@@ -182,10 +181,12 @@
 - release-notes.test.cjs
 - usePtyParser.ts
 - agentTemplates.ts
-- .commit
 - pollSlackDoneTasks
 - agent-templates.test.cjs
 - help-guide.test.cjs
+- hiddenClaude.ts
+- heroPayload.ts
+- Third-Party Notices
 - terminalAutomation.ts
 - md-slack-reply.cjs
 - ossModels.ts
@@ -214,7 +215,6 @@
 - update-download-asset.test.cjs
 - 14. Voice & copy
 - 4. Typography
-- heroPayload.ts
 - 6. Borders & panels
 - Release drops
 - GitPanes.tsx
@@ -224,7 +224,7 @@
 - JsonEditor.tsx
 - codex-remote.test.cjs
 - terminal-selection.test.cjs
-- breaker.ts
+- CircuitBreaker
 - Camera
 - WorkerWakeWatchdog
 - Per-agent environment metadata
@@ -287,34 +287,34 @@
 1. `HiveManager` - 93 edges
 2. `Character` - 56 edges
 3. `readConfig()` - 37 edges
-4. `react` - 29 edges
+4. `react` - 30 edges
 5. `RealtimeActionDeps` - 25 edges
 6. `attribute()` - 24 edges
 7. `MemoryManager` - 22 edges
 8. `TiledMapRenderer` - 22 edges
 9. `proposeDestructive()` - 21 edges
-10. `PixelButton()` - 21 edges
+10. `react-i18next` - 21 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `completionWatcher` --calls--> `resolveGodName()`  [EXTRACTED]
   src/main/index.ts → src/shared/godIdentity.ts
-- `resolveLocalImageRel()` --calls--> `isImagePath()`  [INFERRED]
-  src/renderer/src/markdown/mdLinks.ts → src/shared/imageTypes.ts
 - `resolveRepoRootSkillDir()` --calls--> `listDir()`  [INFERRED]
   src/main/skills.ts → src/main/fs.ts
 - `ToolWaterfall()` --calls--> `useAgentSpans()`  [INFERRED]
   src/renderer/src/components/ToolWaterfall.tsx → src/renderer/src/hooks/useTelemetry.ts
 - `ToolWaterfall()` --calls--> `useFleetTelemetry()`  [INFERRED]
   src/renderer/src/components/ToolWaterfall.tsx → src/renderer/src/hooks/useTelemetry.ts
+- `notifyArabicTerminalChangeAll()` --calls--> `isArabicTerminalEnabled()`  [INFERRED]
+  src/renderer/src/components/terminalPool.ts → src/renderer/src/terminal/arabicSetting.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (278 total, 49 thin omitted)
+## Communities (277 total, 45 thin omitted)
 
 ### Community 1 - "main/index.ts"
 Cohesion: 0.04
-Nodes (66): AgentSpawnOptions, allWindows, BACKEND_KEY_ENV, clampBounds(), clearContextTimers(), clearMissionTimers(), closingTime, completionWatcher (+58 more)
+Nodes (58): AgentSpawnOptions, allWindows, BACKEND_KEY_ENV, clampBounds(), completionWatcher, contextTimers, control, costTotals (+50 more)
 
 ### Community 2 - "realtimeActions.ts"
 Cohesion: 0.06
@@ -326,7 +326,7 @@ Nodes (50): getText(), HERO_URL, loadHero(), CATALOG_URL, loadModelCatalog(), Re
 
 ### Community 4 - "PixelPanel.tsx"
 Cohesion: 0.12
-Nodes (13): CommandBarProps, Mode, borderByVariant, fillByVariant, PixelPanel(), PixelPanelProps, Variant, ClosingTimeState (+5 more)
+Nodes (14): CommandBarProps, Mode, folderName(), HivePicker(), HivePickerProps, borderByVariant, fillByVariant, PixelPanel() (+6 more)
 
 ### Community 6 - "ui.tsx"
 Cohesion: 0.13
@@ -337,8 +337,8 @@ Cohesion: 0.12
 Nodes (20): isDarkBackground(), oscColorBody(), parseHexColor(), detachTerminal(), disableArabicRendering(), dismissTerminalPicker(), disposeTerminal(), enableArabicRendering() (+12 more)
 
 ### Community 8 - "readConfig"
-Cohesion: 0.08
-Nodes (41): readConfig(), writeConfig(), archiveOrphanedAgents(), armAlwaysOnBeats(), armHeartbeat(), bootstrapHiveServices(), breaker, breakerToast() (+33 more)
+Cohesion: 0.09
+Nodes (34): readConfig(), writeConfig(), armHeartbeat(), breaker, buildHeartbeatDigest(), clearContextTimers(), clearMissionTimers(), closingTime (+26 more)
 
 ### Community 9 - "nodeInstall.ts"
 Cohesion: 0.15
@@ -413,8 +413,8 @@ Cohesion: 0.06
 Nodes (59): @openai/agents-realtime, act(), obj(), realtimeActionTools(), capInputStyle, CostHud(), CostHudProps, labelStyle (+51 more)
 
 ### Community 30 - "ATMT Labs — Spec"
-Cohesion: 0.11
-Nodes (17): 10. Risks & open questions, 12. Decisions captured so far, 13. Decisions still needed from you, 1. Product shape, 2. Architecture: the two data planes, 5. Configuration per agent, 6. The "/goal" question, 7. Sending commands from the app (+9 more)
+Cohesion: 0.09
+Nodes (21): 10. Risks & open questions, 12. Decisions captured so far, 13. Decisions still needed from you, 1. Product shape, 2. Architecture: the two data planes, 3. Registering an agent, 5. Configuration per agent, 6. The "/goal" question (+13 more)
 
 ### Community 31 - "bug-14.renderer.js"
 Cohesion: 0.06
@@ -441,8 +441,8 @@ Cohesion: 0.18
 Nodes (4): BubbleState, TOOL_ICONS, ToolBubble, toolIcon()
 
 ### Community 38 - "agentProvider.ts"
-Cohesion: 0.11
-Nodes (29): modelForRole(), findCodexHomeForSession(), providerKeyRef(), skillsResourceDir(), spawnAgentCore(), spawnFailReason(), usesHookStandingGoal(), AgentProviderPreset (+21 more)
+Cohesion: 0.14
+Nodes (22): usesHookStandingGoal(), AgentProviderPreset, argsWithAutoModeFlag(), autoModeFlagForProvider(), BridgeDescriptor, bridgeOf(), canReceiveInbox(), commandBinary() (+14 more)
 
 ### Community 39 - "arabicSetting.ts"
 Cohesion: 0.21
@@ -468,13 +468,21 @@ Nodes (9): 11. Terminal (xterm.js) theme, 13. Sound (deferred — spec only), 16
 Cohesion: 0.20
 Nodes (13): basename(), FullscreenTerminal(), FullscreenTerminalProps, groupKey(), repoKeyOf(), repoLabelOf(), repoLookupsInFlight, repoRootByCwd (+5 more)
 
+### Community 45 - "ControlRegistry"
+Cohesion: 0.10
+Nodes (6): ClosingTimeController, ClosingTimeEvent, ClosingTimePhase, AgentControl, AgentControlSnapshot, ControlRegistry
+
+### Community 46 - "MessageQueueComposer.tsx"
+Cohesion: 0.22
+Nodes (10): Attachment, EMPTY_QUEUE, MessageQueueComposer(), MessageQueueComposerProps, useDeliveryPaused(), useTerminalBlock(), LS_KEY(), PromptLibraryPanel() (+2 more)
+
 ### Community 47 - "slack.ts"
 Cohesion: 0.09
 Nodes (17): tunnelmole, errMsg(), _IActivatedThreads, _ISeenEvents, isLoopback(), postSlackReply(), TODO: optional persistent domain — pass `domain` here when config carries one., NOTE: `tunnelmole` is an ESM-only package. The Electron main process is bundled (+9 more)
 
 ### Community 48 - "PixelButton.tsx"
-Cohesion: 0.18
-Nodes (7): BlockedBannerProps, heightBySize, padBySize, PixelButton(), PixelButtonProps, Size, Variant
+Cohesion: 0.19
+Nodes (7): AgentStripProps, heightBySize, padBySize, PixelButton(), PixelButtonProps, Size, Variant
 
 ### Community 49 - "properties"
 Cohesion: 0.20
@@ -564,21 +572,21 @@ Nodes (20): askedAtMs(), AskLike, compareByNewestAsk(), colorByStatus, labelKeyB
 Cohesion: 0.22
 Nodes (4): App(), favicon, root, splashMark
 
-### Community 72 - "RealtimeMichaelToggle.tsx"
-Cohesion: 0.28
-Nodes (7): react-dom, AgentCard(), AgentCardProps, fmtK(), RealtimeMichaelToggle(), RealtimeMichaelToggleProps, STATE_VIEW
+### Community 72 - "spawnAgentCore"
+Cohesion: 0.17
+Nodes (13): modelForRole(), breakerToast(), enableCodexRemoteForSpawn(), findCodexHomeForSession(), healthCheckPtys(), onSystemResume(), providerKeyRef(), runCodexDaemonCommand() (+5 more)
 
 ### Community 73 - "MarkdownPreview.tsx"
-Cohesion: 0.07
-Nodes (26): useWorkspaceImage(), WorkspaceImageState, ideBarStyle, ideIconBtn, ideTextBtn, ImagePreview(), ImagePreviewProps, AUTO_DIR_PLUGINS (+18 more)
+Cohesion: 0.05
+Nodes (39): resolvePathCandidate(), useWorkspaceImage(), WorkspaceImageState, ideBarStyle, ideIconBtn, ideTextBtn, ImagePreview(), ImagePreviewProps (+31 more)
 
 ### Community 74 - "store/config.ts"
 Cohesion: 0.11
 Nodes (17): agentModels(), applyRemoteModelCatalog(), ASSISTANT_MODEL, CircuitBreakerConfig, HarnessConfig, KnowledgeGraphConfig, LIVE, MODEL_CATALOG_EVENT (+9 more)
 
 ### Community 75 - "react"
-Cohesion: 0.18
-Nodes (8): react, AgentControlStrip(), Snapshot, AgentDetailPanelProps, AgentHoldButton(), CommandCenterPanel(), ActiveToast, RealtimeCompletionToastData
+Cohesion: 0.25
+Nodes (6): react, AgentControlStrip(), Snapshot, AgentDetailPanelProps, AgentHoldButton(), CommandCenterPanel()
 
 ### Community 76 - "CommandCenterPanel.tsx"
 Cohesion: 0.12
@@ -588,9 +596,9 @@ Nodes (8): CCTab, FloorTab(), fmtTokens(), GHIssue, LogEntry, TABS, textareaStyl
 Cohesion: 0.13
 Nodes (22): pick(), pickExchange(), pickSoloLine(), hexToNumber(), CafeBreak, CafeChat, CHEER_KEYS, CoffeeRun (+14 more)
 
-### Community 78 - "MessageQueueComposer.tsx"
-Cohesion: 0.28
-Nodes (6): Attachment, EMPTY_QUEUE, MessageQueueComposer(), MessageQueueComposerProps, useDeliveryPaused(), useTerminalBlock()
+### Community 78 - "bootstrapHiveServices"
+Cohesion: 0.24
+Nodes (11): archiveOrphanedAgents(), armAlwaysOnBeats(), bootstrapHiveServices(), lastCoordinationAt(), lastWorkAt(), looksStuck(), nudgeWorker(), ptyForAgent() (+3 more)
 
 ### Community 79 - "Knowledge Graph — Enterprise Multimodal Context for Agents (Design, v1)"
 Cohesion: 0.09
@@ -612,9 +620,9 @@ Nodes (7): additionalProperties, description, $id, required, $schema, title, typ
 Cohesion: 0.13
 Nodes (14): assert, fs, { HiveManager }, hookCommandsUnder(), isolatedHomes(), loadTs, net, os (+6 more)
 
-### Community 85 - "3. Registering an agent"
-Cohesion: 0.50
-Nodes (4): 3. Registering an agent, Option A — User adds existing pane (MVP path), Option B — Spawn from app (later), What if the user closes the tmux pane?
+### Community 85 - "promptLibrary.ts"
+Cohesion: 0.18
+Nodes (6): KEYWORDS, PROMPT_CATEGORIES, PromptCategory, PromptItem, PROMPTS, TITLE_MAP
 
 ### Community 86 - "recorder.ts"
 Cohesion: 0.13
@@ -641,16 +649,16 @@ Cohesion: 0.29
 Nodes (5): define, defineMain, pkg, electron-vite, @vitejs/plugin-react
 
 ### Community 93 - "handleWebhookMessage"
-Cohesion: 0.17
-Nodes (18): dispatchWebhookWork(), enabledWebhookEndpoints(), handleWebhookMessage(), hashWebhookToken(), heldTokenHashFor(), heldTokens(), lookupWebhookStatus(), notifyTriggerHistoryUpdated() (+10 more)
+Cohesion: 0.18
+Nodes (17): dispatchWebhookWork(), enabledWebhookEndpoints(), handleWebhookMessage(), hashWebhookToken(), heldTokenHashFor(), heldTokens(), lookupWebhookStatus(), notifyTriggerHistoryUpdated() (+9 more)
 
 ### Community 94 - "cafeteriaLines.ts"
 Cohesion: 0.13
 Nodes (14): BreakSpot, BY_CHARACTER, CHISMIS_EXCHANGES, COFFEE, Exchange, HUGOT_EXCHANGES, KEYED_EXCHANGES, LINGO_EXCHANGES (+6 more)
 
 ### Community 95 - "realtimePricing.ts"
-Cohesion: 0.14
-Nodes (16): electron, hasData(), LEGACY_NAMES, migrateLegacyUserData(), SKIP, hasOpenAiKey(), mintRealtimeToken(), MintResult (+8 more)
+Cohesion: 0.22
+Nodes (11): hasOpenAiKey(), mintRealtimeToken(), MintResult, registerRealtimeIpc(), computeRealtimeUsd(), formatUsd(), normalizeRealtimeUsage(), REALTIME_AUDIO_INPUT_PER_MTOK (+3 more)
 
 ### Community 96 - "weeklySchedule.ts"
 Cohesion: 0.24
@@ -659,6 +667,10 @@ Nodes (14): formatMinute(), formatWeekly(), nextWeeklyFireMs(), normalizeWeekly(
 ### Community 97 - "capabilities"
 Cohesion: 0.33
 Nodes (6): description, items, maxItems, type, maxLength, capabilities
+
+### Community 98 - ".appendLog"
+Cohesion: 0.20
+Nodes (3): repairLiteralLineBreaksInJsonStrings(), shortRand(), stamp()
 
 ### Community 99 - "Contributing to ATMT Labs"
 Cohesion: 0.14
@@ -685,8 +697,8 @@ Cohesion: 0.18
 Nodes (14): clearMissionTimers(), clr(), m, missionTimers, onSystemResume(), reset(), resumeNew(), routeOnce() (+6 more)
 
 ### Community 106 - "ephemeralWorkerTick"
-Cohesion: 0.18
-Nodes (17): archiveRequest(), buildAutonomousRequestProtocol(), ephemeralWorkerTick(), finalizeWorkerWorktree(), gcPreservedWorktrees(), informGod(), processSpawnRequest(), removeWorkerScratch() (+9 more)
+Cohesion: 0.19
+Nodes (16): archiveRequest(), buildAutonomousRequestProtocol(), ephemeralWorkerTick(), finalizeWorkerWorktree(), gcPreservedWorktrees(), informGod(), processSpawnRequest(), removeWorkerScratch() (+8 more)
 
 ### Community 107 - "commandFlags"
 Cohesion: 0.33
@@ -700,17 +712,17 @@ Nodes (11): assets, checkLive(), fs, head(), indexHtml, llms, path, problems (+3
 Cohesion: 0.12
 Nodes (15): AgentUsageSample, ATTR_ALLOWLIST, BreakerState, OtelAnyValue, OtelDataPoint, OtelKV, OtelLogRecord, OtelMetric (+7 more)
 
-### Community 110 - "pty.ts"
-Cohesion: 0.15
-Nodes (13): expandTilde(), normalizeHiveHome(), statAbs(), buildCmdCommandLine(), NpmShimTarget, parseNpmCmdShim(), PtyExitInfo, PtySession (+5 more)
+### Community 110 - "RealtimeMichaelToggle.tsx"
+Cohesion: 0.28
+Nodes (7): react-dom, AgentCard(), AgentCardProps, fmtK(), RealtimeMichaelToggle(), RealtimeMichaelToggleProps, STATE_VIEW
 
-### Community 111 - "closingTime.ts"
-Cohesion: 0.33
-Nodes (4): ClosingTimeEvent, ClosingTimePhase, AgentControl, AgentControlSnapshot
+### Community 111 - "prompt-library.test.cjs"
+Cohesion: 0.29
+Nodes (6): { AGENT_TEMPLATES }, assert, EXPECTED, loadTs, { roleCategoryFor, promptsFor, firstPlaceholder, PROMPTS, PROMPT_CATEGORIES }, test
 
-### Community 112 - "terminalPaths.ts"
-Cohesion: 0.20
-Nodes (13): resolvePathCandidate(), extensionOf(), imageMimeForPath(), isImagePath(), isSvgPath(), MIME_BY_EXT, classifyPathToken(), EDIT_EXTS (+5 more)
+### Community 112 - "electron"
+Cohesion: 0.40
+Nodes (5): electron, hasData(), LEGACY_NAMES, migrateLegacyUserData(), SKIP
 
 ### Community 113 - "skills.ts"
 Cohesion: 0.12
@@ -753,8 +765,8 @@ Cohesion: 0.18
 Nodes (11): 7.10 `<Modal>`, 7.1 `<PixelPanel>`, 7.2 `<PixelButton>`, 7.3 `<PixelBadge>` (status chip), 7.4 `<AgentCard>` (bottom strip), 7.5 `<CommandBar>`, 7.6 `<TerminalView>`, 7.7 `<Toast>` (notification) (+3 more)
 
 ### Community 123 - "Icon.tsx"
-Cohesion: 0.17
-Nodes (11): AgentStripProps, folderName(), HivePicker(), HivePickerProps, Icon(), IconDef, IconName, IconProps (+3 more)
+Cohesion: 0.15
+Nodes (10): BlockedBannerProps, Icon(), IconDef, IconName, IconProps, paths, ClosingTimeState, QuitWarningModalProps (+2 more)
 
 ### Community 124 - "windows-command-fallback.test.cjs"
 Cohesion: 0.18
@@ -764,13 +776,13 @@ Nodes (9): assert, fs, loadTs, os, path, { PtyManager }, { resolveCommand, windo
 Cohesion: 0.17
 Nodes (5): HookPayload, HookServer, HookEvent, OPTIONAL_STRING_FIELDS, validateHookEvent()
 
-### Community 126 - "hiddenClaude.ts"
-Cohesion: 0.23
-Nodes (12): HiddenClaudeOptions, HiddenClaudeResult, captureFromLoginShell(), captureFromLoginShellUncached(), isAbsoluteWindowsPathWithVolume(), isSafeCommandName(), resolveCommand(), shellCapture (+4 more)
+### Community 126 - "pty.ts"
+Cohesion: 0.16
+Nodes (17): NpmShimTarget, PtyExitInfo, PtySession, SHIM_INTERPRETERS, SpawnOptions, buildPtyEnv(), CLAUDE_CONFIG_KEEP, captureFromLoginShell() (+9 more)
 
 ### Community 127 - "transcript.ts"
-Cohesion: 0.20
-Nodes (14): extractLastAssistantText(), AgentUsage, FileUsageEntry, legacyProjectKey(), num(), projectDir(), projectKey(), readAgentUsage() (+6 more)
+Cohesion: 0.13
+Nodes (23): extractLastAssistantText(), estimateCostUsd(), HAIKU, ModelPrice, normalizeModel(), OPUS, priceFor(), SONNET (+15 more)
 
 ### Community 128 - "The Hive — autonomous multi-agent layer"
 Cohesion: 0.20
@@ -781,16 +793,16 @@ Cohesion: 0.40
 Nodes (5): DIRECTIONS, findPath(), Point, reconstructPath(), Walkable
 
 ### Community 130 - "fs.ts"
-Cohesion: 0.32
-Nodes (11): canonicalize(), DirEntry, hasSymlinkComponent(), lexicalJoin(), listDir(), openForRead(), readFileBinary(), readFileText() (+3 more)
+Cohesion: 0.25
+Nodes (14): canonicalize(), DirEntry, expandTilde(), hasSymlinkComponent(), lexicalJoin(), listDir(), normalizeHiveHome(), openForRead() (+6 more)
 
 ### Community 131 - "Character.ts"
 Cohesion: 0.22
 Nodes (6): pixi.js, CharacterAnimation, CharacterOptions, paintCup(), StatusGlyph, BubbleState
 
-### Community 132 - "pricing.ts"
-Cohesion: 0.27
-Nodes (9): estimateCostUsd(), HAIKU, ModelPrice, normalizeModel(), OPUS, priceFor(), SONNET, TokenSplit (+1 more)
+### Community 132 - "MemoryPanel.tsx"
+Cohesion: 0.40
+Nodes (3): MemoryStatus, ModelId, MODELS
 
 ### Community 133 - "WorkersTab.tsx"
 Cohesion: 0.18
@@ -819,10 +831,6 @@ Nodes (5): description, maxLength, minLength, type, name
 ### Community 139 - "tokenCap"
 Cohesion: 0.40
 Nodes (5): tokenCap, description, maximum, minimum, type
-
-### Community 140 - "MemoryPanel.tsx"
-Cohesion: 0.40
-Nodes (3): MemoryStatus, ModelId, MODELS
 
 ### Community 141 - "author"
 Cohesion: 0.50
@@ -942,6 +950,18 @@ Nodes (5): { AGENT_TEMPLATES, templatesFor }, assert, loadTs, test, { validateHi
 Cohesion: 0.29
 Nodes (6): assert, fs, html, path, root, test
 
+### Community 176 - "hiddenClaude.ts"
+Cohesion: 0.24
+Nodes (5): HiddenClaudeOptions, HiddenClaudeResult, ensureKilled(), groupMembers(), hardKillTree()
+
+### Community 177 - "heroPayload.ts"
+Cohesion: 0.25
+Nodes (7): DEFAULT_HERO, HeroPayload, HeroPlan, HeroSponsor, httpsUrl(), MAX, parseHeroPayload()
+
+### Community 179 - "Third-Party Notices"
+Cohesion: 0.40
+Nodes (4): Original application foundation — MIT License, Other open-source components, Pixel-art assets — LimeZu, Third-Party Notices
+
 ### Community 182 - "terminalAutomation.ts"
 Cohesion: 0.32
 Nodes (7): INTERACTIVE_COMMANDS, isStaleTerminalDraft(), isStaleTerminalPicker(), opensInteractiveTerminalUi(), shouldFollowTerminalOutput(), terminalAutomationBlock, TerminalAutomationState
@@ -955,8 +975,8 @@ Cohesion: 0.25
 Nodes (5): OSS_BLOG_LINKS, OSS_LOCAL_PICKS, OSS_PROVIDER_PICKS, OssLocalPick, OssProviderPick
 
 ### Community 186 - "PtyManager"
-Cohesion: 0.12
-Nodes (4): ensureKilled(), groupMembers(), hardKillTree(), PtyManager
+Cohesion: 0.14
+Nodes (4): buildCmdCommandLine(), parseNpmCmdShim(), PtyManager, withHiveRuntimeFallback()
 
 ### Community 187 - "Telemetry"
 Cohesion: 0.25
@@ -1056,10 +1076,6 @@ Nodes (5): 14. Voice & copy, Always, Examples (do / don't), Never, Tone
 Cohesion: 0.40
 Nodes (5): 4.1 Type scale (all px integers), 4.2 Weight, 4.3 Case, 4.4 Letter spacing, 4. Typography
 
-### Community 297 - "heroPayload.ts"
-Cohesion: 0.25
-Nodes (7): DEFAULT_HERO, HeroPayload, HeroPlan, HeroSponsor, httpsUrl(), MAX, parseHeroPayload()
-
 ### Community 298 - "6. Borders & panels"
 Cohesion: 0.40
 Nodes (5): 6.1 Anatomy, 6.2 Panel variants, 6.3 Corner cuts, 6.4 Drop shadow, 6. Borders & panels
@@ -1106,9 +1122,9 @@ Nodes (4): assert, loadTs, {
   stripLeadingRail
 }, test
 
-### Community 316 - "breaker.ts"
-Cohesion: 0.16
-Nodes (13): actionFor(), AgentBreakerState, BreakerAction, BreakerDecision, BreakerInput, BreakerLevel, BreakerState, DEFAULTS (+5 more)
+### Community 316 - "CircuitBreaker"
+Cohesion: 0.12
+Nodes (14): actionFor(), AgentBreakerState, BreakerAction, BreakerDecision, BreakerInput, BreakerLevel, BreakerState, CircuitBreaker (+6 more)
 
 ### Community 332 - "WorkerWakeWatchdog"
 Cohesion: 0.22
@@ -1211,23 +1227,23 @@ Cohesion: 0.83
 Nodes (3): load_sheets(), render(), resolve()
 
 ## Knowledge Gaps
-- **1441 isolated node(s):** `ptyManager`, `ptyToAgent`, `pendingInstallRelaunch`, `control`, `grokLedgerGate` (+1436 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1898 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **49 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **1456 isolated node(s):** `EMPTY_QUEUE`, `Attachment`, `MessageQueueComposerProps`, `PromptCategory`, `PROMPT_CATEGORIES` (+1451 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1917 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **45 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `react` connect `react` to `design/theme.ts`, `UpdateToast.tsx`, `SettingsModal.tsx`, `updater.ts`, `toolCatalog.ts`, `AddAgentModal.tsx`, `App.tsx`, `RealtimeMichaelToggle.tsx`, `OnboardingWizard.tsx`, `CommandCenterPanel.tsx`, `FullscreenTerminal.tsx`, `MemoryPanel.tsx`, `MessageQueueComposer.tsx`, `OfficeFloor.tsx`, `package.json`, `useHive.ts`, `session.ts`, `IdePanel.tsx`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
-- **Why does `electron` connect `realtimePricing.ts` to `main/index.ts`, `realtimeActions.ts`, `updater.ts`, `preload/index.ts`, `package.json`, `main/config.ts`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `HiveManager` connect `HiveManager` to `main/index.ts`, `hive.ts`, `.appendLog`, `.writeTasks`, `.commit`, `.agentDir`, `.root`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **What connects `ptyManager`, `ptyToAgent`, `pendingInstallRelaunch` to the rest of the system?**
-  _1441 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `react` connect `react` to `updater.ts`, `MemoryPanel.tsx`, `CompletionToast.tsx`, `package.json`, `session.ts`, `design/theme.ts`, `UpdateToast.tsx`, `SettingsModal.tsx`, `FullscreenTerminal.tsx`, `MessageQueueComposer.tsx`, `useHive.ts`, `IdePanel.tsx`, `toolCatalog.ts`, `App.tsx`, `CommandCenterPanel.tsx`, `OfficeFloor.tsx`, `AddAgentModal.tsx`, `OnboardingWizard.tsx`, `RealtimeMichaelToggle.tsx`?**
+  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+- **Why does `electron` connect `electron` to `main/index.ts`, `realtimeActions.ts`, `updater.ts`, `preload/index.ts`, `package.json`, `main/config.ts`, `realtimePricing.ts`?**
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
+- **Why does `Character` connect `Character` to `Character.ts`, `ThoughtBubble`, `OfficeFloor.tsx`?**
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **What connects `EMPTY_QUEUE`, `Attachment`, `MessageQueueComposerProps` to the rest of the system?**
+  _1456 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `main/index.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.03975155279503106 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04283447911158118 - nodes in this community are weakly interconnected._
 - **Should `realtimeActions.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.06360759493670887 - nodes in this community are weakly interconnected._
 - **Should `updater.ts` be split into smaller, more focused modules?**

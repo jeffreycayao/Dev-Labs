@@ -1337,7 +1337,15 @@
     "ffCreateKey": "Create a free key at",
     "ffPasteKey": "Paste it into Settings → Voice → Groq API key",
     "ffClickOrHold": "Click voice, or hold the right Option key to talk",
-    "ffHoldHint": "Hold it ALONE for a moment to start; release to transcribe into the composer, where you can edit before sending. Either Option key works, and Option+key combos still reach the terminal untouched."
+    "ffHoldHint": "Hold it ALONE for a moment to start; release to transcribe into the composer, where you can edit before sending. Either Option key works, and Option+key combos still reach the terminal untouched.",
+    "prompts": "prompts",
+    "promptsButtonTitle": "Prompt library — ready-made instructions for this agent's role",
+    "promptsTitle": "PROMPT LIBRARY",
+    "promptsFor": "for",
+    "promptsAuto": "Auto: {{category}}",
+    "promptsSearch": "Search all prompts…",
+    "promptsEmpty": "No prompts match.",
+    "promptsCategoryTitle": "Detected from this agent's role. Change it if the guess is wrong."
   },
   "idePanel": {
     "workspace": "{{name}}'s workspace",

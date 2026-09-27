@@ -1337,7 +1337,15 @@
     "ffCreateKey": "在以下地址免费创建密钥",
     "ffPasteKey": "粘贴到设置 → 语音 → Groq API 密钥",
     "ffClickOrHold": "点击「语音」，或按住右侧 Option 键说话",
-    "ffHoldHint": "单独按住一会儿即可开始；松开后转写到编辑器，发送前可修改。两个 Option 键都可以，Option+按键组合仍会原样到达终端。"
+    "ffHoldHint": "单独按住一会儿即可开始；松开后转写到编辑器，发送前可修改。两个 Option 键都可以，Option+按键组合仍会原样到达终端。",
+    "prompts": "提示词",
+    "promptsButtonTitle": "提示词库 — 适合该智能体角色的现成指令",
+    "promptsTitle": "提示词库",
+    "promptsFor": "适用于",
+    "promptsAuto": "自动：{{category}}",
+    "promptsSearch": "搜索全部提示词…",
+    "promptsEmpty": "没有匹配的提示词。",
+    "promptsCategoryTitle": "根据该智能体的角色自动识别，如有误可手动更改。"
   },
   "idePanel": {
     "workspace": "{{name}} 的工作区",

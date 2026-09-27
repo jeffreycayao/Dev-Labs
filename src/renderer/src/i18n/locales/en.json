@@ -1431,5 +1431,51 @@
     "viewSource": "view source",
     "loading": "loading image…",
     "decodeFailed": "could not decode this image — the file may be corrupt or misnamed"
+  },
+  "license": {
+    "title": "SIGN IN TO ATMT LABS",
+    "intro": "ATMT Labs needs an active subscription. Sign in with Google or Yahoo in your browser, and you'll come straight back here.",
+    "startTrial": "start 7-day free trial",
+    "trialNote": "Card required. Nothing is charged for 7 days, then a one-time payment for a lifetime license. Cancel anytime before then.",
+    "signIn": "I already have an account — sign in",
+    "waitingTitle": "FINISH IN YOUR BROWSER",
+    "waitingBody": "We opened auth.labs.atmt.dev in your browser. Once you're signed in, it sends you back here automatically.",
+    "reopen": "open the browser again",
+    "cancel": "cancel",
+    "inactiveTitle": "NO LICENSE YET",
+    "inactiveBody": "There's no license on this account yet. Start your free trial, or buy a lifetime license.",
+    "checkAgain": "I've paid — check again",
+    "checking": "checking…",
+    "manageBilling": "manage billing",
+    "manageAccount": "manage account",
+    "signOut": "sign out",
+    "offlineTitle": "LICENSE CHECK NEEDED",
+    "offlineBody": "Your license needs a quick online check and we couldn't reach the server. Connect to the internet and try again.",
+    "errorTitle": "LICENSING PROBLEM",
+    "errorBody": "Something is wrong with this install's license. Try again, or manage your account in the browser.",
+    "retry": "try again",
+    "signedInAs": "Signed in as {{email}}",
+    "errors": {
+      "network": "Couldn't reach the ATMT Labs servers. Check your connection.",
+      "server_error": "The ATMT Labs servers had a problem. Try again in a moment.",
+      "session_expired": "Your session ended. Sign in again.",
+      "state_mismatch": "That sign-in link wasn't started from this app. Start again from here.",
+      "sign_in_cancelled": "Sign-in was cancelled.",
+      "sign_in_timeout": "Sign-in took too long. Start again.",
+      "device_limit": "Your plan's device limit is reached. Sign out on another computer, or remove a device from your account.",
+      "device_mismatch": "This license belongs to a different computer. Sign in again on this one.",
+      "invalid_token": "The license couldn't be verified. Sign in again.",
+      "clock_rollback": "Your computer's clock looks wrong. Fix the date and time, then try again.",
+      "misconfigured": "This build of ATMT Labs is missing its licensing key. Download the latest version from labs.atmt.dev."
+    },
+    "account": {
+      "title": "ACCOUNT",
+      "trialing": "Free trial — {{days}} days left. One-time charge on {{date}}.",
+      "lifetime": "Lifetime license — this computer is activated for good."
+    },
+    "buyLicense": "buy lifetime license",
+    "completeTitle": "COMPLETE YOUR PURCHASE",
+    "completeBody": "Your free trial is over, but the one-time payment didn't go through. Complete the purchase to keep using ATMT Labs.",
+    "completePurchase": "complete purchase"
   }
 }

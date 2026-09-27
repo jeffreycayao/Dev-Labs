@@ -1431,5 +1431,51 @@
     "viewSource": "查看源码",
     "loading": "正在加载图片…",
     "decodeFailed": "无法解码此图片——文件可能已损坏或扩展名有误"
+  },
+  "license": {
+    "title": "登录 ATMT Labs",
+    "intro": "使用 ATMT Labs 需要有效订阅。请在浏览器中使用 Google 或 Yahoo 登录，完成后会自动返回此处。",
+    "startTrial": "开始 7 天免费试用",
+    "trialNote": "需要绑定银行卡。7 天内不扣款，之后一次性付款即可获得终身许可证。在此之前可随时取消。",
+    "signIn": "已有账户？登录",
+    "waitingTitle": "请在浏览器中完成",
+    "waitingBody": "我们已在浏览器中打开 auth.labs.atmt.dev。登录完成后会自动返回此处。",
+    "reopen": "重新打开浏览器",
+    "cancel": "取消",
+    "inactiveTitle": "尚无许可证",
+    "inactiveBody": "此账户尚无许可证。开始免费试用，或购买终身许可证。",
+    "checkAgain": "我已付款——重新检查",
+    "checking": "检查中…",
+    "manageBilling": "管理账单",
+    "manageAccount": "管理账户",
+    "signOut": "退出登录",
+    "offlineTitle": "需要验证许可证",
+    "offlineBody": "许可证需要联网快速验证，但无法连接服务器。请连接网络后重试。",
+    "errorTitle": "许可证问题",
+    "errorBody": "此安装的许可证出现问题。请重试，或在浏览器中管理账户。",
+    "retry": "重试",
+    "signedInAs": "已登录：{{email}}",
+    "errors": {
+      "network": "无法连接 ATMT Labs 服务器。请检查网络连接。",
+      "server_error": "ATMT Labs 服务器出现问题。请稍后重试。",
+      "session_expired": "会话已结束。请重新登录。",
+      "state_mismatch": "该登录链接并非由此应用发起。请从此处重新开始。",
+      "sign_in_cancelled": "已取消登录。",
+      "sign_in_timeout": "登录超时。请重新开始。",
+      "device_limit": "已达到套餐的设备数量上限。请在其他电脑上退出登录，或从账户中移除设备。",
+      "device_mismatch": "此许可证属于另一台电脑。请在本机重新登录。",
+      "invalid_token": "无法验证许可证。请重新登录。",
+      "clock_rollback": "电脑时钟似乎不正确。请校正日期和时间后重试。",
+      "misconfigured": "此版本的 ATMT Labs 缺少许可证密钥。请从 labs.atmt.dev 下载最新版本。"
+    },
+    "account": {
+      "title": "账户",
+      "trialing": "免费试用——剩余 {{days}} 天。将于 {{date}} 一次性扣款。",
+      "lifetime": "终身许可证——此电脑已永久激活。"
+    },
+    "buyLicense": "购买终身许可证",
+    "completeTitle": "完成购买",
+    "completeBody": "免费试用已结束，但一次性付款未成功。请完成购买以继续使用 ATMT Labs。",
+    "completePurchase": "完成购买"
   }
 }

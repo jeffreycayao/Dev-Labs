@@ -11,7 +11,9 @@ JSON errors are `{ "error": "<code>" }`.
 
 ### Desktop OAuth 2.0 (public client, PKCE S256 required)
 
-The client ID is `atmt-labs-desktop`, and the only redirect URI is `atmtlabs://auth/callback` (exact match).
+The client ID is `atmt-labs-desktop`. Two redirect URIs are accepted:
+- **Loopback (what the app uses):** `http://127.0.0.1:<port>/callback`, any port 1024–65535 ([RFC 8252 §7.3](https://datatracker.ietf.org/doc/html/rfc8252#section-7.3)). The app opens a one-shot listener on an OS-assigned port for each sign-in. Only the literal `127.0.0.1` is accepted, never `localhost`.
+- **Fallback:** `atmtlabs://auth/callback` (exact match), used when the listener cannot start. Browsers do not reliably hand custom schemes to apps, so it is no longer the default.
 
 **`GET /oauth/authorize`** takes these parameters:
 
@@ -19,7 +21,7 @@ The client ID is `atmt-labs-desktop`, and the only redirect URI is `atmtlabs://a
 |---|---|
 | `response_type` | `code` |
 | `client_id` | `atmt-labs-desktop` |
-| `redirect_uri` | `atmtlabs://auth/callback` |
+| `redirect_uri` | `http://127.0.0.1:<port>/callback` or `atmtlabs://auth/callback` |
 | `code_challenge` | 43 characters |
 | `code_challenge_method` | `S256` |
 | `state` | Echoed back unchanged |
@@ -27,12 +29,14 @@ The client ID is `atmt-labs-desktop`, and the only redirect URI is `atmtlabs://a
 
 Behaviour:
 - **Unregistered `redirect_uri` or `client_id`:** an error page. It never redirects.
-- **Signed-in browser:** a hand-off page that redirects to `atmtlabs://auth/callback?code=…&state=…`, with a visible **Open ATMT Labs** button as a fallback.
+- **Signed-in browser, loopback:** a plain `302` to `http://127.0.0.1:<port>/callback?code=…&state=…`. The app's listener answers with its own "You're signed in" page.
+- **Signed-in browser, `atmtlabs://`:** a hand-off page that redirects to `atmtlabs://auth/callback?code=…&state=…`, with a visible **Open ATMT Labs** button as a fallback.
 - **Otherwise:** the login page (Google / Yahoo), then `/oauth/continue` issues the code.
-- **Codes:** single use, valid for 60 s, stored hashed.
+- **Errors** after the redirect URI is validated go back to that same URI with `?error=…&state=…`.
+- **Codes:** single use, valid for 60 s, stored hashed, and pinned to the exact `redirect_uri` they were issued for.
 
 **`POST /oauth/token`** (form-encoded) supports two grants:
-- `grant_type=authorization_code&code&code_verifier&redirect_uri&client_id`
+- `grant_type=authorization_code&code&code_verifier&redirect_uri&client_id`. `redirect_uri` must equal the one the code was issued for.
 - `grant_type=refresh_token&refresh_token&client_id`
 
 Returns `{ access_token (HS256, 15 min), refresh_token, token_type: "Bearer", expires_in: 900 }`.

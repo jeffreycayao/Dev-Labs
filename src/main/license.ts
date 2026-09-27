@@ -24,6 +24,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { LICENSING } from '../shared/brand';
 import type { LicenseStatus } from '../shared/license';
 import { LicenseManager, type LicenseStore, type PersistedLicense } from './licenseManager';
+import { startLoopbackListener } from './licenseLoopback';
 import type { FetchLike } from './licenseCore';
 
 const TICK_MS = 30 * 60 * 1000;
@@ -133,6 +134,15 @@ function broadcast(status: LicenseStatus): void {
   }
 }
 
+/** After the browser hands the sign-in back, bring the app forward. */
+function focusApp(): void {
+  const w = BrowserWindow.getAllWindows().find((x) => !x.isDestroyed());
+  if (!w) return;
+  if (w.isMinimized()) w.restore();
+  w.show();
+  w.focus();
+}
+
 function openExternal(url: string): Promise<void> {
   // Only ever our own origins or Stripe (licenseCore validates API-supplied
   // URLs). Plain http only for a local licensing server in a dev build.
@@ -169,7 +179,9 @@ export function initLicensing(): LicenseManager {
     openExternal,
     device: { deviceName: hostname().slice(0, 64), platform: process.platform, appVersion: app.getVersion() },
     machineId,
-    newDeviceId: randomUUID
+    newDeviceId: randomUUID,
+    // RFC 8252 loopback first; atmtlabs:// stays as the fallback.
+    listenLoopback: (onCallback) => startLoopbackListener(onCallback, { onDone: focusApp })
   });
   manager.onChange(broadcast);
   const status = manager.init();
@@ -188,7 +200,8 @@ export function licenseAllowsAgents(): boolean {
   return manager ? manager.allowsAgents() : !isEnforced();
 }
 
-/** Route an atmtlabs:// link. True = it was the auth callback (handled). */
+/** Route an atmtlabs:// link (the fallback when the loopback listener could
+ *  not start). True = it was the auth callback (handled). */
 export function handleLicenseLink(url: string): Promise<boolean> {
   if (!manager) return Promise.resolve(false);
   return manager.handleCallback(url);

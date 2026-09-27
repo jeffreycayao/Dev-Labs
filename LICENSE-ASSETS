@@ -1,6 +1,6 @@
 NOTE ON BUNDLED ART ASSETS
 
-The MIT License in LICENSE applies to the SOURCE CODE of this project. It does
+The LICENSE and THIRD_PARTY_NOTICES.md terms cover the SOURCE CODE. They do
 NOT apply to the bundled pixel-art assets under src/renderer/src/assets/
 (tilesets and maps). Those are "Modern Interiors - RPG Tileset [16X16]" by
 LimeZu, licensed separately under the LimeZu Complete Version license, which

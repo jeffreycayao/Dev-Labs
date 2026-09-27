@@ -1484,27 +1484,28 @@ async function showAboutDialog(parent: BrowserWindow | null): Promise<void> {
     title: 'About ATMT Labs',
     message: `ATMT Labs  v${app.getVersion()}`,
     detail: [
-      'Philippine localized edition of an open-source multi-agent desktop harness, released under the MIT License.',
+      'Philippine edition — an AI agent workspace for Filipino teams and businesses, built on a proven open-source foundation and extended, localized and maintained by ATMT Labs.',
       '',
-      'We ship it to help Filipino teams and businesses put AI agents to work — locally, safely and with local support.',
+      '© 2026 ATMT Labs (Automatika PH Labs). All rights reserved.',
       '',
       'Maintainer: ATMT Labs (Automatika PH Labs)',
       'Contact: hello@automatika.ph · automatika.ph',
       '',
       `Electron ${process.versions.electron} · Chromium ${process.versions.chrome} · Node ${process.versions.node}`
     ].join('\n'),
-    buttons: ['OK', 'How to use', 'View license'],
+    buttons: ['OK', 'How to use', 'Third-party notices'],
     defaultId: 0,
     cancelId: 0,
     noLink: true
   };
   const { response } = parent ? await dialog.showMessageBox(parent, opts) : await dialog.showMessageBox(opts);
   if (response === 1) openHelpWindow();
-  if (response === 2) openLicense();
+  if (response === 2) openBundledDoc('THIRD_PARTY_NOTICES.md');
 }
 
-function openLicense(): void {
-  const file = app.isPackaged ? join(process.resourcesPath, 'LICENSE') : join(app.getAppPath(), 'LICENSE');
+/** Open a legal doc shipped via extraResources (repo root in dev). */
+function openBundledDoc(name: 'LICENSE' | 'THIRD_PARTY_NOTICES.md'): void {
+  const file = app.isPackaged ? join(process.resourcesPath, name) : join(app.getAppPath(), name);
   void shell.openPath(file);
 }
 
@@ -2596,7 +2597,8 @@ function installAppMenu(): void {
         { label: 'How to use ATMT Labs', accelerator: 'F1', click: () => openHelpWindow() },
         { label: 'Security & FAQ', click: () => openHelpWindow('faq') },
         { type: 'separator' as const },
-        { label: 'View License', click: () => openLicense() },
+        { label: 'License Agreement', click: () => openBundledDoc('LICENSE') },
+        { label: 'Third-Party Notices', click: () => openBundledDoc('THIRD_PARTY_NOTICES.md') },
         { label: 'About ATMT Labs', click: () => { void showAboutDialog(BrowserWindow.getFocusedWindow()); } }
       ]
     }

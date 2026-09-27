@@ -67,6 +67,10 @@ extraResources:
     to: help
   - from: LICENSE
     to: LICENSE
+  - from: THIRD_PARTY_NOTICES.md
+    to: THIRD_PARTY_NOTICES.md
+  - from: LICENSE-ASSETS
+    to: LICENSE-ASSETS
   - from: resources/md-slack-reply.cjs
     to: md-slack-reply.cjs
   # Knowledge Graph agent CLI + its pure-JS core. Agents invoke `node

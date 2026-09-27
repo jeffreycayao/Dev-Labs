@@ -47,7 +47,7 @@ export interface HeroPayload {
 export const DEFAULT_HERO: HeroPayload = {
   plan: {
     label: 'Local',
-    blurb: 'Every agent runs on your machine, in your folders, under your own keys. No seat limit, nothing metered.'
+    blurb: 'Every agent runs on your machine, in your folders, under your own keys.'
   },
   sponsor: null,
   notice: null

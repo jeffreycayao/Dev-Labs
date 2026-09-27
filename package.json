@@ -6,7 +6,7 @@
   "main": "out/main/index.js",
   "author": "Automatika Consulting <hello@automatika.ph>",
   "homepage": "https://automatika.ph/",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build && npm run copy:main-assets",

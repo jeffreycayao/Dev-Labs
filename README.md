@@ -6,7 +6,7 @@
 
 **An office of AI coding agents, running on your machine.**
 
-Local-first · multi-agent · MIT licensed · by [Automatika](https://automatika.ph)
+Local-first · multi-agent · Philippine edition · by [Automatika](https://automatika.ph)
 
 </div>
 
@@ -69,4 +69,5 @@ Brand assets live in [`brand/`](brand/). App name, slugs and the release repo ar
 
 ## License
 
-Source code: [MIT](LICENSE). Bundled pixel-art assets have their own terms — see [LICENSE-ASSETS](LICENSE-ASSETS).
+Proprietary — © 2026 Automatika Consulting (ATMT Labs). All rights reserved. See [LICENSE](LICENSE).
+Third-party components (including the MIT-licensed foundation this app is built on) keep their own licenses — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSE-ASSETS](LICENSE-ASSETS).

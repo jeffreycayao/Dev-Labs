@@ -130,25 +130,6 @@ export function SettingsHeroCard() {
           }}>{hero.notice}</div>
         )}
 
-        {/* Pro announcement. Same block the release drop carries. */}
-        <div style={{
-          padding: '12px 14px',
-          background: 'var(--cth-lilac-light)',
-          border: `2px solid ${INK}`
-        }}>
-          <span style={{
-            display: 'inline-block', fontFamily: MONO, fontSize: 9, letterSpacing: '.18em',
-            textTransform: 'uppercase', padding: '2px 7px',
-            background: INK, color: 'var(--cth-paper-100)'
-          }}>{t('settingsHero.announcement')}</span>
-          <div style={{
-            marginTop: 8, fontFamily: MONO, fontSize: 14, fontWeight: 700, color: INK
-          }}>{t('settingsHero.proLaunch')}</div>
-          <div style={{ marginTop: 6, fontSize: 12.5, lineHeight: 1.5, color: 'var(--cth-ink-700)', maxWidth: '64ch' }}>
-            <b style={{ color: INK }}>{t('settingsHero.proCommunityFree')}</b>{' '}
-            {t('settingsHero.proParagraph')}
-          </div>
-        </div>
 
         {/* Founders' Wall offer. */}
         {FOUNDERS_WALL_URL && (

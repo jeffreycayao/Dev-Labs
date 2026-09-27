@@ -62,6 +62,11 @@ files:
 # resources dir (process.resourcesPath). It runs under `node`, NOT inside the
 # asar, so the office worker can invoke `node <resources>/md-slack-reply.cjs`.
 extraResources:
+  # Offline user guide (Help → How to use) + the LICENSE shown by Help → View License.
+  - from: resources/help
+    to: help
+  - from: LICENSE
+    to: LICENSE
   - from: resources/md-slack-reply.cjs
     to: md-slack-reply.cjs
   # Knowledge Graph agent CLI + its pure-JS core. Agents invoke `node

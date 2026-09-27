@@ -1439,6 +1439,75 @@ function slackReplyScriptPath(): string {
     : join(app.getAppPath(), 'resources', 'md-slack-reply.cjs');
 }
 
+/** Bundled user guide (resources/help): extraResources when packaged, repo in dev. */
+function helpResourceDir(): string {
+  return app.isPackaged
+    ? join(process.resourcesPath, 'help')
+    : join(app.getAppPath(), 'resources', 'help');
+}
+
+let helpWindow: BrowserWindow | null = null;
+/** Open the offline "How to use" guide. The running version is passed as ?v= so
+ *  the page never hard-codes it. Locked down: no node, sandboxed, and any link
+ *  leaves for the system browser instead of navigating the guide window. */
+function openHelpWindow(section?: string): void {
+  if (helpWindow && !helpWindow.isDestroyed()) {
+    if (helpWindow.isMinimized()) helpWindow.restore();
+    helpWindow.focus();
+    return;
+  }
+  helpWindow = new BrowserWindow({
+    width: 1100, height: 820, minWidth: 420, minHeight: 480,
+    title: 'How to use ATMT Labs',
+    backgroundColor: '#0B0A06',
+    autoHideMenuBar: true,
+    webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false }
+  });
+  const openOutside = (url: string): void => {
+    if (/^(https?:|mailto:)/i.test(url)) void shell.openExternal(url);
+  };
+  helpWindow.webContents.setWindowOpenHandler(({ url }) => { openOutside(url); return { action: 'deny' }; });
+  helpWindow.webContents.on('will-navigate', (e, url) => {
+    if (!url.startsWith('file:')) { e.preventDefault(); openOutside(url); }
+  });
+  helpWindow.on('closed', () => { helpWindow = null; });
+  void helpWindow.loadFile(join(helpResourceDir(), 'index.html'), {
+    query: { v: app.getVersion() },
+    ...(section ? { hash: section } : {})
+  });
+}
+
+/** Help → About: localized-edition notice with the live version. */
+async function showAboutDialog(parent: BrowserWindow | null): Promise<void> {
+  const opts: Electron.MessageBoxOptions = {
+    type: 'info',
+    title: 'About ATMT Labs',
+    message: `ATMT Labs  v${app.getVersion()}`,
+    detail: [
+      'Philippine localized edition of an open-source multi-agent desktop harness, released under the MIT License.',
+      '',
+      'We ship it to help Filipino teams and businesses put AI agents to work — locally, safely and with local support.',
+      '',
+      'Maintainer: ATMT Labs (Automatika PH Labs)',
+      'Contact: hello@automatika.ph · automatika.ph',
+      '',
+      `Electron ${process.versions.electron} · Chromium ${process.versions.chrome} · Node ${process.versions.node}`
+    ].join('\n'),
+    buttons: ['OK', 'How to use', 'View license'],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true
+  };
+  const { response } = parent ? await dialog.showMessageBox(parent, opts) : await dialog.showMessageBox(opts);
+  if (response === 1) openHelpWindow();
+  if (response === 2) openLicense();
+}
+
+function openLicense(): void {
+  const file = app.isPackaged ? join(process.resourcesPath, 'LICENSE') : join(app.getAppPath(), 'LICENSE');
+  void shell.openPath(file);
+}
+
 /** W3 — the bundled read-only `skills/` source dir copied into each agent's
  *  `.claude/skills/` at spawn. Same packaged/dev resolution as the helpers above.
  *  Tolerated-missing until lp-manifest (Kevin) populates it (the hive copy is a
@@ -2520,7 +2589,17 @@ function installAppMenu(): void {
       ]
     },
     { role: 'viewMenu' },
-    { role: 'windowMenu' }
+    { role: 'windowMenu' },
+    {
+      role: 'help',
+      submenu: [
+        { label: 'How to use ATMT Labs', accelerator: 'F1', click: () => openHelpWindow() },
+        { label: 'Security & FAQ', click: () => openHelpWindow('faq') },
+        { type: 'separator' as const },
+        { label: 'View License', click: () => openLicense() },
+        { label: 'About ATMT Labs', click: () => { void showAboutDialog(BrowserWindow.getFocusedWindow()); } }
+      ]
+    }
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }

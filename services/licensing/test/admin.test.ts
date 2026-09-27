@@ -124,3 +124,25 @@ test('admin: ADMIN_EMAILS replaces the default owner; /admin is not served on th
   assert.equal((await (await h.webSignIn('boss@example.com')).req(`${AUTH}/admin`)).status, 200);
   assert.equal((await h.app.request(`${API}/admin`)).status, 404);
 });
+
+test('admin PWA: /admin links an owner-only manifest; nobody else can read it or install anything', async () => {
+  const h = await harness();
+  const owner = await h.webSignIn(OWNER);
+  const page = await (await owner.req(`${AUTH}/admin`)).text();
+  assert.match(page, /<link rel="manifest" href="\/admin\/manifest\.webmanifest" crossorigin="use-credentials">/);
+  assert.match(page, /apple-mobile-web-app-capable/);
+  assert.match((await owner.req(`${AUTH}/admin`)).headers.get('content-security-policy') ?? '', /manifest-src 'self'/);
+
+  const res = await owner.req(`${AUTH}/admin/manifest.webmanifest`);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('content-type'), 'application/manifest+json');
+  assert.match(res.headers.get('cache-control') ?? '', /private/);
+  const m = (await res.json()) as Record<string, any>;
+  assert.deepEqual([m.start_url, m.scope, m.display], ['/admin', '/admin', 'standalone']);
+  for (const icon of m.icons) assert.equal((await h.app.request(`${AUTH}${icon.src}`)).status, 200, icon.src);
+
+  assert.equal((await h.browser().req(`${AUTH}/admin/manifest.webmanifest`)).status, 404, 'signed out');
+  assert.equal((await (await h.webSignIn('someone@example.com')).req(`${AUTH}/admin/manifest.webmanifest`)).status, 404, 'not the owner');
+  const account = await (await owner.req(`${AUTH}/account`)).text();
+  assert.doesNotMatch(account, /rel="manifest"/, 'the account page is not installable');
+});

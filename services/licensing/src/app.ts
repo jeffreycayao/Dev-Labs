@@ -13,7 +13,7 @@ import { deleteCookie, getCookie, getSignedCookie, setCookie, setSignedCookie } 
 import type { Config, ProviderId } from './config.js';
 import { Billing, type StripeLike } from './billing.js';
 import { Oidc } from './oidc.js';
-import { PAGE_HEADERS, accountPage, adminPage, loginPage, messagePage, returnToAppPage } from './pages.js';
+import { ADMIN_MANIFEST, PAGE_HEADERS, accountPage, adminPage, loginPage, messagePage, returnToAppPage } from './pages.js';
 import { BRAND_ASSETS } from './brandAssets.js';
 import { REDEEM_MESSAGES, hashUnlockCode, mintUnlockCodes, normalizeUnlockCode } from './codes.js';
 import type { AccountRow, Store } from './store.js';
@@ -380,6 +380,19 @@ export function createApp(deps: AppDeps): Hono {
   app.get('/admin', async (c) => {
     const g = await adminGate(c, 'GET');
     return g.ok ? renderAdmin(c, g.acct) : g.res;
+  });
+
+  // Fetched by the browser with the session cookie (crossorigin=use-credentials).
+  // Owner email only; a stale or Yahoo session still gets it, because the
+  // page itself sends those through Google again.
+  app.get('/admin/manifest.webmanifest', async (c) => {
+    const s = await webSession(c);
+    if (!s || !cfg.adminEmails.includes(s.acct.email.toLowerCase())) return c.json({ error: 'not_found' }, 404);
+    return c.body(JSON.stringify(ADMIN_MANIFEST), 200, {
+      'content-type': 'application/manifest+json',
+      'cache-control': 'private, no-cache',
+      'x-robots-tag': 'noindex, nofollow'
+    });
   });
 
   app.post('/admin/codes', async (c) => {

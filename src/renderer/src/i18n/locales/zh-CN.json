@@ -564,7 +564,7 @@
     "templatesTechnical": "技术",
     "templatesNonTechnical": "非技术",
     "templatesYourFloor": "你的楼层",
-    "templatesHint": "选择一个角色，自动填写名称、角色形象、颜色和长期目标。逐步检查后再生成。",
+    "roleTemplatesHint": "选择一个角色，自动填写名称、角色形象、颜色和长期目标。逐步检查后再生成。",
     "importHireDesc": "导入 hire 会从一个 .json 清单加载现成的智能体——它会填好下方所有字段供你检查。不点 生成 就不会启动任何东西。",
     "generateWithAI": "用 AI 生成一个…",
     "hideAIPrompt": "隐藏 AI 提示词",

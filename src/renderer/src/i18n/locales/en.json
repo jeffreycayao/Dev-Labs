@@ -564,7 +564,7 @@
     "templatesTechnical": "Technical",
     "templatesNonTechnical": "Non-technical",
     "templatesYourFloor": "your floor",
-    "templatesHint": "Pick a role to pre-fill the name, character, color and a standing goal. Review each step, then spawn.",
+    "roleTemplatesHint": "Pick a role to pre-fill the name, character, color and a standing goal. Review each step, then spawn.",
     "importHireDesc": "Import hire loads a ready-made agent from a .json manifest — it fills in every field below for you to review. Nothing spawns until you hit spawn.",
     "generateWithAI": "generate one with AI…",
     "hideAIPrompt": "hide AI prompt",

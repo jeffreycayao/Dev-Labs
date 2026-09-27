@@ -1073,8 +1073,8 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
                         value={goal}
                         onChange={(e) => setGoal(e.target.value)}
                         placeholder={tr('addAgent.goalPlaceholder')}
-                        rows={2}
-                        style={{ ...inputStyle, fontFamily: 'var(--cth-font-ui)', resize: 'none' }}
+                        rows={6}
+                        style={{ ...inputStyle, fontFamily: 'var(--cth-font-ui)', resize: 'vertical' }}
                       />
                     </Row>
                   </>
@@ -1175,7 +1175,7 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
                   ))}
                 </div>
                 <span style={{ fontSize: 12, color: 'var(--cth-ink-500)', lineHeight: '16px' }}>
-                  {tr('addAgent.templatesHint')}
+                  {tr('addAgent.roleTemplatesHint')}
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {templatesFor(templateTrack).map((tpl) => (

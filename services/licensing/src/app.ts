@@ -14,6 +14,7 @@ import type { Config, ProviderId } from './config.js';
 import { Billing, type StripeLike } from './billing.js';
 import { Oidc } from './oidc.js';
 import { PAGE_HEADERS, accountPage, adminPage, loginPage, messagePage, returnToAppPage } from './pages.js';
+import { BRAND_ASSETS } from './brandAssets.js';
 import { REDEEM_MESSAGES, hashUnlockCode, mintUnlockCodes, normalizeUnlockCode } from './codes.js';
 import type { AccountRow, Store } from './store.js';
 import {
@@ -38,6 +39,9 @@ const ENTITLED = new Set(['trialing', 'active']);
 const ADMIN_FRESH_MS = 12 * 3600 * 1000;
 
 const API_PATHS = /^\/(v1\/|api\/cron\/|health$)/;
+
+/** Favicons, logos and fonts (src/brandAssets.ts), decoded once per instance. */
+const ASSETS = new Map(Object.entries(BRAND_ASSETS).map(([path, a]) => [path, { type: a.type, bytes: Buffer.from(a.b64, 'base64') }]));
 
 function html(c: Context, body: string, status = 200) {
   return c.body(body, status as 200, PAGE_HEADERS);
@@ -75,6 +79,16 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   app.get('/health', (c) => c.json({ ok: true }));
+
+  app.get('*', async (c, next) => {
+    const a = ASSETS.get(new URL(c.req.url).pathname);
+    if (!a) return next();
+    return c.body(new Uint8Array(a.bytes), 200, {
+      'content-type': a.type,
+      'cache-control': 'public, max-age=86400',
+      'x-content-type-options': 'nosniff'
+    });
+  });
 
   // ─── browser session helpers ────────────────────────────────────────────
   async function webSession(c: Context) {

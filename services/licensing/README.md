@@ -104,6 +104,10 @@ npm run dev
 ```
 These overrides are ignored in packaged builds.
 
+## Branding
+
+The pages follow `brand/Automatika-Design-System-v2.md`. Favicons, logos and fonts live in `assets/` and are embedded into `src/brandAssets.ts`, so the single Vercel function serves them itself (`/favicon.ico`, `/apple-touch-icon.png`, `/site.webmanifest`, `/brand/*`). After changing anything in `assets/`, run `npm run brand:assets`; a test fails if you forget.
+
 ## Operations
 
 - **Unlock codes in the browser: `https://auth.labs.atmt.dev/admin`.** Sign in with Google as an `ADMIN_EMAILS` address (default `jeffreycayao@gmail.com`). Create codes (how many, who for, optional expiry), copy them with their links from the page, see who used which, and revoke unused ones.

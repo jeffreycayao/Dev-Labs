@@ -113,6 +113,7 @@ The pages follow `brand/Automatika-Design-System-v2.md`. Favicons, logos and fon
 - **Unlock codes in the browser: `https://auth.labs.atmt.dev/admin`.** Sign in with Google as an `ADMIN_EMAILS` address (default `jeffreycayao@gmail.com`). Create codes (how many, who for, optional expiry), copy them with their links from the page, see who used which, and revoke unused ones.
   - Only Google sign-in counts, and only if it happened in the last 12 hours; otherwise you're sent through Google again. Anyone else gets a 404.
   - New codes are shown once, on the page right after you create them.
+  - **On your phone:** open `/admin`, sign in with Google, then **Share → Add to Home Screen** (iPhone Safari) or **⋮ → Install app** (Android Chrome). It opens full-screen as "ATMT Admin". On iPhone the home-screen app keeps its own sign-in, so sign in once inside it. The 12-hour rule still applies, so expect a Google prompt about twice a day. It needs a connection; nothing is stored offline.
   - After deploying this, run `npm run db:migrate` once (adds `web_sessions.provider`). Existing browser sessions just sign in again to reach /admin.
 
 - **Unlock codes from the command line.** Same thing, run on your computer with `DATABASE_URL` in `.env.local`:

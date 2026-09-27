@@ -72,7 +72,6 @@ const HEAD = `<link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#faf8f2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">`;
 
@@ -188,6 +187,36 @@ ${devices}
 <form method="post" action="/logout"><button class="btn">Sign out</button></form>`);
 }
 
+/** Installable on the owner's phone (Add to Home Screen). The manifest sits
+ *  behind the same owner gate as the page, so it is fetched with the session
+ *  cookie (use-credentials) and 404s for everyone else. No service worker:
+ *  nothing from the admin page is cached on the device, and pages stay
+ *  script-free. */
+const ADMIN_HEAD = `<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="/admin/manifest.webmanifest" crossorigin="use-credentials">
+<meta name="application-name" content="ATMT Admin">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ATMT Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">`;
+
+/** The web app manifest for /admin. */
+export const ADMIN_MANIFEST = {
+  id: '/admin',
+  name: 'ATMT Labs Admin',
+  short_name: 'ATMT Admin',
+  description: 'Create, track and revoke ATMT Labs unlock codes.',
+  start_url: '/admin',
+  scope: '/admin',
+  display: 'standalone',
+  theme_color: '#faf8f2',
+  background_color: '#faf8f2',
+  icons: [
+    { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
+  ]
+};
+
 /**
  * Owner-only: mint, list and revoke unlock codes. Freshly minted codes are
  * shown in this response only (the database keeps a hash), so the page is
@@ -239,5 +268,5 @@ ${created}
 <h2>All codes</h2>
 <div class="stats"><span><b>${count('unused')}</b>unused</span><span><b>${count('used')}</b>used</span><span><b>${count('revoked')}</b>revoked</span><span><b>${count('expired')}</b>expired</span></div>
 ${rows ? `<div class="scroll"><table><thead><tr><th>Created</th><th>For</th><th>Code</th><th>State</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p><small>No codes yet.</small></p>'}
-<form method="post" action="/logout"><button class="btn">Sign out</button></form>`, '<meta name="robots" content="noindex,nofollow">', true);
+<form method="post" action="/logout"><button class="btn">Sign out</button></form>`, ADMIN_HEAD, true);
 }

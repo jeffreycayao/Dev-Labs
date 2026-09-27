@@ -1,6 +1,6 @@
-# Munder Difflin — Landing Site Design System
+# ATMT LAB — Landing Site Design System
 
-> Source of truth for `docs/index.html` (the marketing site at **munderdiffl.in**).
+> Source of truth for `docs/index.html` (the marketing site at **automatika.ph**).
 > This is **not** the app design system — see the root `DESIGN.md` for the Electron app.
 >
 > **Direction:** light, warm-paper, monospace, lightly **neo-brutalist** — in the lineage of
@@ -8,9 +8,9 @@
 > thick black borders, and hard offset shadows. JetBrains Mono carries the type. Playful
 > pastel color-blocks accent the feature cards; one warm **yellow** drives every CTA.
 >
-> We keep Munder Difflin's own identity inside this system: the **maroon brand mark**, the
+> We keep ATMT LAB's own identity inside this system: the **maroon brand mark**, the
 > name, the *Office* parody, the **GOD / hive / MemPalace** story, and the real captured
-> product footage. "Munder Difflin is a paper company," so the cream-paper canvas is on-theme.
+> product footage. "ATMT LAB is a paper company," so the cream-paper canvas is on-theme.
 >
 > **History:** this replaces the previous *dark, flat, rounded* system. That direction
 > ("no offset shadows, no square corners, dark canvas") is fully retired.
@@ -115,7 +115,7 @@ Inter is fallback only.
 | Body | sans | 14.5–15px | 400 | normal | `--ink-dim` |
 | Button | mono | 13–14px | 700 | normal | |
 | Terminal / code | mono | 13–14px | 400 | normal | on `--ink-band` |
-| Wordmark | mono | 13px | 700 | 0.02em | "MUNDER DIFFLIN" |
+| Wordmark | mono | 13px | 700 | 0.02em | "ATMT LAB" |
 
 **Emphasis:** in the big "What" statement, key nouns use `--ink` (bold), `--sky` (hive mind,
 long-term memory) and `--maroon` (GOD orchestrator).
@@ -251,9 +251,9 @@ The retired `media/how-*.{webm,mp4}` footage stays on disk but is no longer refe
 
 ## 10. SEO / meta
 
-Title, description, canonical (`https://munderdiffl.in/`), favicon (`./logo.png`),
+Title, description, canonical (`https://automatika.ph/`), favicon (`./logo.png`),
 Open Graph + Twitter card (`og:image` → `./media/og.png`), `theme-color` `#F5F2E8`.
-CNAME → `munderdiffl.in`.
+CNAME → `automatika.ph`.
 
 ---
 
@@ -279,4 +279,4 @@ MemPalace** narrative, MD's own copy, the real pixel-office hero footage, and th
 
 ---
 
-*Last updated: 2026-06-01. Owner: Munder Difflin / Chaitanya Giri.*
+*Last updated: 2026-06-01. Owner: ATMT LAB / Automatika Consulting.*

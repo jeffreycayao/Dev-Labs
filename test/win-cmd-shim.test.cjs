@@ -175,10 +175,10 @@ test('the win32 branch is genuinely platform-gated', () => {
  *  newlines, parentheses, embedded double quotes, a backslash run, `&`/`|`. */
 const HOSTILE_PROMPT = [
   'You are "Michael" (god-1), an autonomous agent in a collaborating hive.',
-  'Your private workspace is C:\\Users\\Tester\\.munder\\hive\\agents\\god-1.',
+  'Your private workspace is C:\\Users\\Tester\\.atmt\\hive\\agents\\god-1.',
   '',
   'HIVE PROTOCOL — follow it every task:',
-  '1. Read EVERY file in C:\\Users\\Tester\\.munder\\hive\\agents\\god-1\\inbox (messages',
+  '1. Read EVERY file in C:\\Users\\Tester\\.atmt\\hive\\agents\\god-1\\inbox (messages',
   '   other agents sent you) & move handled ones to inbox\\.done.',
   '3. To ask another agent, write ONE message JSON into your outbox\\ (schema in',
   '   PROTOCOL.md) | NEVER write into another agent\'s folder.',

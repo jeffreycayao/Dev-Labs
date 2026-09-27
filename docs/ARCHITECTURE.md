@@ -71,19 +71,19 @@ src/
     scene/office/            Pixi office floor: OfficeFloor, Character, Camera, cast, pathfinding, …
     store/ · hooks/          zustand store, event loop, PTY parser, typewriter
     assets/                  tilesets, maps, character sheets (see ATTRIBUTION.md)
-docs/                        `logo.png`, `banner.png`, landing page (GitHub Pages → munderdiffl.in)
+docs/                        `logo.png`, `banner.png`, landing page (GitHub Pages → automatika.ph)
 docs/media/                  `og.png` (social previews) + rendered Remotion clips
 landing-remotion/            Remotion project that renders the landing page's "how it works" clips
 HIVE.md · SPEC.md · DESIGN.md   multi-agent · terminal/event · visual design
 docs/message-queue.md        who may type into an agent's terminal, and when
 ```
 
-<div align="right">(<a href="#munder-difflin">↑ back to top</a>)</div>
+<div align="right">(<a href="#atmt-lab">↑ back to top</a>)</div>
 
 ## Design system
 
 The aesthetic is **Animal Crossing × Earthbound × SNES menu UI** — pixel-snapped, chunky, friendly.
-[`DESIGN.md`](../DESIGN.md) is canonical; every component derives from its tokens. The Munder Difflin
+[`DESIGN.md`](../DESIGN.md) is canonical; every component derives from its tokens. The ATMT LAB
 brand layers a **Dunder-Mifflin maroon** (`#6E1423`) and **gold** (`#F4D35E`) on top for logo and
 chrome. The 15 avatars are the cast of *The Office*, differentiated by hair/skin/shirt recipes.
 

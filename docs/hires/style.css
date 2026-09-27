@@ -1,9 +1,9 @@
-/* Agent Gallery — styled to match munderdiffl.in (neo-brutalist):
+/* Agent Gallery — styled to match automatika.ph (neo-brutalist):
    same palette tokens, Geist + JetBrains Mono, hard ink borders and
    offset shadows, pastel accent chips. */
 
 :root {
-  /* palette — mirrors munderdiffl.in */
+  /* palette — mirrors automatika.ph */
   --paper:    #FFFDF7;
   --cream:    #F5F2E8;
   --cream-2:  #F5ECD7;

@@ -377,7 +377,7 @@ test('reset cleanup removes only exposed ATMT LAB rollouts', (t) => {
   const agentDir = path.join(harness, 'hive', 'agents', 'a1');
   const isolated = path.join(agentDir, '.codex', 'sessions');
   fs.mkdirSync(isolated, { recursive: true });
-  fs.writeFileSync(path.join(isolated, 'rollout-munder.jsonl'), 'munder\n', 'utf8');
+  fs.writeFileSync(path.join(isolated, 'rollout-atmt.jsonl'), 'atmt\n', 'utf8');
   const personal = path.join(home, '.codex', 'sessions', '2026', '08', '21', 'rollout-personal.jsonl');
   fs.mkdirSync(path.dirname(personal), { recursive: true });
   fs.writeFileSync(personal, 'personal\n', 'utf8');

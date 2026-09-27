@@ -225,7 +225,7 @@ test('redact: bearer keeps the label, drops the credential', () => {
 const BENIGN = [
   'integrated feat/voice-key-ux at commit db61b12 off main 4585902',
   'kevin-mqpbq43v parked, awaiting assignment',
-  '/Users/chaitanya/Documents/Personal/cth-voice-msg-access is the worktree',
+  '/Users/dev/Documents/Personal/cth-voice-msg-access is the worktree',
   'The token cap is 1.2 million tokens this session.',
   'Tasks: 3 todo, 1 doing, 0 blocked, 12 done.',
   'Pam approved 8 of 8 dimensions, no must-fix.'

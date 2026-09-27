@@ -4,7 +4,7 @@
 'use strict';
 
 window.HireSpec = (function () {
-  const SPEC = 'munder-difflin/hire@1';
+  const SPEC = 'atmt-lab/hire@1';
   const PROVIDERS = ['claude', 'antigravity', 'codex', 'cursor'];
   const PROVIDER_LABEL = { claude: 'Claude Code', antigravity: 'Antigravity', codex: 'Codex', cursor: 'Cursor' };
   const FLAG_RE = /^[A-Za-z0-9._\/=:,@+-]{1,100}$/;

@@ -9,7 +9,7 @@ Two different queues get called "the queue". They are not the same thing:
 
 | Name | Lives in | Holds |
 |---|---|---|
-| **MD queue** | the harness (zustand store, per agent) | messages parked by *Munder Difflin* until that agent's terminal is free |
+| **MD queue** | the harness (zustand store, per agent) | messages parked by *ATMT LAB* until that agent's terminal is free |
 | **Claude queue** | inside Claude Code itself | text Claude Code has accepted but not started on yet |
 
 Everything below is about the **MD queue**. The harness cannot see the Claude queue

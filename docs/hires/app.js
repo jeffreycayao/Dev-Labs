@@ -12,7 +12,7 @@ const ACCENT_BG = {
   lemon: 'var(--lemon)', lilac: 'var(--lilac)', peach: 'var(--peach)'
 };
 
-/* Function categories — same eight as munderdiffl.in's landing page, derived
+/* Function categories — same eight as automatika.ph's landing page, derived
    from each role's capability tags (no spec change needed). */
 const CATEGORIES = {
   engineering: ['code', 'testing', 'qa', 'ci', 'debugging', 'code-review', 'git', 'refactoring', 'migrations', 'codemods', 'cleanup', 'dependencies', 'maintenance', 'security', 'audit', 'frontend'],

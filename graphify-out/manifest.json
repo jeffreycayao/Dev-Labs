@@ -1098,9 +1098,9 @@
     "semantic_hash": ""
   },
   "src/renderer/src/components/MessageQueueComposer.tsx": {
-    "mtime": 1790466436.576824,
-    "seen": 1790466869.967264,
-    "ast_hash": "261898b4c1a3a889485a45d1611c8912",
+    "mtime": 1790475081.3364327,
+    "seen": 1790475258.3434718,
+    "ast_hash": "e81959333a022d7018735c6849324d8a",
     "semantic_hash": ""
   },
   "src/renderer/src/components/MichaelBooting.tsx": {
@@ -1476,21 +1476,21 @@
     "semantic_hash": ""
   },
   "src/renderer/src/i18n/locales/ar.json": {
-    "mtime": 1790474137.546111,
-    "seen": 1790474246.245713,
-    "ast_hash": "93d3e1f9eec41bbb6fcc1962ea6aa54a",
+    "mtime": 1790475081.3533154,
+    "seen": 1790475258.3435538,
+    "ast_hash": "ea6dc633fa82c43a74efb2171259a72a",
     "semantic_hash": ""
   },
   "src/renderer/src/i18n/locales/en.json": {
-    "mtime": 1790474137.4820163,
-    "seen": 1790474246.245714,
-    "ast_hash": "eaf6192f58bed5c894f932e6f19a0d11",
+    "mtime": 1790475081.3518138,
+    "seen": 1790475258.3435552,
+    "ast_hash": "1ea1b5d14046d0d2a9a4039db4ef519b",
     "semantic_hash": ""
   },
   "src/renderer/src/i18n/locales/zh-CN.json": {
-    "mtime": 1790474137.5314386,
-    "seen": 1790474246.2457147,
-    "ast_hash": "77e64922378d7a8498646196df8edd09",
+    "mtime": 1790475081.3533154,
+    "seen": 1790475258.3435564,
+    "ast_hash": "a1bfbe17f5dd9745e1e15d190756a82c",
     "semantic_hash": ""
   },
   "src/renderer/src/ide/chrome.ts": {
@@ -3351,6 +3351,24 @@
     "mtime": 1790474104.4548547,
     "seen": 1790474246.2459855,
     "ast_hash": "048e6467b1ca3177021010dcd02e2ca8",
+    "semantic_hash": ""
+  },
+  "src/renderer/src/components/PromptLibraryPanel.tsx": {
+    "mtime": 1790475057.5547812,
+    "seen": 1790475258.3434815,
+    "ast_hash": "0bdfb8bbfdc529d536405486f5b29af7",
+    "semantic_hash": ""
+  },
+  "src/shared/promptLibrary.ts": {
+    "mtime": 1790475021.673769,
+    "seen": 1790475258.343652,
+    "ast_hash": "95999b454e84fdfe513db90511f537cf",
+    "semantic_hash": ""
+  },
+  "test/prompt-library.test.cjs": {
+    "mtime": 1790475253.6530843,
+    "seen": 1790475258.343757,
+    "ast_hash": "34594454f86500c947a884132c522e04",
     "semantic_hash": ""
   }
 }

@@ -23,6 +23,14 @@ export const FLOOR_SPEC_V1 = 'atmt-labs/floor@1';
 /** Hard caps. A floor is a team, not a directory. */
 export const FLOOR_MAX_HIRES = 24;
 export const FLOOR_MAX_BYTES = 256 * 1024;
+
+/** A building: every open floor (office window), the first one included,
+ *  counts toward the cap. */
+export const BUILDING_MAX_FLOORS = 200;
+
+export function canAddFloor(openFloors: number): boolean {
+  return openFloors < BUILDING_MAX_FLOORS;
+}
 const MAX_CONNECTORS = 12;
 
 export interface FloorManifest {

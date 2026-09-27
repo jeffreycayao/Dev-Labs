@@ -154,6 +154,8 @@ and <https://auth.labs.atmt.dev/login> should show the sign-in page.
 
 ## 8. Landing page (labs.atmt.dev)
 
+The site lives in `site/` (static, no build). Deploy it as a **separate Vercel project** with Root Directory `site`, then add the domain `labs.atmt.dev`. `/`, `/welcome` and `/pricing` are done. Still to fill in: the video, the price, the download redirects and `/terms` + `/privacy`. See `site/README.md`.
+
 The app and the licensing service link to these pages. **Each one must exist before launch:**
 
 | Page | Who links to it | What it needs |

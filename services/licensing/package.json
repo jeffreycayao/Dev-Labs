@@ -15,7 +15,8 @@
     "db:migrate": "node scripts/migrate.mjs",
     "env:push": "node scripts/push-env.mjs",
     "dev": "vercel dev",
-    "codes": "node --import tsx scripts/codes.ts"
+    "codes": "node --import tsx scripts/codes.ts",
+    "brand:assets": "node scripts/brand-assets.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

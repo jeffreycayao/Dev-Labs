@@ -62,7 +62,7 @@ test('admin: the owner mints codes once, they redeem, and revoke stops the unuse
   // Listing never shows the plain code again.
   const list = await (await owner.req(`${AUTH}/admin`)).text();
   for (const c of codes) assert.ok(!list.includes(c));
-  assert.match(list, /2 unused/);
+  assert.match(list, /<b>2<\/b>unused/);
 
   const ana = await h.desktopSignIn('ana@example.com');
   assert.equal((await redeemApi(h, ana.access_token, codes[0])).status, 200);
@@ -76,7 +76,7 @@ test('admin: the owner mints codes once, they redeem, and revoke stops the unuse
 
   const after = await (await owner.req(`${AUTH}/admin`)).text();
   assert.match(after, /used 2026-09-27 by ana@example\.com/);
-  assert.match(after, /1 revoked/);
+  assert.match(after, /<b>1<\/b>revoked/);
 });
 
 test('admin: revoke from the list by hash; a used code cannot be revoked', async () => {

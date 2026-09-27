@@ -4,6 +4,7 @@ All notable changes to ATMT Labs. Versions are bumped with `npm run release:<pat
 
 ## Unreleased
 
+- **Branded web pages:** sign-in, account, admin and message pages on auth.labs.atmt.dev now follow the Automatika Design System v2 (`brand/`): automatika™ logo (light and dark versions), Poppins headings, Inter body text, lime `#C7FD11` primary button, rounded cards, light and dark mode. The brand favicon set, apple-touch icon and web manifest are served by the service itself. Fonts are self-hosted (SIL OFL, `services/licensing/assets/fonts/LICENSE.txt`).
 - **Admin page for unlock codes:** `auth.labs.atmt.dev/admin` lets the owner create (with a label and optional expiry), list and revoke unlock codes in the browser. Only emails in `ADMIN_EMAILS` (default `jeffreycayao@gmail.com`), only via Google sign-in from the last 12 hours; everyone else gets a 404. Run `npm run db:migrate` once (adds `web_sessions.provider`).
 - **Account menu in the app:** Manage Account & Subscription, Cancel Free Trial, Redeem Unlock Code, and Start Free Trial / Buy open the web account page or Checkout. The app menu is now always installed; "New Floor" still appears only with multi-window floors on.
 - **Fixed licensing checkout:** account page buttons now submit with a valid same-origin browser Origin, so buying a lifetime license no longer stops at Forbidden.

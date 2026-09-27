@@ -151,13 +151,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" > "$RUNNER_TEMP/private-release.json"
-          jq -e '.draft == true' "$RUNNER_TEMP/private-release.json" > /dev/null
+          # The REST release-by-tag endpoint can return 404 for drafts; the
+          # CLI's release view resolves them for repository writers.
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+            --json databaseId,isDraft,assets > "$RUNNER_TEMP/private-release.json"
+          jq -e '.isDraft == true' "$RUNNER_TEMP/private-release.json" > /dev/null
           jq -e '[.assets[].name] as $assets |
             all(["latest.yml", "latest-mac.yml", "latest-linux.yml"][];
               . as $name | ($assets | index($name)) != null)' \
             "$RUNNER_TEMP/private-release.json" > /dev/null
-          id=$(jq -r '.id' "$RUNNER_TEMP/private-release.json")
+          id=$(jq -r '.databaseId' "$RUNNER_TEMP/private-release.json")
           prerelease=false
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then prerelease=true; fi
           gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$id" \

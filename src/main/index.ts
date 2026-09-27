@@ -2815,7 +2815,7 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
   // god, ephemeral workers, Slack/webhook/schedule triggers — starts through
   // this one function.
   if (!licenseAllowsAgents()) {
-    return { ok: false, error: 'An active ATMT Labs subscription is required. Sign in or start your free trial.' };
+    return { ok: false, error: 'An ATMT Labs license is required. Sign in to start your free trial, buy a lifetime license, or redeem an unlock code.' };
   }
   // ── cwd INGESTION — expand `~` exactly once, here ───────────────────────────
   // This is the single door every agent spawn comes through (`pty:spawn` IPC and

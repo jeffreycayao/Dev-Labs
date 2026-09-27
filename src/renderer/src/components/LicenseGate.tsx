@@ -16,6 +16,7 @@ import type { LicenseStatus } from '@shared/license';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
 import brandLogo from '@brand/logo.png?url';
+import { LICENSING } from '@shared/brand';
 
 export interface LicenseGateProps {
   status: LicenseStatus;
@@ -35,6 +36,16 @@ export function LicenseGate({ status }: LicenseGateProps) {
   const refresh = () => run(() => window.cth.licenseRefresh());
   const signOut = () => run(() => window.cth.licenseSignOut());
   const cancel = () => run(() => window.cth.licenseCancelSignIn());
+
+  // Unlock codes (free vouchers). Needs a signed-in account to attach to.
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const redeem = () => run(async () => {
+    setCodeError(null);
+    const r = await window.cth.licenseRedeem(code);
+    if (!r.ok) setCodeError(t(`license.errors.${r.error ?? 'server_error'}`));
+  });
 
   const { state } = status;
   const needsPayment = state === 'inactive' && status.purchase === 'payment_required';
@@ -118,6 +129,36 @@ export function LicenseGate({ status }: LicenseGateProps) {
                     {t('license.trialNote')}
                   </div>
                 )}
+                {!codeOpen ? (
+                  <button
+                    onClick={() => setCodeOpen(true)}
+                    style={{ alignSelf: 'center', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--cth-ink-700)', textDecoration: 'underline' }}
+                  >{t('license.haveCode')}</button>
+                ) : (
+                  <form
+                    data-testid="license-redeem"
+                    onSubmit={(e) => { e.preventDefault(); if (code.trim()) redeem(); }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
+                  >
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        autoFocus value={code} onChange={(e) => setCode(e.target.value)} maxLength={64}
+                        placeholder="ATMT-XXXXX-XXXXX-XXXXX-XXXXX" spellCheck={false} aria-label={t('license.haveCode')}
+                        style={{
+                          flex: 1, minWidth: 0, padding: '6px 8px 4px', border: 'none', outline: 'none',
+                          background: 'var(--cth-paper-100)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
+                          fontFamily: 'var(--cth-font-mono)', fontSize: 13, color: 'var(--cth-ink-900)'
+                        }}
+                      />
+                      <PixelButton variant="primary" size="sm" disabled={busy || !code.trim()} onClick={() => { if (code.trim()) redeem(); }}>
+                        {t('license.redeem')}
+                      </PixelButton>
+                    </div>
+                    <div style={{ fontSize: 11, lineHeight: '16px', color: codeError ? 'var(--cth-coral)' : 'var(--cth-ink-500)' }} role={codeError ? 'alert' : undefined}>
+                      {codeError ?? t('license.codeNote')}
+                    </div>
+                  </form>
+                )}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' }}>
                   <PixelButton variant="ghost" size="sm" disabled={busy} onClick={signOut}>{t('license.signOut')}</PixelButton>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -150,6 +191,12 @@ export function LicenseGate({ status }: LicenseGateProps) {
                 </PixelButton>
               </div>
             )}
+            <div style={{ fontSize: 11, color: 'var(--cth-ink-500)', textAlign: 'center' }}>
+              {t('license.legalPrefix')}{' '}
+              <a href="#" onClick={(e) => { e.preventDefault(); void window.cth.openExternal(`${LICENSING.siteOrigin}/terms`); }} style={{ color: 'inherit' }}>{t('license.terms')}</a>
+              {' · '}
+              <a href="#" onClick={(e) => { e.preventDefault(); void window.cth.openExternal(`${LICENSING.siteOrigin}/privacy`); }} style={{ color: 'inherit' }}>{t('license.privacy')}</a>
+            </div>
           </div>
         </PixelPanel>
       </div>

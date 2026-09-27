@@ -1445,7 +1445,7 @@
   },
   "license": {
     "title": "SIGN IN TO ATMT LABS",
-    "intro": "ATMT Labs needs an active subscription. Sign in with Google or Yahoo in your browser, and you'll come straight back here.",
+    "intro": "Sign in with Google or Yahoo in your browser to start your free trial, activate your lifetime license, or redeem an unlock code. You'll come straight back here.",
     "startTrial": "start 7-day free trial",
     "trialNote": "Card required. Nothing is charged for 7 days, then a one-time payment for a lifetime license. Cancel anytime before then.",
     "signIn": "I already have an account — sign in",
@@ -1454,7 +1454,7 @@
     "reopen": "open the browser again",
     "cancel": "cancel",
     "inactiveTitle": "NO LICENSE YET",
-    "inactiveBody": "There's no license on this account yet. Start your free trial, or buy a lifetime license.",
+    "inactiveBody": "There's no license on this account yet. Start your free trial, buy a lifetime license, or redeem an unlock code.",
     "checkAgain": "I've paid — check again",
     "checking": "checking…",
     "manageBilling": "manage billing",
@@ -1477,7 +1477,11 @@
       "device_mismatch": "This license belongs to a different computer. Sign in again on this one.",
       "invalid_token": "The license couldn't be verified. Sign in again.",
       "clock_rollback": "Your computer's clock looks wrong. Fix the date and time, then try again.",
-      "misconfigured": "This build of ATMT Labs is missing its licensing key. Download the latest version from labs.atmt.dev."
+      "misconfigured": "This build of ATMT Labs is missing its licensing key. Download the latest version from labs.atmt.dev.",
+      "code_invalid": "That code isn't valid. Check it and try again.",
+      "code_used": "That code has already been used.",
+      "code_expired": "That code has expired.",
+      "already_licensed": "Your account already has a lifetime license, so the code was not used."
     },
     "account": {
       "title": "ACCOUNT",
@@ -1487,7 +1491,13 @@
     "buyLicense": "buy lifetime license",
     "completeTitle": "COMPLETE YOUR PURCHASE",
     "completeBody": "Your free trial is over, but the one-time payment didn't go through. Complete the purchase to keep using ATMT Labs.",
-    "completePurchase": "complete purchase"
+    "completePurchase": "complete purchase",
+    "haveCode": "Have an unlock code?",
+    "redeem": "redeem",
+    "codeNote": "An unlock code gives your account a free lifetime license. Each code works once.",
+    "legalPrefix": "By signing in you agree to the",
+    "terms": "License Agreement",
+    "privacy": "Privacy Policy"
   },
   "floor": {
     "importBtn": "import floor…",

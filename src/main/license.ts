@@ -204,4 +204,6 @@ export function registerLicenseIpc(): void {
   ipcMain.handle('license:signOut', () => m().signOut());
   ipcMain.handle('license:openBilling', (_evt, kind: unknown) =>
     m().openBilling(kind === 'portal' ? 'portal' : 'checkout'));
+  ipcMain.handle('license:redeem', (_evt, code: unknown) =>
+    m().redeemCode(typeof code === 'string' ? code : ''));
 }

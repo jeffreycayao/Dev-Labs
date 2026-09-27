@@ -2,7 +2,7 @@
   "name": "atmt-labs-licensing",
   "version": "0.1.0",
   "private": true,
-  "description": "ATMT Labs accounts, licensing and billing — auth.labs.atmt.dev + api.labs.atmt.dev on Vercel.",
+  "description": "ATMT Labs accounts, licensing and billing \u2014 auth.labs.atmt.dev + api.labs.atmt.dev on Vercel.",
   "type": "module",
   "license": "UNLICENSED",
   "engines": {
@@ -14,7 +14,8 @@
     "keygen": "node scripts/keygen.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "env:push": "node scripts/push-env.mjs",
-    "dev": "vercel dev"
+    "dev": "vercel dev",
+    "codes": "node --import tsx scripts/codes.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

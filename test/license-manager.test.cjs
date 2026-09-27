@@ -83,6 +83,13 @@ function backend(clock) {
         : { ...base, exp: now + 7 * 86400, trial_end: now + 7 * 86400 };
       return json(200, { license: mint(claims) });
     }
+    if (u.href === 'https://api.test/v1/redeem') {
+      const { code } = JSON.parse(init.body);
+      if (s.status === 'active') return json(409, { error: 'already_licensed' });
+      if (code === 'ATMT-GOOD') { s.status = 'active'; return json(200, { ok: true, status: 'active' }); }
+      if (code === 'ATMT-USED') return json(409, { error: 'code_used' });
+      return json(400, { error: 'code_invalid' });
+    }
     if (u.pathname.startsWith('/v1/devices/')) { s.released.push(decodeURIComponent(u.pathname.split('/').pop())); return json(204, {}); }
     if (u.href === 'https://api.test/v1/billing/checkout' || u.href === 'https://api.test/v1/billing/portal') {
       return json(200, { url: s.billingUrl });
@@ -420,4 +427,41 @@ test('a failed day-7 payment shows payment_required and blocks', async () => {
   await h.m.tick();
   assert.deepEqual([h.m.getStatus().state, h.m.getStatus().purchase], ['inactive', 'payment_required']);
   assert.equal(h.m.allowsAgents(), false);
+});
+
+// ── unlock codes ─────────────────────────────────────────────────────────────
+
+test('an unlock code turns an inactive account into a stamped lifetime license right away', async () => {
+  const h = harness();
+  h.m.init();
+  h.api.status = 'canceled';
+  await signIn(h);
+  assert.equal(h.m.getStatus().state, 'inactive');
+  const r = await h.m.redeemCode('ATMT-GOOD');
+  assert.deepEqual(r, { ok: true });
+  assert.equal(h.m.getStatus().state, 'licensed');
+  assert.equal(h.m.getStatus().perpetual, true);
+  assert.equal(h.m.allowsAgents(), true);
+  // Stamped: the next restart never calls home.
+  const again = harness({ stored: h.disk.data });
+  again.api.offline = true;
+  assert.equal(again.m.init().state, 'licensed');
+});
+
+test('a bad or used code comes back for the code field; the gate status is untouched', async () => {
+  const h = harness();
+  h.m.init();
+  h.api.status = 'canceled';
+  await signIn(h);
+  assert.deepEqual(await h.m.redeemCode('nope'), { ok: false, error: 'code_invalid' });
+  assert.deepEqual(await h.m.redeemCode('ATMT-USED'), { ok: false, error: 'code_used' });
+  assert.equal(h.m.getStatus().state, 'inactive');
+  assert.equal(h.m.getStatus().error, undefined, 'no gate-level error for a typo');
+});
+
+test('redeeming needs a signed-in account', async () => {
+  const h = harness();
+  h.m.init();
+  assert.deepEqual(await h.m.redeemCode('ATMT-GOOD'), { ok: false, error: 'session_expired' });
+  assert.deepEqual(h.api.calls, []);
 });

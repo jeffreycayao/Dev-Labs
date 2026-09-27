@@ -1445,7 +1445,7 @@
   },
   "license": {
     "title": "登录 ATMT Labs",
-    "intro": "使用 ATMT Labs 需要有效订阅。请在浏览器中使用 Google 或 Yahoo 登录，完成后会自动返回此处。",
+    "intro": "请在浏览器中使用 Google 或 Yahoo 登录，以开始免费试用、激活终身授权或兑换解锁码。完成后会自动返回此处。",
     "startTrial": "开始 7 天免费试用",
     "trialNote": "需要绑定银行卡。7 天内不扣款，之后一次性付款即可获得终身许可证。在此之前可随时取消。",
     "signIn": "已有账户？登录",
@@ -1454,7 +1454,7 @@
     "reopen": "重新打开浏览器",
     "cancel": "取消",
     "inactiveTitle": "尚无许可证",
-    "inactiveBody": "此账户尚无许可证。开始免费试用，或购买终身许可证。",
+    "inactiveBody": "此账户尚无许可证。开始免费试用、购买终身授权，或兑换解锁码。",
     "checkAgain": "我已付款——重新检查",
     "checking": "检查中…",
     "manageBilling": "管理账单",
@@ -1477,7 +1477,11 @@
       "device_mismatch": "此许可证属于另一台电脑。请在本机重新登录。",
       "invalid_token": "无法验证许可证。请重新登录。",
       "clock_rollback": "电脑时钟似乎不正确。请校正日期和时间后重试。",
-      "misconfigured": "此版本的 ATMT Labs 缺少许可证密钥。请从 labs.atmt.dev 下载最新版本。"
+      "misconfigured": "此版本的 ATMT Labs 缺少许可证密钥。请从 labs.atmt.dev 下载最新版本。",
+      "code_invalid": "该解锁码无效。请检查后重试。",
+      "code_used": "该解锁码已被使用。",
+      "code_expired": "该解锁码已过期。",
+      "already_licensed": "你的账户已拥有终身授权，因此未使用该解锁码。"
     },
     "account": {
       "title": "账户",
@@ -1487,7 +1491,13 @@
     "buyLicense": "购买终身许可证",
     "completeTitle": "完成购买",
     "completeBody": "免费试用已结束，但一次性付款未成功。请完成购买以继续使用 ATMT Labs。",
-    "completePurchase": "完成购买"
+    "completePurchase": "完成购买",
+    "haveCode": "有解锁码？",
+    "redeem": "兑换",
+    "codeNote": "解锁码可为你的账户免费开通终身授权。每个码只能使用一次。",
+    "legalPrefix": "登录即表示你同意",
+    "terms": "许可协议",
+    "privacy": "隐私政策"
   },
   "floor": {
     "importBtn": "导入团队…",

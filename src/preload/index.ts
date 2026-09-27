@@ -1436,6 +1436,9 @@ const api = {
   /** 'checkout' = start the 7-day trial (Stripe Checkout); 'portal' = manage billing. */
   licenseOpenBilling: (kind: 'checkout' | 'portal'): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('license:openBilling', kind),
+  /** Redeem a single-use unlock code (free lifetime license). Signed in only. */
+  licenseRedeem: (code: string): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('license:redeem', code),
 
   // ─── Auto-update (v0.3.4; full state model v0.3.7) ──────────────────────────
   /** Push channel from main's updater — every stage of the pipeline, so the

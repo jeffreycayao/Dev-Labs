@@ -585,6 +585,18 @@ function migrateTriggersV1(cfg: HarnessConfig): HarnessConfig {
   }
 }
 
+/** The old Codex orchestrator recommendation was rejected by ChatGPT sign-in.
+ * A failed switch could still save it in config.json, so repair only that exact
+ * legacy selection before the renderer or GOD spawn reads the config. */
+function migrateUnsupportedCodexModel(cfg: HarnessConfig): HarnessConfig {
+  if (cfg.godProvider !== 'codex' || cfg.godModel !== 'gpt-5-codex') return cfg;
+  const replacement = providerPreset('codex').recommendedOrchestratorModel;
+  if (!replacement) return cfg;
+  const next = { ...cfg, godModel: replacement };
+  try { persistConfig(next); } catch { /* The corrected in-memory config still boots. */ }
+  return next;
+}
+
 export function readConfig(): HarnessConfig {
   const p = configPath();
   // No file yet = a first run with nothing to migrate; the defaults ARE the
@@ -594,7 +606,7 @@ export function readConfig(): HarnessConfig {
   try {
     const raw = readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
-    return normalizeStoredHomes(migrateTriggersV1(withTriggerDefaults({ ...DEFAULTS, ...parsed })));
+    return normalizeStoredHomes(migrateUnsupportedCodexModel(migrateTriggersV1(withTriggerDefaults({ ...DEFAULTS, ...parsed }))));
   } catch {
     return withTriggerDefaults({ ...DEFAULTS });
   }

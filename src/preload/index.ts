@@ -15,8 +15,10 @@ export type { ModelCatalog, CatalogModel } from '../shared/modelCatalogPayload';
 import type { CatalogModel } from '../shared/modelCatalogPayload';
 import type { HookEvent } from '../shared/hookEvents';
 export type { HookEvent } from '../shared/hookEvents';
-import type { LocalSkill, CatalogSkill } from '../main/skills';
-export type { LocalSkill, CatalogSkill } from '../main/skills';
+import type { LocalSkill } from '../main/skills';
+import type { CatalogSkill } from '../main/atmtSkills';
+export type { LocalSkill } from '../main/skills';
+export type { CatalogSkill } from '../main/atmtSkills';
 import type {
   ContextRule, ContextTriggerConfig, OrgTriggerConfig, TriggerHistoryEntry, WebhookTrigger
 } from '../shared/triggers';
@@ -805,11 +807,10 @@ const api = {
   skillsCatalog: (force?: boolean): Promise<{
     skills: CatalogSkill[]; fetchedAt: number; stale: boolean; error?: string;
   }> => ipcRenderer.invoke('skills:catalog', force),
-  /** Install a catalog skill into ~/.claude/skills. `unsupported` distinguishes
-   *  "there is no downloadable source" from "the download failed". */
-  skillsInstall: (url: string, name: string): Promise<
-    { ok: true; path: string } | { ok: false; error: string; unsupported?: boolean }
-  > => ipcRenderer.invoke('skills:install', url, name),
+  /** Install or update a validated ATMT catalog ID into ~/.claude/skills. */
+  skillsInstall: (id: string, expectedVersion: string, expectedSourceCommit: string): Promise<
+    { ok: true; path: string } | { ok: false; error: string }
+  > => ipcRenderer.invoke('skills:install', id, expectedVersion, expectedSourceCommit),
   /** Delete an installed skill. Main refuses any path outside a skills root. */
   skillsUninstall: (path: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('skills:uninstall', path),

@@ -1,24 +1,12 @@
 /**
- * SKILLS — what the coding agents on this machine can actually do, plus a
- * browsable catalog of what they could.
+ * Local skill discovery used by the Skills tab. Claude Code skills are folders
+ * containing SKILL.md. The OpenCode and Codex directories are currently
+ * reported as plugins by this discovery code.
  *
- * Two halves, deliberately separate:
- *
- *  1. LOCAL — skills already installed, discovered by walking the directories
- *     each CLI reads. Claude Code is the well-specified one: a skill is a folder
- *     containing SKILL.md whose YAML frontmatter carries `name` and
- *     `description`. OpenCode and Codex use plugin/config directories instead,
- *     so they are reported as plugins rather than pretending they share a format.
- *
- *  2. CATALOG — abubakarsiddik31/claude-skills-collection: 227 skills in 13
- *     categories, as markdown tables with a GitHub source link per row. It has no
- *     JSON index (checked), so entries are parsed from the raw markdown and
- *     cached on disk. Network failure is never fatal: a stale cache, then an
- *     empty list, then the UI says so.
- *
- * Nothing here installs anything. Discovery and browsing only — installing a
- * third-party skill means running someone else's instructions inside an agent
- * that has the user's tools, and that decision stays with the user.
+ * The community README parser and URL-based installer below are legacy helpers
+ * retained for their existing regression tests. They are no longer wired to IPC
+ * or the renderer. The active first-party catalog and installer live in
+ * atmtSkills.ts, where installation accepts only a validated catalog ID.
  */
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join, basename, dirname, resolve, sep } from 'node:path';

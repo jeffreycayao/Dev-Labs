@@ -1,14 +1,4 @@
-/**
- * SKILLS — what the coding agents here can already do, and 1,200 more they could.
- *
- * Two modes behind one toggle rather than two tabs: "installed" answers "why did
- * my agent just do that?", "browse" answers "what else is out there?", and they
- * share the same search box because the user's question is usually just a word.
- *
- * Nothing here installs anything. A skill is instructions that run inside an
- * agent holding the user's tools and keys, so adding one is a decision, not a
- * click — the catalog links out and the user chooses.
- */
+/** Local skills and the first-party ATMT Skills Library. */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PixelButton } from './PixelButton';
@@ -35,16 +25,15 @@ function Chip({ text, tone = 'quiet' }: { text: string; tone?: 'quiet' | 'accent
 }
 
 export function SkillsTab({ agentCwd }: { agentCwd?: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [mode, setMode] = useState<Mode>('installed');
   const [query, setQuery] = useState('');
   const [local, setLocal] = useState<LocalSkill[] | null>(null);
   const [catalog, setCatalog] = useState<CatalogSkill[] | null>(null);
   const [catalogMeta, setCatalogMeta] = useState<{ stale: boolean; error?: string; fetchedAt: number } | null>(null);
-  const [owner, setOwner] = useState<string>('all');
   const [category, setCategory] = useState<string>('all');
   const [busy, setBusy] = useState(false);
-  /** Per-row action state, keyed by catalog url / local path. Keeps one row's
+  /** Per-row action state, keyed by catalog ID / local path. Keeps one row's
    *  spinner or error from being mistaken for the whole tab failing. */
   const [action, setAction] = useState<Record<string, { busy?: boolean; error?: string; done?: string }>>({});
   /** Uninstall is destructive, so it is two clicks: the first arms this, the
@@ -81,12 +70,6 @@ export function SkillsTab({ agentCwd }: { agentCwd?: string }) {
       s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
   }, [local, q]);
 
-  const owners = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const s of catalog ?? []) counts.set(s.owner, (counts.get(s.owner) ?? 0) + 1);
-    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  }, [catalog]);
-
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
     for (const s of catalog ?? []) counts.set(s.category, (counts.get(s.category) ?? 0) + 1);
@@ -95,38 +78,31 @@ export function SkillsTab({ agentCwd }: { agentCwd?: string }) {
 
   const shownCatalog = useMemo(() => {
     let list = catalog ?? [];
-    if (owner !== 'all') list = list.filter((s) => s.owner === owner);
     if (category !== 'all') list = list.filter((s) => s.category === category);
     if (q) {
       list = list.filter((s) =>
-        s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
+        s.name.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q) ||
+        s.id.toLowerCase().includes(q) ||
+        s.category.toLowerCase().includes(q));
     }
-    // Bounded render: 1,200 rows in a DOM list makes the panel janky, and nobody
-    // scrolls past a few hundred. The count below always states the real total.
-    return list.slice(0, 300);
-  }, [catalog, owner, category, q]);
-
-  const totalMatching = useMemo(() => {
-    let list = catalog ?? [];
-    if (owner !== 'all') list = list.filter((s) => s.owner === owner);
-    if (category !== 'all') list = list.filter((s) => s.category === category);
-    if (!q) return list.length;
-    return list.filter((s) =>
-      s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)).length;
-  }, [catalog, owner, category, q]);
+    return list;
+  }, [catalog, category, q]);
 
   const install = async (c: CatalogSkill) => {
-    setAction((a) => ({ ...a, [c.url]: { busy: true } }));
+    if (c.installState !== 'not-installed' && c.installState !== 'update-available') return;
+    setAction((a) => ({ ...a, [c.id]: { busy: true } }));
     try {
-      const res = await window.cth.skillsInstall(c.url, c.name);
+      const res = await window.cth.skillsInstall(c.id, c.version, c.sourceCommit);
       if (res.ok) {
-        setAction((a) => ({ ...a, [c.url]: { done: t('skillsTab.installed') } }));
-        void loadLocal(); // the installed pane must reflect it immediately
+        setAction((a) => ({ ...a, [c.id]: { done: t(c.installState === 'update-available' ? 'skillsTab.updated' : 'skillsTab.installed') } }));
+        await Promise.all([loadLocal(), loadCatalog()]);
       } else {
-        setAction((a) => ({ ...a, [c.url]: { error: res.error } }));
+        setAction((a) => ({ ...a, [c.id]: { error: res.error ?? t('skillsTab.installFailed') } }));
+        void loadCatalog();
       }
     } catch (e) {
-      setAction((a) => ({ ...a, [c.url]: { error: e instanceof Error ? e.message : t('skillsTab.installFailed') } }));
+      setAction((a) => ({ ...a, [c.id]: { error: e instanceof Error ? e.message : t('skillsTab.installFailed') } }));
     }
   };
 
@@ -135,7 +111,11 @@ export function SkillsTab({ agentCwd }: { agentCwd?: string }) {
     setAction((a) => ({ ...a, [sk.path]: { busy: true } }));
     try {
       const res = await window.cth.skillsUninstall(sk.path);
-      if (res.ok) { setAction((a) => { const n = { ...a }; delete n[sk.path]; return n; }); void loadLocal(); }
+      if (res.ok) {
+        setAction((a) => { const n = { ...a }; delete n[sk.path]; return n; });
+        void loadLocal();
+        if (catalog !== null) void loadCatalog();
+      }
       else setAction((a) => ({ ...a, [sk.path]: { error: res.error ?? t('skillsTab.removeFailed') } }));
     } catch (e) {
       setAction((a) => ({ ...a, [sk.path]: { error: e instanceof Error ? e.message : t('skillsTab.uninstallFailed') } }));
@@ -162,6 +142,22 @@ export function SkillsTab({ agentCwd }: { agentCwd?: string }) {
     boxShadow: `inset 0 0 0 1px ${mode === m ? 'var(--cth-lemon)' : 'var(--cth-ink-300)'}`,
     color: 'var(--cth-ink-900)'
   });
+
+  const cachedAt = catalogMeta?.fetchedAt
+    ? new Date(catalogMeta.fetchedAt).toLocaleString(i18n.language)
+    : null;
+
+  const catalogActionLabel = (s: CatalogSkill): string => {
+    if (action[s.id]?.busy) return t(s.installState === 'update-available' ? 'skillsTab.updating' : 'skillsTab.installing');
+    switch (s.installState) {
+      case 'installed': return t('skillsTab.installed');
+      case 'update-available': return t('skillsTab.update');
+      case 'modified': return t('skillsTab.localChanges');
+      case 'unmanaged': return t('skillsTab.alreadyExists');
+      case 'newer-installed': return t('skillsTab.newerInstalled');
+      default: return t('skillsTab.install');
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, height: '100%' }}>
@@ -201,21 +197,6 @@ export function SkillsTab({ agentCwd }: { agentCwd?: string }) {
           >
             <option value="all">{t('skillsTab.allCategories')}</option>
             {categories.map(([c, n]) => <option key={c} value={c}>{c} ({n})</option>)}
-          </select>
-        )}
-        {mode === 'browse' && (
-          <select
-            value={owner}
-            onChange={(e) => setOwner(e.target.value)}
-            style={{
-              padding: '4px 6px', maxWidth: 190,
-              background: 'var(--cth-paper-100)', color: 'var(--cth-ink-900)',
-              border: 'none', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)',
-              fontFamily: 'var(--cth-font-ui)', fontSize: 12
-            }}
-          >
-            <option value="all">{t('skillsTab.allPublishers')}</option>
-            {owners.map(([o, n]) => <option key={o} value={o}>{o} ({n})</option>)}
           </select>
         )}
         <PixelButton
@@ -292,48 +273,91 @@ export function SkillsTab({ agentCwd }: { agentCwd?: string }) {
         ) : catalog === null ? <Muted>{t('skillsTab.loadingCatalog')}</Muted>
         : (
           <>
-            {catalogMeta?.error && (
+            <div style={{
+              marginBottom: 10, padding: 10, background: 'var(--cth-lemon-light)',
+              boxShadow: 'inset 0 0 0 1px var(--cth-lemon)'
+            }}>
+              <div style={{ fontFamily: 'var(--cth-font-display)', fontSize: 12, marginBottom: 4 }}>
+                {t('skillsTab.libraryTitle')}
+              </div>
+              <div style={{ fontSize: 12, lineHeight: 1.5 }}>{t('skillsTab.libraryIntro')}</div>
+              <div style={{ fontSize: 11, lineHeight: 1.5, marginTop: 4, color: 'var(--cth-ink-700)' }}>
+                {t('skillsTab.licenseNote')}
+              </div>
+            </div>
+            {catalogMeta?.stale && (
               <div style={{
                 marginBottom: 8, padding: 8, fontSize: 12, color: 'var(--cth-ink-900)',
                 background: 'var(--cth-coral-light)', boxShadow: 'inset 0 0 0 1px var(--cth-coral)'
               }}>
-                {t('skillsTab.cachedCopy', { error: catalogMeta.error })}
+                {catalog.length > 0
+                  ? t('skillsTab.cachedCopy', {
+                    date: cachedAt ?? t('skillsTab.timeUnknown'),
+                    error: catalogMeta.error ?? t('skillsTab.catalogUnreachable')
+                  })
+                  : t('skillsTab.catalogUnavailable', { error: catalogMeta.error ?? t('skillsTab.catalogUnreachable') })}
               </div>
             )}
             <div style={{ fontSize: 11, color: 'var(--cth-ink-500)', marginBottom: 8 }}>
-              {totalMatching > shownCatalog.length
-                ? t('skillsTab.matchingFirst', { count: totalMatching, shown: shownCatalog.length })
-                : t('skillsTab.matching', { count: totalMatching })}
+              {t('skillsTab.matching', { count: shownCatalog.length })}
               {' · '}{t('skillsTab.curatedBy')}
             </div>
+            {catalog.length === 0
+              ? <Muted>{catalogMeta?.stale ? t('skillsTab.noCachedSkills') : t('skillsTab.noPublishedSkills')}</Muted>
+              : shownCatalog.length === 0
+                ? <Muted>{t('skillsTab.nothingMatches')}</Muted>
+                : null}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {shownCatalog.map((s) => (
-                <div key={s.url + s.name} style={rowStyle}>
+                <div key={s.id} style={rowStyle}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <span style={{ fontFamily: 'var(--cth-font-display)', fontSize: 11, flex: 1, minWidth: 0 }}>
                       {s.name.toUpperCase()}
                     </span>
                     <Chip text={s.category} />
-                    <Chip text={s.owner} />
+                    <Chip text={t('skillsTab.version', { version: s.version })} />
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--cth-ink-700)', lineHeight: 1.45 }}>
                     {s.description}
                   </div>
+                  {s.installedVersion && (
+                    <div style={{ fontSize: 11, color: 'var(--cth-ink-500)' }}>
+                      {t('skillsTab.installedVersion', { version: s.installedVersion })}
+                    </div>
+                  )}
+                  {s.installState === 'modified' && (
+                    <div style={{ fontSize: 11, color: 'var(--cth-ink-700)' }}>
+                      {t('skillsTab.modifiedHelp')}
+                    </div>
+                  )}
+                  {s.installState === 'unmanaged' && (
+                    <div style={{ fontSize: 11, color: 'var(--cth-ink-700)' }}>
+                      {t('skillsTab.unmanagedHelp')}
+                    </div>
+                  )}
+                  {s.installState === 'newer-installed' && (
+                    <div style={{ fontSize: 11, color: 'var(--cth-ink-700)' }}>
+                      {t('skillsTab.newerHelp')}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     <button
                       onClick={() => void install(s)}
-                      disabled={!!action[s.url]?.busy || !!action[s.url]?.done}
-                      style={actionBtn(action[s.url]?.done ? 'quiet' : 'primary')}
+                      disabled={!!action[s.id]?.busy || (s.installState !== 'not-installed' && s.installState !== 'update-available')}
+                      style={actionBtn(s.installState === 'not-installed' || s.installState === 'update-available' ? 'primary' : 'quiet')}
                     >
-                      {action[s.url]?.busy ? t('skillsTab.installing') : action[s.url]?.done ?? t('skillsTab.install')}
+                      {catalogActionLabel(s)}
                     </button>
                     <button
-                      onClick={() => void window.cth.openExternal(s.url)}
+                      onClick={() => void window.cth.openExternal(s.sourceUrl)}
                       style={actionBtn('quiet')}
                     >{t('skillsTab.learnMore')}</button>
-                    {action[s.url]?.error && (
+                    {action[s.id]?.done && (
+                      <span style={{ fontSize: 11, color: 'var(--cth-ink-700)' }}>{action[s.id].done}</span>
+                    )}
+                    {action[s.id]?.error && (
                       <span style={{ fontSize: 11, color: 'var(--cth-coral)', flex: 1, minWidth: 0 }}>
-                        {action[s.url]?.error}
+                        {action[s.id].error}
                       </span>
                     )}
                   </div>

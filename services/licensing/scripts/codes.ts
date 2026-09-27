@@ -9,7 +9,7 @@
 import { neon } from '@neondatabase/serverless';
 import { readEnv } from './env.mjs';
 import { Store } from '../src/store.js';
-import { generateUnlockCode, hashUnlockCode, normalizeUnlockCode } from '../src/codes.js';
+import { hashUnlockCode, mintUnlockCodes, normalizeUnlockCode, unlockCodeState } from '../src/codes.js';
 
 const env = { ...readEnv(), ...process.env } as Record<string, string | undefined>;
 const url = env.DATABASE_URL || env.POSTGRES_URL;
@@ -35,8 +35,7 @@ if (cmd === 'create') {
   const exp = flag('expires');
   const expiresAt = exp ? new Date(`${exp}T23:59:59Z`) : null;
   if (expiresAt && Number.isNaN(expiresAt.getTime())) throw new Error('--expires must be YYYY-MM-DD');
-  const codes = Array.from({ length: count }, generateUnlockCode);
-  await store.createUnlockCodes(codes.map((c) => hashUnlockCode(normalizeUnlockCode(c)!)), label, expiresAt);
+  const codes = await mintUnlockCodes(store, count, label, expiresAt);
   console.log(`Created ${count} unlock code(s)${label ? ` for "${label}"` : ''}${expiresAt ? `, valid until ${exp}` : ''}.`);
   console.log('Save them now — they are not shown again.\n');
   for (const c of codes) console.log(`${c}    ${authOrigin}/redeem?code=${c}`);
@@ -44,10 +43,7 @@ if (cmd === 'create') {
   const rows = await store.listUnlockCodes();
   if (!rows.length) console.log('No unlock codes yet.');
   for (const r of rows) {
-    const state = r.redeemed_at ? `used ${day(r.redeemed_at)} by ${r.redeemed_email ?? '(deleted account)'}`
-      : r.revoked_at ? `revoked ${day(r.revoked_at)}`
-      : r.expires_at && new Date(r.expires_at) < new Date() ? `expired ${day(r.expires_at)}`
-      : `unused${r.expires_at ? `, expires ${day(r.expires_at)}` : ''}`;
+    const state = unlockCodeState(r, new Date()).text;
     console.log(`${day(r.created_at)}  ${r.code_hash.slice(0, 10)}…  ${(r.label ?? '').padEnd(28).slice(0, 28)}  ${state}`);
   }
 } else if (cmd === 'revoke') {

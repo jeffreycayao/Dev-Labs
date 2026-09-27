@@ -1,7 +1,7 @@
 /**
  * The licensing service: one Hono app, two hostnames.
  *
- *   auth.labs.atmt.dev  /oauth/*, /login*, /account*, /start, /logout
+ *   auth.labs.atmt.dev  /oauth/*, /login*, /account*, /start, /logout, /admin*
  *   api.labs.atmt.dev   /v1/*, /api/cron/*
  *
  * On those two production hosts each only serves its own routes; any other
@@ -13,8 +13,8 @@ import { deleteCookie, getCookie, getSignedCookie, setCookie, setSignedCookie } 
 import type { Config, ProviderId } from './config.js';
 import { Billing, type StripeLike } from './billing.js';
 import { Oidc } from './oidc.js';
-import { PAGE_HEADERS, accountPage, loginPage, messagePage, returnToAppPage } from './pages.js';
-import { REDEEM_MESSAGES } from './codes.js';
+import { PAGE_HEADERS, accountPage, adminPage, loginPage, messagePage, returnToAppPage } from './pages.js';
+import { REDEEM_MESSAGES, hashUnlockCode, mintUnlockCodes, normalizeUnlockCode } from './codes.js';
 import type { AccountRow, Store } from './store.js';
 import {
   CODE_TTL_MS, REFRESH_TTL_MS, SESSION_TTL_MS, ACCESS_TTL_S,
@@ -34,6 +34,8 @@ const AUTHZ_COOKIE = 'atmt_authz';
 const IDP_COOKIE = 'atmt_idp';
 const FLOW_TTL_MS = 10 * 60 * 1000;
 const ENTITLED = new Set(['trialing', 'active']);
+/** /admin wants a Google sign-in from the last 12 hours, not a 30-day-old session. */
+const ADMIN_FRESH_MS = 12 * 3600 * 1000;
 
 const API_PATHS = /^\/(v1\/|api\/cron\/|health$)/;
 
@@ -48,7 +50,7 @@ function oauthJson(c: Context, body: object, status = 200) {
 /** Only same-site relative paths we actually serve after login. */
 function safeNext(next: string | undefined): string {
   if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return '/account';
-  return /^\/(oauth\/continue|account|start|redeem)(\?|$|\/)/.test(next) ? next : '/account';
+  return /^\/(oauth\/continue|account|start|redeem|admin)(\?|$|\/)/.test(next) ? next : '/account';
 }
 
 export function createApp(deps: AppDeps): Hono {
@@ -75,11 +77,16 @@ export function createApp(deps: AppDeps): Hono {
   app.get('/health', (c) => c.json({ ok: true }));
 
   // ─── browser session helpers ────────────────────────────────────────────
-  async function sessionAccount(c: Context): Promise<AccountRow | null> {
+  async function webSession(c: Context) {
     const token = getCookie(c, SESSION_COOKIE, 'host');
     if (!token) return null;
-    const id = await store.sessionAccount(sha256(token), new Date(now()));
-    return id ? store.account(id) : null;
+    const s = await store.session(sha256(token), new Date(now()));
+    const acct = s ? await store.account(s.accountId) : null;
+    return s && acct ? { ...s, acct } : null;
+  }
+
+  async function sessionAccount(c: Context): Promise<AccountRow | null> {
+    return (await webSession(c))?.acct ?? null;
   }
 
   async function readFlow<T>(c: Context, name: string): Promise<T | null> {
@@ -255,7 +262,7 @@ export function createApp(deps: AppDeps): Hono {
     }
     const acct = await store.signIn(p.id, who.subject, who.email, who.name);
     const token = randomToken();
-    await store.createSession(sha256(token), acct.id, new Date(now() + SESSION_TTL_MS));
+    await store.createSession(sha256(token), acct.id, new Date(now() + SESSION_TTL_MS), p.id, new Date(now()));
     setCookie(c, SESSION_COOKIE, token, { ...cookieOpts, maxAge: SESSION_TTL_MS / 1000 });
     return c.redirect(flow.next, 302);
   });
@@ -328,6 +335,68 @@ export function createApp(deps: AppDeps): Hono {
     await store.releaseDevice(a.id, c.req.param('id') ?? '');
     return c.redirect('/account', 303);
   }));
+
+  // ─── owner admin: unlock codes ──────────────────────────────────────────
+  // Only for ADMIN_EMAILS, and only through Google (which always verifies the
+  // email; Yahoo may not say). An owner session that is older than 12 h or
+  // came from Yahoo is sent through Google again. Everyone else gets a 404,
+  // so the page doesn't advertise itself.
+  type AdminGate = { ok: true; acct: AccountRow } | { ok: false; res: Response };
+  async function adminGate(c: Context, method: 'GET' | 'POST'): Promise<AdminGate> {
+    const notFound = () => html(c, messagePage('Not found', 'There is nothing here.'), 404);
+    if (method === 'POST' && !sameOrigin(c)) return { ok: false, res: c.text('Forbidden', 403) };
+    const s = await webSession(c);
+    if (!s) return { ok: false, res: method === 'GET' ? c.redirect('/login?next=/admin', 302) : c.text('Forbidden', 403) };
+    if (!cfg.adminEmails.includes(s.acct.email.toLowerCase())) return { ok: false, res: notFound() };
+    if (s.provider !== 'google' || now() - s.createdAt.getTime() > ADMIN_FRESH_MS) {
+      if (!cfg.providers.some((p) => p.id === 'google')) return { ok: false, res: notFound() };
+      return { ok: false, res: method === 'GET' ? c.redirect('/login/google?next=/admin', 302) : c.text('Sign in again', 403) };
+    }
+    return { ok: true, acct: s.acct };
+  }
+
+  const ADMIN_HEADERS = { ...PAGE_HEADERS, 'x-robots-tag': 'noindex, nofollow' };
+  async function renderAdmin(c: Context, acct: AccountRow, extra: { created?: { codes: string[]; label: string | null; expires: string | null }; notice?: string; ok?: boolean } = {}, status = 200) {
+    return c.body(adminPage({
+      email: acct.email, authOrigin: cfg.authOrigin, codes: await store.listUnlockCodes(), now: new Date(now()),
+      notice: extra.notice ?? c.req.query('notice')?.slice(0, 200), ok: extra.ok ?? c.req.query('ok') === '1', created: extra.created
+    }), status as 200, ADMIN_HEADERS);
+  }
+
+  app.get('/admin', async (c) => {
+    const g = await adminGate(c, 'GET');
+    return g.ok ? renderAdmin(c, g.acct) : g.res;
+  });
+
+  app.post('/admin/codes', async (c) => {
+    const g = await adminGate(c, 'POST');
+    if (!g.ok) return g.res;
+    const f = (await c.req.parseBody()) as Record<string, string>;
+    const count = Number(f.count ?? '1');
+    const label = String(f.label ?? '').trim().slice(0, 120) || null;
+    const expires = String(f.expires ?? '').trim() || null;
+    const expiresAt = expires ? new Date(`${expires}T23:59:59Z`) : null;
+    if (!Number.isInteger(count) || count < 1 || count > 500) return renderAdmin(c, g.acct, { notice: 'Choose between 1 and 500 codes.' }, 400);
+    if (expires && (!/^\d{4}-\d{2}-\d{2}$/.test(expires) || Number.isNaN(expiresAt!.getTime()) || expiresAt!.getTime() <= now())) {
+      return renderAdmin(c, g.acct, { notice: 'The expiry date must be a date in the future.' }, 400);
+    }
+    const codes = await mintUnlockCodes(store, count, label, expiresAt);
+    console.log('[admin] minted', count, 'unlock code(s) by', g.acct.email);
+    // Rendered from the POST itself: the codes never go into a URL or a cookie.
+    return renderAdmin(c, g.acct, { created: { codes, label, expires } });
+  });
+
+  app.post('/admin/codes/revoke', async (c) => {
+    const g = await adminGate(c, 'POST');
+    if (!g.ok) return g.res;
+    const f = (await c.req.parseBody()) as Record<string, string>;
+    const n = f.code ? normalizeUnlockCode(String(f.code)) : null;
+    const hash = n ? hashUnlockCode(n) : /^[0-9a-f]{64}$/.test(String(f.hash ?? '')) ? String(f.hash) : null;
+    const done = hash ? await store.revokeUnlockCode(hash) : false;
+    if (done) console.log('[admin] revoked unlock code', hash!.slice(0, 10), 'by', g.acct.email);
+    const notice = done ? 'Code revoked. It can no longer be redeemed.' : 'Not revoked: unknown code, or it was already used or revoked.';
+    return c.redirect(`/admin?${done ? 'ok=1&' : ''}notice=${encodeURIComponent(notice)}`, 303);
+  });
 
   // ─── licensing API (bearer) ─────────────────────────────────────────────
   async function bearerAccount(c: Context): Promise<AccountRow | null> {

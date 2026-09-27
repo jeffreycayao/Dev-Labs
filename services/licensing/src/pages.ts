@@ -2,7 +2,8 @@
  * Server-rendered pages for auth.labs.atmt.dev. No client JS at all (the CSP
  * says `script-src 'none'`); every value is HTML-escaped.
  */
-import type { AccountRow, DeviceRow, LicenseRow } from './store.js';
+import type { AccountRow, DeviceRow, LicenseRow, UnlockCodeRow } from './store.js';
+import { unlockCodeState } from './codes.js';
 
 export function esc(s: unknown): string {
   return String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
@@ -32,12 +33,20 @@ h1{font-size:20px;margin:0 0 6px}p{margin:8px 0;color:var(--muted)}
 .ok{border:1px solid var(--accent);color:var(--ink);padding:8px 10px;margin:10px 0}
 input{width:100%;padding:11px 12px;margin:10px 0 0;border:1px solid var(--line);background:transparent;color:var(--ink);font:15px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em}
 details{margin-top:14px}summary{cursor:pointer;color:var(--muted)}
-small{color:var(--muted)}`;
+small{color:var(--muted)}
+main.wide{max-width:960px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+label{display:block;font-size:13px;color:var(--muted);margin-top:10px}label input,label textarea{margin-top:4px}
+textarea{width:100%;min-height:140px;padding:11px 12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:13px/1.6 ui-monospace,Menlo,Consolas,monospace}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line);vertical-align:middle}th{color:var(--muted);font-weight:600}
+td form{margin:0}td .btn{width:auto;margin:0;padding:4px 10px;font-size:12px}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.stats span{border:1px solid var(--line);padding:4px 10px;font-size:13px}`;
 
-function page(title: string, body: string, extraHead = ''): string {
+function page(title: string, body: string, extraHead = '', wide = false): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} · ATMT Labs</title>${extraHead}<style>${CSS}</style></head>
-<body><main><div class="brand">ATMT LABS</div>${body}</main></body></html>`;
+<body><main${wide ? ' class="wide"' : ''}><div class="brand">ATMT LABS</div>${body}</main></body></html>`;
 }
 
 /** Legal pages live on the marketing site (labs.atmt.dev). */
@@ -141,4 +150,58 @@ ${redeem}
 <h1 style="margin-top:22px;font-size:16px">Computers (${o.devices.length}/${o.maxDevices})</h1>
 ${devices}
 <form method="post" action="/logout"><button class="btn">Sign out</button></form>`);
+}
+
+/**
+ * Owner-only: mint, list and revoke unlock codes. Freshly minted codes are
+ * shown in this response only (the database keeps a hash), so the page is
+ * rendered straight from the POST, never from a redirect or a URL.
+ */
+export function adminPage(o: {
+  email: string;
+  authOrigin: string;
+  codes: UnlockCodeRow[];
+  now: Date;
+  created?: { codes: string[]; label: string | null; expires: string | null };
+  notice?: string;
+  ok?: boolean;
+}): string {
+  const states = o.codes.map((r) => ({ r, s: unlockCodeState(r, o.now) }));
+  const count = (k: string) => states.filter((x) => x.s.state === k).length;
+  const created = o.created ? `
+<div class="ok"><strong>${o.created.codes.length} code(s) created${o.created.label ? ` for “${esc(o.created.label)}”` : ''}${o.created.expires ? `, valid until ${esc(o.created.expires)}` : ''}.</strong>
+Copy them now. They are not shown again; only a hash is stored.</div>
+<label>Codes and ready-to-send links
+<textarea readonly spellcheck="false">${esc(o.created.codes.map((c) => `${c}    ${o.authOrigin}/redeem?code=${c}`).join('\n'))}</textarea></label>` : '';
+  const rows = states.map(({ r, s }) => `<tr>
+<td>${esc(r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : '')}</td>
+<td>${esc(r.label ?? '')}</td>
+<td><code>${esc(r.code_hash.slice(0, 10))}…</code></td>
+<td>${esc(s.text)}</td>
+<td>${s.state === 'unused' ? `<form method="post" action="/admin/codes/revoke"><input type="hidden" name="hash" value="${esc(r.code_hash)}"><button class="btn danger">Revoke</button></form>` : ''}</td>
+</tr>`).join('');
+  return page('Admin', `
+<h1>Unlock codes</h1>
+<p>Signed in as ${esc(o.email)}. Each code gives one account a free lifetime license.</p>
+${o.notice ? `<div class="${o.ok ? 'ok' : 'err'}">${esc(o.notice)}</div>` : ''}
+${created}
+<h1 style="margin-top:22px;font-size:16px">Create codes</h1>
+<form method="post" action="/admin/codes">
+<div class="grid">
+<label>How many<input name="count" type="number" min="1" max="500" value="1" required></label>
+<label>Who it's for (optional)<input name="label" maxlength="120" placeholder="Beta tester: Ana"></label>
+<label>Expires (optional)<input name="expires" type="date"></label>
+</div>
+<button class="btn primary">Create codes</button>
+</form>
+<details><summary>Revoke a code you still have</summary>
+<form method="post" action="/admin/codes/revoke">
+<input name="code" placeholder="ATMT-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false" maxlength="64" required>
+<button class="btn danger">Revoke code</button>
+</form>
+</details>
+<h1 style="margin-top:22px;font-size:16px">All codes</h1>
+<div class="stats"><span>${count('unused')} unused</span><span>${count('used')} used</span><span>${count('revoked')} revoked</span><span>${count('expired')} expired</span></div>
+${rows ? `<div class="scroll"><table><thead><tr><th>Created</th><th>For</th><th>Code</th><th>State</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p><small>No codes yet.</small></p>'}
+<form method="post" action="/logout"><button class="btn">Sign out</button></form>`, '<meta name="robots" content="noindex,nofollow">', true);
 }

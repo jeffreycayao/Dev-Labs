@@ -106,7 +106,12 @@ These overrides are ignored in packaged builds.
 
 ## Operations
 
-- **Unlock codes (free lifetime licenses).** Run these on your computer, with `DATABASE_URL` in `.env.local`:
+- **Unlock codes in the browser: `https://auth.labs.atmt.dev/admin`.** Sign in with Google as an `ADMIN_EMAILS` address (default `jeffreycayao@gmail.com`). Create codes (how many, who for, optional expiry), copy them with their links from the page, see who used which, and revoke unused ones.
+  - Only Google sign-in counts, and only if it happened in the last 12 hours; otherwise you're sent through Google again. Anyone else gets a 404.
+  - New codes are shown once, on the page right after you create them.
+  - After deploying this, run `npm run db:migrate` once (adds `web_sessions.provider`). Existing browser sessions just sign in again to reach /admin.
+
+- **Unlock codes from the command line.** Same thing, run on your computer with `DATABASE_URL` in `.env.local`:
   ```bash
   npm run codes -- create --count 5 --label "Beta testers" [--expires 2026-12-31]
   npm run codes -- list      # who used which code, and when

@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. Versions are bumped with `npm run release:<pat
 
 ## Unreleased
 
+- **Admin page for unlock codes:** `auth.labs.atmt.dev/admin` lets the owner create (with a label and optional expiry), list and revoke unlock codes in the browser. Only emails in `ADMIN_EMAILS` (default `jeffreycayao@gmail.com`), only via Google sign-in from the last 12 hours; everyone else gets a 404. Run `npm run db:migrate` once (adds `web_sessions.provider`).
+- **Account menu in the app:** Manage Account & Subscription, Cancel Free Trial, Redeem Unlock Code, and Start Free Trial / Buy open the web account page or Checkout. The app menu is now always installed; "New Floor" still appears only with multi-window floors on.
 - **Fixed licensing checkout:** account page buttons now submit with a valid same-origin browser Origin, so buying a lifetime license no longer stops at Forbidden.
 - **Licensing:** sign in with Google or Yahoo (auth.labs.atmt.dev); 7-day free trial with a card, charged once on day 7; one-time lifetime purchase via Stripe; a paid computer is stamped to its hardware ID and never checks the license again; up to 3 computers per email. Service in `services/licensing` (Vercel + Neon, Singapore).
 - **Unlock codes:** single-use vouchers that grant a free lifetime license without Stripe. Redeem in the app ("Have an unlock code?"), on the account page, or via `auth.labs.atmt.dev/redeem?code=…`. Owners mint, list and revoke them with `npm run codes` in `services/licensing`.

@@ -60,7 +60,7 @@ import { CostLedgerTotals } from './costLifetime';
 import { analytics, isRendererMessageSurface } from './analytics';
 import type { SpawnFailReason } from './analytics';
 import { IntegrationBroker } from './integrationBroker';
-import { initLicensing, licenseAllowsAgents, handleLicenseLink, registerLicenseIpc } from './license';
+import { initLicensing, licenseAllowsAgents, handleLicenseLink, openAccountPage, registerLicenseIpc } from './license';
 import * as integrations from './integrations';
 import { MCP_CATALOG, mcpCatalogEntry, mcpSecretRef, mcpBrokerId, mcpUpstream, isHttpSpec, enabledHttpEntries } from '../shared/mcpCatalog';
 import type { IntegrationRecord } from '../shared/integrations';
@@ -2655,24 +2655,20 @@ function openFloor(): BrowserWindow | null {
   return createWindow({ floor: true });
 }
 
-/** Build + install the application menu. Only called when multiWindow is on, so
- *  flag-off keeps Electron's default menu (zero behavior change). Uses standard
- *  role-based items so copy/paste/quit/etc. work per-platform, and adds the
- *  "New Floor" item (Cmd/Ctrl+Shift+N). */
-function installAppMenu(): void {
+/** Build + install the application menu. Uses standard role-based items so
+ *  copy/paste/quit/etc. work per-platform, an Account menu (subscription and
+ *  trial live on the web account page), and — only when multiWindow is on —
+ *  the "New Floor" item (Cmd/Ctrl+Shift+N). */
+function installAppMenu(multiWindow: boolean): void {
   const isMac = process.platform === 'darwin';
-  const newFloorItem = {
-    label: 'New Floor',
-    accelerator: 'CmdOrCtrl+Shift+N',
-    click: () => { openFloor(); }
-  };
+  const floorItems: Electron.MenuItemConstructorOptions[] = multiWindow
+    ? [{ label: 'New Floor', accelerator: 'CmdOrCtrl+Shift+N', click: () => { openFloor(); } }, { type: 'separator' }]
+    : [];
   const template: Electron.MenuItemConstructorOptions[] = [
     ...(isMac ? [{ role: 'appMenu' as const }] : []),
     {
       label: 'File',
-      submenu: isMac
-        ? [newFloorItem, { type: 'separator' as const }, { role: 'close' as const }]
-        : [newFloorItem, { type: 'separator' as const }, { role: 'quit' as const }]
+      submenu: [...floorItems, isMac ? { role: 'close' as const } : { role: 'quit' as const }]
     },
     // The Edit menu is spelled out rather than `{ role: 'editMenu' }` for one
     // reason: `registerAccelerator: false` on the clipboard items.
@@ -2704,6 +2700,16 @@ function installAppMenu(): void {
     },
     { role: 'viewMenu' },
     { role: 'windowMenu' },
+    {
+      label: 'Account',
+      submenu: [
+        { label: 'Manage Account & Subscription…', click: () => openAccountPage('portal') },
+        { label: 'Cancel Free Trial…', click: () => openAccountPage('portal') },
+        { label: 'Redeem Unlock Code…', click: () => openAccountPage('portal') },
+        { type: 'separator' as const },
+        { label: 'Start Free Trial / Buy…', click: () => openAccountPage('checkout') }
+      ]
+    },
     {
       role: 'help',
       submenu: [
@@ -5596,9 +5602,9 @@ app.whenReady().then(() => {
   powerMonitor.on('unlock-screen', () => onSystemResume('unlock-screen'));
   powerMonitor.on('suspend', () => { lastSuspendAt = Date.now(); console.log('[power] suspend — system sleeping'); });
   powerMonitor.on('lock-screen', () => { lastSuspendAt = Date.now(); console.log('[power] lock-screen'); });
-  // Multi-window floors (opt-in): install the menu carrying "New Floor". When
-  // off, the app keeps Electron's default menu — zero behavior change.
-  if (readConfig().multiWindow) installAppMenu();
+  // App menu: Account (subscription / trial / unlock code) always; "New Floor"
+  // only with multi-window floors on.
+  installAppMenu(!!readConfig().multiWindow);
   createWindow();
   // Auto-start the Slack webhook server when configured. Best-effort: a tunnel
   // failure (offline) is logged, not fatal. The tunnel URL is ephemeral and

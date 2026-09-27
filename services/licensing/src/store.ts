@@ -277,13 +277,19 @@ export class Store {
 
   // ─── browser sessions ───────────────────────────────────────────────────
 
-  async createSession(tokenHash: string, accountId: string, expiresAt: Date): Promise<void> {
-    await this.q(`INSERT INTO web_sessions (token_hash, account_id, expires_at) VALUES ($1, $2, $3)`, [tokenHash, accountId, expiresAt]);
+  async createSession(tokenHash: string, accountId: string, expiresAt: Date, provider: string, createdAt: Date): Promise<void> {
+    await this.q(
+      `INSERT INTO web_sessions (token_hash, account_id, expires_at, provider, created_at) VALUES ($1, $2, $3, $4, $5)`,
+      [tokenHash, accountId, expiresAt, provider, createdAt]
+    );
   }
 
-  async sessionAccount(tokenHash: string, now: Date): Promise<string | null> {
-    const rows = await this.q(`SELECT account_id FROM web_sessions WHERE token_hash = $1 AND expires_at > $2`, [tokenHash, now]);
-    return rows[0]?.account_id ?? null;
+  async session(tokenHash: string, now: Date): Promise<{ accountId: string; provider: string | null; createdAt: Date } | null> {
+    const rows = await this.q(
+      `SELECT account_id, provider, created_at FROM web_sessions WHERE token_hash = $1 AND expires_at > $2`,
+      [tokenHash, now]
+    );
+    return rows[0] ? { accountId: rows[0].account_id, provider: rows[0].provider ?? null, createdAt: toDate(rows[0].created_at)! } : null;
   }
 
   async deleteSession(tokenHash: string): Promise<void> {

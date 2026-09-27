@@ -111,3 +111,7 @@ CREATE TABLE IF NOT EXISTS unlock_codes (
   redeemed_by  text REFERENCES accounts(id) ON DELETE SET NULL,
   redeemed_at  timestamptz
 );
+
+-- Which IdP a browser session signed in with. The owner-only /admin page
+-- requires a recent Google session (Google always verifies the email).
+ALTER TABLE web_sessions ADD COLUMN IF NOT EXISTS provider text;

@@ -31,6 +31,7 @@ import {
   isClaudeProvider
 } from '@/store/config';
 import { useRtl } from '@/i18n/useDirection';
+import type { FloorImportPayload } from './FloorModals';
 
 const ACCENTS: AccentColorName[] = ['coral', 'mint', 'sky', 'lemon', 'lilac', 'peach'];
 
@@ -141,9 +142,13 @@ export interface AddAgentModalProps {
   /** Lift config changes (e.g. a project registered from this modal) back up to
    *  App so the rest of the UI — and the next time this modal opens — sees them. */
   onConfigChange?: (config: HarnessConfig) => void;
+  /** A floor file was picked and validated — App opens the floor review. */
+  onImportFloor?: (payload: FloorImportPayload) => void;
+  /** Open the export-floor dialog. */
+  onExportFloor?: () => void;
 }
 
-export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModalProps) {
+export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, onExportFloor }: AddAgentModalProps) {
   const { t: tr } = useTranslation();
   const rtl = useRtl();
   const addAgent = useStore(s => s.addAgent);
@@ -385,6 +390,13 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
     } else if (!res.ok && res.error && res.error !== 'cancelled') {
       setError(res.error);
     }
+  };
+
+  const importFloor = async () => {
+    setError(undefined);
+    const res = await window.cth.importFloorFile();
+    if (res.ok) onImportFloor?.({ floor: res.floor, consentRequired: res.consentRequired });
+    else if (res.error !== 'cancelled') setError(res.error);
   };
 
   const skipHire = () => {
@@ -1209,6 +1221,16 @@ export function AddAgentModal({ onClose, config, onConfigChange }: AddAgentModal
               >
                 {tr('addAgent.importHireBtn')}
               </PixelButton>
+              {onImportFloor && !pendingHire && (
+                <PixelButton variant="secondary" size="md" onClick={importFloor} disabled={busy} title={tr('floor.importBtnTitle')}>
+                  {tr('floor.importBtn')}
+                </PixelButton>
+              )}
+              {onExportFloor && !pendingHire && (
+                <PixelButton variant="secondary" size="md" onClick={onExportFloor} disabled={busy} title={tr('floor.exportBtnTitle')}>
+                  {tr('floor.exportBtn')}
+                </PixelButton>
+              )}
               <div style={{ flex: 1 }} />
               {pendingHire && (
                 <PixelButton variant="secondary" size="md" onClick={skipHire} disabled={busy}>{tr('addAgent.skipHire')}</PixelButton>

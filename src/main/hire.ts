@@ -16,6 +16,7 @@ import {
   type HireManifest,
   type HireValidation
 } from '../shared/hire';
+import { FLOOR_MAX_BYTES, validateFloorManifest, type FloorManifest, type FloorValidation } from '../shared/floor';
 
 export type HireResult = { ok: true; manifest: HireManifest } | { ok: false; error: string };
 
@@ -147,6 +148,40 @@ async function assertPublicTarget(u: URL): Promise<string | null> {
  *  64 KB body cap, https only (the deep-link parser already enforces https,
  *  but this is also called with user-pasted URLs). */
 export async function fetchHireManifest(src: string): Promise<HireResult> {
+  const r = await fetchManifestJson(src, HIRE_MAX_BYTES);
+  return r.ok ? finish(validateHireManifest(r.value)) : r;
+}
+
+export type FloorResult = { ok: true; floor: FloorManifest; consentRequired?: string[] } | { ok: false; error: string };
+
+function finishFloor(v: FloorValidation): FloorResult {
+  if (v.ok && v.floor) return { ok: true, floor: v.floor, consentRequired: v.consentRequired };
+  return { ok: false, error: `invalid floor: ${v.errors.slice(0, 5).join('; ')}${v.errors.length > 5 ? ` (+${v.errors.length - 5} more)` : ''}` };
+}
+
+/** Fetch + validate a floor manifest (same SSRF/redirect/size guards as hires;
+ *  a larger 256 KB cap because a floor holds up to 24 hires). */
+export async function fetchFloorManifest(src: string): Promise<FloorResult> {
+  const r = await fetchManifestJson(src, FLOOR_MAX_BYTES);
+  return r.ok ? finishFloor(validateFloorManifest(r.value)) : r;
+}
+
+/** Read + validate a floor manifest from a local JSON file (file import). */
+export function readFloorManifestFile(path: string): FloorResult {
+  try {
+    if (statSync(path).size > FLOOR_MAX_BYTES) return { ok: false, error: 'floor file too large' };
+    const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
+    return finishFloor(validateFloorManifest(parsed));
+  } catch (e) {
+    const msg = e instanceof SyntaxError ? 'not valid JSON' : String(e);
+    return { ok: false, error: `could not read floor: ${msg.split(path).join(basename(path))}` };
+  }
+}
+
+/** The guarded fetch shared by hire and floor links: https only (http for
+ *  loopback dev), every hop re-checked, private/metadata addresses blocked,
+ *  10 s timeout, byte-capped body, parsed as JSON. */
+async function fetchManifestJson(src: string, maxBytes: number): Promise<{ ok: true; value: unknown } | { ok: false; error: string }> {
   let url: URL;
   try { url = new URL(src); } catch { return { ok: false, error: 'not a valid URL' }; }
   if (!isAllowedManifestUrl(url)) return { ok: false, error: 'manifest URL must be https (http allowed for localhost only)' };
@@ -200,13 +235,13 @@ export async function fetchHireManifest(src: string): Promise<HireResult> {
     // stream first, so a hostile host could stream unbounded data and OOM us
     // inside the 10s window. Read chunks, abort once bytes exceed the cap.
     const len = Number(res.headers.get('content-length') ?? 0);
-    if (len > HIRE_MAX_BYTES) return { ok: false, error: 'manifest too large' };
-    const text = await readBounded(res, HIRE_MAX_BYTES);
+    if (len > maxBytes) return { ok: false, error: 'manifest too large' };
+    const text = await readBounded(res, maxBytes);
     if (text === null) return { ok: false, error: 'manifest too large' };
 
     let parsed: unknown;
     try { parsed = JSON.parse(text); } catch { return { ok: false, error: 'manifest is not valid JSON' }; }
-    return finish(validateHireManifest(parsed));
+    return { ok: true, value: parsed };
   } catch (e) {
     const msg = e instanceof Error && e.name === 'AbortError' ? 'fetch timed out' : String(e);
     return { ok: false, error: `fetch failed: ${msg}` };

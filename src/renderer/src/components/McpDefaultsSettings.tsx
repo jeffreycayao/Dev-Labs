@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { HarnessConfig } from '@/store/config';
-import { MCP_CATALOG, type McpTier } from '@shared/mcpCatalog';
+import { MCP_CATALOG, type McpCatalogEntry, type McpTier } from '@shared/mcpCatalog';
 
 export interface McpDefaultsSettingsProps {
   config: HarnessConfig;
@@ -27,9 +27,90 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase'
 };
 
+/**
+ * The key row under a connector that needs one. WRITE-ONLY: the key goes to the
+ * main-process encrypted store and is never read back — the row only ever knows
+ * whether one is saved.
+ */
+function ConnectorKey({ entry, hasKey, onChanged }: { entry: McpCatalogEntry; hasKey: boolean; onChanged: (msg: string) => void }) {
+  const { t } = useTranslation();
+  const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
+  const secret = entry.secret!;
+  const save = async () => {
+    if (!value.trim()) return;
+    setBusy(true);
+    try {
+      const r = await window.cth.mcpSecretSet({ id: entry.id, secret: value });
+      setValue('');
+      onChanged(r.ok ? t('mcpDefaults.key.savedNote', { label: entry.label }) : (r.error ?? t('mcpDefaults.couldNotSave')));
+    } finally { setBusy(false); }
+  };
+  const clear = async () => {
+    setBusy(true);
+    try {
+      await window.cth.mcpSecretClear(entry.id);
+      onChanged(t('mcpDefaults.key.clearedNote', { label: entry.label }));
+    } finally { setBusy(false); }
+  };
+  const small: React.CSSProperties = {
+    padding: '3px 8px 1px', border: 'none', cursor: busy ? 'default' : 'pointer',
+    fontFamily: 'var(--cth-font-display)', fontSize: 8, lineHeight: '14px', textTransform: 'uppercase',
+    background: 'var(--cth-cream-200)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-700)', color: 'var(--cth-ink-900)'
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: hasKey ? 'var(--cth-mint)' : 'var(--cth-coral)' }}>
+        {hasKey ? t('mcpDefaults.key.saved') : t('mcpDefaults.key.missing')}
+      </span>
+      <input
+        type="password"
+        autoComplete="off"
+        spellCheck={false}
+        value={value}
+        placeholder={hasKey ? t('mcpDefaults.key.replace', { label: secret.label }) : secret.label}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') void save(); }}
+        style={{
+          flex: '1 1 180px', minWidth: 140, padding: '3px 6px', fontSize: 12,
+          fontFamily: 'var(--cth-font-mono)', background: 'var(--cth-paper-100)',
+          border: 'none', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', color: 'var(--cth-ink-900)'
+        }}
+      />
+      <button type="button" disabled={busy || !value.trim()} onClick={() => { void save(); }} style={small}>
+        {t('mcpDefaults.key.save')}
+      </button>
+      {hasKey && (
+        <button type="button" disabled={busy} onClick={() => { void clear(); }} style={small}>
+          {t('mcpDefaults.key.clear')}
+        </button>
+      )}
+      {secret.helpUrl && (
+        <button
+          type="button"
+          onClick={() => { void window.cth.openExternal(secret.helpUrl!); }}
+          style={{ ...small, background: 'transparent', boxShadow: 'none', textDecoration: 'underline' }}
+        >
+          {t('mcpDefaults.key.howToGet')}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
   const { t } = useTranslation();
   const [note, setNote] = useState('');
+  const [keys, setKeys] = useState<Record<string, boolean>>({});
+  const refreshKeys = useCallback(() => {
+    void window.cth.mcpSecretStatus?.().then(setKeys).catch(() => { /* older main */ });
+  }, []);
+  useEffect(() => { refreshKeys(); }, [refreshKeys]);
+  const flash = (msg: string) => {
+    setNote(msg);
+    refreshKeys();
+    setTimeout(() => setNote(''), 2400);
+  };
 
   const enabledFor = (id: string): boolean =>
     config.mcpDefaults?.[id]?.enabled ?? MCP_CATALOG.find((e) => e.id === id)?.defaultEnabled ?? false;
@@ -105,6 +186,12 @@ export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
                       <span style={{ fontSize: 12, lineHeight: '16px', color: 'var(--cth-ink-500)', wordBreak: 'break-word' }}>
                         {entry.description}
                       </span>
+                      {entry.secret && (
+                        <ConnectorKey entry={entry} hasKey={!!keys[entry.id]} onChanged={flash} />
+                      )}
+                      {entry.secret && on && !keys[entry.id] && (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--cth-coral)' }}>{t('mcpDefaults.key.needsKey')}</span>
+                      )}
                     </div>
                     <button
                       type="button"

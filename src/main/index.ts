@@ -62,6 +62,8 @@ import type { SpawnFailReason } from './analytics';
 import { IntegrationBroker } from './integrationBroker';
 import { initLicensing, licenseAllowsAgents, handleLicenseLink, registerLicenseIpc } from './license';
 import * as integrations from './integrations';
+import { MCP_CATALOG, mcpCatalogEntry, mcpSecretRef, mcpBrokerId, mcpUpstream, isHttpSpec, enabledHttpEntries } from '../shared/mcpCatalog';
+import type { IntegrationRecord } from '../shared/integrations';
 import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';
 import { RosterStore } from './roster';
 import { buildWorkerLaunch } from './workerLaunch';
@@ -69,8 +71,9 @@ import { ControlRegistry } from './control';
 import { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';
 import { inboxNudgeText } from '../shared/hiveNudge';
 import { resolveGodName } from '../shared/godIdentity';
-import { fetchHireManifest, readHireManifestFiles } from './hire';
+import { fetchHireManifest, readHireManifestFiles, fetchFloorManifest, readFloorManifestFile, type FloorResult } from './hire';
 import { parseHireDeepLink, type HireManifest } from '../shared/hire';
+import { parseFloorDeepLink, validateFloorManifest, floorFileName, FLOOR_MAX_BYTES } from '../shared/floor';
 import { ClosingTimeController } from './closingTime';
 import {
   argsWithAutoModeFlag,
@@ -392,9 +395,36 @@ const liveWorkers = new Map<string, WorkerRec>();
  *  stays electron-free + unit-testable. Started in bootstrapHiveServices; each worker is
  *  granted a per-worker capability token at spawn (revoked in teardownPty). */
 const integrationBroker = new IntegrationBroker({
-  getRecord: integrations.getRecord,
-  getSecret: integrations.getSecret
+  getRecord: (id) => mcpBrokerRecord(id) ?? integrations.getRecord(id),
+  getSecret: integrations.getSecret,
+  isStreaming: (id) => id.startsWith('mcp-')
 });
+
+/**
+ * Vendor-hosted MCP connectors (e.g. Pancake POS) are proxied through the broker
+ * as SYNTHETIC integration records derived from the catalog, not from the user's
+ * integrations list: the vendor origin is fixed by the catalog (an agent can't
+ * point it anywhere else), the key is the encrypted `mcp:<id>` secret, and the
+ * record is enabled only while the user has the connector switched on.
+ */
+function mcpBrokerRecord(brokerId: string): IntegrationRecord | undefined {
+  if (!brokerId.startsWith('mcp-')) return undefined;
+  const entry = MCP_CATALOG.find((e) => mcpBrokerId(e.id) === brokerId);
+  if (!entry || !isHttpSpec(entry.spec) || entry.secret?.kind !== 'header') return undefined;
+  const now = Date.now();
+  return {
+    id: brokerId,
+    label: entry.label,
+    kind: 'custom-rest',
+    baseUrl: mcpUpstream(entry.spec).baseUrl,
+    authType: 'header',
+    authHeader: entry.secret.name,
+    secretRef: mcpSecretRef(entry.id),
+    enabled: readConfig().mcpDefaults?.[entry.id]?.enabled === true,
+    createdAt: now,
+    updatedAt: now
+  };
+}
 
 /** BYOK backend model-providers whose API keys the non-Claude CLI engines
  *  (OpenCode/Crush/pi/qwen) read from standard env vars. Keys are stored
@@ -2268,6 +2298,10 @@ function floorCascade(): WindowBounds | null {
  *  can't lose a deep link to a startup race. */
 const pendingHires: HireManifest[] = [];
 let rendererReadyForHires = false;
+/** Floors that arrived by deep link before the renderer subscribed (cold start).
+ *  Same readiness flag as hires: both are drained by the same App mount. */
+type FloorImport = Extract<FloorResult, { ok: true }>;
+const pendingFloors: FloorImport[] = [];
 
 function deliverHire(manifest: HireManifest): void {
   if (rendererReadyForHires && mainWindow && !mainWindow.isDestroyed()) {
@@ -2293,7 +2327,29 @@ async function handleDeepLink(link: string): Promise<void> {
     }
     return;
   }
+  if (parseFloorDeepLink(link)) { await handleFloorLink(link); return; }
   await handleHireLink(link);
+}
+
+/** atmtlabs://floor?src=<https-url> — fetch (same guards as hires), validate,
+ *  and open the floor review screen. Never spawns anything by itself. */
+async function handleFloorLink(link: string): Promise<void> {
+  const src = parseFloorDeepLink(link);
+  if (!src) return;
+  const res = await fetchFloorManifest(src);
+  if (!res.ok) {
+    console.error('[floor] deep link rejected:', res.error);
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('hire:error', { error: res.error });
+    return;
+  }
+  if (rendererReadyForHires && mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('floor:import', { floor: res.floor, consentRequired: res.consentRequired });
+  } else {
+    pendingFloors.push(res);
+    if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.show(); mainWindow.focus(); }
+  }
 }
 
 async function handleHireLink(link: string): Promise<void> {
@@ -2358,6 +2414,45 @@ ipcMain.handle('hire:drainPending', () => {
 
 // IPC: "import hires…" file picker in the Add-Agent modal. Every selected file
 // is validated independently; valid neighbours survive an invalid manifest.
+ipcMain.handle('floor:drainPending', () => {
+  const out = pendingFloors.splice(0, pendingFloors.length);
+  return out.map((f) => ({ floor: f.floor, consentRequired: f.consentRequired }));
+});
+
+// IPC: "import floor…" — one floor file, validated in main; the renderer only
+// ever sees an already-validated FloorManifest.
+ipcMain.handle('floor:openFile', async () => {
+  const res = await dialog.showOpenDialog({
+    title: 'Import a floor',
+    filters: [{ name: 'ATMT Labs floor', extensions: ['json'] }],
+    properties: ['openFile']
+  });
+  if (res.canceled || res.filePaths.length === 0) return { ok: false, error: 'cancelled' };
+  return readFloorManifestFile(res.filePaths[0]);
+});
+
+// IPC: "export floor…" — the renderer builds the document from its roster; main
+// re-validates it (never writes something an importer would reject) and saves.
+ipcMain.handle('floor:save', async (_evt, payload: unknown) => {
+  const doc = (payload ?? {}) as { floor?: unknown };
+  const v = validateFloorManifest(doc.floor);
+  if (!v.ok || !v.floor) return { ok: false, error: `invalid floor: ${v.errors.join('; ')}` };
+  const text = JSON.stringify(v.floor, null, 2) + '\n';
+  if (Buffer.byteLength(text, 'utf8') > FLOOR_MAX_BYTES) return { ok: false, error: 'floor too large' };
+  const res = await dialog.showSaveDialog({
+    title: 'Export floor',
+    defaultPath: floorFileName(v.floor.name),
+    filters: [{ name: 'ATMT Labs floor', extensions: ['json'] }]
+  });
+  if (res.canceled || !res.filePath) return { ok: false, error: 'cancelled' };
+  try {
+    writeFileSync(res.filePath, text, 'utf8');
+    return { ok: true, path: res.filePath };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+});
+
 ipcMain.handle('hire:openFile', async () => {
   const res = await dialog.showOpenDialog({
     title: 'Import hire manifests',
@@ -2887,6 +2982,20 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
           theme: readConfig().terminalTheme ?? 'light',
           // W3 — default-MCP consent state + the bundled skills source dir.
           mcpDefaults: readConfig().mcpDefaults,
+          // Connector keys stay main-only: stdio servers get theirs in env,
+          // vendor-hosted ones go through the broker under this PTY's capability
+          // (extended, not replaced, so a worker's integration token stays valid;
+          // revoked with the rest in teardownPty).
+          mcpSecret: (id) => integrations.getSecret(mcpSecretRef(id)),
+          mcpBroker: (() => {
+            const remote = enabledHttpEntries(readConfig().mcpDefaults);
+            if (!remote.length || !integrationBroker.running()) return undefined;
+            const token = integrationBroker.extend(opts.id, remote.map((e) => mcpBrokerId(e.id)));
+            return { url: integrationBroker.url(), token };
+          })(),
+          onMcpSkipped: (skipped) => {
+            for (const s of skipped) console.warn(`[mcp] ${s.id} not attached to ${opts.id}: ${s.reason}`);
+          },
           skillsDir: skillsResourceDir(),
           // The shared palace is mutated by the agent's own `mempalace` calls, so
           // the OS sandbox must let it through (empty when memory is off).
@@ -3273,6 +3382,30 @@ ipcMain.handle('providerKey:clear', (_evt, backend: unknown) => {
   if (typeof backend !== 'string' || !(backend in BACKEND_KEY_ENV)) return { ok: false, error: 'unknown backend' };
   try { integrations.deleteSecret(providerKeyRef(backend)); return { ok: true }; }
   catch (e) { return { ok: false, error: e instanceof Error ? e.message : String(e) }; }
+});
+// ─── IPC: MCP connector keys (write-only) ─────────────────────────────────────
+// Same contract as providerKey: the renderer can SET a connector's key, CLEAR it,
+// and ASK which connectors have one — never read it back. Only catalog entries
+// that declare a `secret` are accepted, so this can't write arbitrary refs.
+const secretEntry = (id: unknown) =>
+  typeof id === 'string' ? (mcpCatalogEntry(id)?.secret ? mcpCatalogEntry(id) : undefined) : undefined;
+ipcMain.handle('mcpSecret:set', (_evt, payload: unknown) => {
+  const p = (payload ?? {}) as { id?: unknown; secret?: unknown };
+  const entry = secretEntry(p.id);
+  if (!entry) return { ok: false, error: 'unknown connector' };
+  if (typeof p.secret !== 'string' || !p.secret.trim() || p.secret.length > 8192) return { ok: false, error: 'key required' };
+  return integrations.setSecret(mcpSecretRef(entry.id), p.secret.trim());
+});
+ipcMain.handle('mcpSecret:clear', (_evt, id: unknown) => {
+  const entry = secretEntry(id);
+  if (!entry) return { ok: false, error: 'unknown connector' };
+  try { integrations.deleteSecret(mcpSecretRef(entry.id)); return { ok: true }; }
+  catch (e) { return { ok: false, error: e instanceof Error ? e.message : String(e) }; }
+});
+ipcMain.handle('mcpSecret:status', () => {
+  const out: Record<string, boolean> = {};
+  for (const e of MCP_CATALOG) if (e.secret) out[e.id] = integrations.hasSecret(mcpSecretRef(e.id));
+  return out;
 });
 // Probe an integration's reachability through the broker's own auth path (admin-only;
 // runs in main, so the secret is used but never returned — only the upstream status).

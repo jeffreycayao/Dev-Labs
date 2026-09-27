@@ -35,6 +35,9 @@ import {
 
 const MAX_BODY_BYTES = 10 * 1024 * 1024; // 10 MB request-body cap
 const UPSTREAM_TIMEOUT_MS = 30_000;
+/** MCP over Streamable HTTP keeps responses open (SSE) for as long as a tool call
+ *  runs, so broker-proxied MCP servers get a much longer ceiling. */
+const MCP_UPSTREAM_TIMEOUT_MS = 10 * 60_000;
 const DEFAULT_USER_AGENT = 'atmt-labs-broker/1';
 
 /** Hop-by-hop headers never forwarded in either direction. */
@@ -59,6 +62,8 @@ interface Capability {
 }
 
 export interface IntegrationBrokerDeps {
+  /** Longer upstream timeout for this integration (MCP streams). Optional. */
+  isStreaming?: (id: string) => boolean;
   /** Resolve an integration record by id (injected — the registry). */
   getRecord: (id: string) => IntegrationRecord | undefined;
   /** Decrypt a secret by ref (injected — the secret store). Main-internal. */
@@ -134,6 +139,18 @@ export class IntegrationBroker {
     return token;
   }
 
+  /** Add `ids` to a worker's live capability (minting one if none), keeping its
+   *  existing token valid. Used when an agent spawn adds MCP connectors on top of
+   *  a worker's integration grant: grant() would revoke the token already in the
+   *  worker's env. */
+  extend(workerId: string, ids: string[]): string {
+    const token = this.byWorker.get(workerId);
+    const cap = token ? this.byToken.get(token) : undefined;
+    if (!token || !cap) return this.grant(workerId, ids);
+    for (const id of ids) cap.allowedIds.add(id);
+    return token;
+  }
+
   /** Revoke a worker's capability (called on teardown). Idempotent. */
   revoke(workerId: string): void {
     const token = this.byWorker.get(workerId);
@@ -206,7 +223,7 @@ export class IntegrationBroker {
       if (!secret) return IntegrationBroker.sendError(res, 503, 'no_secret', 'no secret configured for this integration');
     }
 
-    void this.forward(req, res, rec, upstream, secret);
+    void this.forward(req, res, rec, upstream, secret, this.deps.isStreaming?.(integrationId) ? MCP_UPSTREAM_TIMEOUT_MS : UPSTREAM_TIMEOUT_MS);
   }
 
   private async forward(
@@ -214,7 +231,8 @@ export class IntegrationBroker {
     res: ServerResponse,
     rec: IntegrationRecord,
     upstream: URL,
-    secret: string | undefined
+    secret: string | undefined,
+    timeoutMs: number = UPSTREAM_TIMEOUT_MS
   ): Promise<void> {
     // Buffer the request body with a hard cap (write methods).
     const method = (req.method ?? 'GET').toUpperCase();
@@ -248,7 +266,9 @@ export class IntegrationBroker {
     }
 
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), UPSTREAM_TIMEOUT_MS);
+    const timer = setTimeout(() => ac.abort(), timeoutMs);
+    // A client that hangs up (e.g. closes an SSE stream) aborts the upstream too.
+    res.on('close', () => { if (!res.writableFinished) ac.abort(); });
     let upstreamRes: Response;
     try {
       upstreamRes = await fetch(upstream, {

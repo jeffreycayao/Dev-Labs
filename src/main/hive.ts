@@ -37,17 +37,13 @@ import {
   bridgeOf,
   type AgentProvider
 } from '../shared/agentProvider';
-import { MCP_CATALOG } from '../shared/mcpCatalog';
+import { buildMcpServers, type McpSkipReason } from '../shared/mcpCatalog';
 import { selectBroadcastTargets } from '../shared/broadcast';
 import { preferredAgentRole } from '../shared/agentRole';
 import { mergeTaskLedger } from '../shared/taskLedger';
 import { expandTilde } from './fs';
 import { resolveGodName } from '../shared/godIdentity';
 
-/** The subset of HarnessConfig the hive consumes for the default-MCP merge.
- *  Kept as a local shape so hive.ts never imports the foundation-owned config
- *  module just for a type. */
-type McpDefaultsMap = { [id: string]: { enabled: boolean } } | undefined;
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -687,6 +683,14 @@ export class HiveManager {
       /** Consent state for the default-MCP bundle (W3). Threaded from the live
        *  HarnessConfig by the caller; undefined → catalog defaults apply. */
       mcpDefaults?: { [id: string]: { enabled: boolean } };
+      /** Decrypted connector credential by catalog id (main-process secret store).
+       *  Undefined → servers that need a secret are skipped. */
+      mcpSecret?: (id: string) => string | undefined;
+      /** Loopback broker URL + this agent's capability token, for vendor-hosted
+       *  (http) MCP servers. Undefined → those servers are skipped. */
+      mcpBroker?: { url: string; token: string };
+      /** Told which enabled servers were left out and why (no key, broker down). */
+      onMcpSkipped?: (skipped: { id: string; reason: McpSkipReason }[]) => void;
       /** App-resources `skills/` source dir (W3). The bundled read-only skills are
        *  copied into the agent's `.claude/skills/` per spawn; undefined or missing
        *  is a no-op (tolerated until Kevin populates the resource dir). */
@@ -962,8 +966,30 @@ export class HiveManager {
     if (sock && shim) {
       env.HIVE_SOCK = sock;
       const settingsPath = join(dir, 'settings.json');
-      this.writeJson(settingsPath, this.hookSettings(shim, meta.cwd, opts.mcpDefaults, opts.theme, this.sandboxWritableDirs(meta, dir, root, opts.extraWritableDirs)));
+      this.writeJson(settingsPath, this.hookSettings(shim, opts.theme, this.sandboxWritableDirs(meta, dir, root, opts.extraWritableDirs)));
       args.push('--settings', settingsPath);
+    }
+    // W3 — the MCP bundle. Claude Code ignores `mcpServers` inside a --settings
+    // file (verified against claude 2.1.283: a stdio server listed there is never
+    // launched), so it goes in its own file passed with --mcp-config, which is
+    // additive to the user's own servers. 0600: a stdio connector's key rides in
+    // its env here. Vendor-hosted (http) connectors carry only the broker URL and
+    // a revocable capability token, never the key.
+    const mcpPath = join(dir, 'mcp.json');
+    const mcp = buildMcpServers({
+      cwd: meta.cwd,
+      consent: opts.mcpDefaults,
+      getSecret: (id) => opts.mcpSecret?.(id),
+      broker: opts.mcpBroker
+    });
+    if (mcp.skipped.length) opts.onMcpSkipped?.(mcp.skipped);
+    if (Object.keys(mcp.servers).length) {
+      writeFileSync(mcpPath, JSON.stringify({ mcpServers: mcp.servers }, null, 2), { encoding: 'utf8', mode: 0o600 });
+      try { chmodSync(mcpPath, 0o600); } catch { /* best-effort on filesystems without modes */ }
+      args.push('--mcp-config', mcpPath);
+    } else if (existsSync(mcpPath)) {
+      // Nothing enabled any more: don't leave a stale key behind on disk.
+      try { rmSync(mcpPath, { force: true }); } catch { /* noop */ }
     }
     return { args, env };
   }
@@ -1143,7 +1169,7 @@ export class HiveManager {
     return Array.from(new Set(out));
   }
 
-  private hookSettings(shim: string, cwd: string, cfg: McpDefaultsMap, theme?: 'light' | 'dark', writableDirs: string[] = []): unknown {
+  private hookSettings(shim: string, theme?: 'light' | 'dark', writableDirs: string[] = []): unknown {
     // Bundled node, NOT bare `node` — see nodeLauncherPath(). Claude runs each of
     // these through `sh -c` with a stripped PATH, where `node` is often absent.
     const cmd = this.nodeRun(shim);
@@ -1151,7 +1177,6 @@ export class HiveManager {
       ...(matcher ? { matcher } : {}),
       hooks: [{ type: 'command', command: cmd }]
     });
-    const mcpServers = this.buildDefaultMcpServers(cwd, cfg);
     return {
       // Match the TUI's truecolor palette to the harness terminal theme —
       // PER SESSION, so the user's global Claude theme (their own terminals
@@ -1165,11 +1190,6 @@ export class HiveManager {
       // listens. The terminal reports the current theme the moment the CLI enables
       // 2031, so startup still matches without pinning anything.
       ...(theme ? { theme: 'auto' } : {}),
-      // W3 — default skills/MCP bundle. Written into the PER-SESSION settings file
-      // only (never ~/.claude), so the user's own MCP servers are never clobbered;
-      // Claude merges this additively. Omitted entirely when empty so a settings
-      // file with no enabled servers is unchanged from before.
-      ...(Object.keys(mcpServers).length ? { mcpServers } : {}),
       // The status line gets the session status JSON after every response —
       // including context_window.{total_input_tokens,context_window_size},
       // the only clean programmatic source for the session's REAL context
@@ -1206,39 +1226,6 @@ export class HiveManager {
         PostCompact: [entry()]
       }
     };
-  }
-
-  /**
-   * W3 — build the per-agent `mcpServers` map from the default catalog. Includes a
-   * server only when it's enabled (catalog ∩ consent), scopes filesystem/git to the
-   * agent cwd (never whole-disk), and namespaces every id `atmt-<id>` so a server
-   * of the same name in the user's own ~/.claude is never clobbered. A write/secret
-   * server is included ONLY on an explicit `enabled:true` consent — never via a
-   * default — so a malformed/partial config can't silently arm a keyed server.
-   */
-  private buildDefaultMcpServers(
-    cwd: string,
-    cfg: McpDefaultsMap
-  ): Record<string, { command: string; args: string[]; env?: Record<string, string> }> {
-    const out: Record<string, { command: string; args: string[]; env?: Record<string, string> }> = {};
-    for (const e of MCP_CATALOG) {
-      const consented = cfg?.[e.id]?.enabled;
-      const enabled = consented ?? e.defaultEnabled;
-      if (!enabled) continue;
-      // Defense-in-depth: a write/secret server requires an EXPLICIT opt-in; it can
-      // never ride in on a default (the catalog already ships these OFF, but this
-      // guards a hand-edited/partial mcpDefaults map too).
-      if (e.tier !== 'safe-readonly' && consented !== true) continue;
-      // Replace the `<cwd>` placeholder (filesystem/git) with the agent cwd at merge
-      // time so these stay strictly workspace-scoped.
-      const args = e.spec.args.map((a) => (a === '<cwd>' ? cwd : a));
-      out[`atmt-${e.id}`] = {
-        command: e.spec.command,
-        args,
-        ...(e.spec.env ? { env: e.spec.env } : {})
-      };
-    }
-    return out;
   }
 
   /**

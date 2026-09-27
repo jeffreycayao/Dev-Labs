@@ -849,6 +849,17 @@
       "safeReadonlyNote": "These servers read data only, need no secrets, and are scoped to the agent workspace. They are enabled for every new agent.",
       "writeNote": "These servers can mutate state beyond the workspace. Off by default — enable only after reviewing.",
       "secretNote": "These servers require an API key or credentials. Off by default — add your credentials and enable after consent."
+    },
+    "key": {
+      "saved": "Key saved",
+      "missing": "No key yet",
+      "replace": "Replace {{label}}",
+      "save": "save",
+      "clear": "remove",
+      "howToGet": "how to get it",
+      "savedNote": "{{label}} key saved. New agents will connect.",
+      "clearedNote": "{{label}} key removed.",
+      "needsKey": "On, but agents won't connect until you save a key."
     }
   },
   "devicePicker": {
@@ -1477,5 +1488,43 @@
     "completeTitle": "COMPLETE YOUR PURCHASE",
     "completeBody": "Your free trial is over, but the one-time payment didn't go through. Complete the purchase to keep using ATMT Labs.",
     "completePurchase": "complete purchase"
+  },
+  "floor": {
+    "importBtn": "import floor…",
+    "importBtnTitle": "Import a whole team from a .floor.json file",
+    "exportBtn": "export floor…",
+    "exportBtnTitle": "Save your current team as a shareable .floor.json file",
+    "importTitle": "IMPORT FLOOR",
+    "exportTitle": "EXPORT FLOOR",
+    "byAuthor": "by {{author}}",
+    "importNote": "{{count}} agents. Review the team, pick the project folder, then hire. Nothing starts until you click.",
+    "isolated": "own git worktree",
+    "tokenCap": "cap {{cap}} tokens",
+    "connectorsTitle": "Needs connectors:",
+    "connectorsNote": "These are not switched on for you. Add your key and turn them on in Settings → Connections before hiring, or the agents start without them.",
+    "projectFolder": "Project folder",
+    "noFolder": "pick a folder…",
+    "browse": "browse…",
+    "errFolder": "Pick a project folder first",
+    "stateSpawning": "starting…",
+    "stateDone": "hired ✓",
+    "stateFailed": "failed: {{error}}",
+    "summary": "Hired {{done}} of {{total}}.",
+    "summaryFailed": "{{count}} failed — fix the cause and retry.",
+    "reviewOneByOne": "review one by one",
+    "hireAll": "hire all ({{count}})",
+    "hiring": "hiring…",
+    "retryFailed": "retry failed",
+    "close": "close",
+    "exportNote": "Exports each agent's name, role, goal, look, engine, model and token cap. Folders, sessions, keys and memory stay on this computer.",
+    "name": "Floor name",
+    "description": "Description",
+    "author": "Author (optional)",
+    "includeConnectors": "List the connectors this team uses: {{list}} (keys are never exported)",
+    "exportIncluded": "{{count}} agents:",
+    "exportSkipped": "Skipped:",
+    "exportNothing": "Nothing to export yet.",
+    "saveFile": "save file…",
+    "saved": "Saved to {{path}}"
   }
 }

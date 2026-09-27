@@ -849,6 +849,17 @@
       "safeReadonlyNote": "这些服务器只读取数据，不需要密钥，且限定在智能体工作区内。它们对每个新智能体启用。",
       "writeNote": "这些服务器可以修改工作区之外的状态。默认关闭——审核后再启用。",
       "secretNote": "这些服务器需要 API 密钥或凭据。默认关闭——添加凭据并在同意后启用。"
+    },
+    "key": {
+      "saved": "密钥已保存",
+      "missing": "尚未设置密钥",
+      "replace": "替换{{label}}",
+      "save": "保存",
+      "clear": "移除",
+      "howToGet": "如何获取",
+      "savedNote": "{{label}}密钥已保存。新的智能体将会连接。",
+      "clearedNote": "{{label}}密钥已移除。",
+      "needsKey": "已开启，但保存密钥之前智能体不会连接。"
     }
   },
   "devicePicker": {
@@ -1477,5 +1488,43 @@
     "completeTitle": "完成购买",
     "completeBody": "免费试用已结束，但一次性付款未成功。请完成购买以继续使用 ATMT Labs。",
     "completePurchase": "完成购买"
+  },
+  "floor": {
+    "importBtn": "导入团队…",
+    "importBtnTitle": "从 .floor.json 文件导入整个团队",
+    "exportBtn": "导出团队…",
+    "exportBtnTitle": "将当前团队保存为可分享的 .floor.json 文件",
+    "importTitle": "导入团队",
+    "exportTitle": "导出团队",
+    "byAuthor": "作者：{{author}}",
+    "importNote": "共 {{count}} 个 agent。先检查团队、选择项目文件夹，再雇用。点击之前不会启动任何 agent。",
+    "isolated": "独立 git worktree",
+    "tokenCap": "上限 {{cap}} tokens",
+    "connectorsTitle": "需要的连接器：",
+    "connectorsNote": "这些连接器不会自动开启。请先在 设置 → 连接 中添加你的密钥并开启，否则 agent 启动时不会带上它们。",
+    "projectFolder": "项目文件夹",
+    "noFolder": "选择文件夹…",
+    "browse": "浏览…",
+    "errFolder": "请先选择项目文件夹",
+    "stateSpawning": "启动中…",
+    "stateDone": "已雇用 ✓",
+    "stateFailed": "失败：{{error}}",
+    "summary": "已雇用 {{done}} / {{total}}。",
+    "summaryFailed": "{{count}} 个失败——排除原因后重试。",
+    "reviewOneByOne": "逐个检查",
+    "hireAll": "全部雇用（{{count}}）",
+    "hiring": "雇用中…",
+    "retryFailed": "重试失败项",
+    "close": "关闭",
+    "exportNote": "导出每个 agent 的名称、角色、目标、外观、引擎、模型和 token 上限。文件夹、会话、密钥和记忆都留在本机。",
+    "name": "团队名称",
+    "description": "描述",
+    "author": "作者（可选）",
+    "includeConnectors": "列出该团队使用的连接器：{{list}}（密钥永不导出）",
+    "exportIncluded": "{{count}} 个 agent：",
+    "exportSkipped": "已跳过：",
+    "exportNothing": "暂无可导出的内容。",
+    "saveFile": "保存文件…",
+    "saved": "已保存到 {{path}}"
   }
 }

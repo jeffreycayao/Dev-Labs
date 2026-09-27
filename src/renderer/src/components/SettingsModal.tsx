@@ -14,6 +14,7 @@ import {
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
 import { UpdatesSection } from './UpdatesSection';
+import { AccountSection } from './AccountSection';
 import { SettingsHeroCard } from './SettingsHeroCard';
 import { SetupPanel } from './SetupPanel';
 import { Icon } from './Icon';
@@ -979,6 +980,10 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                           of the settings below. Slots for a future subscription
                           and a sponsor live here; both render nothing until set. */}
                       <SettingsHeroCard />
+
+                      {/* Signed-in account + license. Renders nothing unless
+                          licensing is enforced (docs/licensing/DESIGN.md). */}
+                      <AccountSection />
 
                       <div style={{ height: 1, background: 'var(--cth-ink-300)' }} />
 

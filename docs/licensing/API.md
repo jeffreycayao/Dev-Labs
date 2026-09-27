@@ -1,0 +1,91 @@
+# Licensing service contract
+
+Implemented in `services/licensing` and called by `src/main/licenseCore.ts`.
+Design: [DESIGN.md](./DESIGN.md).
+
+JSON errors are `{ "error": "<code>" }`.
+
+---
+
+## auth.labs.atmt.dev
+
+### Desktop OAuth 2.0 (public client, PKCE S256 required)
+
+The client ID is `atmt-labs-desktop`, and the only redirect URI is `atmtlabs://auth/callback` (exact match).
+
+**`GET /oauth/authorize`** takes these parameters:
+
+| Parameter | Value |
+|---|---|
+| `response_type` | `code` |
+| `client_id` | `atmt-labs-desktop` |
+| `redirect_uri` | `atmtlabs://auth/callback` |
+| `code_challenge` | 43 characters |
+| `code_challenge_method` | `S256` |
+| `state` | Echoed back unchanged |
+| `screen_hint` | Optional: `signup` |
+
+Behaviour:
+- **Unregistered `redirect_uri` or `client_id`:** an error page. It never redirects.
+- **Signed-in browser:** a hand-off page that redirects to `atmtlabs://auth/callback?code=…&state=…`, with a visible **Open ATMT Labs** button as a fallback.
+- **Otherwise:** the login page (Google / Yahoo), then `/oauth/continue` issues the code.
+- **Codes:** single use, valid for 60 s, stored hashed.
+
+**`POST /oauth/token`** (form-encoded) supports two grants:
+- `grant_type=authorization_code&code&code_verifier&redirect_uri&client_id`
+- `grant_type=refresh_token&refresh_token&client_id`
+
+Returns `{ access_token (HS256, 15 min), refresh_token, token_type: "Bearer", expires_in: 900 }`.
+
+Refresh tokens:
+- They rotate on every use and live for 90 days.
+- **Replaying a spent refresh token revokes the whole token family.**
+- Any bad, spent or revoked code or token returns `400 invalid_grant`, the only response that signs the app out.
+
+**`POST /oauth/revoke`** (form-encoded, RFC 7009): `token=…&client_id=…` → `200 {}`.
+
+### Web
+
+| Route | What |
+|---|---|
+| `GET /login?next=&signup=1` | Login page |
+| `GET /login/:provider` → IdP → `GET /login/:provider/callback` | OIDC with Google/Yahoo using discovery, `state` + `nonce`, and PKCE where offered. A verified email is required; the account is keyed on it. |
+| `GET /account` | License state, trial end, one-time price, devices, buttons |
+| `POST /account/trial` · `/account/buy` · `/account/billing` · `/account/trial/cancel` · `/account/devices/:id/remove` · `/logout` | Account forms: Origin checked and SameSite=Lax |
+| `GET /start?plan=trial\|buy` | Funnel entry for the landing page's CTA buttons |
+
+---
+
+## api.labs.atmt.dev
+
+All `/v1/*` routes except the webhook require `Authorization: Bearer <access_token>`. A missing or invalid token returns `401`.
+
+**`POST /v1/licenses`** takes `{ device_id, device_name, platform, app_version }` and returns `200 { license }`.
+- A trial past day 7 is charged here, immediately.
+- Trialing and active accounts stamp the device. A new device over `MAX_DEVICES` returns `403 { "error": "device_limit" }`.
+- License claims: DESIGN.md §5.
+
+**`DELETE /v1/devices/:id`** frees a seat and returns `204`. It does not un-stamp a perpetual machine.
+
+**`POST /v1/billing/checkout`** → `{ url }`:
+- Status `none`, trial never used: a trial Checkout (setup mode).
+- Otherwise: a one-time payment Checkout.
+- Trialing or active: the account page.
+
+**`POST /v1/billing/portal`** → `{ url }`: the account page.
+
+**`POST /v1/stripe/webhook`** is Stripe only:
+- The `Stripe-Signature` header is verified, and events are de-duplicated by `event.id`.
+- A handler error returns `500`, so Stripe retries.
+
+| Event | Effect |
+|---|---|
+| `checkout.session.completed` (setup, `purpose=trial`) | Save the card as default, check the fingerprint → `trialing` for 7 days, or `payment_required` if the card was already used for a trial |
+| `checkout.session.completed` (payment, paid) | `active` |
+| `payment_intent.succeeded` (`trial_conversion` or `purchase`) | `active` |
+| `payment_intent.payment_failed` (`trial_conversion`) | `payment_required` |
+| `charge.refunded` (full), `charge.dispute.created` | `refunded` |
+
+**`GET /api/cron/charge-trials`** requires `Authorization: Bearer $CRON_SECRET` (Vercel Cron sends it). It charges every due trial and returns `{ attempted, paid, failed }`.
+
+**`GET /health`** → `{ ok: true }`.

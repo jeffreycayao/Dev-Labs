@@ -60,6 +60,7 @@ import { CostLedgerTotals } from './costLifetime';
 import { analytics, isRendererMessageSurface } from './analytics';
 import type { SpawnFailReason } from './analytics';
 import { IntegrationBroker } from './integrationBroker';
+import { initLicensing, licenseAllowsAgents, handleLicenseLink, registerLicenseIpc } from './license';
 import * as integrations from './integrations';
 import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';
 import { RosterStore } from './roster';
@@ -2281,6 +2282,19 @@ function deliverHire(manifest: HireManifest): void {
   }
 }
 
+/** Every atmtlabs:// link lands here. The OAuth callback
+ *  (atmtlabs://auth/callback) belongs to licensing; everything else is a hire. */
+async function handleDeepLink(link: string): Promise<void> {
+  if (await handleLicenseLink(link)) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+    return;
+  }
+  await handleHireLink(link);
+}
+
 async function handleHireLink(link: string): Promise<void> {
   const src = parseHireDeepLink(link);
   if (!src) { console.warn('[hire] ignoring malformed deep link'); return; }
@@ -2321,14 +2335,17 @@ if (!gotInstanceLock) {
       mainWindow.focus();
     }
     const link = argv.find((a) => a.startsWith('atmtlabs://'));
-    if (link) void handleHireLink(link);
+    if (link) void handleDeepLink(link);
   });
 }
 
 app.on('open-url', (evt, url) => {
   evt.preventDefault();
-  void handleHireLink(url);
+  void handleDeepLink(url);
 });
+
+// IPC: account sign-in, license status and billing (src/main/license.ts).
+registerLicenseIpc();
 
 // IPC: the renderer signals readiness and PULLS anything queued (deep links
 // that arrived before the window/subscription existed, incl. cold starts).
@@ -2698,6 +2715,12 @@ ipcMain.handle('pty:spawn', async (evt, opts: AgentSpawnOptions) => {
  *  no renderer `evt`). `owner` is the window that should receive this PTY's output
  *  (null → the primary window). Behavior-identical to the prior inline handler. */
 async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebContents | null): Promise<{ ok: boolean; error?: string; cwd?: string; worktreePath?: string; resumeNotFound?: boolean; resumed?: boolean; seedPrompt?: string }> {
+  // The paywall lives HERE, not only in the renderer: every agent — the floor,
+  // god, ephemeral workers, Slack/webhook/schedule triggers — starts through
+  // this one function.
+  if (!licenseAllowsAgents()) {
+    return { ok: false, error: 'An active ATMT Labs subscription is required. Sign in or start your free trial.' };
+  }
   // ── cwd INGESTION — expand `~` exactly once, here ───────────────────────────
   // This is the single door every agent spawn comes through (`pty:spawn` IPC and
   // the god-triggered ephemeral-worker watcher), so it is where a user-typed
@@ -5378,6 +5401,12 @@ app.whenReady().then(() => {
   // setMicGate(true)); macOS TCC stays a second gate regardless.
   if (readConfig().realtimeVoiceEnabled) writeConfig({ realtimeVoiceEnabled: false });
 
+  // Licensing: decide offline from the stored license BEFORE the first window,
+  // so the renderer's sign-in gate paints right away; renewal runs in the
+  // background. A no-op (state 'disabled') unless LICENSING.enabled in a
+  // packaged build. docs/licensing/DESIGN.md.
+  initLicensing();
+
   // Anonymous product analytics (PostHog) — the full contract lives in
   // TELEMETRY.md. No-op unless a build-time key was injected (official releases
   // only), and gated on DO_NOT_TRACK + the telemetryEnabled config (opt-out).
@@ -5394,8 +5423,8 @@ app.whenReady().then(() => {
   void loadModelCatalog(MODEL_CATALOG_CACHE()).catch(() => { /* never fatal */ });
 
   // A cold-start deep link (Windows/Linux) rides in on OUR argv.
-  const startupHireLink = process.argv.find((a) => a.startsWith('atmtlabs://'));
-  if (startupHireLink) void handleHireLink(startupHireLink);
+  const startupLink = process.argv.find((a) => a.startsWith('atmtlabs://'));
+  if (startupLink) void handleDeepLink(startupLink);
 
   // Hand every spawned agent the path to the Slack reply discovery file via the
   // inherited env (pty merges process.env). The path is stable whether or not the

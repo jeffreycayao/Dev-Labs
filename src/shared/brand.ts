@@ -20,3 +20,38 @@ export const GITHUB_REPO_URL = GITHUB_REPO ? `https://github.com/${GITHUB_REPO}`
 export function rawRepoUrl(path: string): string {
   return GITHUB_REPO ? `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${path}` : '';
 }
+
+/**
+ * Accounts + licensing (see docs/licensing/DESIGN.md).
+ *
+ *   labs.atmt.dev       marketing, pricing, downloads, release notes
+ *   auth.labs.atmt.dev  OAuth 2.0 authorization server: Google/Yahoo sign-in,
+ *                       /oauth/authorize, /oauth/token, /oauth/revoke
+ *   api.labs.atmt.dev   licensing API: signed license tokens, devices, Stripe
+ *                       checkout/portal sessions, Stripe webhooks
+ *
+ * `enabled` is the ONE switch that turns the sign-in gate on in packaged builds.
+ * Leave it false until api.labs.atmt.dev is live AND its Ed25519 public key is
+ * pasted into `publicKeys` — a build with the gate on and no key refuses to
+ * start agents for everyone. test/license-core.test.cjs fails the build if
+ * `enabled` is true while `publicKeys` is empty.
+ */
+export const LICENSING = {
+  enabled: false,
+  siteOrigin: 'https://labs.atmt.dev',
+  authOrigin: 'https://auth.labs.atmt.dev',
+  apiOrigin: 'https://api.labs.atmt.dev',
+  /** Public OAuth client (PKCE, no secret) registered on the auth server. */
+  clientId: 'atmt-labs-desktop',
+  /** Must be registered as an allowed redirect URI for `clientId`. */
+  redirectUri: `${PROTOCOL}://auth/callback`,
+  /** `iss` / `aud` every license token must carry. */
+  issuer: 'https://api.labs.atmt.dev',
+  audience: 'atmt-labs-desktop',
+  /**
+   * `kid` → Ed25519 public key (SPKI PEM). Several at once so the server can
+   * rotate its signing key without stranding installed builds: ship the new
+   * key here one release BEFORE the server starts signing with it.
+   */
+  publicKeys: {} as Record<string, string>
+} as const;

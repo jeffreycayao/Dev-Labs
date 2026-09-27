@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useStore, type ToolKind, type StationKind } from '@/store/store';
 import { createAnsiStripper } from '@/components/ansiText';
+import { terminalShowsStartupPrompt } from '@/components/terminalPool';
 
 // Tool call lines look like: `● Read SPEC.md`, `● Bash npm test`, `● Edit src/foo.ts`
 const TOOL_RE = /●\s+([A-Za-z][A-Za-z_]*)(?:\s+(.+))?/g;
@@ -59,6 +60,9 @@ export function usePtyParser(agentId: string) {
       window.clearTimeout(idleTimerRef.current);
     }
     idleTimerRef.current = window.setTimeout(() => {
+      const current = useStore.getState().agents.find((agent) => agent.id === agentId);
+      if (current?.action === 'Complete engine setup in Terminal'
+        && current.ptyId && terminalShowsStartupPrompt(current.ptyId)) return;
       // No new tool calls for ~4 s → assume the model went idle
       updateAgent(agentId, {
         status: 'idle',

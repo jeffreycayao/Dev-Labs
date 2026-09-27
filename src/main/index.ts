@@ -2697,7 +2697,7 @@ ipcMain.handle('pty:spawn', async (evt, opts: AgentSpawnOptions) => {
  *  it can ALSO be invoked by the god-triggered ephemeral-worker watcher (which has
  *  no renderer `evt`). `owner` is the window that should receive this PTY's output
  *  (null → the primary window). Behavior-identical to the prior inline handler. */
-async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebContents | null): Promise<{ ok: boolean; error?: string; cwd?: string; worktreePath?: string; resumeNotFound?: boolean; resumed?: boolean; seedPrompt?: string }> {
+async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebContents | null): Promise<{ ok: boolean; error?: string; cwd?: string; worktreePath?: string; resumeNotFound?: boolean; resumed?: boolean; seedPrompt?: string; setup?: 'installing' | 'manual' }> {
   // ── cwd INGESTION — expand `~` exactly once, here ───────────────────────────
   // This is the single door every agent spawn comes through (`pty:spawn` IPC and
   // the god-triggered ephemeral-worker watcher), so it is where a user-typed
@@ -2788,7 +2788,7 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
         analytics.track('agent_spawn_failed', { provider, reason: spawnFailReason(res.error) });
       }
       syncKeepAwake();
-      return res;
+      return { ...res, ...(res.ok ? { setup: rung.command ? 'installing' as const : 'manual' as const } : {}) };
     }
   }
   // Git isolation: when requested and the cwd is a real repo, give this agent
@@ -3027,9 +3027,8 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
   if (claudeProvider) {
     try { ensureClaudePermissionsAccepted(opts.cwd); } catch { /* never block spawn */ }
   }
-  // Suppress first-run interactive prompts for providers that need it (e.g. Codex
-  // directory-trust gate via CODEX_NON_INTERACTIVE). Merges into any env already
-  // set on opts.
+  // Apply each provider's noninteractive environment. Codex can still display
+  // a folder-trust question in its TUI; the renderer must expose that terminal.
   const nonInteractiveEnv = nonInteractiveEnvForProvider(provider);
   if (Object.keys(nonInteractiveEnv).length > 0) {
     opts.env = { ...(opts.env ?? {}), ...nonInteractiveEnv };
@@ -3105,8 +3104,16 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
   // record matches what the registry and the PTY actually used.
   return { ...res, cwd: opts.cwd, ...(worktreePath ? { worktreePath } : {}), ...(resumeNotFound ? { resumeNotFound: true } : {}), ...(didResume ? { resumed: true } : {}), ...(seedPrompt ? { seedPrompt } : {}) };
 }
-ipcMain.handle('pty:write', (_evt, id: string, data: string) => {
+ipcMain.handle('pty:write', (_evt, id: string, data: string, expectedPid?: number) => {
   if (typeof id !== 'string' || typeof data !== 'string') return { ok: false, error: 'invalid args' };
+  // Automated writers pin both their text and Enter to the process they saw.
+  // A switch reuses the PTY id, so an old queued write must never answer the
+  // replacement CLI's folder-trust or permission prompt.
+  if (expectedPid !== undefined) {
+    if (!Number.isSafeInteger(expectedPid) || ptyManager.list().find((pty) => pty.id === id)?.pid !== expectedPid) {
+      return { ok: false, error: 'pty process changed' };
+    }
+  }
   return ptyManager.write(id, data);
 });
 ipcMain.handle('pty:resize', (_evt, id: string, cols: number, rows: number) => {
@@ -3127,6 +3134,8 @@ ipcMain.handle('pty:kill', (_evt, id: string) => {
   return res;
 });
 ipcMain.handle('pty:list', () => ptyManager.list());
+ipcMain.handle('pty:commandAvailable', (_evt, command: string) =>
+  typeof command === 'string' && ptyManager.isCommandAvailable(command));
 
 // ─── IPC: analytics (the ONE renderer-facing seam) ──────────────────────────
 /** Count one human-sent message (TELEMETRY.md → `message_sent`). A COUNT, and

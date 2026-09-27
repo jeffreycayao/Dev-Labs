@@ -224,6 +224,9 @@ export interface SpawnPtyOptions {
    *  main process seeds that session's `.jsonl` into the target cwd's project dir
    *  (copying it from wherever it lives) and launches `claude --resume <id>`. */
   resumeSessionId?: string;
+  /** Engine switching keeps the previous agent recoverable: do not start a
+   * first-time CLI installer in the replacement PTY. */
+  noAutoInstall?: boolean;
 }
 
 export interface PtyExit { exitCode: number; signal?: number | undefined }
@@ -580,10 +583,10 @@ const api = {
   // ─── PTY ─────────────────────────────────────────────────────────────────
   /** `cwd` in the result is the TILDE-EXPANDED absolute path main actually spawned
    *  into — the renderer stores that, not the raw `~/…` the user typed. */
-  spawnPty: (opts: SpawnPtyOptions): Promise<{ ok: boolean; error?: string; cwd?: string; worktreePath?: string; resumeNotFound?: boolean; resumed?: boolean; seedPrompt?: string }> =>
+  spawnPty: (opts: SpawnPtyOptions): Promise<{ ok: boolean; error?: string; cwd?: string; worktreePath?: string; resumeNotFound?: boolean; resumed?: boolean; seedPrompt?: string; setup?: 'installing' | 'manual' }> =>
     ipcRenderer.invoke('pty:spawn', opts),
-  writePty: (id: string, data: string): Promise<{ ok: boolean; error?: string }> =>
-    ipcRenderer.invoke('pty:write', id, data),
+  writePty: (id: string, data: string, expectedPid?: number): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('pty:write', id, data, expectedPid),
   resizePty: (id: string, cols: number, rows: number): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('pty:resize', id, cols, rows),
   redrawPty: (id: string): Promise<{ ok: boolean; error?: string }> =>
@@ -599,6 +602,9 @@ const api = {
     hasOutput: boolean;
   }>> =>
     ipcRenderer.invoke('pty:list'),
+  /** Uses the same command resolver as the actual PTY spawn. */
+  isPtyCommandAvailable: (command: string): Promise<boolean> =>
+    ipcRenderer.invoke('pty:commandAvailable', command),
   /** Resolve a Claude session id to the cwd it originally ran in (Add Agent
    *  resume auto-fill), or null if the id is invalid/unknown. */
   resolveSessionCwd: (sessionId: string): Promise<string | null> =>

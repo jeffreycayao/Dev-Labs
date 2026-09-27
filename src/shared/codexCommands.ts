@@ -55,7 +55,7 @@ export const CODEX_COMMAND_GROUPS: CmdGroup[] = [
     title: 'AUTOMATION (HEADLESS)',
     items: [
       { cmd: 'codex -p "your prompt"', kind: 'cli', desc: 'Non-interactive print mode: run one prompt and exit.', usage: 'codex -p "summarise this file"' },
-      { cmd: 'CODEX_NON_INTERACTIVE=1 codex', kind: 'cli', desc: 'Suppress all interactive installer / first-run prompts. Set automatically by ATMT Labs in auto mode.' }
+      { cmd: 'CODEX_NON_INTERACTIVE=1 codex', kind: 'cli', desc: 'Set automatically by ATMT Labs in auto mode. Codex may still ask to trust a folder on first run.' }
     ]
   },
   {

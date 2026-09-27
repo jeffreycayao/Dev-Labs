@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const loadTs = require('./load-ts.cjs');
 const catalog = require('../src/shared/modelCatalog.json');
+const { AGENT_PROVIDER_PRESETS } = loadTs('src/shared/agentProvider.ts');
 
 const {
   ASSISTANT_MODEL,
@@ -144,6 +145,22 @@ test('the Claude list still offers the 1M-context assistant model', () => {
   // The catalog carries the id as a literal, so this is now the only thing
   // holding the picker entry and the constant together.
   assert.ok(ids(modelsForProvider('claude')).includes(ASSISTANT_MODEL));
+});
+
+test('every recommended orchestrator model is offered by its shipped provider catalog', () => {
+  for (const preset of AGENT_PROVIDER_PRESETS) {
+    if (!preset.recommendedOrchestratorModel) continue;
+    const offered = ids(modelsForProvider(preset.id));
+    assert.ok(
+      offered.includes(preset.recommendedOrchestratorModel),
+      `${preset.id} recommends ${preset.recommendedOrchestratorModel}, absent from its shipped model picker`
+    );
+  }
+});
+
+test('Codex recommends the verified ChatGPT sign-in model', () => {
+  const codex = AGENT_PROVIDER_PRESETS.find((preset) => preset.id === 'codex');
+  assert.equal(codex?.recommendedOrchestratorModel, 'gpt-6-astra');
 });
 
 test('the catalog is the schema config.ts expects', () => {

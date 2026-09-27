@@ -66,7 +66,7 @@ export interface AgentProviderPreset {
   defaultCommand: string;
   /** Slash / CLI command reference for this provider. */
   commandGroups: CmdGroup[];
-  /** Environment variable to set for non-interactive / first-run suppression. */
+  /** Environment variable to set when the CLI runs in auto mode. */
   nonInteractiveEnv?: Record<string, string>;
   /** Flag(s) appended to the command string when auto mode is active.
    *  Kept alongside `autoFlag` (same value) for the HEAD consumers that read
@@ -212,7 +212,8 @@ export const AGENT_PROVIDER_PRESETS: AgentProviderPreset[] = [
     // Any of these on a command line means the user already chose a posture
     // (including the old full bypass) — do not stack ours on top.
     autoStanceTokens: ['-a', '--ask-for-approval', '-s', '--sandbox', '--full-auto', '--dangerously-bypass-approvals-and-sandbox'],
-    // Suppresses first-run interactive prompts (directory-trust gate, installer).
+    // Requested for non-interactive operation. Codex v0.157 can still show a
+    // folder-trust prompt, so the terminal must expose its first-run output.
     nonInteractiveEnv: { CODEX_NON_INTERACTIVE: '1' },
     supportsModel: true,
     modelFlag: '--model',
@@ -232,9 +233,9 @@ export const AGENT_PROVIDER_PRESETS: AgentProviderPreset[] = [
     canReceiveInbox: true,
     initialPromptFlag: undefined,
     positionalInitialPrompt: true,
-    // Codex's long-context coding model for the orchestrator role. // TODO-verify
-    // the exact codex CLI model id (couldn't install the codex CLI to confirm).
-    recommendedOrchestratorModel: 'gpt-5-codex',
+    // Verified with the Codex CLI under ChatGPT sign-in; also present in the
+    // shipped model catalog used by the orchestrator model picker.
+    recommendedOrchestratorModel: 'gpt-6-astra',
     // Codex resumes via a SUBCOMMAND, not a flag: `codex resume [OPTIONS]
     // [SESSION_ID]`. A `--resume <id>` flag does not exist, which is why restarts
     // used to silently start a brand-new session instead of continuing.

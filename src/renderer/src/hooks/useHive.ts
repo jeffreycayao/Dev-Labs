@@ -20,7 +20,8 @@ import { bridgeOf, providerPreset } from '../../../shared/agentProvider';
 import { isDurableRole, preferredAgentRole, roleForHiveSpawn } from '../../../shared/agentRole';
 import { inboxNudgeText } from '../../../shared/hiveNudge';
 import { resolveGodName } from '../../../shared/godIdentity';
-import { acquireTerminal, resetTerminal, isTerminalAutomationSafe } from '@/components/terminalPool';
+import { acquireTerminal, armTerminalStartupGuard, resetTerminal, isTerminalAutomationSafe } from '@/components/terminalPool';
+import { spawnAndObservePty } from '@/components/ptyStartup';
 import { canDeliverToAgent, deliverWithAcknowledgement, checkPrecondition } from './queueDelivery';
 import { OFFICE_CAST, DEFAULT_CHARACTER } from '@/scene/office/cast';
 
@@ -92,16 +93,16 @@ async function waitForTerminalReady(
   ptyId: string,
   provider: AgentProvider,
   timeoutMs = 30_000
-): Promise<void> {
+): Promise<number> {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     const live = await window.cth.listPtys();
     const pty = live.find((entry) => entry.id === ptyId);
     if (!pty) throw new Error(`PTY exited before becoming ready: ${ptyId}`);
-    if (readyPids.get(ptyId) === pty.pid) return;
+    if (readyPids.get(ptyId) === pty.pid) return pty.pid;
     if (terminalReadyToReceive(pty.hasOutput, Date.now() - started, provider)) {
       readyPids.set(ptyId, pty.pid);
-      return;
+      return pty.pid;
     }
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
@@ -130,11 +131,15 @@ function submitToPty(
   ptyId: string,
   text: string,
   provider: AgentProvider,
-  settleMs = 250
+  settleMs = 250,
+  guard?: { expectedPid: number; beforeWrite: () => boolean; beforeEnter: () => boolean }
 ): Promise<void> {
   const prev = writeChains.get(ptyId) ?? Promise.resolve();
   const next = prev.catch(() => { /* a failed prior write must not stall the chain */ }).then(async () => {
-    await waitForTerminalReady(ptyId, provider);
+    const readyPid = await waitForTerminalReady(ptyId, provider);
+    if (guard && (readyPid !== guard.expectedPid || !guard.beforeWrite())) {
+      throw new Error(`queued delivery deferred during agent restart: ${ptyId}`);
+    }
     // Bracketed paste (ESC[200~ … ESC[201~) only matters for MULTI-LINE text, so a
     // stray "\n" doesn't submit early (#24). Single-line text (nudges, slash
     // commands) is sent raw — some TUIs (Antigravity's agy) treat the paste
@@ -145,10 +150,13 @@ function submitToPty(
     // successful (the queue-drain then destroyed the message it had already
     // popped, #36). Surface the failure as a rejection; the chain itself is
     // immune (the prev.catch above absorbs it for the next writer).
-    const wrote = await window.cth.writePty(ptyId, payload);
+    const wrote = await window.cth.writePty(ptyId, payload, readyPid);
     if (!wrote?.ok) throw new Error(wrote?.error ?? `pty write failed: ${ptyId}`);
     await new Promise((r) => setTimeout(r, 140));
-    const submitted = await window.cth.writePty(ptyId, '\r');
+    if (guard && !guard.beforeEnter()) {
+      throw new Error(`queued delivery deferred during agent restart: ${ptyId}`);
+    }
+    const submitted = await window.cth.writePty(ptyId, '\r', readyPid);
     if (!submitted?.ok) throw new Error(submitted?.error ?? `pty write failed: ${ptyId}`);
     await new Promise((r) => setTimeout(r, settleMs));
   });
@@ -400,7 +408,10 @@ export function useHive(config: HarnessConfig | null): void {
       const godModel = config.godModel;
       const command = buildSpawnCommand(config, godModel, godProvider);
       const [exe, ...args] = tokenizeCommand(command.trim());
-      const res = await window.cth.spawnPty({
+      // Buffer Codex's first frame even when the terminal tab is not mounted.
+      // Its TUI can ask for folder trust before the positional hive prompt runs.
+      if (godProvider === 'codex') armTerminalStartupGuard(GOD_PTY);
+      const spawnGod = () => window.cth.spawnPty({
         id: GOD_PTY,
         cwd: config.harnessHome!,
         command: exe,
@@ -416,8 +427,13 @@ export function useHive(config: HarnessConfig | null): void {
         resume: true,
         hive: { id: GOD_ID, name: godName, provider: godProvider, cwd: config.harnessHome!, isGod: true, role: 'orchestrator (god)' }
       });
+      const { result: res, startup } = godProvider === 'codex'
+        ? await spawnAndObservePty(GOD_PTY, window.cth, spawnGod)
+        : { result: await spawnGod(), startup: undefined };
       if (cancelled) { godSpawning.current = false; return; }
       if (!res.ok) { godSpawning.current = false; useStore.getState().setGodStatus('failed'); return; }
+      const needsInput = startup?.kind === 'needs-input';
+      const startupFailed = startup?.kind === 'exited' || res.setup === 'manual';
       const god: Agent = {
         id: GOD_ID,
         name: godName,
@@ -427,8 +443,8 @@ export function useHive(config: HarnessConfig | null): void {
         project: 'hive',
         tmuxTarget: '',
         cwd: config.harnessHome!,
-        status: 'idle',
-        action: 'running the floor',
+        status: startupFailed ? 'ghost' : needsInput ? 'blocked' : 'idle',
+        action: startupFailed ? 'engine failed to start' : needsInput ? 'Complete engine setup in Terminal' : 'running the floor',
         progress: 0,
         currentStation: 'desk',
         ptyId: GOD_PTY,
@@ -439,7 +455,13 @@ export function useHive(config: HarnessConfig | null): void {
         recentTextTs: Date.now()
       };
       useStore.getState().addAgent(god);
-      useStore.getState().setGodStatus('ready');
+      useStore.getState().setGodStatus(startupFailed ? 'failed' : 'ready');
+      if (godProvider === 'codex' && (needsInput || startupFailed || !res.resumed)) {
+        const store = useStore.getState();
+        store.select(GOD_ID);
+        store.requestCommandCenterTab('terminal');
+      }
+      if (startupFailed) { godSpawning.current = false; return; }
 
       // Kick Ramon off once his TUI is up. Always re-enable remote control so
       // the human can approve permission prompts from their phone (best-effort — a
@@ -454,21 +476,32 @@ export function useHive(config: HarnessConfig | null): void {
       bootGraceUntil.current[GOD_ID] = Date.now() + BOOT_GRACE_MS;
       void (async () => {
         try {
+          // Codex receives the hive prompt positionally at spawn. Its terminal
+          // may still be asking for folder trust, so do not type any boot text.
+          if (godProvider === 'codex') return;
+          const bootPid = (await window.cth.listPtys()).find((pty) => pty.id === GOD_PTY)?.pid;
+          if (bootPid === undefined) return;
+          const sameBoot = () => {
+            const current = useStore.getState().agents.find((agent) => agent.id === GOD_ID);
+            return !!current && current.ptyId === GOD_PTY && current.command === command.trim()
+              && current.provider === godProvider && current.action !== 'starting engine…';
+          };
+          const bootGuard = { expectedPid: bootPid, beforeWrite: sameBoot, beforeEnter: sameBoot };
           const remoteCommand = remoteControlCommandForProvider(godProvider, godName);
           if (remoteCommand) {
             // settleMs pauses the chain ~1.5s after /remote-control before the
             // orientation prompt (fresh spawns only) is submitted next.
-            await submitToPty(GOD_PTY, remoteCommand, godProvider, REMOTE_CONTROL_SETTLE_MS);
+            await submitToPty(GOD_PTY, remoteCommand, godProvider, REMOTE_CONTROL_SETTLE_MS, bootGuard);
           }
           if (!cancelled && !resumedGod) {
             // A type-into-tui god (Crush) can't ride its hive protocol on argv, so the
             // main process hands it back as seedPrompt — type it FIRST (identity), then
             // the orientation kick. Serialized via writeChains so they can't jam. (ondev-b)
-            if (res.seedPrompt) await submitToPty(GOD_PTY, res.seedPrompt, godProvider);
-            await submitToPty(GOD_PTY, INITIAL_GOD_PROMPT, godProvider);
+            if (res.seedPrompt) await submitToPty(GOD_PTY, res.seedPrompt, godProvider, 250, bootGuard);
+            await submitToPty(GOD_PTY, INITIAL_GOD_PROMPT, godProvider, 250, bootGuard);
           }
         } catch { /* PTY may have died during startup */ }
-        finally { bootGraceUntil.current[GOD_ID] = 0; }
+        finally { if (godProvider !== 'codex') bootGraceUntil.current[GOD_ID] = 0; }
       })();
     }, 1200);
     return () => { cancelled = true; clearTimeout(t); };
@@ -763,12 +796,24 @@ export function useHive(config: HarnessConfig | null): void {
             useStore.getState().updateAgent(a.id, { seedPrompt: seed });
             return;
           }
-          submitToPty(
-            ptyId,
-            withStandingGoal(live, seed),
-            inferAgentProvider(live.command, live.provider)
-          )
-            .catch(() => { /* pty may have died */ });
+          void (async () => {
+            const seedPid = (await window.cth.listPtys()).find((pty) => pty.id === ptyId)?.pid;
+            if (seedPid === undefined) return;
+            const sameSeedProcess = () => {
+              const current = useStore.getState().agents.find((agent) => agent.id === a.id);
+              return !!current && current.ptyId === ptyId
+                && current.command === live.command && current.provider === live.provider
+                && current.action !== 'starting engine…'
+                && current.action !== 'Complete engine setup in Terminal';
+            };
+            await submitToPty(
+              ptyId,
+              withStandingGoal(live, seed),
+              inferAgentProvider(live.command, live.provider),
+              250,
+              { expectedPid: seedPid, beforeWrite: sameSeedProcess, beforeEnter: sameSeedProcess }
+            );
+          })().catch(() => { /* pty may have died or been replaced */ });
         }, SEED_BOOT_MS);
       }
     }, 1500);
@@ -822,7 +867,7 @@ export function useHive(config: HarnessConfig | null): void {
       // opened, holds delivery. Both blocks expire after half an hour, and when
       // one does we simply type after whatever is there — automation never
       // erases the user's text and never closes the user's menu.
-      if (!isTerminalAutomationSafe(target.ptyId, now)) return { sent: false };
+      if (!isTerminalAutomationSafe(target.ptyId, now, inferAgentProvider(target.command, target.provider))) return { sent: false };
       if (now - (lastFlush.current[target.id] ?? 0) < FLUSH_COOLDOWN_MS) return { sent: false };
       // Last gate before we type: re-check the message's delivery-time
       // precondition. A queue item is decided at enqueue time and delivered an
@@ -834,6 +879,24 @@ export function useHive(config: HarnessConfig | null): void {
         removeQueuedMessage(srcId, next.id);
         return { sent: false };
       }
+      const expectedPid = (await window.cth.listPtys()).find((pty) => pty.id === target.ptyId)?.pid;
+      if (expectedPid === undefined) return { sent: false };
+      const currentTarget = () => useStore.getState().agents.find((agent) => agent.id === target.id);
+      const sameGeneration = () => {
+        const current = currentTarget();
+        return !!current && current.ptyId === target.ptyId
+          && current.command === target.command && current.provider === target.provider
+          && current.model === target.model
+          && current.action !== 'starting engine…'
+          && current.action !== 'Complete engine setup in Terminal';
+      };
+      const beforeWrite = () => {
+        const current = currentTarget();
+        return !!current && sameGeneration()
+          && canDeliverToAgent(current.status, ptyQuietMs(target.ptyId!, Date.now()), QUIESCE_IDLE_MS)
+          && isTerminalAutomationSafe(target.ptyId!, Date.now(), inferAgentProvider(current.command, current.provider));
+      };
+      if (!beforeWrite()) return { sent: false };
       const flightKey = `${srcId}:${next.id}`;
       if (inFlight.has(flightKey)) return { sent: false };
       inFlight.add(flightKey);
@@ -848,7 +911,9 @@ export function useHive(config: HarnessConfig | null): void {
               target,
               wrap ? wrap(next) : (next.instruction ?? next.text)
             ),
-            inferAgentProvider(target.command, target.provider)
+            inferAgentProvider(target.command, target.provider),
+            250,
+            { expectedPid, beforeWrite, beforeEnter: sameGeneration }
           ),
           () => {
             removeQueuedMessage(srcId, next.id);
@@ -868,6 +933,11 @@ export function useHive(config: HarnessConfig | null): void {
           delete sendFailures[next.id];
           return { sent: true, message: next };
         }
+        // A process replacement or interactive prompt defers this message;
+        // it is still queued and must not spend its bounded failure budget.
+        const livePid = (await window.cth.listPtys().catch(() => []))
+          .find((pty) => pty.id === target.ptyId)?.pid;
+        if (livePid !== expectedPid || !beforeWrite()) return { sent: false };
         // Failed write (dead/crashed pty the store still thinks is idle): retry
         // on the next cooldown-spaced flush, but only MAX_SEND_ATTEMPTS times —
         // then drop LOUDLY so the loss is diagnosable. (#113/#36)

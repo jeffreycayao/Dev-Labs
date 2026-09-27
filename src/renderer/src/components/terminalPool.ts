@@ -39,6 +39,8 @@ import {
   type TerminalAutomationBlock
 } from './terminalAutomation';
 import { sanitizeTerminalSelection } from './terminalSelection';
+import { terminalNeedsStartupInput } from './ptyStartup';
+import type { AgentProvider } from '@shared/agentProvider';
 import '@xterm/xterm/css/xterm.css';
 
 export interface TerminalEntry {
@@ -69,6 +71,12 @@ export interface TerminalEntry {
   themeNotify: boolean;
   /** When the picker latch was set — the block expires, see PICKER_BLOCK_MS. */
   automationBlockedAt: number;
+  /** Limit screen-text setup detection to a fresh Codex launch. Agent answers
+   * can discuss sign-in later without holding the delivery queue indefinitely. */
+  startupGuardUntil: number;
+  /** Once a setup menu was seen during startup, keep it protected until it
+   * disappears from the active screen, even if the startup timer expires. */
+  startupPromptLatched: boolean;
   /** True while the user has unsubmitted text in the live TUI prompt. */
   inputDirty: boolean;
   inputDirtyAt: number; // when the draft was last typed into; drives staleness expiry
@@ -174,6 +182,8 @@ export function acquireTerminal(ptyId: string, theme?: ThemeMap, fontSize = 14):
     automationBlocked: false,
     themeNotify: false,
     automationBlockedAt: 0,
+    startupGuardUntil: 0,
+    startupPromptLatched: false,
     inputDirty: false,
     inputDirtyAt: 0,
     automationSettleUntil: 0,
@@ -189,6 +199,9 @@ export function acquireTerminal(ptyId: string, theme?: ThemeMap, fontSize = 14):
     const active = term.buffer.active;
     const follow = shouldFollowTerminalOutput(active.viewportY, active.baseY);
     term.write(chunk, () => {
+      if (entry.startupGuardUntil > Date.now() && terminalShowsStartupPrompt(ptyId)) {
+        entry.startupPromptLatched = true;
+      }
       if (follow) {
         try { term.scrollToBottom(); } catch { /* terminal may be detaching */ }
       }
@@ -334,6 +347,11 @@ export function acquireTerminal(ptyId: string, theme?: ThemeMap, fontSize = 14):
   // path resets it too.
   term.onData((data) => {
     if (entry.exited) return;
+    // A person may answer folder trust long after the initial launch. Keep the
+    // guard active for a follow-on sign-in menu while their answer takes effect.
+    if (entry.startupGuardUntil && terminalShowsStartupPrompt(ptyId)) {
+      entry.startupGuardUntil = Date.now() + STARTUP_GUARD_MS;
+    }
     window.cth.writePty(ptyId, data);
     // A lone Escape or Ctrl-C closes interactive pickers. Arrow-key escape
     // sequences must NOT clear the block while the user navigates a picker.
@@ -401,10 +419,23 @@ export function acquireTerminal(ptyId: string, theme?: ThemeMap, fontSize = 14):
 
 /** Whether queued automation can safely own this terminal's input line. A PTY
  * without a pooled terminal cannot have a user-opened local picker. */
-export function isTerminalAutomationSafe(ptyId: string, now = Date.now()): boolean {
+export function isTerminalAutomationSafe(ptyId: string, now = Date.now(), provider?: AgentProvider): boolean {
   const entry = pool.get(ptyId);
   if (!entry) return true;
+  if (provider === 'codex' && (now < entry.startupGuardUntil || entry.startupPromptLatched)) {
+    entry.startupPromptLatched = terminalShowsStartupPrompt(ptyId);
+    if (entry.startupPromptLatched) return false;
+  }
   return canAutomateTerminal(automationStateOf(entry, now), now);
+}
+
+const STARTUP_GUARD_MS = 120_000;
+
+/** Call immediately before a Codex PTY spawn, including rollback and cold boot. */
+export function armTerminalStartupGuard(ptyId: string): void {
+  const entry = acquireTerminal(ptyId);
+  entry.startupGuardUntil = Date.now() + STARTUP_GUARD_MS;
+  entry.startupPromptLatched = false;
 }
 
 /** Characters a TUI paints around its input line that are not the user's text:
@@ -874,6 +905,8 @@ export function resetTerminal(
   entry.lineBuf = '';
   entry.automationBlocked = false;
   entry.automationBlockedAt = 0;
+  entry.startupGuardUntil = 0;
+  entry.startupPromptLatched = false;
   try {
     if (opts.preserveScrollback) {
       entry.term.writeln('\r\n\x1b[2m─ resuming existing session ─\x1b[0m');
@@ -882,6 +915,19 @@ export function resetTerminal(
       entry.term.reset();
     }
   } catch { /* not yet open */ }
+}
+
+/** Read the active screen, not scrollback: after the user answers a Codex
+ * setup question its old text may still exist in terminal history. */
+export function terminalShowsStartupPrompt(ptyId: string): boolean {
+  const term = pool.get(ptyId)?.term;
+  if (!term) return false;
+  const buffer = term.buffer.active;
+  let screen = '';
+  for (let row = 0; row < term.rows; row++) {
+    screen += `${buffer.getLine(buffer.baseY + row)?.translateToString(true) ?? ''}\n`;
+  }
+  return terminalNeedsStartupInput(screen);
 }
 
 /** Tear down a pty's terminal (call when the agent/pty is gone for good). */

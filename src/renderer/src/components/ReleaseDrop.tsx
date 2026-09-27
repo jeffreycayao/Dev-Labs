@@ -110,7 +110,7 @@ export function ReleaseDrop({ version, html, onDismiss }: ReleaseDropProps) {
     >
       <div
         role="dialog"
-        aria-label={`What's new in ATMT LAB ${version}`}
+        aria-label={`What's new in ATMT Labs ${version}`}
         onClick={(e) => e.stopPropagation()}
         style={{
           margin: 'auto',
@@ -148,7 +148,7 @@ export function ReleaseDrop({ version, html, onDismiss }: ReleaseDropProps) {
             textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden',
             textOverflow: 'ellipsis'
           }}>
-            ATMT LAB <span style={{ color: YELLOW }}>v{version.replace(/^v/, '')}</span>
+            ATMT Labs <span style={{ color: YELLOW }}>v{version.replace(/^v/, '')}</span>
             <span style={{ color: INK_FAINT, fontWeight: 500, marginLeft: 10, letterSpacing: '.12em' }}>
               / release notes
             </span>

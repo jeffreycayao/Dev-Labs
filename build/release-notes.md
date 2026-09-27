@@ -1,3 +1,3 @@
-- ATMT LAB is here: a rebrand of the local-first multi-agent office.
+- ATMT Labs is here: a rebrand of the local-first multi-agent office.
 - New warm-dark theme with the signature lime accent.
 - A Filipino team roster, led by Ramon at the head desk.

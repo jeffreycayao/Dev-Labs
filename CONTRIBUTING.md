@@ -1,4 +1,4 @@
-# Contributing to ATMT LAB
+# Contributing to ATMT Labs
 
 Thanks for your interest! This is an early prototype, so there's a lot of surface
 area and plenty of room to help. This guide covers setup, the gotchas, and the
@@ -17,7 +17,7 @@ much cheaper than finding out in review.
 - **Keep the change scoped to one clear improvement, fix, or refactor.** A fix
   plus a rename plus a refactor is three pull requests, and all three merge
   faster than the one.
-- **ATMT LAB targets macOS, Windows and Linux.** Every change has to work
+- **ATMT Labs targets macOS, Windows and Linux.** Every change has to work
   on all three unless it sits behind an explicit runtime platform check. Most
   of our cross-platform bugs are paths: use `path.join` and the Node path
   helpers, never a hand-built `"a/b"` string.
@@ -37,7 +37,7 @@ much cheaper than finding out in review.
 ### Prerequisites
 
 - **macOS, Windows, or Linux** — signed/notarized macOS builds, plus Windows and
-  Linux builds, ship from the [releases page](https://github.com/automatika/atmt-lab/releases/latest).
+  Linux builds, ship from the [releases page](https://github.com/automatika/atmt-labs/releases/latest).
   Cross-platform smoke-testing and fixes are still very welcome (see
   [Good first areas](#good-first-areas)).
 - **Node.js 18+** and npm.
@@ -52,8 +52,8 @@ much cheaper than finding out in review.
 ### Install & run
 
 ```bash
-git clone <your-fork-url> atmt-lab
-cd atmt-lab
+git clone <your-fork-url> atmt-labs
+cd atmt-labs
 npm install        # postinstall rebuilds node-pty against Electron's ABI
 npm run dev        # live-reloading Electron build
 ```
@@ -133,7 +133,7 @@ negotiate, and every one of them is cheaper to avoid than to fix in review:
 - **Wholesale reformatting** of files, or a diff where the real change is buried
   in whitespace and import reordering.
 - **A rewrite nobody asked for.** Large architectural changes need an issue or a
-  [discussion](https://github.com/automatika/atmt-lab/discussions) with
+  [discussion](https://github.com/automatika/atmt-labs/discussions) with
   agreement **before** you write the code. We would rather say no to a paragraph
   than to a week of your work.
 - **Generated or unattributed content** — art that isn't yours or compatibly

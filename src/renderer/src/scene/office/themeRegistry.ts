@@ -100,6 +100,9 @@ export interface AnchorConfig {
   calendar: Tile;
   boards: Tile;
   clock: Tile;
+  /** Optional wall decor (brand theme only): Philippine flag + company sign. */
+  flag?: Tile;
+  sign?: Tile;
 }
 
 /** Theme palette. `background` is the canvas clear color; `noteColors` are the
@@ -174,6 +177,8 @@ export const OFFICE_THEME: ThemeConfig = {
     calendar: { x: 4, y: 1 },
     boards: { x: 6, y: 10 },
     clock: { x: 1, y: 1 },
+    flag: { x: 6, y: 1 },   // between the calendar and the first window
+    sign: { x: 19, y: 1 },  // long clear wall run above the right-hand room
   },
   errandSpots: [
     // plants (droplets ride on the character via startWatering)

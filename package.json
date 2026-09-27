@@ -1,8 +1,8 @@
 {
-  "name": "atmt-lab",
+  "name": "atmt-labs",
   "version": "0.0.1",
   "private": true,
-  "description": "ATMT LAB — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
+  "description": "ATMT Labs — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
   "main": "out/main/index.js",
   "author": "Automatika Consulting <hello@automatika.ph>",
   "homepage": "https://automatika.ph/",

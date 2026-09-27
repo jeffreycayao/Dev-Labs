@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://atmtlab-hires.dev/spec/hire.schema.json",
-  "title": "ATMT LAB hire manifest (v1)",
-  "description": "A portable, shareable agent role template for the ATMT LAB multi-agent harness. A manifest never auto-spawns an agent: importing it only pre-fills the Add-Agent modal for human review.",
+  "$id": "https://atmtlabs-hires.dev/spec/hire.schema.json",
+  "title": "ATMT Labs hire manifest (v1)",
+  "description": "A portable, shareable agent role template for the ATMT Labs multi-agent harness. A manifest never auto-spawns an agent: importing it only pre-fills the Add-Agent modal for human review.",
   "type": "object",
   "required": ["spec", "name"],
   "additionalProperties": false,
   "properties": {
     "spec": {
-      "const": "atmt-lab/hire@1",
+      "const": "atmt-labs/hire@1",
       "description": "Spec version tag. Exactly this string for v1."
     },
     "name": {

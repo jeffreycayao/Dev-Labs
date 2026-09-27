@@ -6,7 +6,7 @@
  *
  * WHY THIS EXISTS. RELEASE.md is published verbatim as the GitHub release body,
  * and its download table links to
- * `/releases/latest/download/ATMT-LAB-<version>-<platform>.<ext>`. That URL
+ * `/releases/latest/download/ATMT-Labs-<version>-<platform>.<ext>`. That URL
  * form requires the EXACT filename present in whichever release is currently
  * "latest", and electron-builder bakes ${version} into every artifact name — so a
  * version string left behind in RELEASE.md turns all four download links into
@@ -43,13 +43,13 @@ function compareVersions(a, b) {
 }
 
 // — 1. every pinned artifact name must carry the current version —
-const assetRe = /ATMT-LAB-(\d+\.\d+\.\d+)-([^\s`)]+)/g;
+const assetRe = /ATMT-Labs-(\d+\.\d+\.\d+)-([^\s`)]+)/g;
 const assets = new Set();
 for (const m of releaseMd.matchAll(assetRe)) {
   if (m[1] !== version) {
-    problems.push(`RELEASE.md advertises ATMT-LAB-${m[1]}-${m[2]} but package.json says ${version}`);
+    problems.push(`RELEASE.md advertises ATMT-Labs-${m[1]}-${m[2]} but package.json says ${version}`);
   }
-  assets.add(`ATMT-LAB-${m[1]}-${m[2]}`);
+  assets.add(`ATMT-Labs-${m[1]}-${m[2]}`);
 }
 if (assets.size === 0) problems.push('RELEASE.md advertises no download assets at all — did the table move?');
 
@@ -76,8 +76,8 @@ if (fs.existsSync(indexHtml)) {
   }
   const base = /var BASE = '([^']+)'/.exec(html);
   if (m && base) {
-    for (const f of html.matchAll(/'ATMT-LAB-' \+ REL \+ '([^']+)'/g)) {
-      siteAssets.push(`${base[1]}ATMT-LAB-${m[1]}${f[1]}`);
+    for (const f of html.matchAll(/'ATMT-Labs-' \+ REL \+ '([^']+)'/g)) {
+      siteAssets.push(`${base[1]}ATMT-Labs-${m[1]}${f[1]}`);
     }
   }
 }
@@ -108,7 +108,7 @@ async function head(url, label) {
 }
 
 async function checkLive() {
-  const base = 'https://github.com/automatika/atmt-lab/releases/latest/download/';
+  const base = 'https://github.com/automatika/atmt-labs/releases/latest/download/';
   for (const name of [...assets, 'SHA256SUMS.txt']) await head(base + name, name);
   for (const url of siteAssets) await head(url, url);
 }

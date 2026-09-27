@@ -428,7 +428,7 @@ export class HiveManager {
     if (!root) return null;
     if (process.platform === 'win32') {
       const id = createHash('sha1').update(root).digest('hex').slice(0, 12);
-      return `\\\\.\\pipe\\atmt-lab-${id}`;
+      return `\\\\.\\pipe\\atmt-labs-${id}`;
     }
     return join(root, 'hooks.sock');
   }
@@ -1470,7 +1470,7 @@ export class HiveManager {
     // us) was invisible to every investigation.
     const rt = this.runtimeInfo();
     const runtimeLine = rt
-      ? `RUNNING BUILD: ATMT LAB v${rt.version}, ${rt.packaged ? 'packaged app' : 'local dev build'}${rt.appPath ? `, from ${rt.appPath}` : ''}. Say this version if asked which one is running, and do not assume behaviour from an older one. A local dev build inherits the launching shell's environment (umask included) where a packaged app does not, so file modes and inherited env can legitimately differ between the two. \`log.jsonl\` records an \`app-start\` event on every launch, which is how you spot a restart or a build switch.`
+      ? `RUNNING BUILD: ATMT Labs v${rt.version}, ${rt.packaged ? 'packaged app' : 'local dev build'}${rt.appPath ? `, from ${rt.appPath}` : ''}. Say this version if asked which one is running, and do not assume behaviour from an older one. A local dev build inherits the launching shell's environment (umask included) where a packaged app does not, so file modes and inherited env can legitimately differ between the two. \`log.jsonl\` records an \`app-start\` event on every launch, which is how you spot a restart or a build switch.`
       : '';
     // Item 11: god could not find the spawn queue. The mechanism has worked since
     // v0.4.4, but nothing told him it existed — the prompt said "spawn" without
@@ -2166,7 +2166,7 @@ export class HiveManager {
       throw new Error(`invalid agent id: ${agentId}`);
     }
     const source = join(home, kind);
-    const scanRoot = join(userHome, kind, 'atmt-lab');
+    const scanRoot = join(userHome, kind, 'atmt-labs');
     const hiveId = createHash('sha1').update(root).digest('hex').slice(0, 12);
     const target = join(scanRoot, hiveId, agentId);
 
@@ -2229,7 +2229,7 @@ export class HiveManager {
         try {
           if (!lstatSync(source).isSymbolicLink()) continue;
           const target = realpathSync(source);
-          const scanRoot = realpathSync(join(userHome, kind, 'atmt-lab'));
+          const scanRoot = realpathSync(join(userHome, kind, 'atmt-labs'));
           const rel = relative(scanRoot, target);
           const scope = dirname(rel);
           if (!rel || rel.startsWith('..') || isAbsolute(rel)
@@ -3424,7 +3424,7 @@ process.stdin.on('end', () => {
 // payload is camelCase and uses snake_case event values. Normalize the input for
 // HookServer and translate its Claude-style permission denial into Grok's direct
 // decision form. Scoped by AGENT_ID so the trusted global hook is inert outside
-// ATMT LAB-spawned workers.
+// ATMT Labs-spawned workers.
 const GROK_HOOK_SHIM = `#!/usr/bin/env node
 'use strict';
 const net = require('net');

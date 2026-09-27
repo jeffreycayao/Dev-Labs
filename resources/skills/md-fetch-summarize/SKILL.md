@@ -6,7 +6,7 @@ description: |
   Read-only: no files are written; the summary is returned as output only.
   Use when asked to "fetch and summarize", "summarize this URL", "what does
   this page say", or "get the content of <url>".
-  Proactively suggest when the user pastes a URL and asks what it contains. (atmt-lab)
+  Proactively suggest when the user pastes a URL and asks what it contains. (atmt-labs)
 allowed-tools:
   - WebFetch
   - Bash

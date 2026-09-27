@@ -93,7 +93,7 @@ export function SettingsHeroCard() {
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
             <span style={{
               fontFamily: 'var(--cth-font-display)', fontSize: 13, lineHeight: '20px', color: INK
-            }}>ATMT LAB</span>
+            }}>ATMT Labs</span>
             {version && (
               <span style={{
                 fontFamily: MONO, fontSize: 15, fontWeight: 700, color: INK

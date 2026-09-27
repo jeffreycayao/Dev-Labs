@@ -1,13 +1,13 @@
 // Brand identity — single source of truth for the app name, slugs and the
 // GitHub repo that serves updates and remote catalogs.
 
-export const APP_NAME = 'ATMT LAB';
+export const APP_NAME = 'ATMT Labs';
 /** Lowercase slug for pipes, user-agents, scan dirs and spec tags. */
-export const APP_SLUG = 'atmt-lab';
+export const APP_SLUG = 'atmt-labs';
 /** Prefix of packaged installer file names (must match electron-builder.yml). */
-export const ARTIFACT_PREFIX = 'ATMT-LAB';
+export const ARTIFACT_PREFIX = 'ATMT-Labs';
 /** Deep-link scheme for shareable hires (must match electron-builder.yml). */
-export const PROTOCOL = 'atmtlab';
+export const PROTOCOL = 'atmtlabs';
 
 /**
  * `owner/repo` on GitHub that hosts releases + docs/hero.json + docs/model-catalog.json.

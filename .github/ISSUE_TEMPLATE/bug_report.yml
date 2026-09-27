@@ -66,8 +66,8 @@ body:
   - type: input
     id: app-version
     attributes:
-      label: ATMT LAB version
-      description: Settings → the version is on the hero card. Or `ATMT LAB → About`.
+      label: ATMT Labs version
+      description: Settings → the version is on the hero card. Or `ATMT Labs → About`.
       placeholder: e.g. 0.4.5
     validations:
       required: true

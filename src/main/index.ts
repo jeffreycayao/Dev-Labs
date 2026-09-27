@@ -1,3 +1,4 @@
+import './legacyUserData'; // must run before anything reads userData
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, powerMonitor, powerSaveBlocker, screen, shell, Notification } from 'electron';
 import { spawn } from 'node:child_process';
 import {
@@ -2184,7 +2185,7 @@ function floorCascade(): WindowBounds | null {
   return clampBounds({ x: b.x + OFFSET, y: b.y + OFFSET, width: b.width, height: b.height });
 }
 
-// ─── Shareable hires: atmtlab:// deep link + file import ──────────────
+// ─── Shareable hires: atmtlabs:// deep link + file import ──────────────
 // A hire manifest NEVER auto-spawns: it is validated, then handed to the
 // renderer, which pre-fills the Add-Agent modal for human review. See
 // src/shared/hire.ts for the spec + security model.
@@ -2229,10 +2230,10 @@ async function handleHireLink(link: string): Promise<void> {
 // exe+args form or the registration points at electron.exe with no entry.
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient('atmtlab', process.execPath, [resolve(process.argv[1])]);
+    app.setAsDefaultProtocolClient('atmtlabs', process.execPath, [resolve(process.argv[1])]);
   }
 } else {
-  app.setAsDefaultProtocolClient('atmtlab');
+  app.setAsDefaultProtocolClient('atmtlabs');
 }
 
 // Deep links on Windows/Linux arrive as the argv of a SECOND process — take the
@@ -2249,7 +2250,7 @@ if (!gotInstanceLock) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }
-    const link = argv.find((a) => a.startsWith('atmtlab://'));
+    const link = argv.find((a) => a.startsWith('atmtlabs://'));
     if (link) void handleHireLink(link);
   });
 }
@@ -2309,7 +2310,7 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
     ...(geom && geom.x !== undefined && geom.y !== undefined ? { x: geom.x, y: geom.y } : {}),
     minWidth: MIN_WIN.width,
     minHeight: MIN_WIN.height,
-    title: isFloor ? 'ATMT LAB — Floor' : 'ATMT LAB',
+    title: isFloor ? 'ATMT Labs — Floor' : 'ATMT Labs',
     backgroundColor: '#FFF8E7',
     titleBarStyle: 'hiddenInset',
     show: false,
@@ -5312,7 +5313,7 @@ app.whenReady().then(() => {
   void loadModelCatalog(MODEL_CATALOG_CACHE()).catch(() => { /* never fatal */ });
 
   // A cold-start deep link (Windows/Linux) rides in on OUR argv.
-  const startupHireLink = process.argv.find((a) => a.startsWith('atmtlab://'));
+  const startupHireLink = process.argv.find((a) => a.startsWith('atmtlabs://'));
   if (startupHireLink) void handleHireLink(startupHireLink);
 
   // Hand every spawned agent the path to the Slack reply discovery file via the

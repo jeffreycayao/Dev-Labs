@@ -1,4 +1,4 @@
-# Releasing ATMT LAB
+# Releasing ATMT Labs
 
 Versions follow [semver](https://semver.org) and start at `0.0.1`.
 

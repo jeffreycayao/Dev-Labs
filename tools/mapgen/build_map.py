@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a ATMT LAB (The Office) styled office.tmj — iconic zones:
+"""Generate a ATMT Labs (The Office) styled office.tmj — iconic zones:
 Michael's corner office, conference room, the open bullpen with desk pods,
 accounting nook, the annex, reception, kitchen/break area, warehouse corner.
 

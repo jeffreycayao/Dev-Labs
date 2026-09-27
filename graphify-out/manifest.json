@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "docs/model-catalog.json": {
-    "mtime": 1790448380.0,
-    "seen": 1790466869.9671595,
-    "ast_hash": "1f2be60bdd664a8f834bdbd9ad889a89",
+    "mtime": 1790469588.2534187,
+    "seen": 1790469718.5382752,
+    "ast_hash": "7ad0f84f8f9ef57a652449fdf75a827c",
     "semantic_hash": ""
   },
   "docs/hires/app.js": {
@@ -726,9 +726,9 @@
     "semantic_hash": ""
   },
   "src/main/index.ts": {
-    "mtime": 1790466435.7024038,
-    "seen": 1790466869.9672012,
-    "ast_hash": "601025d5bfa324de00c7cc0f1d829fad",
+    "mtime": 1790469514.6362195,
+    "seen": 1790469718.538319,
+    "ast_hash": "4a14a0151221b7e7c4fbc28a392bd801",
     "semantic_hash": ""
   },
   "src/main/integrationBroker.ts": {
@@ -924,9 +924,9 @@
     "semantic_hash": ""
   },
   "src/preload/index.ts": {
-    "mtime": 1790466436.139836,
-    "seen": 1790466869.9672296,
-    "ast_hash": "d289c1197415e39b7a58714a3885255a",
+    "mtime": 1790469543.1343596,
+    "seen": 1790469718.5383642,
+    "ast_hash": "d807fa678ef7c28974eaeda2e9b6c9c9",
     "semantic_hash": ""
   },
   "src/renderer/src/App.tsx": {
@@ -1716,9 +1716,9 @@
     "semantic_hash": ""
   },
   "src/renderer/src/store/config.ts": {
-    "mtime": 1790466437.4944718,
-    "seen": 1790466869.967389,
-    "ast_hash": "3d13b57a063ba9cbdbc98f491227afef",
+    "mtime": 1790469514.6379797,
+    "seen": 1790469718.5385425,
+    "ast_hash": "35993fee70b589c7dfdef51cd93aa544",
     "semantic_hash": ""
   },
   "src/renderer/src/store/focusMode.ts": {
@@ -1890,9 +1890,9 @@
     "semantic_hash": ""
   },
   "src/shared/modelCatalog.json": {
-    "mtime": 1790448380.0,
-    "seen": 1790466869.9674146,
-    "ast_hash": "178172923a8d4c04ee9692b9bae3bf9c",
+    "mtime": 1790469542.9502661,
+    "seen": 1790469718.5385783,
+    "ast_hash": "7ad0f84f8f9ef57a652449fdf75a827c",
     "semantic_hash": ""
   },
   "src/shared/modelCatalogPayload.ts": {
@@ -2886,9 +2886,9 @@
     "semantic_hash": ""
   },
   "test/model-catalog.test.cjs": {
-    "mtime": 1790448380.0,
-    "seen": 1790466869.967477,
-    "ast_hash": "b2a9e5d8e9e5d977b273eebc348a5631",
+    "mtime": 1790469665.5920596,
+    "seen": 1790469718.538723,
+    "ast_hash": "0d1eddba2ef1af3d4a7d61951b407e70",
     "semantic_hash": ""
   },
   "test/node-install.test.cjs": {
@@ -3297,6 +3297,18 @@
     "mtime": 1790467866.5289953,
     "seen": 1790468290.2844572,
     "ast_hash": "1dd87d147f1ef3a929854164d4511c3c",
+    "semantic_hash": ""
+  },
+  "src/main/cliModels.ts": {
+    "mtime": 1790469498.1830575,
+    "seen": 1790469718.5382977,
+    "ast_hash": "67b0f0a4ffce16286e39db667433eb71",
+    "semantic_hash": ""
+  },
+  "test/cli-models.test.cjs": {
+    "mtime": 1790469580.323156,
+    "seen": 1790469718.5386367,
+    "ast_hash": "f60ee96de471b400e4a50b9578dd79e0",
     "semantic_hash": ""
   }
 }

@@ -1,5 +1,5 @@
-appId: ph.automatika.atmtlab
-productName: ATMT LAB
+appId: ph.automatika.atmtlabs
+productName: ATMT Labs
 copyright: Copyright © 2026 Automatika Consulting
 
 # Where electron-updater looks for new versions (latest*.yml + assets on GitHub
@@ -11,7 +11,7 @@ copyright: Copyright © 2026 Automatika Consulting
 # publish:
 #   provider: github
 #   owner: automatika
-#   repo: atmt-lab
+#   repo: atmt-labs
 
 # Bake the update toast's "What's new" list straight into latest*.yml.
 #
@@ -37,12 +37,12 @@ releaseInfo:
 # (the hook no-ops otherwise, so contributor builds still work). Root-level hook.
 afterSign: build/notarize.cjs
 
-# Register the atmtlab:// URL scheme (shareable-hires deep link) in the
+# Register the atmtlabs:// URL scheme (shareable-hires deep link) in the
 # packaged app: CFBundleURLTypes on macOS, registry entries via NSIS on Windows.
 protocols:
-  - name: ATMT LAB
+  - name: ATMT Labs
     schemes:
-      - atmtlab
+      - atmtlabs
 
 # electron-vite emits the app into out/; package exactly that plus what the
 # runtime needs. node-pty is native, so keep it out of the asar.
@@ -94,15 +94,15 @@ mac:
   # the privacy prompt and, for a signed app, remembers the grant — so the user
   # is asked ONCE instead of on every agent action.
   extendInfo:
-    NSDocumentsFolderUsageDescription: "ATMT LAB runs your Claude Code agents, which read and write files in the project folders you point them at."
-    NSDesktopFolderUsageDescription: "ATMT LAB's agents may work on projects located on your Desktop."
-    NSDownloadsFolderUsageDescription: "ATMT LAB's agents may work on projects located in your Downloads."
-    NSRemovableVolumesUsageDescription: "ATMT LAB's agents may work on projects located on external volumes."
-    NSNetworkVolumesUsageDescription: "ATMT LAB's agents may work on projects located on network volumes."
+    NSDocumentsFolderUsageDescription: "ATMT Labs runs your Claude Code agents, which read and write files in the project folders you point them at."
+    NSDesktopFolderUsageDescription: "ATMT Labs's agents may work on projects located on your Desktop."
+    NSDownloadsFolderUsageDescription: "ATMT Labs's agents may work on projects located in your Downloads."
+    NSRemovableVolumesUsageDescription: "ATMT Labs's agents may work on projects located on external volumes."
+    NSNetworkVolumesUsageDescription: "ATMT Labs's agents may work on projects located on network volumes."
     # The microphone is used by two opt-in, off-by-default voice features: Free
     # Flow dictation (Groq transcription) and Realtime Michael (live voice chat
     # with the orchestrator via OpenAI). Mic access only happens while one is on.
-    NSMicrophoneUsageDescription: "ATMT LAB uses your microphone only for its opt-in voice features: Free Flow dictation (transcribed by Groq into the message queue) and talking to Michael in real time (streamed to OpenAI). The mic is off unless you turn one of these on."
+    NSMicrophoneUsageDescription: "ATMT Labs uses your microphone only for its opt-in voice features: Free Flow dictation (transcribed by Groq into the message queue) and talking to Michael in real time (streamed to OpenAI). The mic is off unless you turn one of these on."
   # Hardened runtime + entitlements so the spawned `claude` agents inherit this
   # app's TCC responsibility (one grant covers them all) and node-pty can load.
   hardenedRuntime: true
@@ -132,10 +132,10 @@ mac:
       arch: [universal]
     - target: zip
       arch: [universal]
-  artifactName: ATMT-LAB-${version}-mac-${arch}.${ext}
+  artifactName: ATMT-Labs-${version}-mac-${arch}.${ext}
 
 dmg:
-  title: ATMT LAB ${version}
+  title: ATMT Labs ${version}
 
 # ---- Windows ----
 win:
@@ -150,11 +150,11 @@ nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
-  artifactName: ATMT-LAB-${version}-win-x64-setup.exe
-  shortcutName: ATMT LAB
+  artifactName: ATMT-Labs-${version}-win-x64-setup.exe
+  shortcutName: ATMT Labs
 
 portable:
-  artifactName: ATMT-LAB-${version}-win-x64-portable.exe
+  artifactName: ATMT-Labs-${version}-win-x64-portable.exe
 
 # ---- Linux ----
 linux:
@@ -163,4 +163,4 @@ linux:
   target:
     - target: AppImage
       arch: [x64]
-  artifactName: ATMT-LAB-${version}-linux-x86_64.AppImage
+  artifactName: ATMT-Labs-${version}-linux-x86_64.AppImage

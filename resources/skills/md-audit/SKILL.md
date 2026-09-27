@@ -6,7 +6,7 @@ description: |
   issues (bugs, dead code, security hotspots, missing error handling) and return
   a prioritised findings report. No files are edited.
   Use when asked to "audit the code", "quick audit", "find issues", "code scan",
-  or "what's wrong with this codebase". (atmt-lab)
+  or "what's wrong with this codebase". (atmt-labs)
 allowed-tools:
   - Read
   - Bash

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agent Gallery — community hires for ATMT LAB</title>
-  <meta name="description" content="A community gallery of shareable agent roles (hire manifests) for the ATMT LAB multi-agent harness. Browse, download a role, and import it into your office." />
-  <meta property="og:title" content="Agent Gallery — community hires for ATMT LAB" />
+  <title>Agent Gallery — community hires for ATMT Labs</title>
+  <meta name="description" content="A community gallery of shareable agent roles (hire manifests) for the ATMT Labs multi-agent harness. Browse, download a role, and import it into your office." />
+  <meta property="og:title" content="Agent Gallery — community hires for ATMT Labs" />
   <meta property="og:description" content="One-click agent roles for your virtual office. Free & open source." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,13 +20,13 @@
         <div class="logo-mark" aria-hidden="true">AG</div>
         <div>
           <h1>Agent Gallery</h1>
-          <p class="tagline">community hires for <a href="https://automatika.ph" rel="noopener">ATMT LAB</a> — browse a role, download it, and import it into your office.</p>
+          <p class="tagline">community hires for <a href="https://automatika.ph" rel="noopener">ATMT Labs</a> — browse a role, download it, and import it into your office.</p>
         </div>
       </div>
       <nav class="masthead-links">
         <a href="#submit">add a hire</a>
         <a href="#validate">validate</a>
-        <a href="https://github.com/automatika/atmt-lab" rel="noopener">the harness ↗</a>
+        <a href="https://github.com/automatika/atmt-labs" rel="noopener">the harness ↗</a>
       </nav>
     </div>
   </header>
@@ -61,7 +61,7 @@
       <p>
         A hire is one JSON file following the
         <a href="spec/HIRE_SPEC.md">hire manifest spec</a>
-        (<code>atmt-lab/hire@1</code>). Start from any card's <em>view json</em>,
+        (<code>atmt-labs/hire@1</code>). Start from any card's <em>view json</em>,
         check your edit with the validator below, and use it immediately via the app's
         <em>Add agent → import hire…</em> button — manifests are just files; share them
         anywhere.
@@ -77,7 +77,7 @@
     <section id="validate" class="panel">
       <h2>Validate a manifest</h2>
       <p>Paste a manifest to check it against the same rules the app enforces.</p>
-      <textarea id="validate-input" rows="10" spellcheck="false" placeholder='{ "spec": "atmt-lab/hire@1", "name": "Pam", … }'></textarea>
+      <textarea id="validate-input" rows="10" spellcheck="false" placeholder='{ "spec": "atmt-labs/hire@1", "name": "Pam", … }'></textarea>
       <div class="validate-row">
         <button id="validate-btn" class="btn btn-primary">check it</button>
         <span id="validate-result" role="status"></span>
@@ -88,7 +88,7 @@
   <footer class="footer">
     <div class="wrap">
       <p>
-        Open source (MIT). Not affiliated with NBC's <em>The Office</em>, ATMT LAB, or the ATMT LAB project (yet — there's a <abbr title="pull request">PR</abbr> for that).
+        Open source (MIT). Not affiliated with NBC's <em>The Office</em>, ATMT Labs, or the ATMT Labs project (yet — there's a <abbr title="pull request">PR</abbr> for that).
         No trackers, no accounts, just JSON.
       </p>
     </div>

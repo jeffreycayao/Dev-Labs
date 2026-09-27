@@ -35,7 +35,7 @@ import {
 
 const MAX_BODY_BYTES = 10 * 1024 * 1024; // 10 MB request-body cap
 const UPSTREAM_TIMEOUT_MS = 30_000;
-const DEFAULT_USER_AGENT = 'atmt-lab-broker/1';
+const DEFAULT_USER_AGENT = 'atmt-labs-broker/1';
 
 /** Hop-by-hop headers never forwarded in either direction. */
 const HOP_BY_HOP = new Set([

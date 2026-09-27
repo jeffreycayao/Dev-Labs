@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Application, Container, Graphics, Ticker, Texture } from 'pixi.js';
+import { Application, Container, Graphics, Text, Ticker, Texture } from 'pixi.js';
 // PixiJS uses new Function() internally, blocked by Electron CSP — this patches it.
 import 'pixi.js/unsafe-eval';
 import { useStore, type Agent } from '@/store/store';
@@ -1113,6 +1113,47 @@ export function OfficeFloor() {
         }
       };
       drawTaskBoard([]);
+
+      // ─── Wall decor: the Philippine flag + the ATMT Labs sign ─────────────
+      // Pure decoration (no pointer events), only for themes that set anchors.
+      if (theme.anchors.flag) {
+        const f = new Graphics();
+        f.position.set(theme.anchors.flag.x * ts0, theme.anchors.flag.y * ts0 + 3);
+        f.zIndex = 3 * ts0;
+        f.rect(-1, -1, 34, 22).fill(0x2a251c);                   // frame
+        f.rect(0, 0, 32, 10).fill(0x0038a8);                     // blue band
+        f.rect(0, 10, 32, 10).fill(0xce1126);                    // red band
+        f.poly([0, 0, 17, 10, 0, 20]).fill(0xffffff);            // white triangle
+        f.circle(6, 10, 2.5).fill(0xfcd116);                     // sun
+        for (const [dx, dy] of [[-1.8, 0], [1.8, 0], [0, -1.8], [0, 1.8], [-1.3, -1.3], [1.3, 1.3], [-1.3, 1.3], [1.3, -1.3]]) {
+          f.rect(6 + dx * 2 - 0.5, 10 + dy * 2 - 0.5, 1, 1).fill(0xfcd116); // 8 rays
+        }
+        f.rect(1, 2, 1.5, 1.5).fill(0xfcd116);                   // three stars
+        f.rect(1, 16.5, 1.5, 1.5).fill(0xfcd116);
+        f.rect(13.5, 9.25, 1.5, 1.5).fill(0xfcd116);
+        charLayer.addChild(f);
+      }
+      if (theme.anchors.sign) {
+        try { await document.fonts.load('8px "Press Start 2P"'); } catch { /* falls back */ }
+        const label = new Text({
+          text: 'ATMT Labs',
+          style: { fontFamily: '"Press Start 2P", monospace', fontSize: 8, fill: 0xdbf914 },
+          resolution: 4,
+        });
+        const padX = 6;
+        const w = Math.ceil(label.width) + padX * 2 + 12;
+        const sign = new Container();
+        sign.position.set(theme.anchors.sign.x * ts0, theme.anchors.sign.y * ts0 + 5);
+        sign.zIndex = 3 * ts0;
+        const plate = new Graphics();
+        plate.rect(-2, -2, w + 4, 20).fill({ color: 0xdbf914, alpha: 0.12 }); // soft lime glow
+        plate.rect(0, 0, w, 16).fill(0x0b0a06).stroke({ color: 0xdbf914, width: 1 });
+        plate.poly([padX, 12, padX + 4, 3, padX + 8, 12]).fill(0xdbf914); // "A" mark
+        plate.rect(padX + 3, 9, 2, 3).fill(0x0b0a06);
+        label.position.set(padX + 12, 4);
+        sign.addChild(plate, label);
+        charLayer.addChild(sign);
+      }
 
       // ─── The office clock: clicking it is CLOCKING OUT ─────────────────────
       // The wall clock beside Ramon's window doubles as the quit entry:

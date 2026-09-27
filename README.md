@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="./brand/icon128.png" alt="ATMT LAB" width="96">
+<img src="./brand/icon128.png" alt="ATMT Labs" width="96">
 
-# ATMT LAB
+# ATMT Labs
 
 **An office of AI coding agents, running on your machine.**
 
@@ -12,7 +12,7 @@ Local-first · multi-agent · MIT licensed · by [Automatika](https://automatika
 
 ---
 
-ATMT LAB is a desktop app that wraps the terminal-agent CLIs you already run and turns them into a
+ATMT Labs is a desktop app that wraps the terminal-agent CLIs you already run and turns them into a
 team: each agent gets its own terminal, working directory, memory and inbox, and an orchestrator
 (**Ramon**, at the head desk) plans work, delegates it and keeps the floor moving while you're away.
 

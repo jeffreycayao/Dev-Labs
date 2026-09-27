@@ -30,6 +30,17 @@ team: each agent gets its own terminal, working directory, memory and inbox, and
 | OpenCode · Crush · pi | `opencode` / `crush` / `pi` — any model, incl. GLM, DeepSeek, local Ollama |
 | Custom | any command |
 
+## What's in it
+
+| Feature | In short | Docs |
+| --- | --- | --- |
+| **Licensing** | Sign in with Google or Yahoo; 7-day card trial, one-time lifetime purchase, or a single-use unlock code. A paid computer is activated for good and never checks in again. | [docs/licensing/](docs/licensing/DESIGN.md) |
+| **Floors** | Import or export a whole team of agents as one `.floor.json` file or `atmtlabs://floor` link. | [.documentations/FLOORS.md](.documentations/FLOORS.md) |
+| **Hires** | Share a single agent as a `.json` manifest or link. | [docs/hires/](docs/hires/) |
+| **Connections** | Let agents work in Pancake POS, Webcake, GitHub and more; keys stay encrypted on your computer. | [.documentations/CONNECTORS.md](.documentations/CONNECTORS.md) |
+
+New users: start with the **[User Guide](docs/USER_GUIDE.md)**.
+
 ## Getting started
 
 **Prerequisites:** Node.js 18+, npm, and at least one agent CLI on your `PATH`.
@@ -65,6 +76,9 @@ part of the desktop app.
 
 ## Docs
 
+- [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — **for customers**: license, first run, hiring, floors, connections
+- [AGENTS.md](AGENTS.md) — orientation for AI coding agents and contributors working in this repo
+- [.documentations/GO_LIVE.md](.documentations/GO_LIVE.md) — production checklist (licensing, payments, website)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the main process, hive and renderer fit together
 - [DESIGN.md](DESIGN.md) · [docs/DESIGN.md](docs/DESIGN.md) — design system
 - [HIVE.md](HIVE.md) — agent coordination model
@@ -80,4 +94,5 @@ Brand assets live in [`brand/`](brand/). App name, slugs and the release repo ar
 ## License
 
 Proprietary — © 2026 Automatika Consulting (ATMT Labs). All rights reserved. See [LICENSE](LICENSE).
+End users are licensed under the [End User License Agreement](EULA.md) (draft); personal data is covered by the [Privacy Policy](PRIVACY.md) (draft).
 Third-party components (including the MIT-licensed foundation this app is built on) keep their own licenses — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSE-ASSETS](LICENSE-ASSETS).

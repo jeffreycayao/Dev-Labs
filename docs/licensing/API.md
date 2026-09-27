@@ -53,6 +53,8 @@ Refresh tokens:
 | `GET /account` | License state, trial end, one-time price, devices, buttons |
 | `POST /account/trial` · `/account/buy` · `/account/billing` · `/account/trial/cancel` · `/account/devices/:id/remove` · `/logout` | Account forms: Origin checked and SameSite=Lax |
 | `GET /start?plan=trial\|buy` | Funnel entry for the landing page's CTA buttons |
+| `GET /redeem?code=` | Shareable voucher link: sign in (sign-up screen), then the account page with the code pre-filled. **Never redeems on GET** (link previews would spend it). |
+| `POST /account/redeem` (`code=`) | Redeem an unlock code from the account page. Origin checked. Redirects to `/account?notice=…` (`ok=1` on success). |
 
 ---
 
@@ -64,6 +66,14 @@ All `/v1/*` routes except the webhook require `Authorization: Bearer <access_tok
 - A trial past day 7 is charged here, immediately.
 - Trialing and active accounts stamp the device. A new device over `MAX_DEVICES` returns `403 { "error": "device_limit" }`.
 - License claims: DESIGN.md §5.
+
+**`POST /v1/redeem`** takes `{ code }` and redeems a single-use unlock code for the signed-in account:
+- `200 { ok: true, status: "active" }`: the account now has a lifetime license (`source = unlock_code`, amount 0). Call `/v1/licenses` next to get the perpetual token.
+- `400 { error: "code_invalid" }`: malformed, never minted, or revoked.
+- `409 { error: "code_used" | "code_expired" | "already_licensed" }`.
+- An account that is already `active` never spends a code; the code stays usable for someone else.
+- A running trial ends without a charge. A day-7 PaymentIntent waiting for 3-D Secure is cancelled.
+- Code format: `ATMT-XXXXX-XXXXX-XXXXX-XXXXX` (Crockford base32, 100 bits). Case, spaces, dashes and O/0, I/L/1 are forgiven. Only a SHA-256 is stored.
 
 **`DELETE /v1/devices/:id`** frees a seat and returns `204`. It does not un-stamp a perpetual machine.
 
@@ -84,7 +94,7 @@ All `/v1/*` routes except the webhook require `Authorization: Bearer <access_tok
 | `checkout.session.completed` (payment, paid) | `active` |
 | `payment_intent.succeeded` (`trial_conversion` or `purchase`) | `active` |
 | `payment_intent.payment_failed` (`trial_conversion`) | `payment_required` |
-| `charge.refunded` (full), `charge.dispute.created` | `refunded` |
+| `charge.refunded` (full), `charge.dispute.created` | `refunded`, except a license later granted by an unlock code |
 
 **`GET /api/cron/charge-trials`** requires `Authorization: Bearer $CRON_SECRET` (Vercel Cron sends it). It charges every due trial and returns `{ attempted, paid, failed }`.
 

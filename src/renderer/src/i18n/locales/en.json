@@ -849,6 +849,17 @@
       "safeReadonlyNote": "These servers read data only, need no secrets, and are scoped to the agent workspace. They are enabled for every new agent.",
       "writeNote": "These servers can mutate state beyond the workspace. Off by default — enable only after reviewing.",
       "secretNote": "These servers require an API key or credentials. Off by default — add your credentials and enable after consent."
+    },
+    "key": {
+      "saved": "Key saved",
+      "missing": "No key yet",
+      "replace": "Replace {{label}}",
+      "save": "save",
+      "clear": "remove",
+      "howToGet": "how to get it",
+      "savedNote": "{{label}} key saved. New agents will connect.",
+      "clearedNote": "{{label}} key removed.",
+      "needsKey": "On, but agents won't connect until you save a key."
     }
   },
   "devicePicker": {

@@ -849,6 +849,17 @@
       "safeReadonlyNote": "这些服务器只读取数据，不需要密钥，且限定在智能体工作区内。它们对每个新智能体启用。",
       "writeNote": "这些服务器可以修改工作区之外的状态。默认关闭——审核后再启用。",
       "secretNote": "这些服务器需要 API 密钥或凭据。默认关闭——添加凭据并在同意后启用。"
+    },
+    "key": {
+      "saved": "密钥已保存",
+      "missing": "尚未设置密钥",
+      "replace": "替换{{label}}",
+      "save": "保存",
+      "clear": "移除",
+      "howToGet": "如何获取",
+      "savedNote": "{{label}}密钥已保存。新的智能体将会连接。",
+      "clearedNote": "{{label}}密钥已移除。",
+      "needsKey": "已开启，但保存密钥之前智能体不会连接。"
     }
   },
   "devicePicker": {

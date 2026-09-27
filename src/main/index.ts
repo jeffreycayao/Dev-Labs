@@ -84,7 +84,8 @@ import {
 import { buildMissingCliScript, chooseInstallRung } from './cliInstall';
 import { detectNodeVersion, nodeIsUsable, resolveNodeInstaller } from './nodeInstall';
 import { toolCatalog, type ToolStatus } from '../shared/toolCatalog';
-import { listLocalSkills, loadCatalog, installSkill, uninstallSkill, type LocalSkill } from './skills';
+import { listLocalSkills, uninstallSkill, type LocalSkill } from './skills';
+import { loadAtmtCatalog, installAtmtSkill, prepareAtmtSkillUninstall } from './atmtSkills';
 import { loadHero } from './hero';
 import { loadModelCatalog } from './modelCatalog';
 import { listLiveModels } from './cliModels';
@@ -3672,26 +3673,28 @@ ipcMain.handle('skills:local', (_evt, cwd: unknown): LocalSkill[] => {
     return [];
   }
 });
-/** The skills catalog, parsed from its README and cached in userData.
- *  `force` is the explicit refresh button; everything else is served from a
- *  day-old cache so opening the tab never waits on the network. */
+/** Validated ATMT catalog, with a separate last-good cache from the old
+ *  community browser. `force` is the user's explicit refresh. */
 ipcMain.handle('skills:catalog', async (_evt, force: unknown) => {
-  const cachePath = join(app.getPath('userData'), 'skill-catalog.json');
-  return loadCatalog(cachePath, { force: force === true });
+  const cachePath = join(app.getPath('userData'), 'atmt-skill-catalog.json');
+  return loadAtmtCatalog(cachePath, { force: force === true });
 });
 
-/** Install one catalog skill into ~/.claude/skills. Structured refusals, never a
- *  throw: the UI distinguishes "not installable" from "install failed". */
-ipcMain.handle('skills:install', async (_evt, url: unknown, name: unknown) => {
-  if (typeof url !== 'string' || typeof name !== 'string') {
+/** Only a validated catalog ID can be installed. The main process constructs
+ *  pinned first-party URLs and verifies each file before replacing a skill. */
+ipcMain.handle('skills:install', async (_evt, id: unknown, version: unknown, sourceCommit: unknown) => {
+  if (typeof id !== 'string' || typeof version !== 'string' || typeof sourceCommit !== 'string') {
     return { ok: false as const, error: 'bad request' };
   }
-  return installSkill(url, name);
+  const cachePath = join(app.getPath('userData'), 'atmt-skill-catalog.json');
+  return installAtmtSkill(id, version, sourceCommit, cachePath);
 });
 /** Delete an installed skill. The guard rails live in uninstallSkill — it refuses
  *  any path it cannot prove is a skill folder inside a skills root. */
 ipcMain.handle('skills:uninstall', (_evt, path: unknown) => {
   if (typeof path !== 'string') return { ok: false as const, error: 'bad request' };
+  const backup = prepareAtmtSkillUninstall(path);
+  if (!backup.ok) return backup;
   const cfg = readConfig();
   return uninstallSkill(path, { cwds: cfg.registeredRepos ?? [] });
 });

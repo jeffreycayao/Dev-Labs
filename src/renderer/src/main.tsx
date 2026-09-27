@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
-import brandLogo from '@brand/logo.png?url';
+import brandLogo from '@brand/Square logos/logo.png?url';
 import './design/global.css';
 import './i18n';
 

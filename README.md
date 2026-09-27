@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./brand/icon128.png" alt="ATMT Labs" width="96">
+<img src="./brand/Square%20logos/icon128.png" alt="ATMT Labs" width="96">
 
 # ATMT Labs
 

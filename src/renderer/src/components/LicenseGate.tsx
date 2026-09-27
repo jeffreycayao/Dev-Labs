@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import type { LicenseStatus } from '@shared/license';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
-import brandLogo from '@brand/logo.png?url';
+import brandLogo from '@brand/Square logos/logo.png?url';
 import { LICENSING } from '@shared/brand';
 
 export interface LicenseGateProps {

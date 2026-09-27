@@ -56,6 +56,8 @@ Refresh tokens:
 | `GET /redeem?code=` | Shareable voucher link: sign in (sign-up screen), then the account page with the code pre-filled. **Never redeems on GET** (link previews would spend it). |
 | `POST /account/redeem` (`code=`) | Redeem an unlock code from the account page. Origin checked. Redirects to `/account?notice=…` (`ok=1` on success). |
 
+Account pages use `Referrer-Policy: same-origin`: browser form posts include the real Origin for the account CSRF check, while links to other sites send no referrer.
+
 ---
 
 ## api.labs.atmt.dev

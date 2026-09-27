@@ -283,6 +283,24 @@ test('an account without a license does not use up device seats', async () => {
 
 // ── web ──────────────────────────────────────────────────────────────────────
 
+test('account forms keep a real same-origin Origin and reject cross-site posts', async () => {
+  const h = await harness();
+  const web = await h.webSignIn('form-origin@example.com');
+  const page = await web.req(`${AUTH}/account`);
+  assert.equal(page.headers.get('referrer-policy'), 'same-origin');
+  assert.match(await page.text(), /<form method="post" action="\/account\/buy">/);
+
+  const nullOrigin = await web.req(`${AUTH}/account/buy`, { method: 'POST', headers: { origin: 'null' } });
+  assert.equal(nullOrigin.status, 403);
+  const crossOrigin = await web.req(`${AUTH}/account/buy`, { method: 'POST', headers: { origin: 'https://other.example' } });
+  assert.equal(crossOrigin.status, 403);
+  assert.equal(h.stripeLog.sessions.length, 0);
+
+  const sameOrigin = await web.req(`${AUTH}/account/buy`, { method: 'POST', headers: { origin: AUTH } });
+  assert.equal(sameOrigin.status, 303);
+  assert.match(sameOrigin.headers.get('location')!, /^https:\/\/checkout\.stripe\.com\//);
+});
+
 test('the account page shows the trial end date and the one-time price', async () => {
   const h = await harness();
   await startTrial(h, 'page@example.com');

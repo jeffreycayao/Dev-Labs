@@ -67,6 +67,50 @@ test('authorize never redirects to an unregistered redirect_uri', async () => {
   assert.equal(res.headers.get('location'), null);
 });
 
+test('loopback sign-in (RFC 8252): any 127.0.0.1 port, plain redirect, code pinned to that exact URI', async () => {
+  const h = await harness();
+  const LOOP = 'http://127.0.0.1:53682/callback';
+  const s = await h.desktopSignIn('loop@example.com', 'google', undefined, LOOP);
+  assert.equal(s.continueResponse.status, 302);
+  assert.match(s.continueResponse.headers.get('location')!, /^http:\/\/127\.0\.0\.1:53682\/callback\?code=[^&]+&state=st1$/);
+  assert.equal(s.tokenStatus, 200);
+  assert.equal((await h.license(s.access_token)).status, 200);
+
+  // A code issued for one loopback port cannot be redeemed with another URI.
+  const other = await h.desktopSignIn('loop2@example.com', 'google', undefined, 'http://127.0.0.1:40000/callback');
+  const res = await h.app.request(`${AUTH}/oauth/token`, {
+    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'authorization_code', code: other.code, code_verifier: other.verifier, redirect_uri: LOOP, client_id: 'atmt-labs-desktop' }).toString()
+  });
+  assert.equal(res.status, 400);
+});
+
+test('only literal 127.0.0.1 loopback redirects on /callback are accepted', async () => {
+  const h = await harness();
+  for (const bad of [
+    'http://localhost:53682/callback',      // name, not the literal IP
+    'http://127.0.0.1/callback',            // no port
+    'http://127.0.0.1:80/callback',         // privileged port
+    'http://127.0.0.1:53682/other',         // wrong path
+    'http://127.0.0.1:53682/callback?x=1',  // extra query
+    'https://127.0.0.1:53682/callback',
+    'http://127.0.0.1.evil.example:53682/callback',
+    'http://[::1]:53682/callback'
+  ]) {
+    const res = await h.app.request(`${AUTH}/oauth/authorize?response_type=code&client_id=atmt-labs-desktop&redirect_uri=${encodeURIComponent(bad)}&code_challenge=${'a'.repeat(43)}&code_challenge_method=S256&state=s`);
+    assert.equal(res.status, 400, bad);
+    assert.equal(res.headers.get('location'), null, bad);
+  }
+});
+
+test('authorize errors go back to the loopback redirect the app asked for', async () => {
+  const h = await harness();
+  const LOOP = 'http://127.0.0.1:53682/callback';
+  const res = await h.app.request(`${AUTH}/oauth/authorize?response_type=code&client_id=atmt-labs-desktop&redirect_uri=${encodeURIComponent(LOOP)}&code_challenge=abc&code_challenge_method=plain&state=s`);
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get('location'), `${LOOP}?error=invalid_request&state=s`);
+});
+
 test('authorize requires S256 PKCE', async () => {
   const h = await harness();
   const res = await h.app.request(`${AUTH}/oauth/authorize?response_type=code&client_id=atmt-labs-desktop&redirect_uri=${encodeURIComponent(REDIRECT)}&code_challenge=abc&code_challenge_method=plain&state=s`);

@@ -69,13 +69,20 @@ export interface AuthorizeParams {
   state: string;
   /** 'signup' asks the auth server to open on the create-account screen. */
   screenHint?: 'signin' | 'signup';
+  /** This sign-in's loopback redirect; defaults to the registered scheme. */
+  redirectUri?: string;
+}
+
+/** RFC 8252 §7.3 loopback redirect. The literal IP, never "localhost". */
+export function loopbackRedirectUri(port: number): string {
+  return `http://127.0.0.1:${port}/callback`;
 }
 
 export function buildAuthorizeUrl(ep: LicensingEndpoints, p: AuthorizeParams): string {
   const u = new URL('/oauth/authorize', ep.authOrigin);
   u.searchParams.set('response_type', 'code');
   u.searchParams.set('client_id', ep.clientId);
-  u.searchParams.set('redirect_uri', ep.redirectUri);
+  u.searchParams.set('redirect_uri', p.redirectUri ?? ep.redirectUri);
   u.searchParams.set('scope', 'openid email profile offline_access');
   u.searchParams.set('code_challenge', p.challenge);
   u.searchParams.set('code_challenge_method', 'S256');
@@ -84,7 +91,7 @@ export function buildAuthorizeUrl(ep: LicensingEndpoints, p: AuthorizeParams): s
   return u.toString();
 }
 
-// ─── the atmtlabs://auth/callback deep link ─────────────────────────────────
+// ─── the auth callback (loopback, or the atmtlabs:// deep link) ─────────────
 
 function sameEndpoint(a: URL, b: URL): boolean {
   return a.protocol === b.protocol && a.host === b.host && a.pathname.replace(/\/+$/, '') === b.pathname.replace(/\/+$/, '');
@@ -284,9 +291,11 @@ function form(fields: Record<string, string>): string {
 
 const FORM = { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' };
 
-/** authorization_code grant (RFC 6749 §4.1.3 + PKCE). */
+/** authorization_code grant (RFC 6749 §4.1.3 + PKCE). `redirectUri` must be
+ *  the one the authorize request used; the server pins the code to it. */
 export async function exchangeCode(
-  fetchImpl: FetchLike, ep: LicensingEndpoints, code: string, verifier: string, now: number
+  fetchImpl: FetchLike, ep: LicensingEndpoints, code: string, verifier: string, now: number,
+  redirectUri: string = ep.redirectUri
 ): Promise<OAuthTokens> {
   const obj = await call(fetchImpl, new URL('/oauth/token', ep.authOrigin).toString(), {
     method: 'POST',
@@ -295,7 +304,7 @@ export async function exchangeCode(
       grant_type: 'authorization_code',
       code,
       code_verifier: verifier,
-      redirect_uri: ep.redirectUri,
+      redirect_uri: redirectUri,
       client_id: ep.clientId
     })
   });

@@ -79,6 +79,18 @@ export interface LicenseManagerDeps {
   newDeviceId: () => string;
   now?: () => number;
   setTimer?: (fn: () => void, ms: number) => { cancel(): void };
+  /**
+   * Start a one-shot RFC 8252 loopback listener for this sign-in; each
+   * request it receives is passed to `onCallback`. Omitted, or rejecting
+   * (port blocked, …), falls back to the atmtlabs:// deep link.
+   */
+  listenLoopback?: (onCallback: (url: string) => Promise<LicenseStatus>) => Promise<LoopbackListener>;
+}
+
+export interface LoopbackListener {
+  /** http://127.0.0.1:<port>/callback */
+  redirectUri: string;
+  close(): void;
 }
 
 /** How long a browser sign-in may take before the gate gives up waiting. */
@@ -91,6 +103,9 @@ interface PendingSignIn {
   verifier: string;
   state: string;
   startedAt: number;
+  /** Where the server will send the code: loopback, or the atmtlabs:// scheme. */
+  redirectUri: string;
+  listener?: LoopbackListener;
 }
 
 export class LicenseManager {
@@ -253,18 +268,33 @@ export class LicenseManager {
     if (!this.status.enforced || (this.status.state === 'error' && this.status.error === 'misconfigured')) {
       return this.getStatus();
     }
+    this.clearPending(); // a second press restarts cleanly (closes the old listener)
     const { verifier, challenge } = createPkce();
     const state = randomState();
-    this.pending = { verifier, state, startedAt: this.now() };
-    this.pendingTimer?.cancel();
+    let listener: LoopbackListener | undefined;
+    if (this.deps.listenLoopback) {
+      try {
+        listener = await this.deps.listenLoopback((url) => this.handleLoopback(url));
+      } catch {
+        listener = undefined; // fall back to the atmtlabs:// deep link
+      }
+    }
+    const redirectUri = listener?.redirectUri ?? this.deps.endpoints.redirectUri;
+    this.pending = { verifier, state, startedAt: this.now(), redirectUri, listener };
     this.pendingTimer = this.setTimer(() => {
       if (this.pending?.state === state) {
-        this.pending = null;
+        this.clearPending();
         this.recompute('sign_in_timeout');
       }
     }, SIGN_IN_TIMEOUT_MS);
     this.set({ ...this.status, state: 'signing_in', error: undefined });
-    await this.deps.openExternal(buildAuthorizeUrl(this.deps.endpoints, { challenge, state, screenHint }));
+    await this.deps.openExternal(buildAuthorizeUrl(this.deps.endpoints, { challenge, state, screenHint, redirectUri }));
+    return this.getStatus();
+  }
+
+  /** A request on the loopback listener: the callback, or noise (favicon…). */
+  private async handleLoopback(url: string): Promise<LicenseStatus> {
+    await this.handleCallback(url);
     return this.getStatus();
   }
 
@@ -275,6 +305,7 @@ export class LicenseManager {
   }
 
   private clearPending(): void {
+    try { this.pending?.listener?.close(); } catch { /* already closed */ }
     this.pending = null;
     this.pendingTimer?.cancel();
     this.pendingTimer = null;
@@ -282,7 +313,9 @@ export class LicenseManager {
 
   /** Returns false when `url` is not the auth callback (let the hire handler have it). */
   async handleCallback(url: string): Promise<boolean> {
-    const cb = parseAuthCallback(url, this.deps.endpoints.redirectUri);
+    const loopback = this.pending?.listener?.redirectUri;
+    const cb = (loopback ? parseAuthCallback(url, loopback) : null)
+      ?? parseAuthCallback(url, this.deps.endpoints.redirectUri);
     if (!cb) return false;
     if (!this.status.enforced) return true;
     const pending = this.pending;
@@ -302,7 +335,7 @@ export class LicenseManager {
       return true;
     }
     try {
-      const tokens = await exchangeCode(this.deps.fetch, this.deps.endpoints, cb.code, pending.verifier, this.now());
+      const tokens = await exchangeCode(this.deps.fetch, this.deps.endpoints, cb.code, pending.verifier, this.now(), pending.redirectUri);
       this.tokens = tokens;
       this.save({ refreshToken: tokens.refreshToken });
       await this.pullLicense();

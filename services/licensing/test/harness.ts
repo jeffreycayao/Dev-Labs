@@ -171,12 +171,12 @@ export async function harness(env: Record<string, string> = {}) {
   }
 
   /** Desktop app sign-in: authorize → web sign-in → code → tokens. */
-  async function desktopSignIn(email: string, provider: 'google' | 'yahoo' = 'google', exchangeVerifier?: string) {
+  async function desktopSignIn(email: string, provider: 'google' | 'yahoo' = 'google', exchangeVerifier?: string, redirect = REDIRECT) {
     const { createHash, randomBytes } = await import('node:crypto');
     const verifier = randomBytes(32).toString('base64url');
     const challenge = createHash('sha256').update(verifier).digest('base64url');
     const b = browser();
-    const authz = `${AUTH}/oauth/authorize?response_type=code&client_id=atmt-labs-desktop&redirect_uri=${encodeURIComponent(REDIRECT)}&code_challenge=${challenge}&code_challenge_method=S256&state=st1`;
+    const authz = `${AUTH}/oauth/authorize?response_type=code&client_id=atmt-labs-desktop&redirect_uri=${encodeURIComponent(redirect)}&code_challenge=${challenge}&code_challenge_method=S256&state=st1`;
     const page = await b.req(authz);
     // Sign in within the same browser, then continue.
     const start = await b.req(`${AUTH}/login/${provider}?next=/oauth/continue`);
@@ -190,17 +190,19 @@ export async function harness(env: Record<string, string> = {}) {
     });
     await b.req(`${AUTH}/login/${provider}/callback?code=${code}&state=${loc.searchParams.get('state')}`);
     const cont = await b.req(`${AUTH}/oauth/continue`);
-    const body = await cont.text();
-    const m = /atmtlabs:\/\/auth\/callback\?code=([^&"]+)&amp;state=([^"&]+)/.exec(body);
-    if (!m) throw new Error(`no callback in continue page: ${cont.status}`);
+    // Loopback redirects are a plain 302; the custom scheme gets a hand-off page.
+    const m = redirect.startsWith('http://127.0.0.1:')
+      ? /\?code=([^&]+)&state=([^&]+)$/.exec(cont.headers.get('location') ?? '')
+      : /atmtlabs:\/\/auth\/callback\?code=([^&"]+)&amp;state=([^"&]+)/.exec(await cont.text());
+    if (!m) throw new Error(`no callback in continue response: ${cont.status}`);
     const tok = await app.request(`${AUTH}/oauth/token`, {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'authorization_code', code: decodeURIComponent(m[1]), code_verifier: exchangeVerifier ?? verifier, redirect_uri: REDIRECT, client_id: 'atmt-labs-desktop' }).toString()
+      body: new URLSearchParams({ grant_type: 'authorization_code', code: decodeURIComponent(m[1]), code_verifier: exchangeVerifier ?? verifier, redirect_uri: redirect, client_id: 'atmt-labs-desktop' }).toString()
     });
     const tokenStatus = tok.status;
     const tokens = (await tok.json()) as { access_token: string; refresh_token: string };
-    return { ...tokens, tokenStatus, browser: b, loginPage: page, verifier, code: decodeURIComponent(m[1]) };
+    return { ...tokens, tokenStatus, browser: b, loginPage: page, verifier, code: decodeURIComponent(m[1]), continueResponse: cont };
   }
 
   async function license(access: string, deviceId = 'machine-aaaaaaaa') {

@@ -191,7 +191,13 @@ export function verifyLicenseToken(token: string, cfg: TokenVerifyConfig, now: n
   if (!isStr(payload.sub) || !isStr(payload.did) || !isStr(payload.plan) || !isStr(payload.status)) {
     return { ok: false, reason: 'bad_claims' };
   }
-  if (!isNum(payload.iat) || !isNum(payload.exp) || payload.exp <= payload.iat) {
+  if (!isNum(payload.iat)) return { ok: false, reason: 'bad_claims' };
+  // Only a PAID license may omit exp (perpetual). Everything else must expire.
+  const perpetual = payload.perpetual === true && payload.status === 'active';
+  if (payload.perpetual !== undefined && typeof payload.perpetual !== 'boolean') return { ok: false, reason: 'bad_claims' };
+  if (payload.exp === undefined) {
+    if (!perpetual) return { ok: false, reason: 'bad_claims' };
+  } else if (!isNum(payload.exp) || payload.exp <= payload.iat) {
     return { ok: false, reason: 'bad_claims' };
   }
   const notBefore = isNum(payload.nbf) ? payload.nbf : payload.iat;
@@ -199,7 +205,7 @@ export function verifyLicenseToken(token: string, cfg: TokenVerifyConfig, now: n
   if (payload.features !== undefined && !(Array.isArray(payload.features) && payload.features.every(isStr))) {
     return { ok: false, reason: 'bad_claims' };
   }
-  for (const k of ['trial_end', 'period_end'] as const) {
+  for (const k of ['trial_end', 'paid_at'] as const) {
     if (payload[k] !== undefined && payload[k] !== null && !isNum(payload[k])) return { ok: false, reason: 'bad_claims' };
   }
   return { ok: true, claims: payload as unknown as LicenseClaims };

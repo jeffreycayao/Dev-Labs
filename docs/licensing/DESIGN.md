@@ -1,151 +1,145 @@
 # Accounts, licensing & billing — design
 
-Status: desktop client implemented (gate OFF until the servers are live).
-Server contract: [API.md](./API.md).
+Status: desktop client and licensing service implemented. The desktop gate
+stays OFF (`LICENSING.enabled = false`) until the service is deployed.
+Server contract: [API.md](./API.md). Setup runbook:
+[services/licensing/README.md](../../services/licensing/README.md).
 
-## 1. Domains
+## 1. The product rules
 
-| Host | Role | Owns |
-|---|---|---|
-| `labs.atmt.dev` | Marketing site | Landing, pricing, download page, release notes, funnel pages. Static; no session cookies. |
-| `auth.labs.atmt.dev` | OAuth 2.0 authorization server | Google + Yahoo sign-in (OIDC), `/oauth/authorize`, `/oauth/token`, `/oauth/revoke`, the web account page. Session cookie is host-only (`__Host-` prefix), never `.atmt.dev`. |
-| `api.labs.atmt.dev` | Licensing API | Signs license tokens, device activations, Stripe Checkout/Portal sessions, **Stripe webhooks**. Stateless; scales horizontally. |
-| `dl.labs.atmt.dev` *(recommended)* | Binaries + update feed | Installers and `latest*.yml` for electron-updater on object storage + CDN (e.g. R2/S3). Public: an installer is useless without a license. |
+- **One-time purchase.** No subscription. Pay once, own the license.
+- **7-day free trial, card required.** The card is saved at the start and
+  charged **once** on day 7, unless the user cancels first.
+- **The license is bound to the email.** Google and Yahoo sign-ins with the
+  same verified email are the same account and the same license.
+- **A paid machine is stamped for good.** After the purchase, the app holds a
+  perpetual license tied to that computer's hardware ID and **never contacts the
+  server again** on that machine: no renewals, no online checks, works offline forever.
+- **Device cap:** `MAX_DEVICES` machines per license (default 3). New machines
+  sign in with the same email.
 
-Why `api.` is separate from `auth.`: different traffic and trust profiles
-(browser sessions vs. machine calls and Stripe webhooks), and `auth.` can later
-be moved to a hosted identity broker via a custom-domain CNAME without touching
-licensing or billing. The app only ever speaks standard OAuth 2.0 to `auth.`.
+## 2. Domains
 
-## 2. Components
+| Host | Role |
+|---|---|
+| `labs.atmt.dev` | Landing, pricing, downloads, release notes, funnel pages (`/welcome` after Checkout) |
+| `auth.labs.atmt.dev` | Google/Yahoo sign-in, desktop OAuth (`/oauth/*`), account page (`/account`), funnel entry (`/start`) |
+| `api.labs.atmt.dev` | License tokens, devices, Stripe Checkout sessions, Stripe webhook, daily cron |
 
-```
- labs.atmt.dev ──"Start free trial"──▶ auth.labs.atmt.dev ──OIDC──▶ Google / Yahoo
-                                          │  (account + session)
-                                          ▼
-                                 api.labs.atmt.dev ◀──webhooks── Stripe
-                                   │  users · subscriptions · devices
-                                   │  Postgres
-      ATMT Labs (Electron) ────────┘  POST /v1/licenses → signed license (EdDSA)
-        src/main/license*.ts          verified OFFLINE with a baked-in public key
-```
+`auth.` and `api.` are **one Vercel project** (`services/licensing`) with both
+domains attached. The app enforces the split: each host serves only its own
+routes, so it can become two projects later without changing a URL. Functions
+run in **sin1 (Singapore)**, next to the **Neon database in Singapore
+(aws-ap-southeast-1)**. That is the lowest latency for customers in Asia.
 
 ## 3. Funnels
 
-Both entry points end in the same place: a signed-in desktop app holding a
-license token for a `trialing` subscription.
+**Web-first** (landing page CTA → `https://auth.labs.atmt.dev/start?plan=trial`):
 
-**A. Web-first (paid acquisition, landing page)**
+1. Sign in with Google or Yahoo, which creates the account keyed on the email.
+2. Stripe Checkout in **setup** mode. The card is saved and nothing is charged; the button text says so.
+3. The `checkout.session.completed` webhook moves the license to `trialing`, with day 7 set.
+4. The user lands on `labs.atmt.dev/welcome` and downloads the app. In the app, sign-in is one click (the browser session already exists).
 
-1. `labs.atmt.dev` → **Start 7-day free trial**
-2. `auth.labs.atmt.dev/signup` → Continue with Google / Yahoo
-3. API creates a Stripe Checkout Session → Stripe Checkout (card collected)
-4. `checkout.session.completed` webhook → subscription `trialing`
-5. Success page (`labs.atmt.dev/welcome`) → OS-specific download
-6. App opens → sign-in gate → browser (already signed in, one click) → `atmtlabs://auth/callback` → licensed
+**App-first:**
 
-**B. App-first (downloaded directly, word of mouth)**
+1. Gate → **Start 7-day free trial** → browser sign-in → the app comes back signed in, with no license yet.
+2. **Start 7-day free trial** again → Stripe Checkout.
+3. The app polls every 10 s and unlocks when the webhook lands.
 
-1. App opens → gate → **Start 7-day free trial** (`screen_hint=signup`)
-2. Browser sign-in → callback → app is signed in but `inactive` (no subscription)
-3. Gate → **Start 7-day free trial** → API returns a Checkout URL → Stripe Checkout
-4. App polls `/v1/licenses` every 10 s for 20 min → flips to licensed when the webhook lands
-   (the user can also press **I've subscribed — check again**)
+`/start?plan=buy` skips the trial and goes to a one-time payment Checkout.
 
-## 4. Stripe: 7-day, card-required trial
+## 4. License lifecycle
 
-- Checkout Session: `mode=subscription`, one recurring Price,
-  `subscription_data.trial_period_days=7`, `payment_method_collection=always`
-  (the default for subscription mode; set it explicitly anyway),
-  `customer` = the account's Stripe customer (create once, reuse).
-- `subscription_data.trial_settings.end_behavior.missing_payment_method=cancel`
-  as a safety net.
-- Customer Portal for card changes, invoices and cancel.
-- One trial per account. Also record `payment_method.card.fingerprint` on
-  `checkout.session.completed`. If that fingerprint already had a trial on
-  another account, end the new trial immediately (`trial_end=now`) so it bills.
-  State this in the terms of service.
+```
+none ──trial checkout──▶ trialing ──day 7 charge ok──▶ active (perpetual)
+  │                        │  └─day 7 charge fails / 3DS─▶ payment_required ──pay──▶ active
+  │                        └─cancel before day 7─▶ canceled ──buy──▶ active
+  └──────────────buy now──────────────────────────────────────────▶ active
+active ──full refund / dispute──▶ refunded
+```
 
-### Webhooks → entitlement (the API copies `subscription.status` verbatim)
-
-| Event | Action |
-|---|---|
-| `checkout.session.completed` | Link customer ↔ account, store subscription id, card fingerprint check |
-| `customer.subscription.created` / `updated` | Upsert status, `trial_end`, `current_period_end`, `cancel_at_period_end`, price → plan |
-| `customer.subscription.deleted` | status `canceled` |
-| `customer.subscription.trial_will_end` | Reminder email (3 days before) |
-| `invoice.paid` / `invoice.payment_failed` | Receipts / dunning email (status changes arrive via `subscription.updated`) |
-
-Verify every webhook signature (`Stripe-Signature`) and make handlers idempotent (store `event.id`).
-
-**Entitled statuses:** `trialing`, `active`, `past_due` (Stripe is still retrying the card).
-Everything else — `incomplete`, `incomplete_expired`, `unpaid`, `canceled`, `paused`, `none` — shows the subscribe screen.
+- **Day-7 charge:** an off-session PaymentIntent for the one-time price.
+  - It's triggered by a **daily Vercel Cron** (01:00 UTC), and also immediately
+    when the app renews its trial license after day 7.
+  - A Stripe idempotency key makes concurrent attempts share one charge.
+  - Status changes are conditional, so a webhook racing the cron can't double-apply.
+- **Charge fails or needs 3-D Secure** → `payment_required`.
+  - The app and the account page offer a normal Checkout to pay. Nothing retries against the card on its own.
+- **One trial per account and per card.** The card fingerprint is recorded when the trial starts.
+  - A second account using the same card gets `payment_required (trial_already_used)` instead of a trial.
+- **Cancel trial** on `auth.labs.atmt.dev/account` → `canceled`. The card is never charged.
+  - A later purchase is still possible; a second trial is not.
 
 ## 5. The license token
 
-A compact JWS, `alg=EdDSA` (Ed25519), `kid` in the header, signed by the API.
-The app verifies it **offline** with `LICENSING.publicKeys` in `src/shared/brand.ts`.
+A compact JWS signed EdDSA (Ed25519) by the service. The app verifies it
+**offline** against `LICENSING.publicKeys` in `src/shared/brand.ts`.
+
+| Status | Token |
+|---|---|
+| `active` | `perpetual: true`, **no `exp`**, `paid_at` — valid forever on that machine |
+| `trialing` | `exp` = `trial_end` + 2-day grace; renewed at half-life |
+| anything else | `exp` = 24 h; the gate shows the subscribe or complete-purchase screen |
+
+Common claims:
 
 | Claim | Meaning |
 |---|---|
 | `iss` / `aud` | `https://api.labs.atmt.dev` / `atmt-labs-desktop` |
-| `sub` | Account id |
-| `did` | Device id the token was issued to (copying it to another machine fails) |
-| `plan`, `features[]` | Entitlements; gate features on these, not on the plan name |
-| `status` | Stripe subscription status |
-| `trial_end`, `period_end`, `cancel_at_period_end` | Shown in Settings → Account |
-| `iat`, `exp` | Lifetime = the offline allowance. Recommended: 7 days |
+| `sub` | Account ID |
+| `email` | The account's email, which the license is bound to |
+| `did` | The hardware-derived device ID (the stamp) |
+| `plan` | `lifetime` |
+| `status` | One of the statuses above |
 
-The app renews at half-life. It also renews on launch, every 30 min (only once past half-life), and on wake from sleep.
-Result: a canceled or unpaid subscription locks within days, while a laptop on a flight keeps working for up to 7.
+The app accepts a token without `exp` **only** when `perpetual: true` and
+`status: active`. A forged "perpetual trial" fails verification.
 
-**Key rotation:** ship the new public key in `publicKeys` one release before
-the API starts signing with it; remove the old key a release after.
+**The stamp (`did`).** It's `sha256("atmt-labs-device:" + OS machine id)`:
 
-## 6. Desktop client (implemented)
-
-| File | What |
+| OS | Machine ID source |
 |---|---|
-| `src/shared/brand.ts` → `LICENSING` | Origins, client id, redirect URI, issuer/audience, public keys, the `enabled` switch |
-| `src/shared/license.ts` | Shared types + the pure entitlement decision (`evaluateClaims`) |
-| `src/main/licenseCore.ts` | PKCE, authorize URL, callback parsing, EdDSA verification, HTTP client |
-| `src/main/licenseManager.ts` | State machine: sign-in, callback, refresh rotation, billing, sign-out (electron-free) |
-| `src/main/license.ts` | Electron glue: `license.json` + safeStorage, IPC, timers |
-| `src/main/index.ts` | `atmtlabs://auth/*` routing; **`spawnAgentCore` refuses every agent spawn while unlicensed**; `initLicensing()` before the first window |
-| `src/renderer/src/components/LicenseGate.tsx` | Full-screen sign-in / subscribe / offline screens |
-| `src/renderer/src/components/AccountSection.tsx` | Settings → General → Account (plan, trial end, manage billing, sign out) |
-| `test/license-core.test.cjs`, `test/license-manager.test.cjs` | 39 tests incl. forgery, rotation, offline, device binding |
+| macOS | `IOPlatformUUID` |
+| Windows | `MachineGuid` |
+| Linux | `/etc/machine-id` |
 
-Sign-in is RFC 8252: system browser + PKCE (S256) + `state`, callback on the
-`atmtlabs://` scheme the installer already registers. Only the refresh token is secret. It is:
-- encrypted with the OS keychain (`safeStorage`), or kept in memory only if no keychain exists; never plaintext;
-- rotated on every use;
-- never sent over IPC.
+The raw ID never leaves the machine. Copying `license.json` to another computer doesn't carry the license. An OS reinstall counts as a new machine: sign in again, and remove the old one on the account page if the cap is reached.
 
-### Turning it on
+## 6. Plain truths about "never check again"
 
-1. Deploy `auth.` and `api.` per [API.md](./API.md). Register the OAuth client
-   `atmt-labs-desktop` with redirect URI `atmtlabs://auth/callback`.
-2. Paste the API's Ed25519 public key (SPKI PEM) into `LICENSING.publicKeys`.
-3. Set `LICENSING.enabled = true`. The test suite refuses `enabled` without a key.
-4. Test against staging from a dev build:
-   `ATMT_LICENSE_ENFORCE=1 ATMT_AUTH_ORIGIN=… ATMT_API_ORIGIN=… ATMT_LICENSE_ISSUER=… ATMT_LICENSE_PUBLIC_KEY="$(cat pub.pem)" npm run dev`
-   (these overrides are ignored in packaged builds).
+- **A refund or chargeback can't reach an already-stamped machine.**
+  `refunded` blocks new activations and every non-stamped machine, but a stamped
+  machine keeps working offline. This is the cost of the no-check guarantee.
+- **Removing a device on the account page frees the seat but can't un-stamp that computer**, for the same reason.
+  So the device cap limits new activations; it can't pull the license off a machine that's already stamped.
+- **Anyone who can patch the binary can bypass any client check.**
+  The signed, machine-bound token stops casual copying and forging, not a determined cracker.
+- **Key rotation affects only new licenses.** Keep old public keys in the app
+  forever: stamped machines carry tokens signed with them.
 
-## 7. Threat model — plainly
+If you later want revocation, the option that keeps the offline guarantee is
+an occasional, best-effort check. It would lock a machine only when the server
+positively says `refunded`, and never because the server can't be reached.
+That's a change to your "never check" rule, so it's not built.
 
-- The check runs on the user's machine, so a determined cracker can patch the
-  binary. The signed token stops the casual paths (edited files, copied licenses, forged status,
-  clock rollback) and keeps honest customers honest.
-- Next hardening step: Electron fuses (`RunAsNode` off,
-  `EnableEmbeddedAsarIntegrityValidation` + `OnlyLoadAppFromAsar` on) in an `afterPack` hook.
-- The durable moat is server-side value only paid accounts reach (hosted model
-  catalog, team sync, cloud features), not the client check.
+## 7. Code map
 
-## 8. Scaling path
+| Where | What |
+|---|---|
+| `services/licensing/` | The Vercel service (Hono): `src/app.ts` routes, `src/billing.ts` Stripe, `src/oidc.ts` Google/Yahoo, `src/store.ts` SQL, `src/tokens.ts` signing, `db/schema.sql` |
+| `services/licensing/test/` | 25 end-to-end tests on real SQL (PGlite) with fake Stripe and fake IdPs |
+| `src/shared/brand.ts` → `LICENSING` | Origins, client ID, public keys, the `enabled` switch |
+| `src/shared/license.ts` | Shared types and the entitlement decision (perpetual handling) |
+| `src/main/licenseCore.ts` | PKCE, callback parsing, EdDSA verification, HTTP client |
+| `src/main/licenseManager.ts` | Sign-in, renewal, billing, sign-out; no network once stamped |
+| `src/main/license.ts` | Electron glue, machine ID, `license.json` + safeStorage |
+| `src/main/index.ts` | `spawnAgentCore` refuses every agent spawn while unlicensed |
+| `src/renderer/…/LicenseGate.tsx`, `AccountSection.tsx` | The gate and Settings → Account |
 
-- `api.` is stateless: JWT in, JWT out. Put it behind a load balancer and add instances.
-  Postgres holds accounts, subscriptions and devices; reads are one row per license call.
-- Teams later: Organization → Subscription (quantity = seats) → Members → Devices.
-  The token already carries `plan` + `features`, so no client change.
-- Enterprise SSO (SAML / OIDC per customer) plugs into `auth.` only.
+## 8. Scaling
+
+- **The service is stateless.** Functions scale out on their own. Each license call is a handful of indexed single-row queries on Neon (HTTP driver, no connection pool to exhaust).
+- **Stamped machines cost nothing:** they never call the service. Load grows only with sign-ins, trials and purchases.
+- **Per-host projects:** splitting `auth.` and `api.` into two Vercel projects later is a deploy change, not a code change.
+- **Teams later:** an `organizations` table with seats. The license token already carries `plan` + `features`.

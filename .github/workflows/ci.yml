@@ -40,3 +40,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+
+  licensing:
+    name: Licensing service
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/licensing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/licensing/package-lock.json
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test (real SQL on PGlite, fake Stripe + IdPs)
+        run: npm test

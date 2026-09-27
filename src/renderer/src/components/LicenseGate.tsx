@@ -37,8 +37,11 @@ export function LicenseGate({ status }: LicenseGateProps) {
   const cancel = () => run(() => window.cth.licenseCancelSignIn());
 
   const { state } = status;
+  const needsPayment = state === 'inactive' && status.purchase === 'payment_required';
+  const canTrial = state === 'inactive' && (status.purchase === 'none' || !status.purchase);
   const title =
     state === 'signing_in' ? t('license.waitingTitle')
+    : needsPayment ? t('license.completeTitle')
     : state === 'inactive' ? t('license.inactiveTitle')
     : state === 'offline_expired' ? t('license.offlineTitle')
     : state === 'error' ? t('license.errorTitle')
@@ -67,6 +70,7 @@ export function LicenseGate({ status }: LicenseGateProps) {
 
             <p style={{ margin: 0, fontSize: 12.5, lineHeight: '19px', color: 'var(--cth-ink-700)' }}>
               {state === 'signing_in' ? t('license.waitingBody')
+                : needsPayment ? t('license.completeBody')
                 : state === 'inactive' ? t('license.inactiveBody')
                 : state === 'offline_expired' ? t('license.offlineBody')
                 : state === 'error' ? t('license.errorBody')
@@ -105,16 +109,19 @@ export function LicenseGate({ status }: LicenseGateProps) {
 
             {state === 'inactive' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* The server picks trial vs. one-time purchase; the label just says which. */}
                 <PixelButton variant="primary" size="lg" fullWidth disabled={busy} onClick={startTrial}>
-                  {t('license.startTrial')}
+                  {needsPayment ? t('license.completePurchase') : canTrial ? t('license.startTrial') : t('license.buyLicense')}
                 </PixelButton>
-                <div style={{ fontSize: 11, lineHeight: '16px', color: 'var(--cth-ink-500)', textAlign: 'center' }}>
-                  {t('license.trialNote')}
-                </div>
+                {canTrial && (
+                  <div style={{ fontSize: 11, lineHeight: '16px', color: 'var(--cth-ink-500)', textAlign: 'center' }}>
+                    {t('license.trialNote')}
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' }}>
                   <PixelButton variant="ghost" size="sm" disabled={busy} onClick={signOut}>{t('license.signOut')}</PixelButton>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <PixelButton variant="secondary" size="sm" disabled={busy} onClick={manageBilling}>{t('license.manageBilling')}</PixelButton>
+                    <PixelButton variant="secondary" size="sm" disabled={busy} onClick={manageBilling}>{t('license.manageAccount')}</PixelButton>
                     <PixelButton variant="secondary" size="sm" disabled={busy} onClick={refresh}>
                       {busy ? t('license.checking') : t('license.checkAgain')}
                     </PixelButton>

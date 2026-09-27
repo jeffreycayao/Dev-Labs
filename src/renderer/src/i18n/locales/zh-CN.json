@@ -1420,15 +1420,15 @@
     "title": "登录 ATMT Labs",
     "intro": "使用 ATMT Labs 需要有效订阅。请在浏览器中使用 Google 或 Yahoo 登录，完成后会自动返回此处。",
     "startTrial": "开始 7 天免费试用",
-    "trialNote": "需要绑定银行卡。7 天试用结束前不会扣款，期间可随时取消。",
+    "trialNote": "需要绑定银行卡。7 天内不扣款，之后一次性付款即可获得终身许可证。在此之前可随时取消。",
     "signIn": "已有账户？登录",
     "waitingTitle": "请在浏览器中完成",
     "waitingBody": "我们已在浏览器中打开 auth.labs.atmt.dev。登录完成后会自动返回此处。",
     "reopen": "重新打开浏览器",
     "cancel": "取消",
-    "inactiveTitle": "没有有效订阅",
-    "inactiveBody": "此账户没有有效订阅。请开始免费试用，或在账单中续订。",
-    "checkAgain": "我已订阅——重新检查",
+    "inactiveTitle": "尚无许可证",
+    "inactiveBody": "此账户尚无许可证。开始免费试用，或购买终身许可证。",
+    "checkAgain": "我已付款——重新检查",
     "checking": "检查中…",
     "manageBilling": "管理账单",
     "manageAccount": "管理账户",
@@ -1454,11 +1454,12 @@
     },
     "account": {
       "title": "账户",
-      "trialing": "免费试用——剩余 {{days}} 天（{{date}} 结束）",
-      "pastDue": "付款失败。请在账单中更新银行卡以保持访问。",
-      "cancels": "订阅将于 {{date}} 结束",
-      "renews": "将于 {{date}} 续订",
-      "active": "订阅有效"
-    }
+      "trialing": "免费试用——剩余 {{days}} 天。将于 {{date}} 一次性扣款。",
+      "lifetime": "终身许可证——此电脑已永久激活。"
+    },
+    "buyLicense": "购买终身许可证",
+    "completeTitle": "完成购买",
+    "completeBody": "免费试用已结束，但一次性付款未成功。请完成购买以继续使用 ATMT Labs。",
+    "completePurchase": "完成购买"
   }
 }

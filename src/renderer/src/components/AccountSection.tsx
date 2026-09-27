@@ -1,7 +1,8 @@
 /**
- * Settings → General → "Account": who is signed in, the plan, where the trial
- * or billing period stands, and the two actions that belong here — manage
- * billing (Stripe Customer Portal) and sign out.
+ * Settings → General → "Account": who is signed in, whether this computer
+ * holds a lifetime license or a running trial (and when the one-time charge
+ * lands), and the two actions that belong here — manage account (cancel
+ * trial, card, receipts, devices) and sign out.
  *
  * Renders nothing when licensing is not enforced, so builds without the gate
  * look exactly as they did before.
@@ -23,17 +24,10 @@ export function AccountSection() {
   const now = Date.now();
 
   let line: string;
-  let warn = false;
-  if (status.subscription === 'trialing') {
-    line = t('license.account.trialing', { date: fmt(status.trialEndsAt), days: daysUntil(status.trialEndsAt, now) ?? 0 });
-  } else if (status.subscription === 'past_due') {
-    line = t('license.account.pastDue');
-    warn = true;
-  } else if (status.cancelAtPeriodEnd) {
-    line = t('license.account.cancels', { date: fmt(status.periodEndsAt) });
-    warn = true;
+  if (status.perpetual || status.purchase === 'active') {
+    line = t('license.account.lifetime');
   } else {
-    line = status.periodEndsAt ? t('license.account.renews', { date: fmt(status.periodEndsAt) }) : t('license.account.active');
+    line = t('license.account.trialing', { date: fmt(status.trialEndsAt), days: daysUntil(status.trialEndsAt, now) ?? 0 });
   }
 
   const act = async (fn: () => Promise<unknown>) => {
@@ -58,10 +52,10 @@ export function AccountSection() {
               }}>{status.plan}</span>
             )}
           </div>
-          <div style={{ fontSize: 12, marginTop: 4, color: warn ? 'var(--cth-coral)' : 'var(--cth-ink-700)' }}>{line}</div>
+          <div style={{ fontSize: 12, marginTop: 4, color: 'var(--cth-ink-700)' }}>{line}</div>
         </div>
         <PixelButton variant="secondary" size="sm" disabled={busy} onClick={() => act(() => window.cth.licenseOpenBilling('portal'))}>
-          {t('license.manageBilling')}
+          {t('license.manageAccount')}
         </PixelButton>
         <PixelButton variant="ghost" size="sm" disabled={busy} onClick={() => act(() => window.cth.licenseSignOut())}>
           {t('license.signOut')}

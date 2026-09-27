@@ -133,11 +133,11 @@ test('a non-Ed25519 public key configured under a kid is refused', () => {
 
 // ── entitlement decision ─────────────────────────────────────────────────────
 
-test('trialing, active and past_due unlock; everything else does not', () => {
-  for (const s of ['trialing', 'active', 'past_due']) {
+test('trialing and active unlock; everything else does not', () => {
+  for (const s of ['trialing', 'active']) {
     assert.equal(lic.evaluateClaims(claims({ status: s }), { now: NOW, deviceId: 'dev-1' }).state, 'licensed', s);
   }
-  for (const s of ['canceled', 'unpaid', 'incomplete', 'incomplete_expired', 'paused', 'none']) {
+  for (const s of ['none', 'payment_required', 'canceled', 'refunded']) {
     assert.equal(lic.evaluateClaims(claims({ status: s }), { now: NOW, deviceId: 'dev-1' }).state, 'inactive', s);
   }
 });
@@ -153,10 +153,46 @@ test('expired token, other device and a rolled-back clock each block', () => {
   assert.equal(lic.evaluateClaims(claims(), { now: NOW, deviceId: 'dev-1', lastSeenAt: NOW + 60_000 }).state, 'licensed');
 });
 
-test('status carries trial/period dates in milliseconds for the UI', () => {
-  const s = lic.evaluateClaims(claims({ period_end: SEC + 30 * 86400 }), { now: NOW, deviceId: 'dev-1' });
+// ── perpetual (paid) license ─────────────────────────────────────────────────
+
+function lifetime(over = {}) {
+  const c = claims({ status: 'active', perpetual: true, paid_at: SEC, ...over });
+  delete c.exp;
+  delete c.trial_end;
+  return c;
+}
+
+test('a paid perpetual license verifies without exp', () => {
+  const v = core.verifyLicenseToken(mint(lifetime()), CFG, NOW);
+  assert.equal(v.ok, true);
+  assert.equal(v.claims.exp, undefined);
+});
+
+test('only a PAID license may omit exp — a forged "perpetual trial" is refused', () => {
+  const trial = lifetime({ status: 'trialing' });
+  assert.equal(core.verifyLicenseToken(mint(trial), CFG, NOW).reason, 'bad_claims');
+  const noExp = claims();
+  delete noExp.exp;
+  assert.equal(core.verifyLicenseToken(mint(noExp), CFG, NOW).reason, 'bad_claims');
+  assert.equal(core.verifyLicenseToken(mint(lifetime({ perpetual: 'yes' })), CFG, NOW).reason, 'bad_claims');
+});
+
+test('a perpetual license stays licensed forever, whatever the clock, but only on its machine', () => {
+  const c = lifetime();
+  for (const now of [NOW, NOW + 10 * 365 * 86400_000]) {
+    const s = lic.evaluateClaims(c, { now, deviceId: 'dev-1', lastSeenAt: NOW + 50 * 365 * 86400_000 });
+    assert.equal(s.state, 'licensed');
+    assert.equal(s.perpetual, true);
+  }
+  assert.equal(lic.shouldRefresh(c, NOW + 10 * 365 * 86400_000), false, 'never renews');
+  const moved = lic.evaluateClaims(c, { now: NOW, deviceId: 'other-machine' });
+  assert.deepEqual([moved.state, moved.error], ['signed_out', 'device_mismatch']);
+});
+
+test('status carries trial and paid dates in milliseconds for the UI', () => {
+  const s = lic.evaluateClaims(claims(), { now: NOW, deviceId: 'dev-1' });
   assert.equal(s.trialEndsAt, (SEC + 7 * 86400) * 1000);
-  assert.equal(s.periodEndsAt, (SEC + 30 * 86400) * 1000);
+  assert.equal(lic.evaluateClaims(lifetime(), { now: NOW, deviceId: 'dev-1' }).paidAt, SEC * 1000);
   assert.equal(lic.daysUntil(s.trialEndsAt, NOW), 7);
   assert.equal(lic.daysUntil(NOW - 1, NOW), 0);
 });

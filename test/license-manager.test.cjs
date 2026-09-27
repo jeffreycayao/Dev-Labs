@@ -73,11 +73,15 @@ function backend(clock) {
       if (s.failLicenseOnce401) { s.failLicenseOnce401 = false; s.access.delete(authz); return json(401, {}); }
       const body = JSON.parse(init.body);
       const now = Math.floor(clock.now / 1000);
-      return json(200, { license: mint({
+      const base = {
         iss: 'https://api.test', aud: 'atmt-labs-desktop', sub: 'usr_1', email: 'jo@example.com',
-        did: s.deviceOverride ?? body.device_id, plan: 'pro', status: s.status,
-        iat: now, exp: now + 7 * 86400, trial_end: now + 7 * 86400
-      }) });
+        did: s.deviceOverride ?? body.device_id, plan: 'lifetime', status: s.status, iat: now
+      };
+      // Mirrors services/licensing/src/tokens.ts: paid = perpetual, no exp.
+      const claims = s.status === 'active'
+        ? { ...base, perpetual: true, paid_at: now }
+        : { ...base, exp: now + 7 * 86400, trial_end: now + 7 * 86400 };
+      return json(200, { license: mint(claims) });
     }
     if (u.pathname.startsWith('/v1/devices/')) { s.released.push(decodeURIComponent(u.pathname.split('/').pop())); return json(204, {}); }
     if (u.href === 'https://api.test/v1/billing/checkout' || u.href === 'https://api.test/v1/billing/portal') {
@@ -88,7 +92,7 @@ function backend(clock) {
   return s;
 }
 
-function harness({ enforced = true, keys = { k1: PEM }, stored = {} } = {}) {
+function harness({ enforced = true, keys = { k1: PEM }, stored = {}, machine = 'machine-A' } = {}) {
   const clock = { now: T0 };
   const api = backend(clock);
   const disk = { data: { ...stored } };
@@ -105,7 +109,8 @@ function harness({ enforced = true, keys = { k1: PEM }, stored = {} } = {}) {
     fetch: api.fetch,
     openExternal: (u) => { opened.push(u); },
     device: { deviceName: 'box', platform: 'linux', appVersion: '1.0.0' },
-    newDeviceId: () => 'dev-1',
+    machineId: () => machine,
+    newDeviceId: () => 'random-fallback',
     now: () => clock.now,
     setTimer: (fn, ms) => { const t = { fn, at: clock.now + ms, live: true, cancel() { t.live = false; } }; timers.push(t); return t; }
   });
@@ -143,7 +148,7 @@ test('gate on without a public key is an error that blocks, not an open door', (
 test('fresh install: signed out, device id minted, agents blocked', () => {
   const h = harness();
   assert.equal(h.m.init().state, 'signed_out');
-  assert.equal(h.disk.data.deviceId, 'dev-1');
+  assert.equal(h.disk.data.deviceId, 'machine-A', 'device id comes from the hardware');
   assert.equal(h.m.allowsAgents(), false);
 });
 
@@ -155,7 +160,7 @@ test('browser sign-in with PKCE ends licensed with the refresh token persisted',
   assert.equal(await signIn(h, 'signup'), true);
   const s = h.m.getStatus();
   assert.equal(s.state, 'licensed');
-  assert.equal(s.subscription, 'trialing');
+  assert.equal(s.purchase, 'trialing');
   assert.equal(s.email, 'jo@example.com');
   assert.equal(h.m.allowsAgents(), true);
   assert.equal(h.disk.data.refreshToken, 'rt-1');
@@ -233,7 +238,7 @@ test('a revoked session signs the user out and forgets the tokens', async () => 
   assert.deepEqual([h.m.getStatus().state, h.m.getStatus().error], ['signed_out', 'session_expired']);
   assert.equal(h.disk.data.refreshToken, undefined);
   assert.equal(h.disk.data.license, undefined);
-  assert.equal(h.disk.data.deviceId, 'dev-1', 'the device id survives sign-out');
+  assert.equal(h.disk.data.deviceId, 'machine-A', 'the device id survives sign-out');
 });
 
 test('offline with a valid license stays licensed; offline past expiry blocks', async () => {
@@ -253,7 +258,7 @@ test('offline with a valid license stays licensed; offline past expiry blocks', 
   assert.equal(h.m.getStatus().state, 'licensed', 'back online renews');
 });
 
-test('a canceled subscription shows as inactive and blocks', async () => {
+test('a canceled trial shows as inactive and blocks', async () => {
   const h = harness();
   h.m.init();
   h.api.status = 'canceled';
@@ -297,7 +302,7 @@ test('a restart reads the stored license offline, then renews', async () => {
 
 test('a tampered stored license is dropped', () => {
   const first = harness();
-  const bad = { deviceId: 'dev-1', license: 'eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIn0.e30.AAAA' };
+  const bad = { deviceId: 'machine-A', license: 'eyJhbGciOiJFZERTQSIsImtpZCI6ImsxIn0.e30.AAAA' };
   const h = harness({ stored: bad });
   const s = h.m.init();
   assert.deepEqual([s.state, s.error], ['signed_out', 'invalid_token']);
@@ -337,7 +342,7 @@ test('sign-out frees the device seat, revokes the session and forgets it', async
   await signIn(h);
   const s = await h.m.signOut();
   assert.equal(s.state, 'signed_out');
-  assert.deepEqual(h.api.released, ['dev-1']);
+  assert.deepEqual(h.api.released, ['machine-A']);
   assert.equal(h.api.revoked.length, 1);
   assert.equal(h.disk.data.refreshToken, undefined);
   assert.equal(h.m.allowsAgents(), false);
@@ -349,4 +354,70 @@ test('sign-out works offline', async () => {
   await signIn(h);
   h.api.offline = true;
   assert.equal((await h.m.signOut()).state, 'signed_out');
+});
+
+// ── lifetime license: stamped to the machine, never checked again ────────────
+
+async function buyLifetime(h) {
+  h.m.init();
+  h.api.status = 'active';
+  await signIn(h);
+  assert.equal(h.m.getStatus().state, 'licensed');
+  assert.equal(h.m.getStatus().perpetual, true);
+}
+
+test('a paid machine is stamped: no network on restart, on tick, or on refresh — even years later', async () => {
+  const first = harness();
+  await buyLifetime(first);
+  const h = harness({ stored: first.disk.data });
+  h.api.offline = true; // would throw if anything tried the network
+  assert.equal(h.m.init().state, 'licensed');
+  assert.equal(h.m.canRefresh(), false);
+  h.clock.now = T0 + 5 * 365 * 86400_000;
+  await h.m.tick();
+  await h.m.refresh();
+  assert.equal(h.m.getStatus().state, 'licensed');
+  assert.deepEqual(h.api.calls, [], 'zero calls to the licensing server');
+  assert.equal(h.m.allowsAgents(), true);
+});
+
+test('the stamp does not travel: the same license file on another computer is not licensed', async () => {
+  const first = harness();
+  await buyLifetime(first);
+  const other = harness({ stored: first.disk.data, machine: 'machine-B' });
+  const s = other.m.init();
+  assert.deepEqual([s.state, s.error], ['signed_out', 'device_mismatch']);
+  assert.equal(other.m.allowsAgents(), false);
+});
+
+test('when the OS will not give a machine id, a random per-install id is used and kept', () => {
+  const h = harness({ machine: '' });
+  h.m.init();
+  assert.equal(h.disk.data.deviceId, 'random-fallback');
+});
+
+test('a trial that converts on day 7 becomes a stamped lifetime license', async () => {
+  const h = harness();
+  h.m.init();
+  await signIn(h);
+  assert.equal(h.m.getStatus().purchase, 'trialing');
+  h.api.status = 'active';
+  h.clock.now = T0 + 7 * 86400_000 + 1000;
+  await h.m.tick();
+  assert.equal(h.m.getStatus().perpetual, true);
+  const calls = h.api.calls.length;
+  h.clock.now += 400 * 86400_000;
+  await h.m.tick();
+  assert.equal(h.api.calls.length, calls, 'no more calls once stamped');
+});
+
+test('a failed day-7 payment shows payment_required and blocks', async () => {
+  const h = harness();
+  h.m.init();
+  await signIn(h);
+  h.api.status = 'payment_required';
+  h.clock.now = T0 + 7 * 86400_000 + 1000;
+  await h.m.tick();
+  assert.deepEqual([h.m.getStatus().state, h.m.getStatus().purchase], ['inactive', 'payment_required']);
+  assert.equal(h.m.allowsAgents(), false);
 });

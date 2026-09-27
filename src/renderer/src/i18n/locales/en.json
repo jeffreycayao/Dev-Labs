@@ -1420,15 +1420,15 @@
     "title": "SIGN IN TO ATMT LABS",
     "intro": "ATMT Labs needs an active subscription. Sign in with Google or Yahoo in your browser, and you'll come straight back here.",
     "startTrial": "start 7-day free trial",
-    "trialNote": "Card required. You won't be charged until the 7-day trial ends, and you can cancel anytime before then.",
+    "trialNote": "Card required. Nothing is charged for 7 days, then a one-time payment for a lifetime license. Cancel anytime before then.",
     "signIn": "I already have an account — sign in",
     "waitingTitle": "FINISH IN YOUR BROWSER",
     "waitingBody": "We opened auth.labs.atmt.dev in your browser. Once you're signed in, it sends you back here automatically.",
     "reopen": "open the browser again",
     "cancel": "cancel",
-    "inactiveTitle": "NO ACTIVE SUBSCRIPTION",
-    "inactiveBody": "There's no active subscription on this account. Start your free trial, or renew it in billing.",
-    "checkAgain": "I've subscribed — check again",
+    "inactiveTitle": "NO LICENSE YET",
+    "inactiveBody": "There's no license on this account yet. Start your free trial, or buy a lifetime license.",
+    "checkAgain": "I've paid — check again",
     "checking": "checking…",
     "manageBilling": "manage billing",
     "manageAccount": "manage account",
@@ -1454,11 +1454,12 @@
     },
     "account": {
       "title": "ACCOUNT",
-      "trialing": "Free trial — {{days}} days left (ends {{date}})",
-      "pastDue": "Payment failed. Update your card in billing to keep access.",
-      "cancels": "Subscription ends on {{date}}",
-      "renews": "Renews on {{date}}",
-      "active": "Subscription active"
-    }
+      "trialing": "Free trial — {{days}} days left. One-time charge on {{date}}.",
+      "lifetime": "Lifetime license — this computer is activated for good."
+    },
+    "buyLicense": "buy lifetime license",
+    "completeTitle": "COMPLETE YOUR PURCHASE",
+    "completeBody": "Your free trial is over, but the one-time payment didn't go through. Complete the purchase to keep using ATMT Labs.",
+    "completePurchase": "complete purchase"
   }
 }

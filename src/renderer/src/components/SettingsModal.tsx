@@ -981,7 +981,7 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                           and a sponsor live here; both render nothing until set. */}
                       <SettingsHeroCard />
 
-                      {/* Signed-in account + subscription. Renders nothing unless
+                      {/* Signed-in account + license. Renders nothing unless
                           licensing is enforced (docs/licensing/DESIGN.md). */}
                       <AccountSection />
 

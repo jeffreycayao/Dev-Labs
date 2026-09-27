@@ -10,35 +10,23 @@
  * Contract with the server: docs/licensing/API.md.
  */
 
-/** Stripe's subscription.status values, plus 'none' for an account that has
- *  never started a subscription. The server copies Stripe's value verbatim. */
-export type SubscriptionStatus =
-  | 'trialing'
-  | 'active'
-  | 'past_due'
-  | 'incomplete'
-  | 'incomplete_expired'
-  | 'unpaid'
-  | 'canceled'
-  | 'paused'
-  | 'none';
-
 /**
- * Stripe states that unlock the app.
- *
- * past_due is IN on purpose: Stripe is still retrying the card (Smart Retries),
- * and locking someone out over a bank hiccup loses the customer the retry was
- * about to save. The server moves the subscription to unpaid/canceled when the
- * retries run out, and that is when access ends.
+ * Where the account's ONE-TIME purchase stands (services/licensing/db/schema.sql):
+ *   none              never started a trial or bought
+ *   trialing          7-day trial, card on file, charged once on day 7
+ *   active            paid — a lifetime license
+ *   payment_required  the day-7 charge failed / needs 3-D Secure, or the card
+ *                     already had a trial; finish the purchase to continue
+ *   canceled          trial canceled before day 7
+ *   refunded          refunded or disputed
  */
-export const ENTITLED_STATUSES: ReadonlySet<SubscriptionStatus> = new Set<SubscriptionStatus>([
-  'trialing',
-  'active',
-  'past_due'
-]);
+export type PurchaseStatus = 'none' | 'trialing' | 'active' | 'payment_required' | 'canceled' | 'refunded';
+
+/** States that unlock the app. */
+export const ENTITLED_STATUSES: ReadonlySet<PurchaseStatus> = new Set<PurchaseStatus>(['trialing', 'active']);
 
 export function isEntitledStatus(s: string | undefined): boolean {
-  return !!s && ENTITLED_STATUSES.has(s as SubscriptionStatus);
+  return !!s && ENTITLED_STATUSES.has(s as PurchaseStatus);
 }
 
 /** The payload of a license token (a compact EdDSA JWS). Times are epoch SECONDS. */
@@ -48,21 +36,32 @@ export interface LicenseClaims {
   /** Account id on the licensing server. */
   sub: string;
   iat: number;
-  exp: number;
+  /** Absent only on a perpetual (paid) license. */
+  exp?: number;
+  /**
+   * A paid lifetime license, stamped to this machine: no `exp`, never renewed,
+   * never checked online again. Only honoured together with status 'active'.
+   */
+  perpetual?: boolean;
+  paid_at?: number;
   nbf?: number;
   jti?: string;
   email?: string;
   name?: string;
-  /** Device id this token was issued to. A token copied to another machine fails. */
+  /** Hardware-derived id of the machine this token was issued to. A token
+   *  (or the whole license file) copied to another machine fails. */
   did: string;
-  /** Plan slug, e.g. 'pro'. */
+  /** Plan slug: 'lifetime'. */
   plan: string;
-  status: SubscriptionStatus;
+  status: PurchaseStatus;
   /** Feature flags the plan unlocks. Empty/absent = the plan's defaults. */
   features?: string[];
   trial_end?: number;
-  period_end?: number;
-  cancel_at_period_end?: boolean;
+}
+
+/** A paid, machine-stamped license that never needs the server again. */
+export function isPerpetual(c: Pick<LicenseClaims, 'perpetual' | 'status'>): boolean {
+  return c.perpetual === true && c.status === 'active';
 }
 
 export type LicenseState =
@@ -72,9 +71,9 @@ export type LicenseState =
   | 'signed_out'
   /** Browser sign-in in progress; waiting for the atmtlabs://auth/callback link. */
   | 'signing_in'
-  /** Entitled: trialing, active or past_due, token unexpired. */
+  /** Entitled: a paid lifetime license, or a running trial with an unexpired token. */
   | 'licensed'
-  /** Signed in, but no entitling subscription (never subscribed, canceled, unpaid). */
+  /** Signed in, but not entitled (never bought, trial canceled, payment needed, refunded). */
   | 'inactive'
   /** Last token expired and the server could not be reached to renew it. */
   | 'offline_expired'
@@ -102,13 +101,14 @@ export interface LicenseStatus {
   email?: string;
   name?: string;
   plan?: string;
-  subscription?: SubscriptionStatus;
+  purchase?: PurchaseStatus;
   features?: string[];
+  /** Paid lifetime license stamped to this machine: nothing to renew, ever. */
+  perpetual?: boolean;
   /** Epoch MILLISECONDS (renderer-friendly). */
   trialEndsAt?: number;
-  periodEndsAt?: number;
-  cancelAtPeriodEnd?: boolean;
-  /** When the current token stops working offline. */
+  paidAt?: number;
+  /** When the current token stops working offline. Absent when perpetual. */
   expiresAt?: number;
   error?: LicenseErrorCode;
 }
@@ -122,30 +122,35 @@ export const CLOCK_ROLLBACK_MS = 60 * 60 * 1000;
  * Derive what the user sees from verified claims.
  *
  * `claims` MUST already have passed signature, issuer and audience checks —
- * this only looks at time, device and subscription state.
+ * this only looks at time, device and purchase state.
  */
 export function evaluateClaims(
   claims: LicenseClaims,
   opts: { now: number; deviceId: string; lastSeenAt?: number }
 ): Omit<LicenseStatus, 'enforced'> {
+  const perpetual = isPerpetual(claims);
   const base: Omit<LicenseStatus, 'enforced' | 'state'> = {
     email: claims.email,
     name: claims.name,
     plan: claims.plan,
-    subscription: claims.status,
+    purchase: claims.status,
     features: claims.features,
+    perpetual: perpetual || undefined,
     trialEndsAt: secToMs(claims.trial_end),
-    periodEndsAt: secToMs(claims.period_end),
-    cancelAtPeriodEnd: claims.cancel_at_period_end,
-    expiresAt: claims.exp * 1000
+    paidAt: secToMs(claims.paid_at),
+    expiresAt: secToMs(claims.exp)
   };
   if (claims.did !== opts.deviceId) {
     return { state: 'signed_out', error: 'device_mismatch' };
   }
+  // Paid and stamped to this machine: valid forever, whatever the clock says.
+  if (perpetual) {
+    return { ...base, state: 'licensed' };
+  }
   if (clockRolledBack(opts.now, opts.lastSeenAt)) {
     return { ...base, state: 'offline_expired', error: 'clock_rollback' };
   }
-  if (opts.now >= claims.exp * 1000) {
+  if (typeof claims.exp !== 'number' || opts.now >= claims.exp * 1000) {
     return { ...base, state: 'offline_expired' };
   }
   if (!isEntitledStatus(claims.status)) {
@@ -160,12 +165,12 @@ export function clockRolledBack(now: number, lastSeenAt: number | undefined): bo
 }
 
 /**
- * Renew once half the token's lifetime is gone. With a 7-day token that is
- * every ~3.5 days offline-tolerant, and in practice every launch/timer tick
- * after the halfway mark, so a canceled subscription stops within days while
- * a laptop on a flight keeps working.
+ * Renew once half the token's lifetime is gone (trial tokens). A perpetual
+ * license is never renewed — the machine does not contact the server again.
  */
-export function shouldRefresh(claims: Pick<LicenseClaims, 'iat' | 'exp'>, now: number): boolean {
+export function shouldRefresh(claims: Pick<LicenseClaims, 'iat' | 'exp' | 'perpetual' | 'status'>, now: number): boolean {
+  if (isPerpetual(claims)) return false;
+  if (typeof claims.exp !== 'number') return true;
   const lifetime = Math.max(0, claims.exp - claims.iat) * 1000;
   const remaining = claims.exp * 1000 - now;
   return remaining < lifetime / 2;

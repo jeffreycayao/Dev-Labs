@@ -7,18 +7,20 @@
  *     the integrations secret store.
  *   - enforcement: LICENSING.enabled in a packaged build. Dev builds skip the
  *     gate unless ATMT_LICENSE_ENFORCE=1, and only dev builds honour the
- *     ATMT_AUTH_ORIGIN / ATMT_API_ORIGIN / ATMT_LICENSE_PUBLIC_KEY overrides
- *     (for a local or staging licensing server).
+ *     ATMT_AUTH_ORIGIN / ATMT_API_ORIGIN / ATMT_LICENSE_ISSUER /
+ *     ATMT_LICENSE_PUBLIC_KEY / ATMT_LICENSE_KID overrides (for a local or
+ *     staging licensing server).
  *   - IPC: license:current / signIn / cancelSignIn / refresh / signOut /
  *     openBilling, plus the `license:status` push. No token ever crosses IPC.
  *
  * Design: docs/licensing/DESIGN.md. Server contract: docs/licensing/API.md.
  */
 import { app, ipcMain, powerMonitor, safeStorage, shell, BrowserWindow } from 'electron';
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { hostname } from 'node:os';
 import { dirname, join } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { LICENSING } from '../shared/brand';
 import type { LicenseStatus } from '../shared/license';
 import { LicenseManager, type LicenseStore, type PersistedLicense } from './licenseManager';
@@ -86,6 +88,34 @@ const fileStore: LicenseStore = {
   }
 };
 
+/**
+ * The OS's own stable machine identifier, hashed (never sent raw):
+ *   macOS    IOPlatformUUID
+ *   Windows  HKLM\SOFTWARE\Microsoft\Cryptography\MachineGuid
+ *   Linux    /etc/machine-id (or the dbus copy)
+ * Survives app reinstalls; changes on an OS reinstall or a different
+ * computer — which is exactly what "stamped to this machine" means.
+ * '' when unavailable; the manager then falls back to a random id.
+ */
+export function machineId(): string {
+  let raw = '';
+  try {
+    if (process.platform === 'darwin') {
+      const out = execFileSync('/usr/sbin/ioreg', ['-rd1', '-c', 'IOPlatformExpertDevice'], { encoding: 'utf8', timeout: 5000 });
+      raw = /"IOPlatformUUID"\s*=\s*"([^"]+)"/.exec(out)?.[1] ?? '';
+    } else if (process.platform === 'win32') {
+      const out = execFileSync('reg', ['query', 'HKLM\\SOFTWARE\\Microsoft\\Cryptography', '/v', 'MachineGuid', '/reg:64'], { encoding: 'utf8', timeout: 5000, windowsHide: true });
+      raw = /MachineGuid\s+REG_SZ\s+(\S+)/.exec(out)?.[1] ?? '';
+    } else {
+      for (const p of ['/etc/machine-id', '/var/lib/dbus/machine-id']) {
+        if (existsSync(p)) { raw = readFileSync(p, 'utf8').trim(); if (raw) break; }
+      }
+    }
+  } catch { raw = ''; }
+  if (!raw) return '';
+  return createHash('sha256').update(`atmt-labs-device:${raw.toLowerCase()}`).digest('base64url').slice(0, 32);
+}
+
 function devOverride(name: string): string | undefined {
   if (app.isPackaged) return undefined;
   const v = process.env[name];
@@ -128,17 +158,23 @@ export function initLicensing(): LicenseManager {
     verify: {
       issuer: devOverride('ATMT_LICENSE_ISSUER') ?? LICENSING.issuer,
       audience: LICENSING.audience,
-      publicKeys: devKey ? { ...LICENSING.publicKeys, dev: devKey.replace(/\\n/g, '\n') } : LICENSING.publicKeys
+      // The staging key is registered under the kid the staging server signs
+      // with (LICENSE_SIGNING_KID there); `dev` if unset.
+      publicKeys: devKey
+        ? { ...LICENSING.publicKeys, [devOverride('ATMT_LICENSE_KID') ?? 'dev']: devKey.replace(/\\n/g, '\n') }
+        : LICENSING.publicKeys
     },
     store: fileStore,
     fetch: globalThis.fetch as unknown as FetchLike,
     openExternal,
     device: { deviceName: hostname().slice(0, 64), platform: process.platform, appVersion: app.getVersion() },
+    machineId,
     newDeviceId: randomUUID
   });
   manager.onChange(broadcast);
   const status = manager.init();
   if (status.enforced) {
+    // A stamped (paid) machine makes no network call here or in tick().
     if (manager.canRefresh()) void manager.refresh();
     const timer = setInterval(() => { void manager?.tick(); }, TICK_MS);
     timer.unref?.();

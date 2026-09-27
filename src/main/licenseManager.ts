@@ -12,8 +12,13 @@
  *   handleCallback() atmtlabs://auth/callback?code&state → tokens → license
  *   refresh()        rotate refresh token → POST /v1/licenses → new license
  *   tick()           periodic: renew past half-life, re-evaluate expiry
- *   openBilling()    Stripe Checkout (trial) / Customer Portal via the API
+ *   openBilling()    Stripe Checkout (trial / one-time purchase) via the API
  *   signOut()        release the device seat, revoke, forget
+ *
+ * Once the machine holds a PERPETUAL (paid) license it is stamped for good:
+ * init/tick/refresh make no network calls at all, ever. The stamp is bound
+ * to a hardware-derived device id, so copying the license file to another
+ * computer does not carry the license with it.
  */
 import {
   buildAuthorizeUrl,
@@ -36,6 +41,7 @@ import {
 } from './licenseCore';
 import {
   evaluateClaims,
+  isPerpetual,
   shouldRefresh,
   statusAllowsAgents,
   type LicenseErrorCode,
@@ -66,6 +72,9 @@ export interface LicenseManagerDeps {
   fetch: FetchLike;
   openExternal: (url: string) => void | Promise<void>;
   device: Omit<DeviceInfo, 'deviceId'>;
+  /** Stable, hardware-derived id for this computer ('' if the OS will not say). */
+  machineId: () => string;
+  /** Fallback id when machineId() is unavailable. */
   newDeviceId: () => string;
   now?: () => number;
   setTimer?: (fn: () => void, ms: number) => { cancel(): void };
@@ -143,20 +152,32 @@ export class LicenseManager {
       return this.getStatus();
     }
     this.persisted = this.deps.store.load() ?? {};
-    if (!this.persisted.deviceId) this.save({ deviceId: this.deps.newDeviceId() });
+    // The machine, not the file, decides the device id: a license file copied
+    // from another computer carries that computer's id and fails the did check.
+    let hw = '';
+    try { hw = this.deps.machineId(); } catch { hw = ''; }
+    const deviceId = hw || this.persisted.deviceId || this.deps.newDeviceId();
+    if (deviceId !== this.persisted.deviceId) this.save({ deviceId });
     this.recompute();
     return this.getStatus();
   }
 
-  /** Whether a background refresh is worth attempting right now. */
+  /** True once this machine holds a verified, paid lifetime license. */
+  isStamped(): boolean {
+    const c = this.currentClaims();
+    return !!c && isPerpetual(c) && this.status.state === 'licensed';
+  }
+
+  /** Whether a background refresh is worth attempting right now. Never for a
+   *  stamped (paid) machine — it does not talk to the server again. */
   canRefresh(): boolean {
-    return this.status.enforced && this.status.state !== 'error' && !!this.persisted.refreshToken;
+    return this.status.enforced && this.status.state !== 'error' && !!this.persisted.refreshToken && !this.isStamped();
   }
 
   /** Periodic: renew past half-life (or when not licensed but signed in), and
    *  re-evaluate so an expiry that happened while idle is noticed. */
   async tick(): Promise<void> {
-    if (!this.status.enforced || this.status.state === 'error' || this.pending) return;
+    if (!this.status.enforced || this.status.state === 'error' || this.pending || this.isStamped()) return;
     const claims = this.currentClaims();
     const due = !claims || shouldRefresh(claims, this.now()) || this.status.state !== 'licensed';
     if (due && this.persisted.refreshToken) await this.refresh();
@@ -165,7 +186,7 @@ export class LicenseManager {
 
   /** Rotate the refresh token and fetch a new license. De-duplicated. */
   refresh(): Promise<LicenseStatus> {
-    if (!this.status.enforced) return Promise.resolve(this.getStatus());
+    if (!this.status.enforced || this.isStamped()) return Promise.resolve(this.getStatus());
     if (!this.inflight) {
       this.inflight = this.doRefresh().finally(() => { this.inflight = null; });
     }
@@ -294,8 +315,9 @@ export class LicenseManager {
   // ─── billing ──────────────────────────────────────────────────────────────
 
   /**
-   * 'checkout' → Stripe Checkout for the 7-day, card-required trial.
-   * 'portal'   → Stripe Customer Portal (card, invoices, cancel).
+   * 'checkout' → Stripe Checkout: the 7-day card trial, or the one-time
+   *              purchase when the trial is used up / the day-7 charge failed.
+   * 'portal'   → the account page (cancel trial, card, receipts, devices).
    * Signed out, or the API unreachable → the public pricing/account page.
    */
   async openBilling(kind: 'checkout' | 'portal'): Promise<{ ok: boolean; error?: LicenseErrorCode }> {

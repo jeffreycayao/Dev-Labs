@@ -79,6 +79,7 @@ part of the desktop app.
 - [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — **for customers**: license, first run, hiring, floors, connections
 - [AGENTS.md](AGENTS.md) — orientation for AI coding agents and contributors working in this repo
 - [.documentations/GO_LIVE.md](.documentations/GO_LIVE.md) — production checklist (licensing, payments, website)
+- [.documentations/HANDOFF.md](.documentations/HANDOFF.md) — where things stand and what to do next
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the main process, hive and renderer fit together
 - [DESIGN.md](DESIGN.md) · [docs/DESIGN.md](docs/DESIGN.md) — design system
 - [HIVE.md](HIVE.md) — agent coordination model

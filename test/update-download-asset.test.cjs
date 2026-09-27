@@ -10,6 +10,7 @@ const assets = [
   { name: 'ATMT-Labs-0.5.0-mac-arm64.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-mac-arm64.dmg' },
   { name: 'ATMT-Labs-0.5.0-mac-arm64.zip', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-mac-arm64.zip' },
   { name: 'ATMT-Labs-0.5.0-mac-x64.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-mac-x64.dmg' },
+  { name: 'ATMT-Labs-0.5.0-mac-universal.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-mac-universal.dmg' },
   { name: 'ATMT-Labs-0.5.0-win-x64-setup.exe', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-win-x64-setup.exe' },
   { name: 'ATMT-Labs-0.5.0-win-x64-portable.exe', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-win-x64-portable.exe' },
   { name: 'ATMT-Labs-0.5.0-linux-x86_64.AppImage', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-linux-x86_64.AppImage' },
@@ -19,6 +20,11 @@ const assets = [
 test('picks the dmg for the running mac arch, not the zip', () => {
   assert.match(pickDownloadAsset(assets, 'darwin', 'arm64'), /mac-arm64\.dmg$/);
   assert.match(pickDownloadAsset(assets, 'darwin', 'x64'), /mac-x64\.dmg$/);
+});
+test('falls back to the universal Mac DMG produced by this builder config', () => {
+  const universal = assets.filter((asset) => asset.name.includes('universal'));
+  assert.match(pickDownloadAsset(universal, 'darwin', 'arm64'), /mac-universal\.dmg$/);
+  assert.match(pickDownloadAsset(universal, 'darwin', 'x64'), /mac-universal\.dmg$/);
 });
 test('picks the installer on windows, never the portable', () => {
   assert.match(pickDownloadAsset(assets, 'win32', 'x64'), /win-x64-setup\.exe$/);

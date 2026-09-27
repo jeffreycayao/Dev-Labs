@@ -228,9 +228,12 @@ npm run codes -- revoke ATMT-XXXXX-XXXXX-XXXXX-XXXXX
 
 ## 12. App release (installers + updates)
 
-1. **Update feed.** Auto-update and the release links are off until `GITHUB_REPO` is set in `src/shared/brand.ts` and `publish:` is uncommented in `electron-builder.yml` (see `RELEASE.md`).
-   - This repo is **private**, and customers can't download from a private repo's releases.
-   - Use a **separate public releases-only repo** (installers, no source), or another update host.
+1. **Update feed.** The app points to the public, releases-only
+   `jeffreycayao/ATMT_LABS_FLOOR-releases` repository. Create it with a
+   `main` README commit, add `PUBLIC_REPO_PAT` to the private source repo,
+   and publish a mirrored release before distributing an installed build.
+   Follow `docs/RELEASE_DISTRIBUTION.md` and verify the public API and
+   packaged `app-update.yml`.
 2. **Code signing.**
    - **macOS:** a "Developer ID Application" certificate plus `APPLE_*` notarization secrets in CI.
    - **Windows:** a code-signing certificate, or SmartScreen warns every user.

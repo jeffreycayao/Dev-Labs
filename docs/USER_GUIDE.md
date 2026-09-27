@@ -101,7 +101,15 @@ Today, connectors only reach **Claude Code** agents.
 
 Details: [Privacy Policy](../PRIVACY.md) · [Telemetry](../TELEMETRY.md) · [License Agreement](../EULA.md).
 
-## 9. Troubleshooting
+## 9. Updates and What's New
+
+Packaged builds check the public ATMT Labs release feed while auto-update is
+enabled in **Settings → General**. When a newer version is ready, the update
+badge tells you; you choose when to restart and install it. **What's New**
+shows the release highlights, and **full changelog** opens the public Releases
+page. The app does not need a GitHub sign-in or token for updates.
+
+## 10. Troubleshooting
 
 | You see | Do this |
 |---|---|

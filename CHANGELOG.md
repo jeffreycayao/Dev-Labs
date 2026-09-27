@@ -22,6 +22,11 @@ All notable changes to ATMT Labs. Versions are bumped with `npm run release:<pat
 - Add pinned, hash-verified Claude Code skill installs and explicit updates with local-edit protection.
 - Fixed Ramon switching from Claude to Codex: use a supported ChatGPT sign-in model, repair the old model if a failed switch saved it, surface Codex's folder-trust prompt, detect immediate startup exits, and restart the previous engine when a switch fails (with an explicit warning if its conversation cannot resume).
 
+## v0.0.2 — 2026-09-28
+
+- Packaged app updates and What's New now use the public ATMT Labs releases repository without a GitHub credential.
+- Published private releases automatically mirror their notes, updater metadata and installers to that public repository.
+
 ## v0.0.1 — 2026-09-27
 
 - Initial ATMT Labs release: built on an MIT-licensed open-source codebase.

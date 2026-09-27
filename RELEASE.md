@@ -20,14 +20,17 @@ then runs `npm run dist` to build installers into `dist/`.
 Preview without changing anything: `node tools/bump-version.cjs auto --dry-run`.
 Bump only (no build): `npm run version:bump -- minor`.
 
-Publish: `git push --follow-tags`.
+Publish: `git push --follow-tags`. The tag workflow creates the private
+release, then mirrors its notes and assets to the public distribution
+repository. See [Public release distribution](docs/RELEASE_DISTRIBUTION.md)
+for the one-time repository and `PUBLIC_REPO_PAT` setup.
 
 Before each release, edit `build/release-notes.md` (3–5 bullets, ≤280 chars) — it is the in-app "What's new" toast.
 
-## Enabling auto-update
+## Auto-update destination
 
-Auto-update and the remote model/hero catalogs are **off** until a release repo exists:
-
-1. Set `GITHUB_REPO = 'owner/repo'` in `src/shared/brand.ts`.
-2. Uncomment `publish:` in `electron-builder.yml` with the same owner/repo.
-3. Publish GitHub releases with the installers produced by `npm run dist`.
+Packaged clients use `jeffreycayao/ATMT_LABS_FLOOR-releases` through
+`electron-builder.yml` and `src/shared/brand.ts`. The public repository
+contains release assets, not application source. Remote model and hero
+catalogs remain on bundled defaults until a separate public catalog source
+is configured.

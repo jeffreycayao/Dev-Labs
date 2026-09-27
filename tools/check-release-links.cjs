@@ -4,15 +4,14 @@
 /**
  * Release gate: every download link we advertise must actually resolve.
  *
- * WHY THIS EXISTS. RELEASE.md is published verbatim as the GitHub release body,
- * and its download table links to
+ * WHY THIS EXISTS. Installer links in the release guide and website may use
  * `/releases/latest/download/ATMT-Labs-<version>-<platform>.<ext>`. That URL
  * form requires the EXACT filename present in whichever release is currently
  * "latest", and electron-builder bakes ${version} into every artifact name — so a
  * version string left behind in RELEASE.md turns all four download links into
  * hard 404s the moment the next release ships.
  *
- * That is not hypothetical. The table sat pinned at 0.3.2 from v0.3.4 through
+ * That is not hypothetical. A table once sat pinned at 0.3.2 from v0.3.4 through
  * v0.3.7, and mac DMG downloads fell from 118 and 76 on v0.3.2/v0.3.3 to single
  * digits on every release after. Nothing failed, nothing warned; the release
  * simply stopped being installable for anyone arriving through GitHub, and the
@@ -32,9 +31,9 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 const releaseMd = fs.readFileSync(path.join(root, 'RELEASE.md'), 'utf8');
-// Where releases are published (src/shared/brand.ts). Empty = no public release
-// repo yet: RELEASE.md is then a process doc with no download table, and there
-// is nothing advertised that could go stale.
+// Where the app expects public releases (src/shared/brand.ts). RELEASE.md is a
+// release runbook, not the published release body; assets listed there are
+// checked if present, but a runbook need not carry a download table.
 const brandTs = fs.readFileSync(path.join(root, 'src/shared/brand.ts'), 'utf8');
 const releaseRepo = (/export const GITHUB_REPO = '([^']*)'/.exec(brandTs) || [])[1] || '';
 
@@ -56,7 +55,6 @@ for (const m of releaseMd.matchAll(assetRe)) {
   }
   assets.add(`ATMT-Labs-${m[1]}-${m[2]}`);
 }
-if (assets.size === 0 && releaseRepo) problems.push('RELEASE.md advertises no download assets at all — did the table move?');
 
 // — 2. source tarball tags too; a stale tag silently ships last release's source —
 for (const m of releaseMd.matchAll(/archive\/refs\/tags\/v(\d+\.\d+\.\d+)/g)) {

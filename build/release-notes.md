@@ -1,3 +1,3 @@
-- ATMT Labs is here: a rebrand of the local-first multi-agent office.
-- New warm-dark theme with the signature lime accent.
-- A Filipino team roster, led by Ramon at the head desk.
+- App updates and What's New now load from the public ATMT Labs releases feed.
+- Installers and release notes mirror automatically after publication.
+- Updating needs no GitHub sign-in or token.

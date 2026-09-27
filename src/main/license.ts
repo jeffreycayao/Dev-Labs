@@ -207,6 +207,13 @@ export function handleLicenseLink(url: string): Promise<boolean> {
   return manager.handleCallback(url);
 }
 
+/** App menu → Account: the web account page (cancel the trial, card,
+ *  receipts, computers, unlock code) or Checkout (trial / buy). Opens in the
+ *  browser; signed out, it falls back to the public page. */
+export function openAccountPage(kind: 'portal' | 'checkout'): void {
+  void (manager ?? initLicensing()).openBilling(kind);
+}
+
 export function registerLicenseIpc(): void {
   const m = () => manager ?? initLicensing();
   ipcMain.handle('license:current', () => m().getStatus());

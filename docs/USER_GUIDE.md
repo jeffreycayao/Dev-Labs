@@ -30,7 +30,7 @@ Then choose one:
 
 | Option | What happens |
 |---|---|
-| **Start 7-day free trial** | Enter a card on Stripe's secure page. **Nothing is charged for 7 days.** On day 7 your card is charged **once** for a lifetime license. Cancel before then at `auth.labs.atmt.dev/account` and you pay nothing. One trial per person and per card. |
+| **Start 7-day free trial** | Enter a card on Stripe's secure page. **Nothing is charged for 7 days.** On day 7 your card is charged **once** for a lifetime license. Cancel before then with **Account → Cancel Free Trial…** in the app menu (or at `auth.labs.atmt.dev/account`) and you pay nothing. One trial per person and per card. |
 | **Buy lifetime license** | Pay once. No subscription, no renewals. |
 | **Have an unlock code?** | Click it on the sign-in screen (after signing in), paste the code (`ATMT-XXXXX-XXXXX-XXXXX-XXXXX`) and press **redeem**. You get a free lifetime license. Each code works once. If you got a link like `auth.labs.atmt.dev/redeem?code=…`, open it, sign in, and press **Redeem code**. |
 

@@ -43,6 +43,8 @@ export interface Config {
     priceId: string;
   };
   cronSecret: string;
+  /** Who may open /admin (unlock codes). Google sign-in only; see app.ts. */
+  adminEmails: string[];
   trialDays: number;
   maxDevices: number;
 }
@@ -128,6 +130,8 @@ export function loadConfig(env: Env = process.env): Config {
       priceId: req(env, 'STRIPE_PRICE_ID')
     },
     cronSecret: req(env, 'CRON_SECRET', 16),
+    adminEmails: (env.ADMIN_EMAILS?.trim() || 'jeffreycayao@gmail.com')
+      .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
     trialDays: int(env, 'TRIAL_DAYS', 7, 1, 30),
     maxDevices: int(env, 'MAX_DEVICES', 3, 1, 100)
   };

@@ -58,6 +58,9 @@ Refresh tokens:
 | `POST /account/trial` · `/account/buy` · `/account/billing` · `/account/trial/cancel` · `/account/devices/:id/remove` · `/logout` | Account forms: Origin checked and SameSite=Lax |
 | `GET /start?plan=trial\|buy` | Funnel entry for the landing page's CTA buttons |
 | `GET /redeem?code=` | Shareable voucher link: sign in (sign-up screen), then the account page with the code pre-filled. **Never redeems on GET** (link previews would spend it). |
+| `GET /admin` | Owner-only unlock-code page. Signed-out → login. Allowed only for `ADMIN_EMAILS` with a Google session under 12 h old (otherwise → `/login/google?next=/admin`); anyone else gets `404`. `noindex`. |
+| `POST /admin/codes` (`count` 1–500, `label`, `expires=YYYY-MM-DD`) | Mint codes. Renders them once in the response (never in a URL). Origin checked. |
+| `POST /admin/codes/revoke` (`code=` or `hash=`) | Revoke an unused code. Redirects to `/admin?notice=…`. Origin checked. |
 | `POST /account/redeem` (`code=`) | Redeem an unlock code from the account page. Origin checked. Redirects to `/account?notice=…` (`ok=1` on success). |
 
 Account pages use `Referrer-Policy: same-origin`: browser form posts include the real Origin for the account CSRF check, while links to other sites send no referrer.

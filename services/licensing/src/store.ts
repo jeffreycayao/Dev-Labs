@@ -27,6 +27,19 @@ export interface LicenseRow {
   amount: number | null;
   currency: string | null;
   failure_reason: string | null;
+  /** How an 'active' license was obtained. */
+  source: 'stripe' | 'unlock_code' | null;
+}
+
+export interface UnlockCodeRow {
+  code_hash: string;
+  label: string | null;
+  created_at: Date;
+  expires_at: Date | null;
+  revoked_at: Date | null;
+  redeemed_by: string | null;
+  redeemed_at: Date | null;
+  redeemed_email?: string | null;
 }
 
 export interface DeviceRow {
@@ -40,7 +53,7 @@ export interface DeviceRow {
 
 const LICENSE_COLUMNS = new Set([
   'status', 'stripe_customer_id', 'payment_method_id', 'trial_started_at', 'trial_end',
-  'paid_at', 'payment_intent_id', 'amount', 'currency', 'failure_reason'
+  'paid_at', 'payment_intent_id', 'amount', 'currency', 'failure_reason', 'source'
 ]);
 
 function toDate(v: unknown): Date | null {
@@ -60,7 +73,8 @@ function licenseFrom(r: Record<string, any>): LicenseRow {
     payment_intent_id: r.payment_intent_id ?? null,
     amount: r.amount ?? null,
     currency: r.currency ?? null,
-    failure_reason: r.failure_reason ?? null
+    failure_reason: r.failure_reason ?? null,
+    source: r.source ?? null
   };
 }
 
@@ -274,6 +288,65 @@ export class Store {
 
   async deleteSession(tokenHash: string): Promise<void> {
     await this.q(`DELETE FROM web_sessions WHERE token_hash = $1`, [tokenHash]);
+  }
+
+  // ─── unlock codes ───────────────────────────────────────────────────────
+
+  async createUnlockCodes(hashes: string[], label: string | null, expiresAt: Date | null): Promise<void> {
+    for (const h of hashes) {
+      await this.q(`INSERT INTO unlock_codes (code_hash, label, expires_at) VALUES ($1, $2, $3)`, [h, label, expiresAt]);
+    }
+  }
+
+  /**
+   * Spend a code and grant the lifetime license in ONE statement, so the two
+   * can't come apart: the code is only spent when the account is not already
+   * licensed, and the license only changes when the code was spent. Two people
+   * racing for the same code: the row lock lets exactly one through.
+   * Returns the new license, or null (the caller asks `unlockCodeState` why).
+   */
+  async redeemUnlockCode(accountId: string, codeHash: string, now: Date): Promise<LicenseRow | null> {
+    await this.license(accountId); // make sure the row exists
+    const rows = await this.q(
+      `WITH eligible AS (
+         SELECT 1 FROM licenses WHERE account_id = $2 AND status <> 'active'
+       ), spent AS (
+         UPDATE unlock_codes SET redeemed_by = $2, redeemed_at = $3
+         WHERE code_hash = $1 AND redeemed_at IS NULL AND revoked_at IS NULL
+           AND (expires_at IS NULL OR expires_at > $3)
+           AND EXISTS (SELECT 1 FROM eligible)
+         RETURNING code_hash
+       )
+       UPDATE licenses SET status = 'active', source = 'unlock_code', paid_at = $3,
+         amount = 0, currency = NULL, failure_reason = NULL, updated_at = now()
+       WHERE account_id = $2 AND status <> 'active' AND EXISTS (SELECT 1 FROM spent)
+       RETURNING *`,
+      [codeHash, accountId, now]
+    );
+    return rows[0] ? licenseFrom(rows[0]) : null;
+  }
+
+  async unlockCode(codeHash: string): Promise<UnlockCodeRow | null> {
+    const rows = await this.q(`SELECT * FROM unlock_codes WHERE code_hash = $1`, [codeHash]);
+    return (rows[0] as UnlockCodeRow) ?? null;
+  }
+
+  async listUnlockCodes(limit = 500): Promise<UnlockCodeRow[]> {
+    return (await this.q(
+      `SELECT c.*, a.email AS redeemed_email FROM unlock_codes c
+       LEFT JOIN accounts a ON a.id = c.redeemed_by
+       ORDER BY c.created_at DESC LIMIT $1`,
+      [limit]
+    )) as UnlockCodeRow[];
+  }
+
+  /** Void an unused code. False when it was already used (or doesn't exist). */
+  async revokeUnlockCode(codeHash: string): Promise<boolean> {
+    const rows = await this.q(
+      `UPDATE unlock_codes SET revoked_at = now() WHERE code_hash = $1 AND redeemed_at IS NULL AND revoked_at IS NULL RETURNING code_hash`,
+      [codeHash]
+    );
+    return rows.length === 1;
   }
 
   // ─── stripe ─────────────────────────────────────────────────────────────

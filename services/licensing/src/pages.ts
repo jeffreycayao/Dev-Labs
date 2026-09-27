@@ -29,6 +29,9 @@ h1{font-size:20px;margin:0 0 6px}p{margin:8px 0;color:var(--muted)}
 .row form{margin:0}.row .btn{width:auto;margin:0;padding:6px 10px;font-size:13px}
 .tag{display:inline-block;padding:2px 8px;border:1px solid var(--accent);color:var(--accent);font-size:12px}
 .err{border:1px solid var(--danger);color:var(--danger);padding:8px 10px;margin:10px 0}
+.ok{border:1px solid var(--accent);color:var(--ink);padding:8px 10px;margin:10px 0}
+input{width:100%;padding:11px 12px;margin:10px 0 0;border:1px solid var(--line);background:transparent;color:var(--ink);font:15px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em}
+details{margin-top:14px}summary{cursor:pointer;color:var(--muted)}
 small{color:var(--muted)}`;
 
 function page(title: string, body: string, extraHead = ''): string {
@@ -37,7 +40,12 @@ function page(title: string, body: string, extraHead = ''): string {
 <body><main><div class="brand">ATMT LABS</div>${body}</main></body></html>`;
 }
 
-export function loginPage(o: { providers: { id: string; label: string }[]; next: string; signup: boolean; error?: string }): string {
+/** Legal pages live on the marketing site (labs.atmt.dev). */
+function legal(site: string): string {
+  return `<p><small>By continuing you agree to the <a href="${esc(site)}/terms" style="color:inherit">ATMT Labs License Agreement</a> and <a href="${esc(site)}/privacy" style="color:inherit">Privacy Policy</a>.</small></p>`;
+}
+
+export function loginPage(o: { providers: { id: string; label: string }[]; next: string; signup: boolean; error?: string; site?: string }): string {
   const buttons = o.providers
     .map((p, i) => `<a class="btn${i === 0 ? ' primary' : ''}" href="/login/${esc(p.id)}?next=${encodeURIComponent(o.next)}">Continue with ${esc(p.label)}</a>`)
     .join('');
@@ -48,7 +56,7 @@ export function loginPage(o: { providers: { id: string; label: string }[]; next:
       : 'Use the same email you bought ATMT Labs with.'}</p>
 ${o.error ? `<div class="err">${esc(o.error)}</div>` : ''}
 ${buttons}
-<p><small>By continuing you agree to the ATMT Labs terms of service.</small></p>`);
+${legal(o.site ?? 'https://labs.atmt.dev')}`);
 }
 
 /** The desktop hand-off. Browsers may ask before opening the app, so there
@@ -78,14 +86,20 @@ export function accountPage(o: {
   trialDays: number;
   canTrial: boolean;
   notice?: string;
+  /** The notice is a success message. */
+  ok?: boolean;
+  /** Pre-filled unlock code (from a /redeem?code= link). */
+  code?: string;
 }): string {
   const l = o.license;
   let status = '';
   let actions = '';
   switch (l.status) {
     case 'active':
-      status = `<span class="tag">Lifetime license</span><p>Paid ${esc(fmtDate(l.paid_at))}. No renewals, no subscription.</p>`;
-      actions = `<form method="post" action="/account/billing"><button class="btn">Receipts &amp; payment details</button></form>`;
+      status = l.source === 'unlock_code'
+        ? `<span class="tag">Lifetime license</span><p>Unlocked with a code on ${esc(fmtDate(l.paid_at))}. No renewals, no subscription.</p>`
+        : `<span class="tag">Lifetime license</span><p>Paid ${esc(fmtDate(l.paid_at))}. No renewals, no subscription.</p>`;
+      actions = l.source === 'unlock_code' ? '' : `<form method="post" action="/account/billing"><button class="btn">Receipts &amp; payment details</button></form>`;
       break;
     case 'trialing':
       status = `<span class="tag">Free trial</span><p>Ends ${esc(fmtDate(l.trial_end))}. On that day your card is charged <strong>${esc(o.price)}</strong> once and the license becomes yours for good.</p>`;
@@ -108,11 +122,22 @@ export function accountPage(o: {
     ? o.devices.map((d) => `<div class="row"><div>${esc(d.name || 'Computer')}<br><small>${esc(d.platform || '')} · last seen ${esc(fmtDate(d.last_seen))}</small></div>
 <form method="post" action="/account/devices/${encodeURIComponent(d.device_id)}/remove"><button class="btn">Remove</button></form></div>`).join('')
     : '<p><small>No computers yet. Sign in from the ATMT Labs app.</small></p>';
+  // Anyone not yet licensed can redeem a voucher instead of paying. Open by
+  // default when the code came in on a /redeem link.
+  const redeem = l.status === 'active' ? '' : `
+<details${o.code ? ' open' : ''}><summary>Have an unlock code?</summary>
+<form method="post" action="/account/redeem">
+<input name="code" value="${esc(o.code ?? '')}" placeholder="ATMT-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false" maxlength="64" required>
+<button class="btn primary">Redeem code</button>
+</form>
+<p><small>An unlock code gives this account a free lifetime license. Each code works once.${l.status === 'trialing' ? ' Your trial ends and your card is not charged.' : ''}</small></p>
+</details>`;
   return page('Your account', `
 <h1>${esc(o.account.email)}</h1>
-${o.notice ? `<div class="err">${esc(o.notice)}</div>` : ''}
+${o.notice ? `<div class="${o.ok ? 'ok' : 'err'}">${esc(o.notice)}</div>` : ''}
 ${status}
 ${actions}
+${redeem}
 <h1 style="margin-top:22px;font-size:16px">Computers (${o.devices.length}/${o.maxDevices})</h1>
 ${devices}
 <form method="post" action="/logout"><button class="btn">Sign out</button></form>`);

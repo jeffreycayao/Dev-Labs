@@ -17,6 +17,9 @@ Server contract: [API.md](./API.md). Setup runbook:
   server again** on that machine: no renewals, no online checks, works offline forever.
 - **Device cap:** `MAX_DEVICES` machines per license (default 3). New machines
   sign in with the same email.
+- **Unlock codes.** The owner can give a free lifetime license with a
+  single-use code, without Stripe. It works exactly like a paid license
+  (perpetual, stamped), just `source = unlock_code` and amount 0.
 
 ## 2. Domains
 
@@ -56,8 +59,21 @@ none ──trial checkout──▶ trialing ──day 7 charge ok──▶ activ
   │                        │  └─day 7 charge fails / 3DS─▶ payment_required ──pay──▶ active
   │                        └─cancel before day 7─▶ canceled ──buy──▶ active
   └──────────────buy now──────────────────────────────────────────▶ active
-active ──full refund / dispute──▶ refunded
+active ──full refund / dispute──▶ refunded   (never for source = unlock_code)
+none | trialing | payment_required | canceled | refunded ──unlock code──▶ active (perpetual)
 ```
+
+**Unlock codes** (`src/codes.ts`, `unlock_codes` table):
+- Only the SHA-256 of the normalized code is stored.
+- Redeeming is **one SQL statement**. It spends the code and grants the license together, only if the account isn't already `active`. So a code can't be burned on a licensed account, and two people can't both win the same code (the row lock lets one through).
+- Codes may expire (`expires_at`) and can be revoked before use.
+- Owner CLI: `npm run codes -- create|list|revoke` in `services/licensing`.
+
+Why not a Stripe 100%-off promotion code? Stripe Checkout does support them for one-time payments ("no-cost orders", no card collected). This service doesn't use them because:
+- the buy Checkout isn't created with `allow_promotion_codes`;
+- a free session completes without a PaymentIntent, and `onCheckoutCompleted` only grants on `payment_status = paid`.
+
+Unlock codes also work from inside the app, need no Stripe customer, can be revoked before use, and are single-use by construction.
 
 - **Day-7 charge:** an off-session PaymentIntent for the one-time price.
   - It's triggered by a **daily Vercel Cron** (01:00 UTC), and also immediately
@@ -127,8 +143,8 @@ That's a change to your "never check" rule, so it's not built.
 
 | Where | What |
 |---|---|
-| `services/licensing/` | The Vercel service (Hono): `src/app.ts` routes, `src/billing.ts` Stripe, `src/oidc.ts` Google/Yahoo, `src/store.ts` SQL, `src/tokens.ts` signing, `db/schema.sql` |
-| `services/licensing/test/` | 25 end-to-end tests on real SQL (PGlite) with fake Stripe and fake IdPs |
+| `services/licensing/` | The Vercel service (Hono): `src/app.ts` routes, `src/billing.ts` Stripe + code redemption, `src/codes.ts` unlock codes, `src/oidc.ts` Google/Yahoo, `src/store.ts` SQL, `src/tokens.ts` signing, `db/schema.sql`, `scripts/codes.ts` owner CLI |
+| `services/licensing/test/` | 35 end-to-end tests on real SQL (PGlite) with fake Stripe and fake IdPs |
 | `src/shared/brand.ts` → `LICENSING` | Origins, client ID, public keys, the `enabled` switch |
 | `src/shared/license.ts` | Shared types and the entitlement decision (perpetual handling) |
 | `src/main/licenseCore.ts` | PKCE, callback parsing, EdDSA verification, HTTP client |

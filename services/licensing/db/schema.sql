@@ -95,3 +95,19 @@ CREATE TABLE IF NOT EXISTS stripe_events (
   event_id     text PRIMARY KEY,
   received_at  timestamptz NOT NULL DEFAULT now()
 );
+
+-- How an 'active' license was obtained: 'stripe' (paid) or 'unlock_code' (free voucher).
+ALTER TABLE licenses ADD COLUMN IF NOT EXISTS source text;
+
+-- Single-use unlock codes (free lifetime license). Hash only; see src/codes.ts.
+-- Minted with `npm run codes -- create`. A code is spent atomically together
+-- with the license change, and never on an account that is already licensed.
+CREATE TABLE IF NOT EXISTS unlock_codes (
+  code_hash    text PRIMARY KEY,
+  label        text,                           -- who/what it was for, e.g. "Beta tester: Ana"
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  expires_at   timestamptz,                    -- NULL = never
+  revoked_at   timestamptz,                    -- voided before use
+  redeemed_by  text REFERENCES accounts(id) ON DELETE SET NULL,
+  redeemed_at  timestamptz
+);

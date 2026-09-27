@@ -23,6 +23,7 @@
 import {
   buildAuthorizeUrl,
   createBillingSession,
+  redeemUnlockCode,
   createPkce,
   exchangeCode,
   fetchLicense,
@@ -358,6 +359,29 @@ export class LicenseManager {
       }, CHECKOUT_POLL_MS);
     };
     step();
+  }
+
+  // ─── unlock codes ─────────────────────────────────────────────────────────
+
+  /** Redeem a voucher, then pull the (now perpetual) license so this machine
+   *  is stamped right away. Errors come back for the code field, not the gate. */
+  async redeemCode(code: string): Promise<{ ok: boolean; error?: LicenseErrorCode }> {
+    if (!this.status.enforced) return { ok: false, error: 'misconfigured' };
+    if (!this.persisted.refreshToken) return { ok: false, error: 'session_expired' };
+    try {
+      await this.withAccess((access) => redeemUnlockCode(this.deps.fetch, this.deps.endpoints, access, code));
+    } catch (e) {
+      const c = e instanceof LicenseApiError ? e.code : 'server_error';
+      if (c === 'session_expired') this.handleError(e);
+      return { ok: false, error: c === 'unauthorized' ? 'session_expired' : c };
+    }
+    try {
+      await this.pullLicense();
+      this.recompute();
+    } catch (e) {
+      this.handleError(e);
+    }
+    return { ok: true };
   }
 
   // ─── sign out ─────────────────────────────────────────────────────────────

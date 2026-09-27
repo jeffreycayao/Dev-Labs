@@ -7,7 +7,7 @@ document is the complete, authoritative
 contract: **if an event or property is not listed here, the app does not send
 it.** The implementation lives in [`src/main/analytics.ts`](src/main/analytics.ts)
 and enforces this list as a hard allowlist — the code and this file are kept in
-lockstep, and because the repo is open source you can verify that yourself.
+lockstep.
 
 ## What is sent
 
@@ -98,9 +98,9 @@ Any one of these fully disables telemetry:
    anonymous usage stats" during onboarding). Takes effect immediately.
 2. Set the standard [`DO_NOT_TRACK`](https://consoledonottrack.com)
    environment variable (any value other than `0`). Respected unconditionally.
-3. **Build from source.** The PostHog key is injected only in official release
-   CI; a local or forked build compiles without one and the analytics module
-   is a no-op — forks never send events anywhere.
+3. **Unofficial builds send nothing.** The PostHog key is injected only in
+   official release CI; any other build compiles without one and the analytics
+   module is a no-op.
 
 ## Self-hosting note
 

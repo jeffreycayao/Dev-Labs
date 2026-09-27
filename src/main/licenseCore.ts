@@ -253,6 +253,9 @@ async function call(
     // token endpoint says invalid_grant; that is the one "you are signed out".
     if (err === 'invalid_grant') throw new LicenseApiError('session_expired', res.status);
     if (err === 'device_limit') throw new LicenseApiError('device_limit', res.status);
+    if (err === 'code_invalid' || err === 'code_used' || err === 'code_expired' || err === 'already_licensed') {
+      throw new LicenseApiError(err, res.status);
+    }
     if (res.status === 401) throw new LicenseApiError('unauthorized', res.status);
     throw new LicenseApiError('server_error', res.status);
   }
@@ -376,6 +379,17 @@ export async function createBillingSession(
   const url = obj.url;
   if (!isStr(url) || !isAllowedBillingUrl(url)) throw new LicenseApiError('server_error');
   return url;
+}
+
+/** Redeem a single-use unlock code for this account (free lifetime license). */
+export async function redeemUnlockCode(
+  fetchImpl: FetchLike, ep: LicensingEndpoints, accessToken: string, code: string
+): Promise<void> {
+  await call(fetchImpl, new URL('/v1/redeem', ep.apiOrigin).toString(), {
+    method: 'POST',
+    headers: bearer(accessToken),
+    body: JSON.stringify({ code: code.trim().slice(0, 64) })
+  });
 }
 
 export function isAllowedBillingUrl(url: string): boolean {

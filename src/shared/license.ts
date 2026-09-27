@@ -92,7 +92,12 @@ export type LicenseErrorCode =
   | 'device_mismatch'
   | 'invalid_token'
   | 'clock_rollback'
-  | 'misconfigured';
+  | 'misconfigured'
+  // Unlock-code redemption (shown inline next to the code field).
+  | 'code_invalid'
+  | 'code_used'
+  | 'code_expired'
+  | 'already_licensed';
 
 export interface LicenseStatus {
   /** True when this build blocks agents until state === 'licensed'. */

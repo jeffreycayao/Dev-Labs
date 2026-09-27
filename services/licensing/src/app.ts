@@ -14,6 +14,7 @@ import type { Config, ProviderId } from './config.js';
 import { Billing, type StripeLike } from './billing.js';
 import { Oidc } from './oidc.js';
 import { PAGE_HEADERS, accountPage, loginPage, messagePage, returnToAppPage } from './pages.js';
+import { REDEEM_MESSAGES } from './codes.js';
 import type { AccountRow, Store } from './store.js';
 import {
   CODE_TTL_MS, REFRESH_TTL_MS, SESSION_TTL_MS, ACCESS_TTL_S,
@@ -47,7 +48,7 @@ function oauthJson(c: Context, body: object, status = 200) {
 /** Only same-site relative paths we actually serve after login. */
 function safeNext(next: string | undefined): string {
   if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return '/account';
-  return /^\/(oauth\/continue|account|start)(\?|$|\/)/.test(next) ? next : '/account';
+  return /^\/(oauth\/continue|account|start|redeem)(\?|$|\/)/.test(next) ? next : '/account';
 }
 
 export function createApp(deps: AppDeps): Hono {
@@ -137,7 +138,7 @@ export function createApp(deps: AppDeps): Hono {
     const acct = await sessionAccount(c);
     if (acct) return issueCodeAndReturn(c, acct.id, flow);
     await writeFlow(c, AUTHZ_COOKIE, flow);
-    return html(c, loginPage({ providers: cfg.providers, next: '/oauth/continue', signup: q.screen_hint === 'signup' }));
+    return html(c, loginPage({ site: cfg.siteOrigin, providers: cfg.providers, next: '/oauth/continue', signup: q.screen_hint === 'signup' }));
   });
 
   app.get('/oauth/continue', async (c) => {
@@ -188,6 +189,7 @@ export function createApp(deps: AppDeps): Hono {
 
   // ─── upstream sign-in (Google / Yahoo) ──────────────────────────────────
   app.get('/login', (c) => html(c, loginPage({
+    site: cfg.siteOrigin,
     providers: cfg.providers,
     next: safeNext(c.req.query('next')),
     signup: c.req.query('signup') === '1'
@@ -216,10 +218,10 @@ export function createApp(deps: AppDeps): Hono {
     const q = c.req.query();
     deleteCookie(c, IDP_COOKIE, cookieOpts);
     if (!flow || !p || flow.provider !== p.id || !q.state || q.state !== flow.state) {
-      return html(c, loginPage({ providers: cfg.providers, next: flow?.next ?? '/account', signup: false, error: 'That sign-in expired. Please try again.' }), 400);
+      return html(c, loginPage({ site: cfg.siteOrigin, providers: cfg.providers, next: flow?.next ?? '/account', signup: false, error: 'That sign-in expired. Please try again.' }), 400);
     }
     if (q.error || !q.code) {
-      return html(c, loginPage({ providers: cfg.providers, next: flow.next, signup: false, error: 'Sign-in was cancelled.' }), 400);
+      return html(c, loginPage({ site: cfg.siteOrigin, providers: cfg.providers, next: flow.next, signup: false, error: 'Sign-in was cancelled.' }), 400);
     }
     let who;
     try {
@@ -229,7 +231,7 @@ export function createApp(deps: AppDeps): Hono {
       const msg = /email/.test((e as Error).message)
         ? `${p.label} did not share a verified email address, which your license is tied to.`
         : 'Sign-in failed. Please try again.';
-      return html(c, loginPage({ providers: cfg.providers, next: flow.next, signup: false, error: msg }), 400);
+      return html(c, loginPage({ site: cfg.siteOrigin, providers: cfg.providers, next: flow.next, signup: false, error: msg }), 400);
     }
     const acct = await store.signIn(p.id, who.subject, who.email, who.name);
     const token = randomToken();
@@ -249,14 +251,29 @@ export function createApp(deps: AppDeps): Hono {
   // ─── account (web) ──────────────────────────────────────────────────────
   app.get('/', (c) => c.redirect('/account', 302));
 
-  app.get('/account', async (c) => {
-    const acct = await sessionAccount(c);
-    if (!acct) return c.redirect('/login?next=/account', 302);
+  async function renderAccount(c: Context, acct: AccountRow, extra: { code?: string } = {}) {
     const [license, devices, price] = await Promise.all([store.license(acct.id), store.devices(acct.id), billing.priceInfo()]);
     return html(c, accountPage({
       account: acct, license, devices, maxDevices: cfg.maxDevices, price: price.label,
-      trialDays: cfg.trialDays, canTrial: billing.canTrial(license), notice: c.req.query('notice')?.slice(0, 200)
+      trialDays: cfg.trialDays, canTrial: billing.canTrial(license),
+      notice: c.req.query('notice')?.slice(0, 200), ok: c.req.query('ok') === '1', code: extra.code
     }));
+  }
+
+  app.get('/account', async (c) => {
+    const acct = await sessionAccount(c);
+    if (!acct) return c.redirect('/login?next=/account', 302);
+    return renderAccount(c, acct);
+  });
+
+  /** Shareable voucher link: /redeem?code=ATMT-… — sign in, then the account
+   *  page with the code filled in. Never redeems on GET (link previews and
+   *  prefetchers would spend it); the user presses the button. */
+  app.get('/redeem', async (c) => {
+    const code = (c.req.query('code') ?? '').slice(0, 64);
+    const acct = await sessionAccount(c);
+    if (!acct) return c.redirect(`/login?signup=1&next=${encodeURIComponent(`/redeem?code=${code}`)}`, 302);
+    return renderAccount(c, acct, { code });
   });
 
   /** Web funnel entry from labs.atmt.dev: /start?plan=trial|buy */
@@ -280,6 +297,12 @@ export function createApp(deps: AppDeps): Hono {
   app.post('/account/trial/cancel', accountPost(async (c, a) => {
     await billing.cancelTrial(a.id);
     return c.redirect('/account', 303);
+  }));
+  app.post('/account/redeem', accountPost(async (c, a) => {
+    const f = (await c.req.parseBody()) as Record<string, string>;
+    const r = await billing.redeemUnlockCode(a.id, String(f.code ?? ''));
+    const notice = r.ok ? 'Code accepted. Your lifetime license is active.' : REDEEM_MESSAGES[r.error];
+    return c.redirect(`/account?${r.ok ? 'ok=1&' : ''}notice=${encodeURIComponent(notice)}`, 303);
   }));
   app.post('/account/devices/:id/remove', accountPost(async (c, a) => {
     await store.releaseDevice(a.id, c.req.param('id') ?? '');
@@ -319,6 +342,15 @@ export function createApp(deps: AppDeps): Hono {
     }
     const token = await mintLicense(cfg, { accountId: acct.id, email: acct.email, name: acct.name, deviceId }, license, now());
     return c.json({ license: token }, 200, { 'cache-control': 'no-store' });
+  });
+
+  app.post('/v1/redeem', async (c) => {
+    const acct = await bearerAccount(c);
+    if (!acct) return c.json({ error: 'invalid_token' }, 401);
+    const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+    const r = await billing.redeemUnlockCode(acct.id, typeof body.code === 'string' ? body.code : '');
+    if (!r.ok) return c.json({ error: r.error }, r.error === 'code_invalid' ? 400 : 409);
+    return c.json({ ok: true, status: r.license.status }, 200, { 'cache-control': 'no-store' });
   });
 
   app.delete('/v1/devices/:id', async (c) => {

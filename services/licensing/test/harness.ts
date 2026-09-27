@@ -87,7 +87,8 @@ export async function harness(env: Record<string, string> = {}) {
     sessions: [] as any[],
     paymentIntents: [] as { params: any; opts: any }[],
     customers: [] as any[],
-    customerUpdates: [] as any[]
+    customerUpdates: [] as any[],
+    cancelled: [] as string[]
   };
   const stripeState = {
     setupIntents: new Map<string, { pm: string; fingerprint: string }>(),
@@ -108,6 +109,7 @@ export async function harness(env: Record<string, string> = {}) {
       }
     },
     paymentIntents: {
+      cancel: async (id: string) => { stripeLog.cancelled.push(id); return { id, status: 'canceled' }; },
       create: async (params: any, opts: any) => {
         stripeLog.paymentIntents.push({ params, opts });
         if (stripeState.nextCharge === 'network') throw new Error('ECONNRESET');

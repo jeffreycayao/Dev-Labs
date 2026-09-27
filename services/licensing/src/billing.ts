@@ -15,12 +15,13 @@
 import type Stripe from 'stripe';
 import type { Config } from './config.js';
 import type { AccountRow, LicenseRow, Store } from './store.js';
+import { hashUnlockCode, normalizeUnlockCode, type RedeemError } from './codes.js';
 
 export type StripeLike = {
   customers: Pick<Stripe['customers'], 'create' | 'update'>;
   checkout: { sessions: Pick<Stripe['checkout']['sessions'], 'create'> };
   setupIntents: Pick<Stripe['setupIntents'], 'retrieve'>;
-  paymentIntents: Pick<Stripe['paymentIntents'], 'create'>;
+  paymentIntents: Pick<Stripe['paymentIntents'], 'create' | 'cancel'>;
   prices: Pick<Stripe['prices'], 'retrieve'>;
   charges: Pick<Stripe['charges'], 'retrieve'>;
   billingPortal: { sessions: Pick<Stripe['billingPortal']['sessions'], 'create'> };
@@ -150,8 +151,36 @@ export class Billing {
       payment_intent_id: p.paymentIntentId,
       amount: p.amount,
       currency: p.currency,
-      failure_reason: null
+      failure_reason: null,
+      source: 'stripe'
     });
+  }
+
+  /**
+   * Redeem a single-use unlock code: a free lifetime license, no card. A trial
+   * in progress simply ends (the day-7 charge only runs on 'trialing'). A
+   * day-7 charge still waiting for 3-D Secure is cancelled so the customer
+   * can't be charged afterwards by completing it.
+   */
+  async redeemUnlockCode(accountId: string, rawCode: string): Promise<{ ok: true; license: LicenseRow } | { ok: false; error: RedeemError }> {
+    const normalized = normalizeUnlockCode(rawCode);
+    if (!normalized) return { ok: false, error: 'code_invalid' };
+    const hash = hashUnlockCode(normalized);
+    const before = await this.store.license(accountId);
+    if (before.status === 'active') return { ok: false, error: 'already_licensed' };
+    const at = new Date(this.now());
+    const license = await this.store.redeemUnlockCode(accountId, hash, at);
+    if (!license) {
+      const row = await this.store.unlockCode(hash);
+      if (!row || row.revoked_at) return { ok: false, error: 'code_invalid' };
+      if (row.redeemed_at) return { ok: false, error: row.redeemed_by === accountId ? 'already_licensed' : 'code_used' };
+      if (row.expires_at && new Date(row.expires_at).getTime() <= at.getTime()) return { ok: false, error: 'code_expired' };
+      return { ok: false, error: 'already_licensed' };
+    }
+    if (before.status === 'payment_required' && before.payment_intent_id) {
+      try { await this.stripe.paymentIntents.cancel(before.payment_intent_id); } catch { /* already final */ }
+    }
+    return { ok: true, license };
   }
 
   /**
@@ -264,7 +293,8 @@ export class Billing {
     const id = typeof customer === 'string' ? customer : customer?.id;
     if (!id) return;
     const l = await this.store.licenseByCustomer(id);
-    if (l) await this.store.transition(l.account_id, ['active'], { status: 'refunded' });
+    // A license later granted by an unlock code isn't the one being refunded.
+    if (l && l.source !== 'unlock_code') await this.store.transition(l.account_id, ['active'], { status: 'refunded' });
   }
 
   private async onCheckoutCompleted(s: Stripe.Checkout.Session): Promise<void> {

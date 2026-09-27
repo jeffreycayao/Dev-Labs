@@ -106,6 +106,15 @@ These overrides are ignored in packaged builds.
 
 ## Operations
 
+- **Unlock codes (free lifetime licenses).** Run these on your computer, with `DATABASE_URL` in `.env.local`:
+  ```bash
+  npm run codes -- create --count 5 --label "Beta testers" [--expires 2026-12-31]
+  npm run codes -- list      # who used which code, and when
+  npm run codes -- revoke ATMT-XXXXX-XXXXX-XXXXX-XXXXX
+  ```
+  - Each code is printed **once**, with a ready-to-send link (`https://auth.labs.atmt.dev/redeem?code=…`). Only a hash is stored, so a lost code can't be recovered; revoke it and make a new one.
+  - Before first use, run `npm run db:migrate` once to create the `unlock_codes` table. It's safe to re-run.
+
 - **Daily cron (01:00 UTC)** charges trials that reached day 7. The app also triggers the charge itself when it renews after day 7, so most customers are charged at the moment the trial ends. On Vercel Pro you can make the cron hourly in `vercel.json`.
 - **Refund:** refund in Stripe. The webhook marks the license `refunded` (see DESIGN.md §6 for what that can and can't do).
 - **Rate limits:** add Vercel Firewall rules for `/oauth/token` and `/login/*` if you see abuse.

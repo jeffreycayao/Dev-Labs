@@ -7,8 +7,10 @@ LimeZu, licensed separately under the LimeZu Complete Version license, which
 permits editing and use in commercial and non-commercial projects and REQUIRES
 credit to LimeZu (https://limezu.itch.io/).
 
-The Office cast sprites are not LimeZu art -- they are drawn procedurally in
-src/renderer/src/scene/office/portraitArt.ts and are covered by the MIT License
-like the rest of the source.
+The office cast sprites are not LimeZu art -- they are drawn procedurally in
+src/renderer/src/scene/office/portraitArt.ts and are covered by the same terms
+as the rest of the source: the proprietary LICENSE, together with the MIT
+notice in THIRD_PARTY_NOTICES.md for any portion derived from the open-source
+foundation.
 
 See src/renderer/src/assets/ATTRIBUTION.md for details.

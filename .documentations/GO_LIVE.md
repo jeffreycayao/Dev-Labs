@@ -31,6 +31,9 @@ which git ignores. **Never commit it.**
 | 7 | Turn licensing on in the app | ~5 min + release | Claude can do it once you send the public key |
 | 8 | Landing page buttons + `/welcome` page | varies | You |
 | 9 | End-to-end test, then switch Stripe to live | ~30 min | You |
+| 10 | Legal: finalize EULA + Privacy Policy, publish on the site | varies | You + a lawyer |
+| 11 | (Optional) Mint unlock codes for free users | ~2 min | You |
+| 12 | App release: signing, update feed, downloads | varies | You (+ Claude for config) |
 
 ---
 
@@ -151,6 +154,16 @@ and <https://auth.labs.atmt.dev/login> should show the sign-in page.
 
 ## 8. Landing page (labs.atmt.dev)
 
+The app and the licensing service link to these pages. **Each one must exist before launch:**
+
+| Page | Who links to it | What it needs |
+|---|---|---|
+| `/` | Everything | Product, price, CTA buttons (below), download section |
+| `/welcome?trial=1` · `/welcome?paid=1` | Stripe Checkout success | "You're in" + download links for macOS / Windows / Linux |
+| `/pricing` | The app, when signed out or offline | Price, trial terms ("card required, charged once on day 7"), the two CTA buttons |
+| `/terms` | Sign-in page, app license screen, LICENSE | The final **EULA** (`EULA.md`, after legal review) |
+| `/privacy` | Sign-in page, app license screen | The final **Privacy Policy** (`PRIVACY.md`, after legal review) |
+
 | Button | Link |
 |---|---|
 | Start 7-day free trial | `https://auth.labs.atmt.dev/start?plan=trial` |
@@ -179,6 +192,48 @@ or `?paid=1`. **Build that page with the download links.**
 3. Run `npm run env:push -- --force` and `vercel --prod`.
 
 ---
+
+## 10. Legal
+
+1. **Resolve every `[CONFIRM]` in `EULA.md` and `PRIVACY.md`:**
+   - refund window;
+   - device limit;
+   - whether a license covers a team;
+   - whether future major versions are included;
+   - governing law and venue;
+   - registered address;
+   - DPO;
+   - PostHog region.
+2. Have both **reviewed by a lawyer**. For a Philippine business, include the Data Privacy Act (RA 10173) registration and DPO duties.
+3. Publish them at `/terms` and `/privacy`.
+4. In Stripe, go to **Settings → Public details** and set the Terms of service and Privacy policy URLs. Stripe shows them at Checkout.
+
+## 11. Unlock codes (free lifetime licenses)
+
+For beta testers, partners, giveaways. No Stripe, no card.
+
+```bash
+cd services/licensing
+npm run db:migrate                       # once, to add the unlock_codes table (safe to re-run)
+npm run codes -- create --count 10 --label "Beta testers" --expires 2026-12-31
+npm run codes -- list
+npm run codes -- revoke ATMT-XXXXX-XXXXX-XXXXX-XXXXX
+```
+
+- **Codes are printed once.** Send each person their code, or the link printed next to it (`https://auth.labs.atmt.dev/redeem?code=…`).
+- **Where they redeem:** in the app (**Have an unlock code?** on the license screen) or on the account page.
+- **Each code works once.** An account that already has a license never uses a code up.
+
+## 12. App release (installers + updates)
+
+1. **Update feed.** Auto-update and the release links are off until `GITHUB_REPO` is set in `src/shared/brand.ts` and `publish:` is uncommented in `electron-builder.yml` (see `RELEASE.md`).
+   - This repo is **private**, and customers can't download from a private repo's releases.
+   - Use a **separate public releases-only repo** (installers, no source), or another update host.
+2. **Code signing.**
+   - **macOS:** a "Developer ID Application" certificate plus `APPLE_*` notarization secrets in CI.
+   - **Windows:** a code-signing certificate, or SmartScreen warns every user.
+3. **Telemetry (optional):** the PostHog key goes into release CI only (`TELEMETRY.md`).
+4. **Release gate:** follow `RELEASE-CHECKLIST.md`. Ship a signed rc first, then the real release, with **`LICENSING.enabled = true`** and your public key in it (step 7).
 
 ## Rules to never break
 

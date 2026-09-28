@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+- **CI costs less.** Typecheck and Build now run on Linux instead of macOS (billed at 10x on private repos); release builds still use macOS and Windows. A newer push to a PR cancels the older CI run, website-only changes skip app CI (Vercel previews them), and the version check no longer runs twice per push.
+- **Website copy matches the app.** The landing page no longer says each floor has its own manager: Ramon manages the whole building, and agents on different floors can work together.
 - **Website motion.** labs.atmt.dev now has smooth scrolling (Lenis), scroll-in reveals, count-up numbers, a blurred sticky nav, a scroll progress bar, card hover spotlights and a three.js night-city backdrop in the hero (desktop only, lazy-loaded, paused off screen). All of it is off with "reduce motion". Built from `tools/site-bundle`; the CSP now allows same-origin scripts only.
 - **Fix: website spacing.** Inline `style` attributes were silently blocked by the site's own CSP, so gaps like the one between "1 agent / 1 floor / 200 floors" and the "Hire your team" cards collapsed. They are now CSS classes.
 - **Fix: Sign out on auth.labs.atmt.dev did nothing.** `/logout` redirected to labs.atmt.dev, and browsers apply the page's CSP `form-action` to that redirect, so the POST was blocked. It now redirects to `/login` on the same origin.

@@ -1,9 +1,17 @@
 name: App version
 
+# Pull requests are checked against their base; direct pushes to main and
+# release branches against the previous commit. (Pushing to any branch AND
+# opening a PR used to run this twice per push. The local pre-push hook still
+# checks every branch.)
 on:
   push:
-    branches: ['**']
+    branches: [main, 'release/**']
   pull_request:
+
+concurrency:
+  group: app-version-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:

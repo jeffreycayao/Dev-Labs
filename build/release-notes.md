@@ -1,3 +1,3 @@
 - Review files your agents deliver in the new Command Center Deliveries tab.
 - Preview documents and request changes from the same conversation.
-- Ramon's inbox now catches the first scheduled message on a fresh floor.
+- Ramon's inbox now catches the first scheduled message on a fresh floor, even at startup.

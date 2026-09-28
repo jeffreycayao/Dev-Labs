@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  checks: read
 
 # One release run per tag; a second push of the same tag waits, never doubles the bill.
 concurrency:

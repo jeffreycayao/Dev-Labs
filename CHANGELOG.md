@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+- **Release pipeline:** allow the preflight gate to read CI check results, so it can publish the validated installers and public mirror.
+
 ## v0.5.0 — 2026-09-28
 
 - **Reliable first message:** Ramon's inbox is created when the first scheduled message arrives on a new floor, so a cold-start race no longer drops that message. Unknown agents still do not acquire mailboxes.

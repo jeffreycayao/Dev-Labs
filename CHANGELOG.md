@@ -27,6 +27,20 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 - Add pinned, hash-verified Claude Code skill installs and explicit updates with local-edit protection.
 - Fixed Ramon switching from Claude to Codex: use a supported ChatGPT sign-in model, repair the old model if a failed switch saved it, surface Codex's folder-trust prompt, detect immediate startup exits, and restart the previous engine when a switch fails (with an explicit warning if its conversation cannot resume).
 
+## v0.0.4 — 2026-09-28
+
+- Release CI now reads the private draft through the GitHub CLI before publishing it, avoiding a draft lookup failure from the REST release-by-tag endpoint.
+
+## v0.0.3 — 2026-09-28
+
+- Release CI uploads each platform's installers and updater metadata to a private draft, then publishes only after every platform succeeds; it no longer needs GitHub Actions artifact storage.
+- Unsigned macOS builds no longer treat an empty signing variable as a certificate path.
+
+## v0.0.2 — 2026-09-28
+
+- Packaged app updates and What's New now use the public ATMT Labs releases repository without a GitHub credential.
+- Published private releases automatically mirror their notes, updater metadata and installers to that public repository.
+
 ## v0.0.1 — 2026-09-27
 
 - Initial ATMT Labs release: built on an MIT-licensed open-source codebase.

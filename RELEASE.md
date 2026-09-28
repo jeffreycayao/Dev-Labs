@@ -2,22 +2,6 @@
 
 Versions follow [semver](https://semver.org) and start at `0.0.1`.
 
-## Every source push
-
-Increase the app version in `package.json` and `package-lock.json` **for every push that advances a source branch**. Choose the level for the changes being pushed:
-
-| Command | When | Example |
-| --- | --- | --- |
-| `npm run version:patch` | Fixes, docs, and routine updates | 1.2.3 → 1.2.4 |
-| `npm run version:minor` | New backwards-compatible features | 1.2.3 → 1.3.0 |
-| `npm run version:major` | Breaking changes | 1.2.3 → 2.0.0 |
-
-Commit both version files with the work before pushing. `npm ci` installs a local Git pre-push check; run `npm run hooks:install` if dependencies were installed another way. The GitHub **App version** workflow also checks branch pushes and pull requests, including changes made from the cloud. A failed workflow reports a missed bump after the push; protect `main` with its required check to prevent unversioned changes from merging. A push that only creates a branch at an existing commit, or pushes a tag, does not introduce a new app version.
-
-These commands change the app version without making a release tag or installer. The release commands below remain for published installers.
-
-## Publishing a release
-
 | Command | Bump | Example |
 | --- | --- | --- |
 | `npm run release:patch` | fixes only | 0.0.1 → 0.0.2 |
@@ -36,8 +20,8 @@ then runs `npm run dist` to build installers into `dist/`.
 Preview without changing anything: `node tools/bump-version.cjs auto --dry-run`.
 Bump only (no build): `npm run version:bump -- minor`.
 
-Publish: `git push --follow-tags`. The tag workflow first creates the
-private release, then mirrors its notes and assets to the public distribution
+Publish: `git push --follow-tags`. The tag workflow creates the private
+release, then mirrors its notes and assets to the public distribution
 repository. See [Public release distribution](docs/RELEASE_DISTRIBUTION.md)
 for the one-time repository and `PUBLIC_REPO_PAT` setup.
 

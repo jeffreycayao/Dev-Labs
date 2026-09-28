@@ -36,9 +36,11 @@ build environment variable, or the desktop application.
 ## 3. Publish or backfill a release
 
 Update `build/release-notes.md` before tagging. The private release workflow
-builds the installers and `latest*.yml` files, generates a release body from
-those highlights and the tagged `CHANGELOG.md` section, and publishes the
-private release. Its final job calls
+creates a private draft release with a body from those highlights and the
+tagged `CHANGELOG.md` section. Each platform builds its installers and
+`latest*.yml` files and uploads them directly to that draft. The workflow
+publishes the private release only after every platform succeeds and the
+updater channel files are present. Its final job calls
 `.github/workflows/publish-public-release.yml` to mirror the release. A release
 published manually also triggers the mirror via `release.published`.
 

@@ -286,7 +286,10 @@ export function createApp(deps: AppDeps): Hono {
     const token = getCookie(c, SESSION_COOKIE, 'host');
     if (token) await store.deleteSession(sha256(token));
     deleteCookie(c, SESSION_COOKIE, cookieOpts);
-    return c.redirect(`${cfg.siteOrigin}/`, 303);
+    // Same-origin on purpose: browsers apply the page's CSP form-action to the
+    // redirect after a form POST, so a cross-origin hop (to the marketing site)
+    // is blocked and the user appears never to sign out.
+    return c.redirect('/login?signedout=1', 303);
   });
 
   // ─── account (web) ──────────────────────────────────────────────────────

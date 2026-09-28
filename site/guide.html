@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>User Guide · ATMT Labs Floor</title>
+<meta name="description" content="How to install, license and use ATMT Labs Floor: hire AI agents, build floors and a whole building, connect apps, and stay safe.">
+<meta property="og:title" content="User Guide · ATMT Labs Floor">
+<meta property="og:url" content="https://labs.atmt.dev/guide">
+<meta name="theme-color" content="#0a0e0b">
+<link rel="canonical" href="https://labs.atmt.dev/guide">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/assets/site.css?v=20260928b">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="ATMT Labs Floor home">
+      <img src="/assets/logo-on-dark.webp" alt="automatika" width="174" height="28">
+      <span class="app">ATMT Labs Floor</span>
+    </a>
+    <nav aria-label="Main">
+      <a class="hide-sm" href="/#building">How it works</a>
+      <a class="hide-sm" href="/guide">User guide</a>
+      <a class="hide-sm" href="/#pricing">Pricing</a>
+      <a class="hide-sm" href="https://auth.labs.atmt.dev/account">Sign in</a>
+      <a class="btn primary" href="https://auth.labs.atmt.dev/start?plan=trial">Start free trial</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <article class="wrap doc">
+    <div class="eyebrow"><span class="dot"></span>User guide</div>
+    <h1>How to use ATMT Labs Floor</h1>
+    <p class="lead">ATMT Labs Floor turns the AI coding tools you already use into a team of agents in a virtual office. Each agent has its own desk, terminal, project folder, memory and inbox. <strong>Ramon</strong>, your orchestrator at the head desk, plans the work, hands it out and keeps the floor moving.</p>
+
+    <nav class="toc" aria-label="Contents">
+      <h4>Contents</h4>
+      <ol>
+        <li><a href="#before">Before you start</a></li>
+        <li><a href="#license">Get a license</a></li>
+        <li><a href="#first-run">First run</a></li>
+        <li><a href="#hire">Hire agents</a></li>
+        <li><a href="#floors">Floors: hire a whole team</a></li>
+        <li><a href="#building">Your building: many floors</a></li>
+        <li><a href="#connectors">Connections</a></li>
+        <li><a href="#safety">Staying safe</a></li>
+        <li><a href="#privacy">Privacy</a></li>
+        <li><a href="#updates">Updates and What's New</a></li>
+        <li><a href="#help">Troubleshooting</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="before">1. Before you start</h2>
+    <p>You need <strong>at least one AI coding tool</strong> installed and signed in on your computer:</p>
+    <div class="table"><table>
+      <thead><tr><th>Tool</th><th>Command it runs</th></tr></thead>
+      <tbody>
+        <tr><td>Claude Code</td><td><code>claude</code></td></tr>
+        <tr><td>OpenAI Codex</td><td><code>codex</code></td></tr>
+        <tr><td>Gemini CLI / Antigravity</td><td><code>gemini</code> / <code>agy</code></td></tr>
+        <tr><td>Cursor</td><td><code>cursor-agent</code></td></tr>
+        <tr><td>Others: Grok, Kimi, Qwen, Copilot, OpenCode, Crush, pi, or any command</td><td>see Settings → Agents &amp; Models</td></tr>
+      </tbody>
+    </table></div>
+    <p>ATMT Labs doesn't include AI usage. <strong>Each tool bills you through your own account with that company.</strong></p>
+
+    <h2 id="license">2. Get a license</h2>
+    <p>When ATMT Labs opens, it asks you to sign in. Signing in happens in your browser, with <strong>Google or Yahoo</strong>; afterwards the browser sends you back to the app. Then choose one:</p>
+    <div class="table"><table>
+      <thead><tr><th>Option</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Start 7-day free trial</strong></td><td>Enter a card on Stripe's secure page. <strong>Nothing is charged for 7 days.</strong> On day 7 your card is charged <strong>once</strong> for a lifetime license. Cancel before then with <strong>Account → Cancel Free Trial…</strong> in the app menu (or at <code>auth.labs.atmt.dev/account</code>) and you pay nothing. One trial per person and per card.</td></tr>
+        <tr><td><strong>Buy lifetime license</strong></td><td>Pay once. No subscription, no renewals.</td></tr>
+        <tr><td><strong>Have an unlock code?</strong></td><td>Click it on the sign-in screen (after signing in), paste the code (<code>ATMT-XXXXX-XXXXX-XXXXX-XXXXX</code>) and press <strong>redeem</strong>. You get a free lifetime license. Each code works once. If you got a link like <code>auth.labs.atmt.dev/redeem?code=…</code>, open it, sign in, and press <strong>Redeem code</strong>.</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>Your license belongs to your email.</strong> Sign in with the same email on another computer to use it there, up to <strong>3 computers</strong>. Free a seat at <code>auth.labs.atmt.dev/account</code> → <strong>Computers</strong> → <strong>Remove</strong>.</p>
+    <p><strong>Once a computer has a lifetime license, it never needs the internet again for licensing.</strong> It's activated for good. Reinstalling your operating system counts as a new computer: sign in again.</p>
+
+    <h2 id="first-run">3. First run</h2>
+    <ol>
+      <li><strong>Pick a harness config.</strong> This is the folder where ATMT Labs keeps one workspace: settings, agents, memory and history. Choose <strong>create new config…</strong> the first time.</li>
+      <li><strong>Set up, in 4 steps:</strong> a home for the app, Ramon's engine, your projects, and permissions.</li>
+      <li><strong>You land on the office floor.</strong> Ramon boots at the head desk.</li>
+    </ol>
+
+    <h2 id="hire">4. Hire agents</h2>
+    <p>Click <strong>add agent</strong>. Give the agent a name, a look, a project folder, an engine and model, and a standing goal. Then press <strong>spawn</strong>.</p>
+    <div class="table"><table>
+      <thead><tr><th>Shortcut</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Role templates</strong></td><td>Pick a ready-made role (Technical or Non-technical) to fill in everything.</td></tr>
+        <tr><td><strong>import hire…</strong></td><td>Load one agent from a <code>.json</code> file someone shared.</td></tr>
+        <tr><td><strong>generate one with AI…</strong></td><td>Copy the prompt into any AI chat, describe the agent you want, and save its reply as a <code>.json</code> file to import.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Nothing starts until you press <strong>spawn</strong>.</p>
+
+    <h2 id="floors">5. Floors: hire a whole team at once</h2>
+    <p>A <strong>floor</strong> is a whole team saved in one file (<code>.floor.json</code>).</p>
+    <p><strong>Import a floor:</strong> <strong>add agent</strong> → <strong>import floor…</strong>, or open an <code>atmtlabs://floor?src=https://…</code> link. The review screen shows every agent and the tools they need. Then:</p>
+    <ul>
+      <li><strong>hire all:</strong> hires everyone into the project folder you pick;</li>
+      <li><strong>review one by one:</strong> opens each agent in the normal form, so you can change or skip it;</li>
+      <li><strong>cancel:</strong> hires nobody.</li>
+    </ul>
+    <p><strong>Export your floor:</strong> <strong>add agent</strong> → <strong>export floor…</strong> → name it → <strong>save file…</strong> The file includes each agent's name, role, goal, look, engine, model and token budget. It never includes your folders, keys, memory or conversations.</p>
+    <p><strong>Reset your floor:</strong> <strong>Settings → General → reset floor</strong>. Confirm with <strong>back up ZIP &amp; reset</strong> or <strong>reset without backup</strong>. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your license, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.</p>
+    <p>The ZIP contains <code>floor/</code> (roster, hive and shared memory), matching Claude session transcripts under <code>claude-projects/</code>, a manifest and <code>RESTORE.txt</code>. It can contain private prompts and messages, so keep it in a private place. To restore, quit ATMT Labs, extract <code>floor/</code> into the original home folder named in the manifest and <code>claude-projects/</code> into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and account credentials are not bundled.</p>
+    <p><strong>Try it:</strong> the <em>Online Seller Team</em> is a shop manager, a landing-page designer and a product copywriter. It's built for Pancake POS and Webcake.</p>
+
+    <h2 id="building">6. Your building: many floors at once</h2>
+    <p>A <strong>building</strong> is every floor you have open at the same time. Each floor is its own office window with its own agents. Use floors to split your business into teams, for example:</p>
+    <div class="table"><table>
+      <thead><tr><th>Floor</th><th>Team</th></tr></thead>
+      <tbody>
+        <tr><td>Floor 0</td><td>Product research and economics (5 agents)</td></tr>
+        <tr><td>Floor 1</td><td>Coding and infrastructure (15 agents)</td></tr>
+        <tr><td>Floor 2</td><td>Marketing and social media research (5 agents)</td></tr>
+        <tr><td>Floor 3</td><td>Product improvement (2 agents)</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>Open a new floor:</strong> app menu → <strong>New Floor</strong>, or press <strong>Cmd+Shift+N</strong> (Mac) / <strong>Ctrl+Shift+N</strong> (Windows, Linux). You can have up to <strong>200 floors</strong> open at once. If you try to open more, the app says your building is full; close a floor you no longer need first.</p>
+    <h3>How floors work together</h3>
+    <ul>
+      <li><strong>Ramon runs the whole building.</strong> There is one Ramon, at the head desk of your first window. He sees every agent on every floor and can hand work to any of them.</li>
+      <li><strong>Agents can reach agents on other floors.</strong> Floors don't wall agents off. Any agent can message any other agent in the building, and Ramon can send a Floor 1 task to an agent on Floor 2. If a floor doesn't have the skill you need, ask Ramon to use the agent on the floor that does.</li>
+      <li><strong>Before hiring someone new, Ramon checks who is already in the building.</strong> He reuses an agent who fits instead of hiring a duplicate.</li>
+      <li><strong>Closing a floor stops its agents.</strong> The app asks first. Other floors keep running. The agents' history and memory are kept, but they don't answer messages until you hire them again.</li>
+    </ul>
+    <h3>Tips</h3>
+    <ul>
+      <li>Agents don't know which floor they're on. Put the team in the name, like <code>F2 Marketing - Liza</code>, so you and Ramon can tell who belongs where.</li>
+      <li>Save each team as a floor file (<strong>export floor…</strong>) so you can set up the same building again in a few clicks.</li>
+      <li>Every running agent uses your AI tool's account. A big building costs more; keep open only the floors you need, and set token budgets in <strong>Settings → Autonomy &amp; Budgets</strong>.</li>
+    </ul>
+    <p class="note"><strong>Not available yet:</strong> a separate manager for each floor. Today every floor reports to Ramon.</p>
+
+    <h2 id="connectors">7. Connections (connectors)</h2>
+    <p>Connectors let agents work inside other apps. Set them up in <strong>Settings → Connections</strong>:</p>
+    <ol>
+      <li>Paste your key and press <strong>Save</strong>. The key is stored encrypted on your computer and never shown again.</li>
+      <li>Switch the connector <strong>On</strong>.</li>
+      <li><strong>Start a new agent.</strong> Agents already running keep the connectors they started with.</li>
+    </ol>
+    <div class="table"><table>
+      <thead><tr><th>Connector</th><th>Agents can</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Pancake POS</strong></td><td>read and change orders, products, stock and sales</td></tr>
+        <tr><td><strong>Webcake Landing</strong></td><td>design, edit and publish landing pages</td></tr>
+        <tr><td>GitHub, Database, Email &amp; Calendar, Web Search</td><td>as described in Settings</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>Connectors can change real data.</strong> Use keys with the least access you need. Today, connectors only reach <strong>Claude Code</strong> agents.</p>
+
+    <h2 id="safety">8. Staying safe</h2>
+    <ul>
+      <li>Agents run <strong>with your permissions</strong> on your computer. In <strong>auto mode</strong> they don't ask before running commands or editing files. Switch Settings → Autonomy &amp; Budgets to <strong>ask first</strong> if you want them to ask before acting.</li>
+      <li>Give each agent only the project folder it needs. Use <strong>git isolation</strong> (its own worktree) when you want to review changes before merging.</li>
+      <li><strong>Review shared hires and floors before hiring them.</strong> A shared file can't run commands of its own, and the app builds every command from your settings, but it can still give an agent a goal you didn't expect.</li>
+    </ul>
+
+    <h2 id="privacy">9. Privacy</h2>
+    <ul>
+      <li>Your code, prompts, agent output and connector keys stay on your computer.</li>
+      <li>Licensing only knows your email, your license status, and which computers are activated.</li>
+      <li>Anonymous usage stats are optional: Settings → General → <strong>Anonymous usage stats</strong>.</li>
+    </ul>
+    <p>Details: <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms and License Agreement</a>.</p>
+
+    <h2 id="updates">10. Updates and What's New</h2>
+    <p>Packaged builds check the public ATMT Labs release feed while auto-update is enabled in <strong>Settings → General</strong>. When a newer version is ready, the update badge tells you; you choose when to restart and install it. <strong>What's New</strong> shows the release highlights, and <strong>full changelog</strong> opens the public Releases page. The app does not need a GitHub sign-in or token for updates.</p>
+
+    <h2 id="help">11. Troubleshooting</h2>
+    <div class="table"><table>
+      <thead><tr><th>You see</th><th>Do this</th></tr></thead>
+      <tbody>
+        <tr><td>"Your plan's device limit is reached"</td><td>Remove an old computer at <code>auth.labs.atmt.dev/account</code>, then <strong>try again</strong>.</td></tr>
+        <tr><td>"That code has already been used"</td><td>Each unlock code works once. Ask the person who gave it to you for a new one.</td></tr>
+        <tr><td>"Your account already has a lifetime license, so the code was not used"</td><td>You're all set. The code still works, so pass it on.</td></tr>
+        <tr><td>"LICENSE CHECK NEEDED"</td><td>A trial computer needs to go online briefly. Lifetime computers never see this.</td></tr>
+        <tr><td>An agent exits right away</td><td>Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name.</td></tr>
+        <tr><td>Codex says "Set up Agent sandbox to continue" on Windows</td><td>Open the agent's terminal, choose <strong>Set up</strong>, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's <code>unelevated</code> sandbox fallback (below).</td></tr>
+        <tr><td>A connector doesn't work</td><td>Check it's <strong>On</strong> with a key saved, start a <strong>new</strong> agent, and use a Claude Code agent.</td></tr>
+        <tr><td>"Your building is full"</td><td>You have 200 floors open. Close a floor you no longer need, then open a new one.</td></tr>
+      </tbody>
+    </table></div>
+    <p>For the Windows fallback, add the following to <code>%USERPROFILE%\.codex\config.toml</code>, then restart the Codex agent. ATMT Labs copies that setting into each agent's Codex configuration when it starts. The fallback keeps a sandbox but has weaker isolation than administrator-approved setup. Company policy may disallow it.</p>
+    <pre><code>[windows]
+sandbox = "unelevated"</code></pre>
+    <p>Still stuck? Email <a href="mailto:hello@automatika.ph">hello@automatika.ph</a> with your app version (Settings → General → Updates).</p>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <img src="/assets/logo-on-dark.webp" alt="automatika" width="174" height="28">
+      <p class="fine">ATMT Labs Floor: a harness that runs a whole building of AI agents on your own computer.</p>
+    </div>
+    <div><h4>Product</h4><a href="/#building">How it works</a><a href="/#tour">Features</a><a href="/#pricing">Pricing</a><a href="/guide">User guide</a></div>
+    <div><h4>Account</h4><a href="https://auth.labs.atmt.dev/start?plan=trial">Start free trial</a><a href="https://auth.labs.atmt.dev/account">Sign in</a><a href="https://auth.labs.atmt.dev/account">Redeem a code</a></div>
+    <div><h4>Company</h4><a href="https://automatika.ph">Automatika</a><a href="mailto:hello@automatika.ph">Contact</a><a href="/terms">Terms &amp; License</a><a href="/privacy">Privacy Policy</a></div>
+    <div class="legal">© 2026 Automatika Consulting. ATMT Labs Floor is proprietary software. Claude, Codex, Gemini, Cursor and other names belong to their owners and are used only to describe compatibility.</div>
+  </div>
+</footer>
+
+</body>
+</html>

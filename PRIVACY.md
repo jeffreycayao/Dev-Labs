@@ -1,5 +1,7 @@
 # ATMT Labs — Privacy Policy (DRAFT)
 
+> **Published version:** https://labs.atmt.dev/privacy (`site/privacy.html`). That page is what users see and what Google's OAuth review checks. Change both together.
+
 > **DRAFT: not yet in force. Have it reviewed before you publish.**
 > Items marked **[CONFIRM]** need the owner's decision. Everything else lists
 > what the code in this repository actually collects.
@@ -46,7 +48,7 @@
 | Neon | Database | Singapore (AWS ap-southeast-1) |
 | Stripe | Payments | Stripe's regions, under Stripe's privacy policy |
 | Google / Yahoo | Sign-in | Under their privacy policies |
-| PostHog | Anonymous usage events, only if enabled | [CONFIRM: PostHog region] |
+| PostHog | Anonymous usage events, only if enabled | United States (PostHog Cloud US) |
 
 We don't sell personal data, and we don't use it for advertising.
 

@@ -12,7 +12,9 @@ The auth pages currently use a separate, older brand treatment.
 | `/` | `index.html` | Everything: the landing page and funnel |
 | `/welcome` | `welcome.html` | Stripe Checkout success (`?trial=1` / `?paid=1`): downloads and first steps |
 | `/pricing` | `pricing.html` | The app, when signed out or offline |
-| `/terms`, `/privacy` | **not yet** | Sign-in page and app license screen. Publish `EULA.md` / `PRIVACY.md` here after legal review |
+| `/guide` | `guide.html` | Footer, welcome page. HTML copy of `docs/USER_GUIDE.md`; update both together |
+| `/terms` | `terms.html` | Sign-in page, app license screen, footer. Published Terms of Service + license (based on `EULA.md`) |
+| `/privacy` | `privacy.html` | Sign-in page, app license screen, footer, Google OAuth consent screen. Published Privacy Policy (based on `PRIVACY.md`) |
 
 ## Deploy (Vercel)
 
@@ -24,4 +26,5 @@ The auth pages currently use a separate, older brand treatment.
 - **Video:** replace the placeholder in `index.html` (search `VIDEO PLACEHOLDER`). If you embed YouTube or Vimeo, add that host to `frame-src` in `vercel.json`'s Content-Security-Policy.
 - **Price:** replace "Pay once" with the amount of your Stripe price (search `PRICE:` in `index.html`).
 - **Downloads:** point the three `/download/*` redirects in `vercel.json` at your installers.
-- **Legal:** `/terms` and `/privacy`.
+- **Legal:** fill every `[CONFIRM]` in `terms.html` and `privacy.html` (search `class="todo"`), have them reviewed, then delete the `DRAFT BANNER` paragraph at the top of each.
+- **Google sign-in verification:** in Google Cloud → OAuth consent screen, set the homepage to `https://labs.atmt.dev`, privacy policy to `https://labs.atmt.dev/privacy`, terms to `https://labs.atmt.dev/terms`, and add `labs.atmt.dev` and `atmt.dev` as authorised domains (verify the domain in Search Console).

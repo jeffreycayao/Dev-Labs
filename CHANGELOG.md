@@ -23,8 +23,9 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 - Add pinned, hash-verified Claude Code skill installs and explicit updates with local-edit protection.
 - Fixed Ramon switching from Claude to Codex: use a supported ChatGPT sign-in model, repair the old model if a failed switch saved it, surface Codex's folder-trust prompt, detect immediate startup exits, and restart the previous engine when a switch fails (with an explicit warning if its conversation cannot resume).
 
-## v0.1.0 — 2026-09-28
+## v0.1.1 — 2026-09-28
 
+- Fixed the package lockfile so clean installs work with the CI version of npm.
 - **Floor Reset:** Settings → General now offers a floor-only reset that keeps the license and general app settings. Its confirmation lets you save a verified, restorable ZIP first or reset without a backup. The ZIP captures the roster, hive, shared memory and known Claude session transcripts; project source folders and credentials remain outside it.
 - Codex's Windows sandbox setup screen now keeps the agent waiting in its visible terminal, so queued work cannot be typed into the setup prompt while the user handles UAC.
 - **Labs website design:** restyled the landing, pricing and welcome pages to match automatika.ph's dark espresso palette, lime accents, Instrument Serif, Manrope, IBM Plex Mono, boxed navigation and restrained borders. Fonts are self-hosted; page content and static placeholders stay in place.

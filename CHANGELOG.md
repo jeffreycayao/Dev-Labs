@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+## v0.5.1 — 2026-09-28
+
 - **Release pipeline:** allow the preflight gate to read CI check results, so it can publish the validated installers and public mirror.
 
 ## v0.5.0 — 2026-09-28

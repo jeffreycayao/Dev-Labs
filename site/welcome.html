@@ -43,14 +43,15 @@
       <div class="eyebrow"><span class="dot"></span>You're in</div>
       <h1>Welcome to the building.</h1>
       <p class="lead">Your account is ready. If you started the free trial, nothing has been charged: your card is charged once on day 7 unless you cancel before then.</p>
-      <!-- DOWNLOADS: the three buttons go to /download/mac|windows|linux, which
-           vercel.json redirects to your installers. Set them there once the
-           release repo exists (src/shared/brand.ts → GITHUB_REPO). -->
+      <!-- DOWNLOADS: /download/<os> is served by api/download.js, which
+           redirects to that platform's installer in the latest public release
+           (jeffreycayao/ATMT_LABS_FLOOR-releases). Nothing to edit per release. -->
       <div class="dl" id="download">
         <a class="btn primary" href="/download/mac">Download for Mac</a>
         <a class="btn" href="/download/windows">Download for Windows</a>
         <a class="btn" href="/download/linux">Download for Linux</a>
       </div>
+      <p class="fine">Always the latest version. Mac: universal (Apple silicon and Intel). Windows: 64-bit installer, or the <a href="/download/windows-portable">portable app</a>. Linux: AppImage. <a href="https://github.com/jeffreycayao/ATMT_LABS_FLOOR-releases/releases/latest">All files and release notes</a>.</p>
       <h3>Your first 10 minutes</h3>
       <ol class="steps">
         <li>Install at least one AI tool (Claude Code, Codex, Gemini, Cursor…) and sign in to it.</li>

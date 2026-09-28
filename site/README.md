@@ -1,6 +1,6 @@
 # labs.atmt.dev — the ATMT Labs Floor website
 
-Static HTML and CSS, with no build step and no JavaScript. The landing,
+Static HTML and CSS, with no build step and no browser JavaScript. One server function, `api/download.js`, handles download links. The landing,
 welcome, and pricing pages use the live visual language of
 [automatika.ph](https://www.automatika.ph/): dark espresso surfaces, lime
 accents, Instrument Serif headlines, Manrope body text, and IBM Plex Mono
@@ -11,6 +11,7 @@ The auth pages currently use a separate, older brand treatment.
 |---|---|---|
 | `/` | `index.html` | Everything: the landing page and funnel |
 | `/welcome` | `welcome.html` | Stripe Checkout success (`?trial=1` / `?paid=1`): downloads and first steps |
+| `/download/:os` | `api/download.js` | Welcome page buttons. Redirects to the installer in the **latest public release** (see below) |
 | `/pricing` | `pricing.html` | The app, when signed out or offline |
 | `/guide` | `guide.html` | Footer, welcome page. HTML copy of `docs/USER_GUIDE.md`; update both together |
 | `/terms` | `terms.html` | Sign-in page, app license screen, footer. Published Terms of Service + license (based on `EULA.md`) |
@@ -25,6 +26,14 @@ The auth pages currently use a separate, older brand treatment.
 
 - **Video:** replace the placeholder in `index.html` (search `VIDEO PLACEHOLDER`). If you embed YouTube or Vimeo, add that host to `frame-src` in `vercel.json`'s Content-Security-Policy.
 - **Price:** replace "Pay once" with the amount of your Stripe price (search `PRICE:` in `index.html`).
-- **Downloads:** point the three `/download/*` redirects in `vercel.json` at your installers.
 - **Legal:** `terms.html` and `privacy.html` are in force from September 28, 2026. When you change them, update the "Last updated" date and the markdown copies (`EULA.md`, `PRIVACY.md`).
 - **Google sign-in verification:** in Google Cloud → OAuth consent screen, set the homepage to `https://labs.atmt.dev`, privacy policy to `https://labs.atmt.dev/privacy`, terms to `https://labs.atmt.dev/terms`, and add `labs.atmt.dev` and `atmt.dev` as authorised domains (verify the domain in Search Console).
+
+## Download links (automatic)
+
+`/download/mac`, `/download/mac-zip`, `/download/windows`, `/download/windows-portable` and `/download/linux` are handled by a small Vercel function, `api/download.js`. It asks GitHub for the latest stable release of `jeffreycayao/ATMT_LABS_FLOOR-releases` and redirects to the matching installer. The CDN caches each redirect for 5 minutes, so a new release shows up within about 5 minutes of the public mirror finishing. You don't edit the site for a release.
+
+- If GitHub is unreachable, or the release has no file for that platform, the link opens the public releases page instead.
+- Prereleases and drafts are skipped (GitHub's "latest" is the newest stable release).
+- Optional: set a `GITHUB_TOKEN` environment variable on this Vercel project (a fine-grained token with no permissions, or public read-only) to raise GitHub's API rate limit. It isn't needed at normal traffic because redirects are cached.
+- If you rename installers in `electron-builder.yml` (`artifactName`), update `PLATFORMS` in `api/download.js`. `test/site-download.test.cjs` fails if they drift apart.

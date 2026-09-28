@@ -26,5 +26,5 @@ The auth pages currently use a separate, older brand treatment.
 - **Video:** replace the placeholder in `index.html` (search `VIDEO PLACEHOLDER`). If you embed YouTube or Vimeo, add that host to `frame-src` in `vercel.json`'s Content-Security-Policy.
 - **Price:** replace "Pay once" with the amount of your Stripe price (search `PRICE:` in `index.html`).
 - **Downloads:** point the three `/download/*` redirects in `vercel.json` at your installers.
-- **Legal:** fill every `[CONFIRM]` in `terms.html` and `privacy.html` (search `class="todo"`), have them reviewed, then delete the `DRAFT BANNER` paragraph at the top of each.
+- **Legal:** `terms.html` and `privacy.html` are in force from September 28, 2026. When you change them, update the "Last updated" date and the markdown copies (`EULA.md`, `PRIVACY.md`).
 - **Google sign-in verification:** in Google Cloud → OAuth consent screen, set the homepage to `https://labs.atmt.dev`, privacy policy to `https://labs.atmt.dev/privacy`, terms to `https://labs.atmt.dev/terms`, and add `labs.atmt.dev` and `atmt.dev` as authorised domains (verify the domain in Search Console).

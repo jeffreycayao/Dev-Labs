@@ -1,17 +1,10 @@
-# ATMT Labs — Privacy Policy (DRAFT)
+# ATMT Labs — Privacy Policy
 
-> **Published version:** https://labs.atmt.dev/privacy (`site/privacy.html`). That page is what users see and what Google's OAuth review checks. Change both together.
+> **Published version:** https://labs.atmt.dev/privacy (`site/privacy.html`). That page is the text users agree to. This file is a markdown copy; change both together.
 
-> **DRAFT: not yet in force. Have it reviewed before you publish.**
-> Items marked **[CONFIRM]** need the owner's decision. Everything else lists
-> what the code in this repository actually collects.
-> If you operate from the Philippines, the Data Privacy Act of 2012 (RA 10173)
-> applies. Your reviewer should check the registration and Data Protection
-> Officer requirements.
-
-**Last updated:** [CONFIRM: publish date]
-**Controller:** Automatika Consulting (ATMT Labs), [CONFIRM: address], hello@automatika.ph
-**Data Protection Officer:** [CONFIRM: name / email]
+**Effective / last updated:** September 28, 2026
+**Controller:** Automatika Consulting (ATMT Labs), 1209 Mountain Road PL NE, Albuquerque, New Mexico 87110, USA, +1 520 413 9685, hello@automatika.ph
+**Data Protection Officer:** support@automatika.ph
 
 ## The short version
 
@@ -69,7 +62,7 @@ You can remove computers yourself, and cancel a trial, at `auth.labs.atmt.dev/ac
 
 ## Children
 
-ATMT Labs is not directed at children under [CONFIRM: 13/16/18].
+ATMT Labs is only for people aged 21 or older.
 
 ## Changes
 

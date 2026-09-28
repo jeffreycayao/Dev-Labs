@@ -1,13 +1,8 @@
-# ATMT Labs — End User License Agreement (DRAFT)
+# ATMT Labs — End User License Agreement
 
-> **Published version:** https://labs.atmt.dev/terms (`site/terms.html`). That page is what users see and what Google's OAuth review checks. Change both together.
+> **Published version:** https://labs.atmt.dev/terms (`site/terms.html`). That page is the text users agree to. This file is a markdown copy; change both together.
 
-> **DRAFT — not yet in force. Have a lawyer licensed in your jurisdiction review
-> it before you publish.** Items marked **[CONFIRM]** are business or legal
-> decisions the owner must make. Everything else describes how the product
-> actually works today, as built in this repository.
-
-**Version:** 0.1 (draft) · **Last updated:** [CONFIRM: publish date]
+**Version:** 1.0 · **Effective / last updated:** September 28, 2026
 
 This End User License Agreement ("Agreement") is between **Automatika Consulting**
 (trading as ATMT Labs / Automatika PH Labs) ("**we**", "**us**") and you, the
@@ -39,8 +34,8 @@ non-transferable, non-sublicensable license to install and use the Software.
 | **Unlock code** | A single-use code we issue at our discretion. It grants a lifetime license to the account that redeems it, at no charge. Codes have no cash value, can't be exchanged or resold, can be used once, and may carry an expiry date. |
 
 - **Tied to your email.** A license belongs to the verified email address of the account that bought or redeemed it. Signing in with Google or Yahoo using the same email reaches the same license.
-- **Devices.** You may activate the Software on up to **3 computers** at a time [CONFIRM: device limit; the service default is 3]. You can free a seat from your account page.
-- **Commercial use.** You may use the Software in your business and for client work. The license is for your own use and your own team's use under the same account; it isn't a license to redistribute the Software. [CONFIRM: whether one license may be shared by a team, or is one person only]
+- **Devices.** You may activate the Software on up to **3 computers** at a time. You can free a seat from your account page.
+- **Commercial use.** You may use the Software in your business and for client work. Each license is for one person only and can't be shared with or used by other people, including a team. It isn't a license to redistribute the Software.
 
 ## 3. Offline activation ("stamping")
 
@@ -79,12 +74,12 @@ AI agents run with **your** user permissions. Depending on your settings ("auto 
 
 - Prices are shown at checkout and charged in the currency shown there. Payments are processed by Stripe; we never receive your full card number.
 - A trial can be cancelled at any time before it ends from your account page, and you won't be charged.
-- **Refunds:** [CONFIRM: refund policy, e.g. "within 14 days of purchase, on request to hello@automatika.ph"]. Consumer rights that apply where you live aren't affected.
-- Taxes: [CONFIRM: whether prices include VAT/GST, and who collects it].
+- **No refunds.** Use the 7-day free trial to try the Software. Once you are charged, all sales are final, except where the law requires a refund. EU/UK consumers agree to immediate supply and lose the 14-day right of withdrawal once the license is active.
+- Taxes: prices don't include sales tax, VAT, GST or similar taxes; where they apply they are added at checkout or are your responsibility.
 
 ## 8. Updates
 
-We may release updates. The Software can check for and download them. Updates we release are covered by your license unless we tell you otherwise when the update is released. [CONFIRM: whether future major versions are included in the lifetime license]
+We may release updates. The Software can check for and download them. Your lifetime license includes all future updates, including new major versions, at no extra charge.
 
 ## 9. Your data
 
@@ -112,16 +107,16 @@ To the maximum extent the law allows, the Software is provided **"as is" and "as
 To the maximum extent the law allows:
 
 - **No indirect or special losses.** We aren't liable for indirect, incidental, special, consequential or punitive damages, or for lost profits, revenue, data or business. This includes losses caused by an agent's actions or a connected service.
-- **Cap.** Our total liability under this Agreement is limited to the amount you paid us for the license in the 12 months before the claim. If you paid nothing (for example, a trial or an unlock code), it's limited to [CONFIRM: e.g. USD 50].
+- **Cap.** Our total liability under this Agreement is limited to the amount you paid us for the license in the 12 months before the claim. If you paid nothing (for example, during a trial or with an unlock code), we have no liability to you.
 
 Nothing here limits liability that can't be limited by law.
 
 ## 14. General
 
-- **Governing law:** [CONFIRM: e.g. the laws of the Republic of the Philippines].
-- **Venue:** [CONFIRM: e.g. the courts of Makati City / Taguig City].
+- **Governing law:** the laws of the State of New Mexico, USA, and applicable US federal law.
+- **Venue:** the state and federal courts in Bernalillo County, New Mexico, USA.
 - **Export and sanctions:** you'll comply with export control and sanctions laws that apply to you.
 - **Changes:** we may update this Agreement. Material changes will be announced on labs.atmt.dev or in the app before they take effect. Continuing to use the Software after that means you accept the change.
 - **Entire agreement:** this Agreement and the Privacy Policy are the whole agreement between us about the Software.
 - **Severability:** if any part of it is unenforceable, the rest still applies.
-- **Contact:** Automatika Consulting, [CONFIRM: registered business address], **hello@automatika.ph**.
+- **Contact:** Automatika Consulting, 1209 Mountain Road PL NE, Albuquerque, New Mexico 87110, USA, +1 520 413 9685, **hello@automatika.ph**.

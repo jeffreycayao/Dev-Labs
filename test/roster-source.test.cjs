@@ -4,7 +4,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const loadTs = require('./load-ts.cjs');
 
-const { chooseRosterSource } = loadTs('src/renderer/src/store/rosterSource.ts');
+const { chooseRosterSource, shouldDiscardFloorCache } = loadTs('src/renderer/src/store/rosterSource.ts');
+
+test('a new floor reset epoch discards stale roster caches in every window', () => {
+  assert.equal(shouldDiscardFloorCache('new-floor', 'old-floor'), true);
+  assert.equal(shouldDiscardFloorCache('new-floor', null), true);
+  assert.equal(shouldDiscardFloorCache('new-floor', 'new-floor'), false);
+  assert.equal(shouldDiscardFloorCache(null, 'old-floor'), false);
+});
 
 const HIVE_A = '/hives/a';
 const HIVE_B = '/hives/b';

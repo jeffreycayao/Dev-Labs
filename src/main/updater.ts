@@ -168,7 +168,7 @@ function errText(e: unknown): string {
 }
 
 /** The one asset in a release that installs on THIS machine, by the names
- *  electron-builder.yml produces: mac-{arch}.dmg, win-x64-setup.exe,
+ *  electron-builder.yml produces: mac-universal.dmg, win-x64-setup.exe,
  *  linux-x86_64.AppImage. Null when the release has no matching asset, and the
  *  caller falls back to the releases page. Download URLs live under
  *  github.com/REPO/releases/download/, so the openRelease prefix guard already
@@ -179,7 +179,7 @@ export function pickDownloadAsset(
   arch: string = process.arch
 ): string | null {
   if (!Array.isArray(assets)) return null;
-  const want = platform === 'darwin' ? new RegExp(`-mac-${arch}\\.dmg$`)
+  const want = platform === 'darwin' ? new RegExp(`-mac-(?:${arch}|universal)\\.dmg$`)
     : platform === 'win32' ? /-win-x64-setup\.exe$/
     : platform === 'linux' ? /-linux-x86_64\.AppImage$/
     : null;

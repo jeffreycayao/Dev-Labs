@@ -63,6 +63,7 @@ inside `node_modules/better-sqlite3`, then run `node tools/patch-node-pty-conpty
 | `npm run test:focused` | Node test suite |
 | `npm run dist` | Build installers into `dist/` |
 | `npm run release:patch` / `:minor` / `:major` | Bump version, changelog, tag, build — see [RELEASE.md](RELEASE.md) |
+| `npm run version:patch` / `:minor` / `:major` | Increase the app version before every source push — see [RELEASE.md](RELEASE.md) |
 
 ## ATMT Skills Library
 

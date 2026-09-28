@@ -1,5 +1,11 @@
 # AGENTS.md — working in this repo
 
+Before every source push, increase the app's `Major.Minor.Patch` version with
+`npm run version:patch`, `npm run version:minor`, or `npm run version:major`.
+Commit `package.json` and `package-lock.json` with the pushed work. Use minor
+for a new backwards-compatible feature, major for a breaking change, and patch
+for fixes and routine updates. See [RELEASE.md](RELEASE.md).
+
 Orientation for AI coding agents (Claude Code, Codex, Cursor, …) and human contributors.
 Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the deep map.
 

@@ -220,8 +220,8 @@ export function SettingsHeroCard() {
           <span style={{ flex: 1 }} />
           {GITHUB_REPO_URL && (
           <a
-            href={`${GITHUB_REPO_URL}/blob/main/CHANGELOG.md`}
-            onClick={(e) => { e.preventDefault(); void window.cth.openExternal(`${GITHUB_REPO_URL}/blob/main/CHANGELOG.md`); }}
+            href={`${GITHUB_REPO_URL}/releases`}
+            onClick={(e) => { e.preventDefault(); void window.cth.openExternal(`${GITHUB_REPO_URL}/releases`); }}
             style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}
           >{t('settingsHero.fullChangelog')}</a>
           )}

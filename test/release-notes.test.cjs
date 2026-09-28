@@ -23,6 +23,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const loadTs = require('./load-ts.cjs');
+const { renderReleaseBody } = require('../tools/render-release-body.cjs');
 
 const {
   summarizeReleaseNotes,
@@ -213,11 +214,10 @@ test('code fences, comments and quoted callouts are handled', () => {
   for (const line of digest) assert.doesNotMatch(line, /npm install/);
 });
 
-test("the project's own RELEASE.md digests to something a toast can hold", () => {
-  // The body electron-updater actually hands us is this file (see
-  // .github/workflows/release.yml → `body_path: RELEASE.md`), so it is the one
-  // fixture guaranteed to stay realistic.
-  const body = fs.readFileSync(path.resolve(__dirname, '..', 'RELEASE.md'), 'utf8');
+test("the generated release body digests to something a toast can hold", () => {
+  const highlights = fs.readFileSync(path.resolve(__dirname, '..', 'build/release-notes.md'), 'utf8');
+  const body = renderReleaseBody('v1.2.3', '1.2.3', highlights,
+    '# Changelog\n\n## v1.2.3 — 2026-09-28\n\n- Fixed public updates.\n');
   const digest = summarizeReleaseNotes(body);
 
   assert.ok(digest.length > 0, 'the shipped release notes must produce a digest');
@@ -228,8 +228,7 @@ test("the project's own RELEASE.md digests to something a toast can hold", () =>
     assert.doesNotMatch(line, /\]\(/, 'an unparsed markdown link reached the toast');
     assert.doesNotMatch(line, /^\s*[-*#|]/, 'a markdown marker reached the toast');
   }
-  // The tagline and the download table live above/below the news; neither is
-  // what "What's new" should say.
+  // The release heading and changelog structure must not become toast copy.
   assert.ok(!digest.some((l) => /Downloads|Requirements|Build from source/i.test(l)));
 });
 

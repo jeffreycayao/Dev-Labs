@@ -1,7 +1,11 @@
 # labs.atmt.dev — the ATMT Labs Floor website
 
-Static HTML and CSS, with no build step and no JavaScript. It follows
-`brand/Automatika-Design-System-v2.md`, like the auth pages.
+Static HTML and CSS, with no build step and no JavaScript. The landing,
+welcome, and pricing pages use the live visual language of
+[automatika.ph](https://www.automatika.ph/): dark espresso surfaces, lime
+accents, Instrument Serif headlines, Manrope body text, and IBM Plex Mono
+labels. Fonts are self-hosted under `assets/fonts/` with their OFL notice.
+The auth pages currently use a separate, older brand treatment.
 
 | Path | File | Who links to it |
 |---|---|---|

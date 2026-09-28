@@ -35,6 +35,12 @@ export interface RosterSource {
   useLocalFallback: boolean;
 }
 
+/** A floor reset keeps the home path, so home-based cache ownership alone cannot
+ * distinguish old agents from the new floor in another window's localStorage. */
+export function shouldDiscardFloorCache(currentEpoch: string | null, storedEpoch: string | null): boolean {
+  return !!currentEpoch && currentEpoch !== storedEpoch;
+}
+
 /** An empty file must never win over a populated localStorage: that is the
  *  "opened the packaged build once and my floor went blank" failure the mirror
  *  exists to prevent (the two origins do not share a localStorage, the file is

@@ -1031,6 +1031,13 @@ const api = {
   /** Wipe all hive data + the memory palace, reset config, and relaunch the app
    *  into onboarding. The process exits, so this promise never resolves. */
   resetAll: (): Promise<void> => ipcRenderer.invoke('app:resetAll'),
+  /** Pick a ZIP destination without stopping the floor; cancellation changes nothing. */
+  chooseFloorResetBackup: (): Promise<{ ok: boolean; path?: string; error?: string }> =>
+    ipcRenderer.invoke('floor:chooseResetBackup'),
+  /** Stop the current floor, verify an optional ZIP, clear floor data and relaunch.
+   * General settings and the license survive. The process normally exits. */
+  resetFloor: (backupPath: string | null): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('app:resetFloor', backupPath),
 
   // ─── Token telemetry (real usage + est. cost from CC transcripts) ──────────
   /** Sum input/output/cache tokens + estimated USD cost for an agent from its
@@ -1412,6 +1419,10 @@ const api = {
    *  hive its localStorage keys belong to before it decides to trust them. */
   harnessHomeSync: (): string | null => {
     try { return ipcRenderer.sendSync('config:homeSync') ?? null; } catch { return null; }
+  },
+  /** Changes when the floor is reset so each window drops its stale roster cache. */
+  floorResetEpochSync: (): string | null => {
+    try { return ipcRenderer.sendSync('floor:resetEpochSync') ?? null; } catch { return null; }
   },
   /** Mirror the roster to disk. Debounced by the caller; main keeps the previous
    *  contents as a backup and refuses a first write that would empty a full file. */

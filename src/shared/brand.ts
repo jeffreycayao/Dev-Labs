@@ -1,5 +1,5 @@
 // Brand identity — single source of truth for the app name, slugs and the
-// GitHub repo that serves updates and remote catalogs.
+// Public GitHub distribution repo for updates; remote catalogs are separate.
 
 export const APP_NAME = 'ATMT Labs';
 /** Lowercase slug for pipes, user-agents, scan dirs and spec tags. */
@@ -10,15 +10,20 @@ export const ARTIFACT_PREFIX = 'ATMT-Labs';
 export const PROTOCOL = 'atmtlabs';
 
 /**
- * `owner/repo` on GitHub that hosts releases + docs/hero.json + docs/model-catalog.json.
- * Empty = auto-update and remote catalogs are OFF (the app uses its bundled
- * defaults). Set this AND `publish:` in electron-builder.yml once the repo exists.
+ * Public, releases-only repository. Never point an installed client at the
+ * private source repository or put a GitHub credential in the app bundle.
+ * Keep this in sync with electron-builder.yml's publish block.
  */
-export const GITHUB_REPO = '';
+export const GITHUB_REPO = 'jeffreycayao/ATMT_LABS_FLOOR-releases';
 export const GITHUB_REPO_URL = GITHUB_REPO ? `https://github.com/${GITHUB_REPO}` : '';
 
+/** Optional repository for public docs/hero.json and docs/model-catalog.json.
+ * The distribution repository contains only releases, so bundled catalogs
+ * remain active until a separate public catalog source is configured. */
+export const CATALOG_REPO = '';
+
 export function rawRepoUrl(path: string): string {
-  return GITHUB_REPO ? `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${path}` : '';
+  return CATALOG_REPO ? `https://raw.githubusercontent.com/${CATALOG_REPO}/main/${path}` : '';
 }
 
 /**

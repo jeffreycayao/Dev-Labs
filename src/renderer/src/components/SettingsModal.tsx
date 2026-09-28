@@ -1,7 +1,7 @@
 import { useState, useEffect, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { agentModels, type HarnessConfig } from '@/store/config';
-import { useStore } from '@/store/store';
+import { flushPendingRosterForBackup, useStore } from '@/store/store';
 import {
   CLONE_NODE_BLURB,
   DEFAULT_TRIGGER_MODE,
@@ -198,6 +198,8 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
   const { t, i18n } = useTranslation();
   const godName = useStore((s) => s.agents.find((a) => a.isGod)?.name) ?? 'the orchestrator';
   const [confirming, setConfirming] = useState(false);
+  const [confirmingFloor, setConfirmingFloor] = useState(false);
+  const [floorResetError, setFloorResetError] = useState('');
   const [busy, setBusy] = useState(false);
   const [activeSection, setActiveSection] = useState<Section>(initialSection ?? 'General');
 
@@ -779,6 +781,29 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
     await window.cth.resetAll();
   };
 
+  const resetFloor = async (withBackup: boolean) => {
+    setBusy(true);
+    setFloorResetError('');
+    try {
+      let backupPath: string | null = null;
+      if (withBackup) {
+        const chosen = await window.cth.chooseFloorResetBackup();
+        if (!chosen.ok || !chosen.path) {
+          if (chosen.error && chosen.error !== 'cancelled') setFloorResetError(chosen.error);
+          return;
+        }
+        backupPath = chosen.path;
+        await flushPendingRosterForBackup();
+      }
+      // Main writes a reset epoch before relaunch. Every window uses it to drop
+      // its own old roster cache, while settings and license stay in place.
+      const result = await window.cth.resetFloor(backupPath);
+      if (!result.ok) setFloorResetError(result.error ?? 'Could not reset the floor.');
+    } catch (e) {
+      setFloorResetError(e instanceof Error ? e.message : String(e));
+    } finally { setBusy(false); }
+  };
+
   // --- Change home folder ---
   /** Pick a new folder, then open the move-vs-fresh sub-modal. */
   const pickNewHome = async () => {
@@ -810,6 +835,8 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
 
   const modalTitle = changeHome
     ? t('settings.changeHomeTitle')
+    : confirmingFloor
+      ? t('settings.floorReset.title')
     : confirming
       ? t('settings.resetTitle')
       : t('settings.title');
@@ -891,6 +918,26 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                 </PixelButton>
                 <PixelButton variant="primary" size="md" onClick={applyChangeHome} disabled={changeBusy}>
                   {changeBusy ? t('settings.apply') : (changeMode === 'move' ? t('settings.moveAndRestart') : t('settings.switchAndRestart'))}
+                </PixelButton>
+              </div>
+            </div>
+
+          /* === Floor-only reset confirmation screen === */
+          ) : confirmingFloor ? (
+            <div data-testid="floor-reset-confirm" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ fontSize: 15, lineHeight: '22px', color: 'var(--cth-ink-700)' }}>
+                {t('settings.floorReset.body')}
+              </div>
+              {floorResetError && <div role="alert" style={{ color: 'var(--cth-coral)', fontSize: 13 }}>{floorResetError}</div>}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8 }}>
+                <PixelButton variant="secondary" size="md" onClick={() => setConfirmingFloor(false)} disabled={busy}>
+                  {t('common.cancel')}
+                </PixelButton>
+                <PixelButton variant="destructive" size="md" onClick={() => { void resetFloor(false); }} disabled={busy}>
+                  {busy ? t('settings.resetting') : t('settings.floorReset.withoutBackup')}
+                </PixelButton>
+                <PixelButton variant="primary" size="md" onClick={() => { void resetFloor(true); }} disabled={busy}>
+                  {busy ? t('settings.resetting') : t('settings.floorReset.backupAndReset')}
                 </PixelButton>
               </div>
             </div>
@@ -2085,6 +2132,15 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                         fontFamily: 'var(--cth-font-display)', fontSize: 10, lineHeight: '14px',
                         color: '#6E1423'
                       }}>{t('settings.general.dangerZone')}</div>
+                      <p style={{ margin: 0, fontSize: 13, lineHeight: '20px', color: 'var(--cth-ink-700)' }}>
+                        {t('settings.floorReset.description')}
+                      </p>
+                      <div>
+                        <PixelButton variant="destructive" size="md" onClick={() => { setFloorResetError(''); setConfirmingFloor(true); }}>
+                          {t('settings.floorReset.action')}
+                        </PixelButton>
+                      </div>
+                      <div style={sectionRule} />
                       <p style={{ margin: 0, fontSize: 13, lineHeight: '20px', color: 'var(--cth-ink-700)' }}>
                         {t('settings.general.dangerDesc', { godName })}
                       </p>

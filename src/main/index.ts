@@ -7,7 +7,7 @@ import {
   readlinkSync, symlinkSync
 } from 'node:fs';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
-import { join, resolve, sep, basename, dirname, isAbsolute } from 'node:path';
+import { join, resolve, relative, sep, basename, dirname, isAbsolute } from 'node:path';
 import { homedir } from 'node:os';
 import { request as httpsRequest } from 'node:https';
 import { PtyManager, type SpawnOptions } from './pty';
@@ -66,6 +66,7 @@ import { MCP_CATALOG, mcpCatalogEntry, mcpSecretRef, mcpBrokerId, mcpUpstream, i
 import type { IntegrationRecord } from '../shared/integrations';
 import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';
 import { RosterStore } from './roster';
+import { createFloorBackup, restoreStagedFloor, stageFloorData } from './floorBackup';
 import { buildWorkerLaunch } from './workerLaunch';
 import { ControlRegistry } from './control';
 import { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';
@@ -3728,7 +3729,9 @@ ipcMain.handle('git:checkout', async (_evt, cwd: unknown, ref: unknown, detach: 
 ipcMain.on('roster:readSync', (evt) => { evt.returnValue = roster.read(); });
 ipcMain.on('config:homeSync', (evt) => { evt.returnValue = readConfig().harnessHome ?? null; });
 ipcMain.handle('roster:read', () => roster.read());
-ipcMain.handle('roster:write', (_evt, snap: unknown) => roster.write(snap));
+let floorResetInProgress = false;
+ipcMain.handle('roster:write', (_evt, snap: unknown) =>
+  floorResetInProgress ? { ok: false, error: 'floor reset in progress' } : roster.write(snap));
 
 // ─── IPC: hive (multi-agent coordination) ───────────────────────────────────
 ipcMain.handle('hive:registry', () => hive.registry());
@@ -4130,6 +4133,99 @@ ipcMain.handle('app:resetAll', () => {
   resetConfig();
   app.relaunch();
   app.exit(0);
+});
+
+// A floor reset keeps account/license state and general app preferences. The
+// backup picker runs before any writer or PTY is stopped; cancelling is a no-op.
+ipcMain.handle('floor:chooseResetBackup', async () => {
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const result = await dialog.showSaveDialog({
+    title: 'Back up floor before reset',
+    defaultPath: `ATMT-Labs-floor-${stamp}.zip`,
+    filters: [{ name: 'ZIP archive', extensions: ['zip'] }]
+  });
+  return result.canceled || !result.filePath
+    ? { ok: false, error: 'cancelled' }
+    : { ok: true, path: result.filePath };
+});
+
+ipcMain.handle('app:resetFloor', async (_evt, backupPath: unknown) => {
+  if (floorResetInProgress) return { ok: false, error: 'A floor reset is already in progress.' };
+  if (backupPath !== null && (typeof backupPath !== 'string' || !backupPath.toLowerCase().endsWith('.zip'))) {
+    return { ok: false, error: 'Choose a ZIP backup path or continue without a backup.' };
+  }
+  const home = readConfig().harnessHome;
+  if (!home) return { ok: false, error: 'No floor folder is configured.' };
+  const hivePath = hive.root();
+  const palacePath = memory.palacePath();
+  if (!hivePath || !palacePath || ![hivePath, palacePath].every((p) => {
+    const rel = relative(resolve(home), resolve(p));
+    return rel && rel !== '..' && !rel.startsWith(`..${sep}`);
+  })) return { ok: false, error: 'The floor folders are outside the configured home.' };
+
+  floorResetInProgress = true;
+  allowQuit = true;
+  closingTime.cancel();
+  abortPendingRestart();
+  // Stop every writer before making the ZIP. A backup that fails leaves all
+  // floor files in place and relaunches the app against the original floor.
+  try { clearMissionTimers(); } catch (e) { console.error('[floor-reset] clearMissionTimers:', e); }
+  try { clearContextTimers(); } catch (e) { console.error('[floor-reset] clearContextTimers:', e); }
+  try { stopWebhookDoneObserver(); } catch (e) { console.error('[floor-reset] stopWebhookDoneObserver:', e); }
+  try { stopEphemeralWorkerWatcher(); } catch (e) { console.error('[floor-reset] stopWorkerWatcher:', e); }
+  try { integrationBroker.stop(); } catch (e) { console.error('[floor-reset] broker.stop:', e); }
+  try { hive.stopRouter(); } catch (e) { console.error('[floor-reset] stopRouter:', e); }
+  try { hookServer.stop(); } catch (e) { console.error('[floor-reset] hookServer.stop:', e); }
+  try { telemetry.stop(); } catch (e) { console.error('[floor-reset] telemetry.stop:', e); }
+  try { stopSlackServer(); } catch (e) { console.error('[floor-reset] slack.stop:', e); }
+  try { stopWebhookServer(); } catch (e) { console.error('[floor-reset] webhook.stop:', e); }
+  try { memory.stop(); } catch (e) { console.error('[floor-reset] memory.stop:', e); }
+  try { reflector.stop(); } catch (e) { console.error('[floor-reset] reflector.stop:', e); }
+  try { hive.stopAllProxyBridges(); } catch (e) { console.error('[floor-reset] proxy.stop:', e); }
+  try { ptyManager.killAll(); } catch (e) { console.error('[floor-reset] killAll:', e); }
+  try { persist.close(); } catch (e) { console.error('[floor-reset] persist.close:', e); }
+
+  if (backupPath) {
+    try {
+      await createFloorBackup(home, backupPath, join(homedir(), '.claude', 'projects'));
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : String(e);
+      dialog.showErrorBox('Floor backup failed', `The floor was not reset. ${detail} The app will reopen the existing floor.`);
+      app.relaunch();
+      app.exit(0);
+      return { ok: false, error: detail };
+    }
+  }
+
+  let stage: string | null = null;
+  try {
+    stage = stageFloorData(home);
+    // Config contains user settings and license state, so leave it untouched.
+    // Every window has its own localStorage partition. A new epoch tells each
+    // renderer to discard old roster keys instead of resurrecting the old floor.
+    writeFileSync(join(home, '.floor-reset-epoch'), randomBytes(16).toString('hex'), 'utf8');
+  } catch (e) {
+    if (stage) {
+      try { restoreStagedFloor(home, stage); } catch (restoreError) { console.error('[floor-reset] restore:', restoreError); }
+    }
+    const detail = e instanceof Error ? e.message : String(e);
+    dialog.showErrorBox('Floor reset failed', `The floor data was kept. ${detail} The app will reopen it.`);
+    app.relaunch();
+    app.exit(0);
+    return { ok: false, error: detail };
+  }
+  try { hive.removeExposedCodexData(); } catch (e) { console.error('[floor-reset] removeExposedCodexData:', e); }
+  try { rmSync(stage, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 }); }
+  catch (e) { console.error('[floor-reset] could not delete staged floor:', stage, e); }
+  app.relaunch();
+  app.exit(0);
+  return { ok: true }; // process exits; retained for the typed IPC contract
+});
+
+ipcMain.on('floor:resetEpochSync', (event) => {
+  const home = readConfig().harnessHome;
+  try { event.returnValue = home ? readFileSync(join(home, '.floor-reset-epoch'), 'utf8').trim() : null; }
+  catch { event.returnValue = null; }
 });
 
 // ─── IPC: token telemetry (real usage + est. cost from CC transcripts) ───────

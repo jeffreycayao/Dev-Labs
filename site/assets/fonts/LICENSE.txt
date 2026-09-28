@@ -1,8 +1,20 @@
 Fonts served by the labs.atmt.dev site and their licenses
 ==============================================================
 
-These files in site/assets/fonts/ are NOT ours. Both families are
+These files in site/assets/fonts/ are NOT ours. All families are
 licensed under the SIL Open Font License, Version 1.1, whose full text follows.
+
+  instrument-serif-latin.woff2, instrument-serif-italic-latin.woff2
+    Instrument Serif (Latin subset, regular and italic)
+    Source: https://www.automatika.ph/
+
+  manrope-latin.woff2
+    Manrope (Latin subset, variable weights)
+    Source: https://www.automatika.ph/
+
+  ibm-plex-mono-latin-600.woff2
+    IBM Plex Mono (Latin subset, weight 600)
+    Source: https://www.automatika.ph/
 
   inter-latin-var.woff2
     Inter (latin subset, variable, weights 400 to 700)

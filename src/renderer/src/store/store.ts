@@ -17,7 +17,7 @@ import { isCompactionCommand } from '@shared/providerAutomation';
 import { preferredAgentRole } from '@shared/agentRole';
 import { isInboxNudge } from '@shared/hiveNudge';
 import { refocusAfterRemoval, focusOnLoad, restoreFocus } from './focusMode';
-import { chooseRosterSource } from './rosterSource';
+import { chooseRosterSource, shouldDiscardFloorCache } from './rosterSource';
 
 export type ToolKind =
   | 'Read' | 'Edit' | 'Write' | 'Bash' | 'WebFetch' | 'WebSearch'
@@ -352,6 +352,20 @@ const LS_QUEUES = 'cth.messageQueues';
 /** Which hive this origin's roster keys were last written for. See rosterSource.ts. */
 const LS_ROSTER_HOME = 'cth.rosterHome';
 const LS_FOCUS_MODE = 'cth.prefersFocusMode';
+const LS_FLOOR_EPOCH = 'cth.floorResetEpoch';
+
+// A floor reset relaunches every window against the SAME home folder. Each
+// window has separate localStorage, so clear stale roster keys before the normal
+// file/local source choice can adopt agents from before the reset.
+try {
+  const epoch = window.cth?.floorResetEpochSync?.();
+  if (epoch && shouldDiscardFloorCache(epoch, window.localStorage.getItem(LS_FLOOR_EPOCH))) {
+    for (const key of [LS_AGENTS, LS_ARCHIVED, LS_RESTORABLE, LS_SELECTED, LS_QUEUES]) {
+      window.localStorage.removeItem(key);
+    }
+    window.localStorage.setItem(LS_FLOOR_EPOCH, epoch);
+  }
+} catch { /* file roster still takes precedence when available */ }
 
 // Fields that are large or transient — not worth persisting across reloads.
 // contextTokens/contextLimit describe a LIVE session; persisting them showed a
@@ -416,16 +430,32 @@ let rosterFlush: ReturnType<typeof setTimeout> | null = null;
 function flushRosterNow(): void {
   if (rosterFlush) { clearTimeout(rosterFlush); rosterFlush = null; }
   try {
-    void window.cth?.rosterWrite?.({
-      version: 1,
-      savedAt: new Date().toISOString(),
-      agents: rosterMirror.agents,
-      archived: rosterMirror.archived,
-      restorable: rosterMirror.restorable,
-      queues: rosterMirror.queues,
-      selectedId: rosterMirror.selectedId
-    });
+    void window.cth?.rosterWrite?.(rosterSnapshot());
   } catch { /* the file is a mirror — localStorage already took the write */ }
+}
+
+function rosterSnapshot() {
+  return {
+    version: 1 as const,
+    savedAt: new Date().toISOString(),
+    agents: rosterMirror.agents,
+    archived: rosterMirror.archived,
+    restorable: rosterMirror.restorable,
+    queues: rosterMirror.queues,
+    selectedId: rosterMirror.selectedId
+  };
+}
+
+/** The ZIP must capture the latest local edit, even if the normal 500ms mirror
+ * debounce has not fired when the user clicks Back up and reset. */
+export async function flushPendingRosterForBackup(): Promise<void> {
+  if (!rosterFlush) return;
+  clearTimeout(rosterFlush);
+  rosterFlush = null;
+  const result = await window.cth.rosterWrite(rosterSnapshot());
+  if (!result.ok && result.skipped !== 'empty-first-write') {
+    throw new Error(result.error ?? 'Could not save the floor roster for backup.');
+  }
 }
 
 /** Coalesce a burst of persist* calls into one disk write. Agent edits arrive in

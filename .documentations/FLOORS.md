@@ -36,6 +36,14 @@ The review screen lists every agent with its role, goal, engine command, token c
 
 Agents the importer would reject (for example, an unsupported engine) are listed as **Skipped** with the reason, not silently dropped.
 
+## Reset and back up the live floor
+
+**Settings → General → reset floor** opens a confirmation with **back up ZIP & reset**, **reset without backup** and **cancel**. This is a live floor reset, separate from the shareable `.floor.json` export and the app's **reset & start over** action. It clears the roster, hive and semantic-memory palace across all floor windows while keeping account/license state and app settings, including schedules and per-agent limits. Project repositories and worktrees outside the home folder are not deleted.
+
+The ZIP backup includes `floor/hive`, `floor/palace`, `floor/roster.json`, `floor/roster-backups` and matching Claude Code session transcripts under `claude-projects/`. It contains `floor-backup.json` and `RESTORE.txt`. Generated Codex auth/config links and package installs are excluded; Codex session data inside the hive is included. A ZIP may contain private conversations, agent memory and task content, so store it securely. The app stops floor writers, creates the archive, then reads every ZIP entry to verify it before removing the floor. If the picker is cancelled or backup fails, no floor data is removed.
+
+To restore: quit ATMT Labs; extract the ZIP's `floor/` contents into the original home folder listed in `floor-backup.json`, and extract `claude-projects/` into `~/.claude/projects/`; then start the app. Restore into an empty floor and keep the ZIP until you have confirmed the roster and conversations. External project source folders and account credentials are not part of the backup.
+
 ## File format (`atmt-labs/floor@1`)
 
 ```json

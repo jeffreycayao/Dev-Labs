@@ -13,7 +13,7 @@ import { request as httpsRequest } from 'node:https';
 
 export function getText(url: string, opts: { timeoutMs?: number } = {}): Promise<string> {
   const timeoutMs = opts.timeoutMs ?? 12000;
-  // Empty URL = remote source disabled (no GITHUB_REPO in shared/brand.ts); callers fall back.
+  // Empty URL = remote catalog disabled (no CATALOG_REPO in shared/brand.ts); callers fall back.
   if (!url) return Promise.reject(new Error('remote source disabled'));
   return new Promise((resolve, reject) => {
     const req = httpsRequest(url, { method: 'GET', headers: { 'user-agent': 'atmt-labs' } }, (res) => {

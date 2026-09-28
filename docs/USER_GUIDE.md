@@ -67,6 +67,10 @@ A **floor** is a whole team saved in one file (`.floor.json`).
 
 **Export your floor:** **add agent** → **export floor…** → name it → **save file…** The file includes each agent's name, role, goal, look, engine, model and token budget. It never includes your folders, keys, memory or conversations.
 
+**Reset your floor:** **Settings → General → reset floor**. Confirm with **back up ZIP & reset** or **reset without backup**. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your license, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.
+
+The ZIP contains `floor/` (roster, hive and shared memory), matching Claude session transcripts under `claude-projects/`, a manifest and `RESTORE.txt`. It can contain private prompts and messages, so keep it in a private place. To restore, quit ATMT Labs, extract `floor/` into the original home folder named in the manifest and `claude-projects/` into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and account credentials are not bundled.
+
 **Try it:** the *Online Seller Team* is a shop manager, a landing-page designer and a product copywriter. It's built for Pancake POS and Webcake.
 
 ## 6. Connections (connectors)
@@ -101,7 +105,15 @@ Today, connectors only reach **Claude Code** agents.
 
 Details: [Privacy Policy](../PRIVACY.md) · [Telemetry](../TELEMETRY.md) · [License Agreement](../EULA.md).
 
-## 9. Troubleshooting
+## 9. Updates and What's New
+
+Packaged builds check the public ATMT Labs release feed while auto-update is
+enabled in **Settings → General**. When a newer version is ready, the update
+badge tells you; you choose when to restart and install it. **What's New**
+shows the release highlights, and **full changelog** opens the public Releases
+page. The app does not need a GitHub sign-in or token for updates.
+
+## 10. Troubleshooting
 
 | You see | Do this |
 |---|---|
@@ -110,6 +122,14 @@ Details: [Privacy Policy](../PRIVACY.md) · [Telemetry](../TELEMETRY.md) · [Lic
 | "Your account already has a lifetime license, so the code was not used" | You're all set. The code still works, so pass it on. |
 | "LICENSE CHECK NEEDED" | A trial computer needs to go online briefly. Lifetime computers never see this. |
 | An agent exits right away | Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name. |
+| Codex says "Set up Agent sandbox to continue" on Windows | Open the agent's terminal, choose **Set up**, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's `unelevated` sandbox fallback (below). |
 | A connector doesn't work | Check it's **On** with a key saved, start a **new** agent, and use a Claude Code agent. |
+
+For the Windows fallback, add the following to `%USERPROFILE%\.codex\config.toml`, then restart the Codex agent. ATMT Labs copies that setting into each agent's Codex configuration when it starts. The fallback keeps a sandbox but has weaker isolation than administrator-approved setup. Company policy may disallow it.
+
+```toml
+[windows]
+sandbox = "unelevated"
+```
 
 Still stuck? Email **hello@automatika.ph** with your app version (Settings → General → Updates).

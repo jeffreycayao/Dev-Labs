@@ -15,7 +15,9 @@ export type PtyStartup =
 
 /** First-run Codex menus must be answered by a person in the visible terminal. */
 export function terminalNeedsStartupInput(text: string): boolean {
-  return /trust this folder\?|(?:^|[\r\n])\s*(?:\d+\.\s*|[❯>]\s*)sign in\b|how would you like to sign in|choose (?:how|a way) to sign in|(?:^|[\r\n])\s*(?:login|authentication) required\s*[.!]?(?=$|[\r\n])|(?:^|[\r\n])\s*(?:enter|paste) (?:your )?(?:openai )?api key\s*[.!]?(?=$|[\r\n])/i.test(text);
+  // Windows sandbox setup may wait for an OS UAC dialog outside the PTY. Keep
+  // this terminal visible and stop queued prompts until the person finishes it.
+  return /set up (?:the )?(?:agent|windows|codex) sandbox to continue|(?:^|[\r\n])\s*windows sandbox setup (?:required|needs (?:administrator|admin) approval)\b|trust this folder\?|(?:^|[\r\n])\s*(?:\d+\.\s*|[❯>]\s*)sign in\b|how would you like to sign in|choose (?:how|a way) to sign in|(?:^|[\r\n])\s*(?:login|authentication) required\s*[.!]?(?=$|[\r\n])|(?:^|[\r\n])\s*(?:enter|paste) (?:your )?(?:openai )?api key\s*[.!]?(?=$|[\r\n])/i.test(text);
 }
 
 /** Subscribe before spawning so even an exit in the same IPC round trip is seen. */

@@ -220,6 +220,14 @@
     "resetConfirm": {
       "body": "This permanently erases all of {{godName}}'s memories and the entire hive, and cannot be undone. Any running sessions will be terminated and the app will relaunch into onboarding. Are you sure?"
     },
+    "floorReset": {
+      "title": "RESET FLOOR?",
+      "action": "reset floor",
+      "description": "Clear this floor's agents, conversations, tasks, board and shared memory. Keep your app settings and license.",
+      "body": "This ends all running agents and clears the current floor, including agent conversations, tasks, board and shared memory. Your app settings, license and project source folders stay. Would you like a restorable ZIP backup first?",
+      "backupAndReset": "back up ZIP & reset",
+      "withoutBackup": "reset without backup"
+    },
     "general": {
       "homeFolder": "Home folder",
       "environment": "Environment",

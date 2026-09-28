@@ -39,9 +39,10 @@ export const REPO = GITHUB_REPO;
 /** The installer for THIS machine in the release tagged v{version}, by the
  *  names electron-builder.yml produces. Used when a status carries no
  *  `downloadUrl` of its own (the native updater path never does). */
-export function installerUrl(version: string, platform: string, arch: string): string {
+export function installerUrl(version: string, platform: string, _arch: string): string {
   const v = version.replace(/^v/, '');
-  const file = platform === 'darwin' ? `ATMT-Labs-${v}-mac-${arch}.dmg`
+  // electron-builder.yml currently emits one universal Mac DMG.
+  const file = platform === 'darwin' ? `ATMT-Labs-${v}-mac-universal.dmg`
     : platform === 'win32' ? `ATMT-Labs-${v}-win-x64-setup.exe`
     : `ATMT-Labs-${v}-linux-x86_64.AppImage`;
   return `https://github.com/${REPO}/releases/download/v${v}/${file}`;

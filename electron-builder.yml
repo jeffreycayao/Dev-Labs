@@ -6,12 +6,10 @@ copyright: Copyright © 2026 Automatika Consulting
 # releases). The release workflow still uploads assets itself (--publish never);
 # this block only stamps app-update.yml into the packaged app so the updater
 # knows which repo to poll.
-# Disabled on rebrand (no release repo yet). To enable auto-update, uncomment,
-# set owner/repo, and set GITHUB_REPO in src/shared/brand.ts to match.
-# publish:
-#   provider: github
-#   owner: automatika
-#   repo: atmt-labs
+publish:
+  provider: github
+  owner: jeffreycayao
+  repo: ATMT_LABS_FLOOR-releases
 
 # Bake the update toast's "What's new" list straight into latest*.yml.
 #

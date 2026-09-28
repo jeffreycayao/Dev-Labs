@@ -66,12 +66,24 @@ test('a Codex sign-in menu also waits for human input', async () => {
   assert.equal(observed.startup.kind, 'needs-input');
 });
 
+test('a split Windows sandbox setup prompt waits for the user', async () => {
+  const pty = fakePty();
+  const observed = await spawnAndObservePty('ramon', pty.bridge, async () => {
+    pty.data('\x1b[1mSet up Agent sand');
+    pty.data('box to continue\x1b[0m  Set up');
+    return { ok: true };
+  }, 10);
+  assert.equal(observed.startup.kind, 'needs-input');
+  assert.equal(pty.listenerCount(), 0);
+});
+
 test('ordinary terminal text about login does not block later automation', () => {
   assert.equal(terminalNeedsStartupInput('The user asked about a login bug.'), false);
   assert.equal(terminalNeedsStartupInput('Read the login code and report back.'), false);
   assert.equal(terminalNeedsStartupInput('Sign in to the dashboard, then open Settings.'), false);
   assert.equal(terminalNeedsStartupInput('To continue, sign in with ChatGPT.'), false);
   assert.equal(terminalNeedsStartupInput('The app reports: authentication required; help the user debug it.'), false);
+  assert.equal(terminalNeedsStartupInput('Explain how to set up the Windows sandbox for my team.'), false);
 });
 
 test('a process that silently disappears fails the final liveness check', async () => {

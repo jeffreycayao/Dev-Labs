@@ -220,6 +220,14 @@
     "resetConfirm": {
       "body": "这将永久抹除 {{godName}} 的所有记忆和整个 hive，且无法撤销。任何运行中的会话都会被终止，应用将重启进入新手引导。你确定吗？"
     },
+    "floorReset": {
+      "title": "重置当前楼层？",
+      "action": "重置楼层",
+      "description": "清除当前楼层的智能体、对话、任务、看板和共享记忆，保留应用设置与许可证。",
+      "body": "这会终止所有运行中的智能体，并清除当前楼层的对话、任务、看板和共享记忆。应用设置、许可证和项目源文件会保留。要先保存可恢复的 ZIP 备份吗？",
+      "backupAndReset": "备份 ZIP 并重置",
+      "withoutBackup": "不备份直接重置"
+    },
     "general": {
       "homeFolder": "主文件夹",
       "environment": "环境",

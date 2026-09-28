@@ -48,6 +48,7 @@
         <li><a href="#hire">Hire agents</a></li>
         <li><a href="#floors">Floors: hire a whole team</a></li>
         <li><a href="#building">Your building: many floors</a></li>
+        <li><a href="#deliveries">Deliveries</a></li>
         <li><a href="#connectors">Connections</a></li>
         <li><a href="#safety">Staying safe</a></li>
         <li><a href="#privacy">Privacy</a></li>
@@ -142,7 +143,27 @@
     </ul>
     <p class="note"><strong>Not available yet:</strong> a separate manager for each floor. Today every floor reports to Ramon.</p>
 
-    <h2 id="connectors">7. Connections (connectors)</h2>
+    <h2 id="deliveries">7. Deliveries: getting finished files back</h2>
+    <p>When you want a <strong>file</strong> (a web page, a document, a PDF, an image), ask Ramon for it and say the format, for example: <em>"Have Pam make a landing page for the spring sale, as HTML"</em> or <em>"I need the Q3 research as a Word document."</em></p>
+    <p>The agent who does the work <strong>delivers</strong> the file. You'll find it in the Command Center under <strong>Deliveries</strong>; a number on the tab shows how many are new.</p>
+    <div class="table"><table>
+      <thead><tr><th>You can</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Preview it</td><td>HTML pages, Markdown, text and images show right in the tab. HTML previews with scripts turned off.</td></tr>
+        <tr><td>Open it</td><td><strong>Open</strong> shows it in its normal app (browser, Word, PDF viewer…).</td></tr>
+        <tr><td>Find the file</td><td><strong>Show in folder</strong></td></tr>
+        <tr><td>Accept it</td><td><strong>Approve</strong>. The agent is told it's done.</td></tr>
+        <tr><td>Send it back</td><td><strong>Request changes</strong>, type what should change, <strong>Send to agent</strong>. The agent fixes it and delivers a new version.</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li>Each delivery is a <strong>copy</strong> taken when the agent sent it, so later edits by the agent don't change what you approved.</li>
+      <li>Agents can only deliver files from their own project folder or workspace. Anything else is refused and listed as "Not delivered".</li>
+      <li>For your safety, programs and scripts (for example <code>.exe</code>, <code>.dmg</code>, <code>.sh</code>) are never opened directly, only shown in their folder.</li>
+      <li>Preview works for HTML, Markdown, text/CSV/JSON and PNG/JPG/GIF/WebP/SVG. PDF, Word, Excel and PowerPoint files open in their own apps.</li>
+    </ul>
+
+    <h2 id="connectors">8. Connections (connectors)</h2>
     <p>Connectors let agents work inside other apps. Set them up in <strong>Settings → Connections</strong>:</p>
     <ol>
       <li>Paste your key and press <strong>Save</strong>. The key is stored encrypted on your computer and never shown again.</li>
@@ -159,14 +180,14 @@
     </table></div>
     <p><strong>Connectors can change real data.</strong> Use keys with the least access you need. Today, connectors only reach <strong>Claude Code</strong> agents.</p>
 
-    <h2 id="safety">8. Staying safe</h2>
+    <h2 id="safety">9. Staying safe</h2>
     <ul>
       <li>Agents run <strong>with your permissions</strong> on your computer. In <strong>auto mode</strong> they don't ask before running commands or editing files. Switch Settings → Autonomy &amp; Budgets to <strong>ask first</strong> if you want them to ask before acting.</li>
       <li>Give each agent only the project folder it needs. Use <strong>git isolation</strong> (its own worktree) when you want to review changes before merging.</li>
       <li><strong>Review shared hires and floors before hiring them.</strong> A shared file can't run commands of its own, and the app builds every command from your settings, but it can still give an agent a goal you didn't expect.</li>
     </ul>
 
-    <h2 id="privacy">9. Privacy</h2>
+    <h2 id="privacy">10. Privacy</h2>
     <ul>
       <li>Your code, prompts, agent output and connector keys stay on your computer.</li>
       <li>Licensing only knows your email, your license status, and which computers are activated.</li>
@@ -174,10 +195,10 @@
     </ul>
     <p>Details: <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms and License Agreement</a>.</p>
 
-    <h2 id="updates">10. Updates and What's New</h2>
+    <h2 id="updates">11. Updates and What's New</h2>
     <p>Packaged builds check the public ATMT Labs release feed while auto-update is enabled in <strong>Settings → General</strong>. When a newer version is ready, the update badge tells you; you choose when to restart and install it. <strong>What's New</strong> shows the release highlights, and <strong>full changelog</strong> opens the public Releases page. The app does not need a GitHub sign-in or token for updates.</p>
 
-    <h2 id="help">11. Troubleshooting</h2>
+    <h2 id="help">12. Troubleshooting</h2>
     <div class="table"><table>
       <thead><tr><th>You see</th><th>Do this</th></tr></thead>
       <tbody>
@@ -187,6 +208,7 @@
         <tr><td>"LICENSE CHECK NEEDED"</td><td>A trial computer needs to go online briefly. Lifetime computers never see this.</td></tr>
         <tr><td>An agent exits right away</td><td>Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name.</td></tr>
         <tr><td>Codex says "Set up Agent sandbox to continue" on Windows</td><td>Open the agent's terminal, choose <strong>Set up</strong>, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's <code>unelevated</code> sandbox fallback (below).</td></tr>
+        <tr><td>A delivery says "Not delivered: … (outside the agent's folders)"</td><td>Ask the agent to save the file inside its project folder and deliver again.</td></tr>
         <tr><td>A connector doesn't work</td><td>Check it's <strong>On</strong> with a key saved, start a <strong>new</strong> agent, and use a Claude Code agent.</td></tr>
         <tr><td>"Your building is full"</td><td>You have 200 floors open. Close a floor you no longer need, then open a new one.</td></tr>
       </tbody>

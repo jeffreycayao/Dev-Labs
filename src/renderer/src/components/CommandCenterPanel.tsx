@@ -8,6 +8,7 @@ import { PtyTerminalView } from './PtyTerminalView';
 import { MessageQueueComposer } from './MessageQueueComposer';
 import { TasksKanban } from './TasksKanban';
 import { AskMeTab } from './AskMeTab';
+import { DeliveriesTab } from './DeliveriesTab';
 import { TriggersTab } from './triggers/TriggersTab';
 import { TriggerHistoryTab } from './triggers/TriggerHistoryTab';
 import { WorkersTab } from './WorkersTab';
@@ -47,7 +48,7 @@ import { useRtl } from '@/i18n/useDirection';
 // Both the AskMe (#human) tab and the Triggers tab live here. Triggers replaced
 // the old Schedules tab: schedules are now one of four trigger types, and the
 // whole surface lives in ./triggers (see src/shared/triggers.ts for the contract).
-type CCTab = 'terminal' | 'floor' | 'tasks' | 'human' | 'triggers' | 'trigger-history'
+type CCTab = 'terminal' | 'floor' | 'tasks' | 'human' | 'deliveries' | 'triggers' | 'trigger-history'
   | 'memory' | 'graph' | 'activity' | 'skills' | 'workers';
 
 /** Fallback denominator for the per-agent token meter when no floor token budget
@@ -71,6 +72,7 @@ const TABS: { key: CCTab; labelKey: string; icon: Parameters<typeof Icon>[0]['na
   { key: 'floor', labelKey: 'commandCenter.tabs.floor', icon: 'mcp' },
   { key: 'tasks', labelKey: 'commandCenter.tabs.tasks', icon: 'check' },
   { key: 'human', labelKey: 'commandCenter.tabs.human', icon: 'bell' },
+  { key: 'deliveries', labelKey: 'commandCenter.tabs.deliveries', icon: 'folder' },
   { key: 'triggers', labelKey: 'commandCenter.tabs.triggers', icon: 'clock' },
   { key: 'trigger-history', labelKey: 'commandCenter.tabs.history', icon: 'ledger' },
   { key: 'memory', labelKey: 'commandCenter.tabs.memory', icon: 'sparkle' },
@@ -84,6 +86,23 @@ const TABS: { key: CCTab; labelKey: string; icon: Parameters<typeof Icon>[0]['na
  *  and renders the real terminal. The docked instance renders the "open in
  *  fullscreen" placeholder instead — two live xterms on one pty fight over its
  *  cols/rows and corrupt the display. */
+function useNewDeliveryCount(): number {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    let live = true;
+    const load = () => {
+      void window.cth.hiveDeliveries()
+        .then((list) => { if (live) setCount(list.filter((d) => d.status === 'new').length); })
+        .catch(() => { /* keep last count */ });
+    };
+    load();
+    const timer = setInterval(load, 10_000);
+    const off = window.cth.onHiveDelivery(load);
+    return () => { live = false; clearInterval(timer); off(); };
+  }, []);
+  return count;
+}
+
 export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent; fullscreen?: boolean }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState<CCTab>('terminal');
@@ -94,6 +113,9 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
   // The rule itself lives in the store (`triggerHistoryVisible`) beside the two
   // mirrors it reads — a second copy here would drift from Settings.
   const showHistory = useStore(triggerHistoryVisible);
+  // Unreviewed deliveries show as a count on the Deliveries tab, so a finished
+  // file is noticed without keeping that tab open.
+  const newDeliveries = useNewDeliveryCount();
   // Never leave the panel parked on a tab that has just been hidden.
   useEffect(() => {
     if (!showHistory && tab === 'trigger-history') setTab('terminal');
@@ -286,6 +308,12 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
             }}
           >
             <Icon name={tabDef.icon} /> {t(tabDef.labelKey)}
+            {tabDef.key === 'deliveries' && newDeliveries > 0 && (
+              <span aria-label={t('deliveries.newCount', { count: newDeliveries })} style={{
+                marginInlineStart: 2, minWidth: 16, padding: '0 4px', lineHeight: '15px', fontSize: 11,
+                background: 'var(--cth-coral)', color: 'var(--cth-on-accent)', textAlign: 'center'
+              }}>{newDeliveries}</span>
+            )}
           </button>
         ))}
       </div>
@@ -323,6 +351,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
         {tab === 'floor' && <FloorTab seed={dispatchSeed} onOpenTerminal={() => setTab('terminal')} />}
         {tab === 'tasks' && <TasksKanban />}
         {tab === 'human' && <AskMeTab />}
+        {tab === 'deliveries' && <DeliveriesTab />}
         {tab === 'triggers' && <TriggersTab />}
         {tab === 'trigger-history' && <TriggerHistoryTab />}
         {tab === 'memory' && (

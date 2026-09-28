@@ -43,6 +43,11 @@ import { preferredAgentRole } from '../shared/agentRole';
 import { mergeTaskLedger } from '../shared/taskLedger';
 import { expandTilde } from './fs';
 import { resolveGodName } from '../shared/godIdentity';
+import {
+  DELIVERY_LIMITS, deliveryKind, isDeliveryId, isDeliveryStatus, normalizeAttachments,
+  safeFileName, uniqueName, extensionOf, MIME_BY_EXT,
+  type Delivery, type DeliveryFile, type DeliverySkipped, type DeliveryStatus
+} from '../shared/delivery';
 
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -62,6 +67,10 @@ export interface HiveMessage {
   requires_reply: boolean;
   needs_human: boolean;
   created_at: string;
+  /** Finished files handed back with this message (paths the agent wrote).
+   *  The router snapshots them into <hive>/deliveries/<id>/ and rewrites this
+   *  list to the snapshot paths. See src/shared/delivery.ts. */
+  attachments?: string[];
 }
 
 /** One hive message reshaped for the voice read-layer (`hive:messages`): the
@@ -620,7 +629,9 @@ export class HiveManager {
     // can include tokens, paths and prompt fragments, and the hive repo is
     // committed on every change — a secret written there would be permanent.
     // log.jsonl gets the structured, non-sensitive fields; the dump stays local.
-    const want = ['fleet.json', 'hooks.sock', 'cost-ledger.jsonl', 'crashes/', '.DS_Store'];
+    // `deliveries/` holds finished files agents hand back (HTML, PDFs, images…):
+    // potentially large binaries that would bloat a repo committed on every change.
+    const want = ['fleet.json', 'hooks.sock', 'cost-ledger.jsonl', 'crashes/', 'deliveries/', '.DS_Store'];
     let lines: string[] = [];
     if (existsSync(gitignore)) { try { lines = readFileSync(gitignore, 'utf8').split('\n'); } catch { lines = []; } }
     const missing = want.filter((w) => !lines.includes(w));
@@ -1472,7 +1483,7 @@ export class HiveManager {
       : '';
     const godLine = meta.isGod
       ? 'You are the GOD / ORCHESTRATOR of this hive — your job is to ORCHESTRATE, not to implement: maintain live situational awareness and delegate the work. (1) AWARENESS — always know what is going on: keep an accurate picture of every agent (active vs archived/idle), the task board, and all in-flight work; drain your inbox continually and triage every other agent\'s requests, answering clarifications so the team runs autonomously. (2) DELEGATE — decompose work and fan it out to the hive agents via their inboxes (route messages and assign owners; do not do their jobs); do NOT take on grunt implementation yourself. Stay aware of who is already on the floor and delegate OPPORTUNISTICALLY: BEFORE you spawn anything, CHECK THE LIVE ROSTER (active agents in registry.json + their state in fleet.json) and prefer routing to an EXISTING agent that fits — above all when the request names one ("ask Pam to…", "have Jim…"), route to that agent instead of reflexively creating a new one. Reuse an idle or already-running agent whose role matches; only spawn a fresh agent when no existing one is a sensible fit, and say that you checked. One capable owner beats a duplicate. (3) OWN ONLY THE IMPORTANT, high-leverage things — task decomposition, dispatch decisions, sign-offs, conflict resolution, branch integration, and final QA — and remain the sole scribe of board.md. You are otherwise fully autonomous — there is NO separate approval queue. For the genuinely critical (destructive actions, spending real money, scope changes, unresolvable conflicts), ask the human directly in your own session and let the tool-permission prompt gate the action; the human approves natively, including remotely from their phone via /remote-control. Keep the team unblocked. When you DISPATCH a task, write it as a 4-part contract so the agent can run autonomously: (1) OBJECTIVE — the concrete goal; (2) OUTPUT — the expected deliverable/format; (3) TOOLS — what to use or avoid, and any references to read instead of re-deriving; (4) BOUNDARIES — scope limits + the definition of done. Pass references (file paths, message ids, board sections), not pasted content — keep dispatches short.'
-        + ` MONITOR the floor by reading ${inRoot('fleet.json')} (live per-agent tokens, cost, status, last tool, breaker level, inbox backlog) and ${inRoot('registry.json')} — note that running 'claude agents' will NOT list your hive's sibling agents. A full Claude Code command reference is at ${inRoot('COMMANDS.md')} (slash commands act ONLY on your own session; CLI commands run in your shell and can target the fleet). You periodically receive scheduler / "Heartbeat" standup requests — on each, review every agent via fleet.json, re-engage anyone stalled, over-budget, or breaker-armed, and keep board.md and tasks.json accurate. In tasks.json, ALWAYS set each task's "assignee" to the worker's agent id the moment you dispatch it, and NEVER clear it on status changes — a done card must still say who did the work (the human reads the board by who-did-what). HUMAN FEEDBACK is first-class in the ledger: when a task can only proceed with the human's input — a QUESTION to answer OR an ACTION only the human can perform (create an account, approve a purchase, provide credentials/screenshots, test on their device) — set its status to "blocked" and append the concrete ask to the card's "humanQA" array (push {"q":"...","askedAt":"<iso>"}; phrase actions as clear to-dos; keep every past entry — the history documents the card's decisions). WRITE THE ASK SHORT AND IN MARKDOWN. The human reads it on a CARD, not in a terminal, so an ask longer than a short paragraph plus its options (roughly 700 characters) is a report, not a question — cut the narrative, keep the decision. Open with ONE **bold** sentence saying exactly what you need from them; put paths, commands, values and identifiers in \`backticks\`; give each option or step its own "-" bullet or "1." number; leave a blank line between paragraphs (a single newline is a line break, so each option stays on its own line). When the ask originates in another agent's report, REWRITE it into that shape — never paste the report body in as the question, and never make the human read the investigation to find the decision. The harness surfaces open questions on the office floor's ASK ME board; the human's answer lands in the same entry ("a") AND arrives as an inbox message to you — read it, act on it, and unblock the card so work continues. Do NOT park human questions in separate files (no HumanQuestion.md) and never sit waiting on the human in your own session. Steward the token budget.`
+        + ` MONITOR the floor by reading ${inRoot('fleet.json')} (live per-agent tokens, cost, status, last tool, breaker level, inbox backlog) and ${inRoot('registry.json')} — note that running 'claude agents' will NOT list your hive's sibling agents. A full Claude Code command reference is at ${inRoot('COMMANDS.md')} (slash commands act ONLY on your own session; CLI commands run in your shell and can target the fleet). You periodically receive scheduler / "Heartbeat" standup requests — on each, review every agent via fleet.json, re-engage anyone stalled, over-budget, or breaker-armed, and keep board.md and tasks.json accurate. In tasks.json, ALWAYS set each task's "assignee" to the worker's agent id the moment you dispatch it, and NEVER clear it on status changes — a done card must still say who did the work (the human reads the board by who-did-what). HUMAN FEEDBACK is first-class in the ledger: when a task can only proceed with the human's input — a QUESTION to answer OR an ACTION only the human can perform (create an account, approve a purchase, provide credentials/screenshots, test on their device) — set its status to "blocked" and append the concrete ask to the card's "humanQA" array (push {"q":"...","askedAt":"<iso>"}; phrase actions as clear to-dos; keep every past entry — the history documents the card's decisions). WRITE THE ASK SHORT AND IN MARKDOWN. The human reads it on a CARD, not in a terminal, so an ask longer than a short paragraph plus its options (roughly 700 characters) is a report, not a question — cut the narrative, keep the decision. Open with ONE **bold** sentence saying exactly what you need from them; put paths, commands, values and identifiers in \`backticks\`; give each option or step its own "-" bullet or "1." number; leave a blank line between paragraphs (a single newline is a line break, so each option stays on its own line). When the ask originates in another agent's report, REWRITE it into that shape — never paste the report body in as the question, and never make the human read the investigation to find the decision. The harness surfaces open questions on the office floor's ASK ME board; the human's answer lands in the same entry ("a") AND arrives as an inbox message to you — read it, act on it, and unblock the card so work continues. Do NOT park human questions in separate files (no HumanQuestion.md) and never sit waiting on the human in your own session. Steward the token budget. DELIVERABLE FILES: when the human asks for a file (HTML, Markdown, DOCX, PDF, image, slides…), put the format in the dispatch's OUTPUT and tell the owner to deliver it with a "done" message "to": "human" carrying "attachments" (see PROTOCOL.md). It lands in the human's Deliveries tray (${inRoot('deliveries')}/<id>/delivery.json) and a copy of the message reaches you — check the files, then record the delivery id on the task card's "result". When the human requests changes, the owner gets them directly; follow up if it stalls.`
       : meta.isAssistant
       ? `You are ${godNameForPrompt}'s PREP ASSISTANT. You will be handed short, possibly vague instructions (each begins with "ENRICH TASK:"). For each one: (1) figure out which project it concerns and cd into the most relevant repo — you start in ${godNameForPrompt}'s home directory; (2) gather concrete context READ-ONLY (exact file paths, current state, relevant code, conventions, active branch, gotchas) — NEVER modify, create, or delete files; (3) rewrite the instruction into ONE clear, self-contained prompt that ${godNameForPrompt} can execute autonomously, preserving the user's original intent without inventing scope. Then deliver it: write ONE message JSON into your outbox with "to":"god", "act":"request", a short subject, and the finished prompt as the body. Do NOT perform the task yourself — your only output is the improved prompt sent to ${godNameForPrompt}.`
       : 'For anything ambiguous, cross-cutting, or needing sign-off, address a message to "god".';
@@ -1488,6 +1499,7 @@ export class HiveManager {
       `1. At the START of a task, read ${inDir('memory.md')} and EVERY file in ${inDir('inbox')} (messages other agents sent you). After handling an inbox message, move its file into ${inDir('inbox', '.done')}.`,
       `2. Record durable facts, decisions, and context by appending to ${inDir('memory.md')}.`,
       `3. To ask another agent for something or share information, write ONE message JSON into ${inDir('outbox')} (schema in PROTOCOL.md). NEVER write into another agent's folder — the orchestrator delivers your outbox.`,
+      `   When your result is a FILE (HTML, Markdown, PDF, DOCX, image, …), deliver it: a "done" message with "attachments": ["path/to/file"] (to "human" when the human asked for it, else to whoever asked). The harness puts it in the human's Deliveries tray. See "Delivering finished files" in PROTOCOL.md.`,
       '4. At the END of a task, append what you learned to memory.md so future-you remembers.',
       guardrailsLine,
       memoryLine,
@@ -1518,7 +1530,8 @@ export class HiveManager {
       hops: typeof partial.hops === 'number' ? partial.hops : 0,
       requires_reply: partial.requires_reply ?? ['request', 'query', 'propose'].includes(act),
       needs_human: partial.needs_human ?? false,
-      created_at: partial.created_at ?? new Date().toISOString()
+      created_at: partial.created_at ?? new Date().toISOString(),
+      ...(normalizeAttachments(partial.attachments).length ? { attachments: normalizeAttachments(partial.attachments) } : {})
     };
   }
 
@@ -1535,6 +1548,7 @@ export class HiveManager {
   /** Inject a message directly (used by the orchestrator / UI / tests). */
   send(partial: Partial<HiveMessage>, from = 'system'): HiveMessage {
     const msg = this.normalize(partial, from);
+    if (msg.attachments?.length) this.captureDelivery(msg);
     this.routeMessage(msg);
     this.commit(`hive: msg ${msg.from}→${msg.to} (${msg.act})`);
     return msg;
@@ -1680,6 +1694,174 @@ export class HiveManager {
     return delivered;
   }
 
+  // — deliveries: finished files handed back to the human —
+
+  deliveriesDir(): string | null {
+    const root = this.root();
+    return root ? join(root, 'deliveries') : null;
+  }
+
+  /** Folders a sender may deliver from: its hive workspace, its project folder
+   *  (registry cwd) and the shared hive root. Anything else (~/.ssh, another
+   *  agent's project, a symlink out) is refused, so a confused or hostile agent
+   *  can't copy arbitrary files into the human's tray. Real paths, so `..` and
+   *  symlinked parents can't escape. */
+  private deliveryRoots(senderId: string): string[] {
+    const root = this.root();
+    if (!root) return [];
+    const reg = this.registry();
+    const cands = [root];
+    if (reg.agents[senderId]) {
+      cands.push(this.agentDir(senderId));
+      const cwd = reg.agents[senderId].cwd;
+      if (cwd && isAbsolute(cwd)) cands.push(cwd);
+    }
+    const out: string[] = [];
+    for (const c of cands) { try { out.push(realpathSync(c)); } catch { /* missing */ } }
+    return [...new Set(out)];
+  }
+
+  /**
+   * Snapshot a message's attachments into <hive>/deliveries/<id>/, write
+   * delivery.json, and point the message at the snapshot so the recipient
+   * (usually god, as the human's proxy) can open it too. Never throws: a bad
+   * attachment is recorded as skipped with a reason and reported in the body.
+   */
+  private captureDelivery(msg: HiveMessage): void {
+    const base = this.deliveriesDir();
+    const requested = msg.attachments ?? [];
+    if (!base || !requested.length) return;
+    try {
+      if (!isDeliveryId(msg.id)) msg.id = `${stamp()}-${shortRand()}`;
+      const dir = join(base, msg.id);
+      const roots = this.deliveryRoots(msg.from);
+      const reg = this.registry();
+      const cwd = reg.agents[msg.from]?.cwd;
+      const files: DeliveryFile[] = [];
+      const skipped: DeliverySkipped[] = [];
+      const taken = new Set<string>();
+      let total = 0;
+      for (const [i, given] of requested.entries()) {
+        if (i >= DELIVERY_LIMITS.maxFiles) { skipped.push({ path: given, reason: 'too-many' }); continue; }
+        const expanded = expandTilde(given);
+        const candidates = isAbsolute(expanded)
+          ? [expanded]
+          : [cwd && isAbsolute(cwd) ? join(cwd, expanded) : '', join(this.agentDir(msg.from), expanded), join(this.root()!, expanded)].filter(Boolean);
+        const abs = candidates.find((c) => existsSync(c));
+        if (!abs) { skipped.push({ path: given, reason: 'not-found' }); continue; }
+        const lst = lstatSync(abs);
+        if (lst.isSymbolicLink()) { skipped.push({ path: given, reason: 'symlink' }); continue; }
+        if (!lst.isFile()) { skipped.push({ path: given, reason: 'not-a-file' }); continue; }
+        let real: string;
+        try { real = realpathSync(abs); } catch { skipped.push({ path: given, reason: 'not-found' }); continue; }
+        const inside = roots.some((r) => { const rel = relative(r, real); return rel && !rel.startsWith('..') && !isAbsolute(rel); });
+        if (!inside) { skipped.push({ path: given, reason: 'outside-workspace' }); continue; }
+        if (lst.size > DELIVERY_LIMITS.maxFileBytes) { skipped.push({ path: given, reason: 'too-large' }); continue; }
+        if (total + lst.size > DELIVERY_LIMITS.maxTotalBytes) { skipped.push({ path: given, reason: 'total-too-large' }); continue; }
+        const name = uniqueName(safeFileName(basename(real)), taken);
+        taken.add(name.toLowerCase());
+        mkdirSync(dir, { recursive: true });
+        copyFileSync(real, join(dir, name));
+        total += lst.size;
+        files.push({ name, size: lst.size, kind: deliveryKind(name) });
+      }
+      if (files.length) {
+        const delivery: Delivery = {
+          id: msg.id,
+          from: msg.from,
+          to: msg.to,
+          subject: msg.subject,
+          note: msg.body,
+          conversation: msg.conversation,
+          createdAt: msg.created_at,
+          files,
+          skipped,
+          status: 'new'
+        };
+        this.atomicWriteJson(join(dir, 'delivery.json'), delivery);
+        this.appendLog({ kind: 'delivery', id: msg.id, from: msg.from, to: msg.to, files: files.length, skipped: skipped.length });
+        try { this.emit?.('hive:delivery', { id: msg.id, from: msg.from, subject: msg.subject, files: files.length }); } catch { /* best-effort */ }
+      }
+      msg.attachments = files.map((f) => join(dir, f.name));
+      const lines: string[] = [];
+      if (files.length) {
+        lines.push(`📦 Delivered ${files.length} file(s) to the human's Deliveries tray (${dir}):`);
+        for (const f of files) lines.push(`- ${f.name} (${f.kind}, ${f.size} bytes)`);
+      }
+      if (skipped.length) {
+        lines.push(`⚠️ Not delivered: ${skipped.map((s) => `${s.path} (${s.reason})`).join(', ')}`);
+      }
+      if (lines.length) msg.body = `${msg.body ? `${msg.body}\n\n` : ''}${lines.join('\n')}`;
+    } catch (err) {
+      this.appendLog({ kind: 'delivery-error', id: msg.id, from: msg.from, error: String((err as Error)?.message ?? err) });
+    }
+  }
+
+  /** Newest first. Unreadable or malformed manifests are skipped. */
+  deliveries(limit = 200): Delivery[] {
+    const base = this.deliveriesDir();
+    if (!base || !existsSync(base)) return [];
+    const out: Delivery[] = [];
+    for (const id of readdirSync(base)) {
+      if (!isDeliveryId(id)) continue;
+      const d = this.readJson<Delivery | null>(join(base, id, 'delivery.json'), null);
+      if (d && d.id === id && Array.isArray(d.files)) out.push(d);
+    }
+    out.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+    return out.slice(0, limit);
+  }
+
+  setDeliveryStatus(id: string, status: DeliveryStatus, feedback?: string): Delivery | null {
+    const base = this.deliveriesDir();
+    if (!base || !isDeliveryId(id) || !isDeliveryStatus(status)) return null;
+    const p = join(base, id, 'delivery.json');
+    const d = this.readJson<Delivery | null>(p, null);
+    if (!d) return null;
+    // "seen" never downgrades a reviewed delivery.
+    if (status === 'seen' && d.status !== 'new') return d;
+    const next: Delivery = {
+      ...d,
+      status,
+      ...(status === 'seen' ? {} : { reviewedAt: new Date().toISOString() }),
+      ...(typeof feedback === 'string' && feedback.trim() ? { feedback: feedback.trim().slice(0, 8000) } : {})
+    };
+    this.atomicWriteJson(p, next);
+    if (status !== 'seen') this.appendLog({ kind: 'delivery-review', id, status });
+    return next;
+  }
+
+  /** Absolute path of one delivered file, or null if the id/name don't name a
+   *  file that is actually in that delivery's manifest. */
+  deliveryFilePath(id: string, name: string): string | null {
+    const base = this.deliveriesDir();
+    if (!base || !isDeliveryId(id) || typeof name !== 'string') return null;
+    const d = this.readJson<Delivery | null>(join(base, id, 'delivery.json'), null);
+    if (!d || !d.files.some((f) => f.name === name)) return null;
+    const p = join(base, id, name);
+    return existsSync(p) ? p : null;
+  }
+
+  /** Preview payload for the tray: text for html/markdown/text, a data URL for
+   *  images, nothing for binaries (the tray offers Open / Show in folder). */
+  readDeliveryFile(id: string, name: string):
+    | { ok: true; kind: string; size: number; text?: string; dataUrl?: string; tooLarge?: boolean }
+    | { ok: false; error: string } {
+    const p = this.deliveryFilePath(id, name);
+    if (!p) return { ok: false, error: 'not found' };
+    const size = statSync(p).size;
+    const kind = deliveryKind(name);
+    if (kind === 'html' || kind === 'markdown' || kind === 'text') {
+      if (size > DELIVERY_LIMITS.maxPreviewTextBytes) return { ok: true, kind, size, tooLarge: true };
+      return { ok: true, kind, size, text: readFileSync(p, 'utf8') };
+    }
+    if (kind === 'image') {
+      if (size > DELIVERY_LIMITS.maxPreviewImageBytes) return { ok: true, kind, size, tooLarge: true };
+      const mime = MIME_BY_EXT[extensionOf(name)] ?? 'application/octet-stream';
+      return { ok: true, kind, size, dataUrl: `data:${mime};base64,${readFileSync(p).toString('base64')}` };
+    }
+    return { ok: true, kind, size };
+  }
+
   // — router: drain outboxes → inboxes —
 
   /** Poll-based router. Cheap and robust vs fs.watch quirks on macOS. */
@@ -1733,6 +1915,7 @@ export class HiveManager {
           }
           const msg = this.normalize(partial, id);
           msg.from = id; // sender is authoritative — the owning directory
+          if (msg.attachments?.length) this.captureDelivery(msg);
           this.routeMessage(msg);
           renameSync(full, join(outbox, '.sent', f)); // archive, don't reprocess
           routed++;
@@ -2822,6 +3005,32 @@ Write one JSON file into \`outbox/\` (any filename ending in \`.json\`):
 \`\`\`
 
 The harness fills in \`id\`, \`from\`, \`hops\`, and timestamps.
+
+## Delivering finished files (HTML, Markdown, PDF, DOCX, images, …)
+When the work product is a FILE, write it inside your project folder or your
+workspace, then send a \`done\` message with \`attachments\`: a list of paths
+(absolute, or relative to your project folder).
+
+\`\`\`json
+{
+  "to": "human",
+  "act": "done",
+  "subject": "Landing page draft (HTML)",
+  "body": "What it is, what to check, anything unfinished.",
+  "attachments": ["out/landing.html", "out/hero.png"]
+}
+\`\`\`
+
+- The harness copies each file into the human's **Deliveries** tray
+  (\`deliveries/<message-id>/\`) as a snapshot, then routes the message as usual
+  (\`"to": "human"\` reaches the god). Later edits to your copy do NOT change what
+  was delivered: to send a new version, deliver again.
+- Only files inside your project folder, your workspace, or the hive are accepted;
+  symlinks, folders and files over 50 MB are refused and reported in the body.
+- Deliver in the format that was asked for. If the request names none, prefer
+  HTML for pages, Markdown for documents, PNG for images.
+- The human may reply with **changes requested** (a \`request\` from \`human\` that
+  quotes the delivery). Fix it and deliver again in the same \`conversation\`.
 
 ## Rules of the road
 - Only \`request\`, \`query\`, and \`propose\` expect a reply. \`inform\` and \`done\` are terminal —

@@ -99,7 +99,26 @@ A **building** is every floor you have open at the same time. Each floor is its 
 
 **Not available yet:** a separate manager for each floor. Today every floor reports to Ramon.
 
-## 7. Connections (connectors)
+## 7. Deliveries: getting finished files back
+
+When you want a **file** (a web page, a document, a PDF, an image), ask Ramon for it and say the format, for example: *"Have Pam make a landing page for the spring sale, as HTML"* or *"I need the Q3 research as a Word document."*
+
+The agent who does the work **delivers** the file. You'll find it in the Command Center under **Deliveries**; a number on the tab shows how many are new.
+
+| You can | How |
+|---|---|
+| Preview it | HTML pages, Markdown, text and images show right in the tab. HTML previews with scripts turned off. |
+| Open it | **Open** shows it in its normal app (browser, Word, PDF viewer…). |
+| Find the file | **Show in folder** |
+| Accept it | **Approve**. The agent is told it's done. |
+| Send it back | **Request changes**, type what should change, **Send to agent**. The agent fixes it and delivers a new version. |
+
+- Each delivery is a **copy** taken when the agent sent it, so later edits by the agent don't change what you approved.
+- Agents can only deliver files from their own project folder or workspace. Anything else is refused and listed as "Not delivered".
+- For your safety, programs and scripts (for example `.exe`, `.dmg`, `.sh`) are never opened directly, only shown in their folder.
+- Supported for preview: HTML, Markdown, text/CSV/JSON, PNG/JPG/GIF/WebP/SVG. PDF, Word, Excel and PowerPoint files open in their own apps.
+
+## 8. Connections (connectors)
 
 Connectors let agents work inside other apps. Set them up in **Settings → Connections**:
 
@@ -117,13 +136,13 @@ Connectors let agents work inside other apps. Set them up in **Settings → Conn
 
 Today, connectors only reach **Claude Code** agents.
 
-## 8. Staying safe
+## 9. Staying safe
 
 - Agents run **with your permissions** on your computer. In **auto mode** they don't ask before running commands or editing files. Switch Settings → Autonomy & Budgets to **ask first** if you want them to ask before acting.
 - Give each agent only the project folder it needs. Use **git isolation** (its own worktree) when you want to review changes before merging.
 - **Review shared hires and floors before hiring them.** A shared file can't run commands of its own, and the app builds every command from your settings, but it can still give an agent a goal you didn't expect.
 
-## 9. Privacy
+## 10. Privacy
 
 - Your code, prompts, agent output and connector keys stay on your computer.
 - Licensing only knows your email, your license status, and which computers are activated.
@@ -133,7 +152,7 @@ Details: [Privacy Policy](https://labs.atmt.dev/privacy) · [Terms / License Agr
 
 This guide is also online at **https://labs.atmt.dev/guide**.
 
-## 10. Updates and What's New
+## 11. Updates and What's New
 
 Packaged builds check the public ATMT Labs release feed while auto-update is
 enabled in **Settings → General**. When a newer version is ready, the update
@@ -141,7 +160,7 @@ badge tells you; you choose when to restart and install it. **What's New**
 shows the release highlights, and **full changelog** opens the public Releases
 page. The app does not need a GitHub sign-in or token for updates.
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 | You see | Do this |
 |---|---|
@@ -151,6 +170,7 @@ page. The app does not need a GitHub sign-in or token for updates.
 | "LICENSE CHECK NEEDED" | A trial computer needs to go online briefly. Lifetime computers never see this. |
 | An agent exits right away | Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name. |
 | Codex says "Set up Agent sandbox to continue" on Windows | Open the agent's terminal, choose **Set up**, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's `unelevated` sandbox fallback (below). |
+| A delivery says "Not delivered: … (outside the agent's folders)" | Ask the agent to save the file inside its project folder and deliver again. |
 | A connector doesn't work | Check it's **On** with a key saved, start a **new** agent, and use a Claude Code agent. |
 | "Your building is full" | You have 200 floors open. Close a floor you no longer need, then open a new one. |
 

@@ -19,6 +19,8 @@ import type { ModelCatalog } from '../shared/modelCatalogPayload';
 export type { ModelCatalog, CatalogModel } from '../shared/modelCatalogPayload';
 import type { CatalogModel } from '../shared/modelCatalogPayload';
 import type { HookEvent } from '../shared/hookEvents';
+import type { Delivery, DeliveryStatus } from '../shared/delivery';
+export type { Delivery, DeliveryStatus, DeliveryKind, DeliveryFile } from '../shared/delivery';
 export type { HookEvent } from '../shared/hookEvents';
 import type { LocalSkill } from '../main/skills';
 import type { CatalogSkill } from '../main/atmtSkills';
@@ -79,6 +81,8 @@ export interface HiveMessage {
   requires_reply: boolean;
   needs_human: boolean;
   created_at: string;
+  /** Finished files handed back (see src/shared/delivery.ts). */
+  attachments?: string[];
 }
 
 /** A hive message reshaped for the voice read-layer (`hive:messages`). `subject`
@@ -877,6 +881,27 @@ const api = {
     ipcRenderer.invoke('history:search', query, limit),
   hiveSend: (msg: Partial<HiveMessage>, from?: string): Promise<{ ok: boolean; error?: string; message?: HiveMessage }> =>
     ipcRenderer.invoke('hive:send', msg, from),
+
+  // ─── Deliveries (finished files agents hand back) ──────────────────────────
+  /** Newest first. */
+  hiveDeliveries: (): Promise<Delivery[]> => ipcRenderer.invoke('hive:deliveries'),
+  /** Preview payload: text for html/markdown/text, a data URL for images. */
+  hiveDeliveryRead: (id: string, name: string): Promise<
+    | { ok: true; kind: string; size: number; text?: string; dataUrl?: string; tooLarge?: boolean }
+    | { ok: false; error: string }
+  > => ipcRenderer.invoke('hive:deliveryRead', id, name),
+  hiveDeliverySetStatus: (id: string, status: DeliveryStatus, feedback?: string): Promise<{ ok: boolean; error?: string; delivery?: Delivery }> =>
+    ipcRenderer.invoke('hive:deliverySetStatus', id, status, feedback),
+  /** Opens documents/images in their default app; anything else is revealed. */
+  hiveDeliveryOpen: (id: string, name: string): Promise<{ ok: boolean; error?: string; revealed?: boolean }> =>
+    ipcRenderer.invoke('hive:deliveryOpen', id, name),
+  hiveDeliveryReveal: (id: string, name?: string): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('hive:deliveryReveal', id, name),
+  onHiveDelivery: (cb: (e: { id: string; from: string; subject: string; files: number }) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, payload: { id: string; from: string; subject: string; files: number }) => cb(payload);
+    ipcRenderer.on('hive:delivery', listener);
+    return () => ipcRenderer.removeListener('hive:delivery', listener);
+  },
 
   onHiveHookEvent: (
     cb: (e: HookEvent) => void

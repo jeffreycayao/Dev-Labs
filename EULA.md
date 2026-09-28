@@ -1,5 +1,7 @@
 # ATMT Labs — End User License Agreement (DRAFT)
 
+> **Published version:** https://labs.atmt.dev/terms (`site/terms.html`). That page is what users see and what Google's OAuth review checks. Change both together.
+
 > **DRAFT — not yet in force. Have a lawyer licensed in your jurisdiction review
 > it before you publish.** Items marked **[CONFIRM]** are business or legal
 > decisions the owner must make. Everything else describes how the product

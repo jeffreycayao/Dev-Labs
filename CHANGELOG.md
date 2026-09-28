@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+- **Website: user guide, terms and privacy.** `labs.atmt.dev/guide` is the user guide online. `labs.atmt.dev/terms` and `labs.atmt.dev/privacy` publish the Terms of Service / license and Privacy Policy that the sign-in page already links to. The privacy policy covers Google and Yahoo sign-in (scopes, use, Google API Services User Data Policy / Limited Use), cookies, processors, retention and data-subject rights (PH DPA, GDPR, US states). Both pages still carry `[CONFIRM]` items and a draft banner to remove after review.
+- **User guide: your building.** New section on running many floors at once: opening a floor, the 200-floor limit, one Ramon for the whole building, agents messaging across floors, and what closing a floor does.
 - **Public app updates:** release CI now mirrors private release notes and installer assets to a public distribution repository; packaged clients check that public feed without a GitHub credential.
 - **Website (labs.atmt.dev):** new `site/` folder, deployed as its own Vercel project. It holds the landing page for **ATMT Labs Floor** (building concept, feature tour "floor by floor", pricing, FAQ, video placeholder), plus `/welcome` (after checkout) and `/pricing`. It uses the Automatika brand and loads no scripts.
 - **Building cap:** up to **200 floors** (office windows) can be open at once. A new floor beyond that shows "Your building is full" instead of opening. There was no limit before.

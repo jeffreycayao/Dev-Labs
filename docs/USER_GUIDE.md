@@ -73,7 +73,33 @@ The ZIP contains `floor/` (roster, hive and shared memory), matching Claude sess
 
 **Try it:** the *Online Seller Team* is a shop manager, a landing-page designer and a product copywriter. It's built for Pancake POS and Webcake.
 
-## 6. Connections (connectors)
+## 6. Your building: many floors at once
+
+A **building** is every floor you have open at the same time. Each floor is its own office window with its own agents. Use floors to split your business into teams, for example:
+
+| Floor | Team |
+|---|---|
+| Floor 0 | Product research and economics (5 agents) |
+| Floor 1 | Coding and infrastructure (15 agents) |
+| Floor 2 | Marketing and social media research (5 agents) |
+| Floor 3 | Product improvement (2 agents) |
+
+**Open a new floor:** app menu → **New Floor**, or press **Cmd+Shift+N** (Mac) / **Ctrl+Shift+N** (Windows, Linux). You can have up to **200 floors** open at once. If you try to open more, the app says your building is full; close a floor you no longer need first.
+
+**How floors work together:**
+- **Ramon runs the whole building.** There is one Ramon, at the head desk of your first window. He sees every agent on every floor and can hand work to any of them.
+- **Agents can reach agents on other floors.** Floors don't wall agents off. Any agent can message any other agent in the building, and Ramon can send a Floor 1 task to an agent on Floor 2. If a floor doesn't have the skill you need, ask Ramon to use the agent on the floor that does.
+- **Before hiring someone new, Ramon checks who is already in the building.** He reuses an agent who fits instead of hiring a duplicate.
+- **Closing a floor stops its agents.** The app asks first. Other floors keep running. The agents' history and memory are kept, but they don't answer messages until you hire them again.
+
+**Tips:**
+- Agents don't know which floor they're on. Put the team in the name, like `F2 Marketing - Liza`, so you and Ramon can tell who belongs where.
+- Save each team as a floor file (**export floor…**) so you can set up the same building again in a few clicks.
+- Every running agent uses your AI tool's account. A big building costs more; keep open only the floors you need, and set token budgets in **Settings → Autonomy & Budgets**.
+
+**Not available yet:** a separate manager for each floor. Today every floor reports to Ramon.
+
+## 7. Connections (connectors)
 
 Connectors let agents work inside other apps. Set them up in **Settings → Connections**:
 
@@ -91,21 +117,23 @@ Connectors let agents work inside other apps. Set them up in **Settings → Conn
 
 Today, connectors only reach **Claude Code** agents.
 
-## 7. Staying safe
+## 8. Staying safe
 
 - Agents run **with your permissions** on your computer. In **auto mode** they don't ask before running commands or editing files. Switch Settings → Autonomy & Budgets to **ask first** if you want them to ask before acting.
 - Give each agent only the project folder it needs. Use **git isolation** (its own worktree) when you want to review changes before merging.
 - **Review shared hires and floors before hiring them.** A shared file can't run commands of its own, and the app builds every command from your settings, but it can still give an agent a goal you didn't expect.
 
-## 8. Privacy
+## 9. Privacy
 
 - Your code, prompts, agent output and connector keys stay on your computer.
 - Licensing only knows your email, your license status, and which computers are activated.
 - Anonymous usage stats are optional: Settings → General → **Anonymous usage stats**.
 
-Details: [Privacy Policy](../PRIVACY.md) · [Telemetry](../TELEMETRY.md) · [License Agreement](../EULA.md).
+Details: [Privacy Policy](https://labs.atmt.dev/privacy) · [Terms / License Agreement](https://labs.atmt.dev/terms) · [Telemetry](../TELEMETRY.md).
 
-## 9. Updates and What's New
+This guide is also online at **https://labs.atmt.dev/guide**.
+
+## 10. Updates and What's New
 
 Packaged builds check the public ATMT Labs release feed while auto-update is
 enabled in **Settings → General**. When a newer version is ready, the update
@@ -113,7 +141,7 @@ badge tells you; you choose when to restart and install it. **What's New**
 shows the release highlights, and **full changelog** opens the public Releases
 page. The app does not need a GitHub sign-in or token for updates.
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 | You see | Do this |
 |---|---|
@@ -124,6 +152,7 @@ page. The app does not need a GitHub sign-in or token for updates.
 | An agent exits right away | Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name. |
 | Codex says "Set up Agent sandbox to continue" on Windows | Open the agent's terminal, choose **Set up**, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's `unelevated` sandbox fallback (below). |
 | A connector doesn't work | Check it's **On** with a key saved, start a **new** agent, and use a Claude Code agent. |
+| "Your building is full" | You have 200 floors open. Close a floor you no longer need, then open a new one. |
 
 For the Windows fallback, add the following to `%USERPROFILE%\.codex\config.toml`, then restart the Codex agent. ATMT Labs copies that setting into each agent's Codex configuration when it starts. The fallback keeps a sandbox but has weaker isolation than administrator-approved setup. Company policy may disallow it.
 

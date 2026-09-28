@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+## v0.5.0 — 2026-09-28
+
 - **Reliable first message:** Ramon's inbox is created when the first scheduled message arrives on a new floor, so a cold-start race no longer drops that message. Unknown agents still do not acquire mailboxes.
 - **Release command:** `release:*` now checks for a clean, current checkout before creating a commit or tag. Installers are built by the tag pipeline; local builds are optional.
 - **Deliveries.** Agents can hand back finished files (HTML, Markdown, PDF, DOCX, images, spreadsheets, slides): a "done" message with `"attachments"`. The router snapshots each file into `<hive>/deliveries/<id>/` and the new **Deliveries** tab in the Command Center shows them, with a count of new ones. Preview HTML (sandboxed, no scripts), Markdown, text and images; open documents in their own app; **Approve** or **Request changes**, which mails the agent to deliver a new version in the same conversation. Only files inside the agent's project folder, workspace or the hive are accepted (no symlinks, 50 MB per file, 20 files); programs and scripts are only ever shown in their folder, never launched. `deliveries/` is kept out of the hive's git history. Ramon and every agent are told how to deliver (PROTOCOL.md).

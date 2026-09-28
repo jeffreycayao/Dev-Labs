@@ -1,6 +1,6 @@
 # labs.atmt.dev — the ATMT Labs Floor website
 
-Static HTML and CSS, with no build step and no browser JavaScript. One server function, `api/download.js`, handles download links. The landing,
+Static HTML and CSS with no build step on Vercel. One server function, `api/download.js`, handles download links. A small motion script (`assets/js/site.js`) adds smooth scrolling, scroll reveals and the 3D hero; the pages work fully without it.
 welcome, and pricing pages use the live visual language of
 [automatika.ph](https://www.automatika.ph/): dark espresso surfaces, lime
 accents, Instrument Serif headlines, Manrope body text, and IBM Plex Mono
@@ -37,3 +37,11 @@ The auth pages currently use a separate, older brand treatment.
 - Prereleases and drafts are skipped (GitHub's "latest" is the newest stable release).
 - Optional: set a `GITHUB_TOKEN` environment variable on this Vercel project (a fine-grained token with no permissions, or public read-only) to raise GitHub's API rate limit. It isn't needed at normal traffic because redirects are cached.
 - If you rename installers in `electron-builder.yml` (`artifactName`), update `PLATFORMS` in `api/download.js`. `test/site-download.test.cjs` fails if they drift apart.
+
+## Motion and 3D (assets/js)
+
+- `assets/js/site.js` (~22 KB): [Lenis](https://github.com/darkroomengineering/lenis) smooth scroll, scroll reveals, count-up numbers, card spotlight, nav blur, scroll progress bar.
+- `assets/js/hero3d-*.js` (~135 KB gzipped): a [three.js](https://threejs.org) night city behind the hero. Loaded lazily, only on screens 720px and wider with WebGL, and paused when off screen.
+- Everything is off for visitors with "reduce motion" turned on, and the pages read normally with scripts blocked.
+- These files are **built output**. Edit `tools/site-bundle/src/`, then run `npm install && npm run build` in `tools/site-bundle` and commit the result. Vercel still has no build step.
+- The CSP allows `script-src 'self'` only. It blocks inline `style="…"` attributes, so use classes in `assets/site.css` (see the `.mt-*` utilities).

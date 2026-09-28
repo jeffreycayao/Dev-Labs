@@ -160,3 +160,44 @@ footer img{width:auto;height:31px}
 @media(max-width:850px){.section{padding:80px 0}.tour{grid-template-columns:1fr}.elevator{display:none}.g3{grid-template-columns:repeat(2,1fr)}.stack{grid-template-columns:1fr}.stack .arrow{justify-self:center;transform:rotate(90deg)}.tag.t1{right:-1%}.tag.t2{left:-1%}}
 @media(max-width:620px){.wrap{padding:0 18px}.nav{padding:10px 0}.nav .wrap{min-height:60px;padding:10px 14px}.brand img{height:26px}.nav nav a:not(.btn){display:none}.nav .btn{min-height:38px;padding:8px 10px;font-size:11px}.hero{padding:23px 12px 75px}.hero .wrap{padding:54px 15px 32px}.hero h1{font-size:clamp(3.8rem,13vw,5.8rem)}.hero .lead{margin:22px auto 26px}.hero .btns{width:100%}.hero .btns .btn{width:100%}.hero .trust{justify-content:flex-start;text-align:left}.building{margin-top:55px}.tower{padding:16px 12px 0}.ground{margin:0 -12px}.floor{padding:10px 8px;gap:5px}.floor .num{min-width:36px;font-size:10px}.floor .desks{gap:4px}.floor .desk{height:13px}.tag{position:relative;display:block;font-size:10px}.tag.t1,.tag.t2{left:auto;right:auto;top:auto;bottom:auto;margin-top:5px}.video .sub{text-align:center;padding:0 20px}.stats{grid-template-columns:repeat(2,1fr)}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--line)}.g2,.g3,.g4{grid-template-columns:1fr}.level{grid-template-columns:1fr;gap:16px}.points{grid-template-columns:1fr}.band{padding:60px 20px}footer .wrap{grid-template-columns:repeat(2,1fr);gap:30px}footer .wrap>div:first-child{grid-column:1/-1}.panel{padding:28px}.toc ol{columns:1}.page{padding:66px 0}.dl{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
+/* Spacing utilities (the CSP blocks inline style="" attributes) */
+.mt-10{margin-top:10px!important}.mt-14{margin-top:14px!important}.mt-22{margin-top:22px!important}.mt-26{margin-top:26px!important}.mt-56{margin-top:56px!important}.mw-320{max-width:320px!important}.jc-center{justify-content:center!important}
+/* ── Motion layer (assets/js/site.js). Everything here is opt-in via html.js
+      and switched off by prefers-reduced-motion. ─────────────────────────── */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+.scroll-progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;background:var(--accent);transform-origin:0 50%;transform:scaleX(var(--p,0));box-shadow:0 0 12px #d8ff0099;pointer-events:none}
+html.js .reveal{opacity:0;transform:translate3d(0,28px,0);transition:opacity .9s cubic-bezier(.2,.7,.2,1) var(--d,0ms),transform 1s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
+html.js .reveal.in{opacity:1;transform:none}
+.nav{transition:padding .35s ease,background-color .35s ease}
+.nav .wrap{transition:background-color .35s ease,border-color .35s ease,box-shadow .35s ease}
+.nav.scrolled{padding:8px 0;background:transparent}
+.nav.scrolled .wrap{background:rgba(26,25,21,.72);border-color:#56503f;box-shadow:0 18px 50px #0009;-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3)}
+.hero-3d{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:0;transition:opacity 2.2s ease;pointer-events:none;-webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
+.hero-3d.on{opacity:.9}
+.hero .wrap{z-index:1;-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px)}
+.hero h1 .hl{background:linear-gradient(100deg,var(--accent) 0%,#f3ffb0 45%,var(--accent) 60%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s ease-in-out infinite}
+@keyframes shine{0%,100%{background-position:100% 0}50%{background-position:0 0}}
+.eyebrow .dot{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #d8ff0080}50%{box-shadow:0 0 0 6px #d8ff0000}}
+.floor .desk.on{animation:desk 3.6s ease-in-out infinite}
+.floor .desk:nth-child(2){animation-delay:.7s}.floor .desk:nth-child(3){animation-delay:1.5s}.floor .desk:nth-child(4){animation-delay:2.2s}.floor .desk:nth-child(5){animation-delay:.3s}
+.floor:nth-child(2) .desk{animation-duration:4.4s}.floor:nth-child(4) .desk{animation-duration:3.1s}.floor:nth-child(5) .desk{animation-duration:5s}
+@keyframes desk{0%,100%{opacity:1}45%{opacity:.55;box-shadow:0 0 6px #d8ff0033}50%{opacity:1;box-shadow:0 0 22px #d8ff00aa}}
+.tag{animation:float 6s ease-in-out infinite}.tag.t2{animation-delay:-3s}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -8px}}
+.btn{position:relative;overflow:hidden;isolation:isolate}
+.btn.primary::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(110deg,transparent 30%,#ffffff8c 50%,transparent 70%);transform:translateX(-120%);transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.btn.primary:hover::after{transform:translateX(120%)}
+.btn.primary:hover{box-shadow:0 10px 34px #d8ff0040}
+.btn:not(.primary):hover{border-color:var(--accent);color:var(--accent)}
+.card{position:relative;overflow:hidden;transition:transform .45s cubic-bezier(.2,.7,.2,1),border-color .35s ease,box-shadow .45s ease}
+.card::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s ease;background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),#d8ff0017,transparent 45%)}
+.card:hover{transform:translateY(-4px);border-color:#6f7a3a;box-shadow:0 22px 60px #0008}
+.card:hover::after{opacity:1}
+.stack .arrow{animation:nudge 2.2s ease-in-out infinite}
+@keyframes nudge{0%,100%{translate:0 0}50%{translate:6px 0}}
+.video .play{animation:ring 2.6s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 #d8ff0066}100%{box-shadow:0 0 0 26px #d8ff0000}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}html.js .reveal{opacity:1;transform:none}.hero-3d{display:none}}

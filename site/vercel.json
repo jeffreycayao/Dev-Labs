@@ -2,10 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
-  "redirects": [
-    { "source": "/download/mac", "destination": "/welcome#download", "permanent": false },
-    { "source": "/download/windows", "destination": "/welcome#download", "permanent": false },
-    { "source": "/download/linux", "destination": "/welcome#download", "permanent": false }
+  "rewrites": [
+    { "source": "/download/:os(mac|mac-zip|windows|windows-portable|linux)", "destination": "/api/download?os=:os" }
   ],
   "headers": [
     {

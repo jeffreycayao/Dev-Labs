@@ -88,3 +88,12 @@ Wait for **Publish public release mirror** to finish. Stable releases appear at
 Until the public repository and `PUBLIC_REPO_PAT` exist, mirroring cannot run
 and the public update endpoint will return 404. Do not distribute a build that
 expects this feed before publishing its first public release.
+
+## 5. Website download buttons
+
+The download buttons on `labs.atmt.dev` (`/download/mac`, `/download/windows`,
+`/download/linux`, plus `/download/mac-zip` and `/download/windows-portable`)
+read the public repository's latest stable release at request time and
+redirect to the matching installer. Once the mirror job above finishes, the
+site serves the new version within about 5 minutes (the CDN cache). No site
+change or redeploy is needed. See `site/README.md` → "Download links".

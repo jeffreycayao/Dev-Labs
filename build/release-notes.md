@@ -1,3 +1,3 @@
-- Reset your floor from Settings with an optional restorable ZIP backup.
-- Floor reset keeps your license and app preferences.
-- Codex on Windows waits at sandbox setup prompts while you handle UAC.
+- Review files your agents deliver in the new Command Center Deliveries tab.
+- Preview documents and request changes from the same conversation.
+- Ramon's inbox now catches the first scheduled message on a fresh floor.

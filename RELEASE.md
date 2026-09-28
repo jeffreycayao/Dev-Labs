@@ -15,7 +15,16 @@ Each command runs `tools/bump-version.cjs`, which:
 2. prepends a `## vX.Y.Z — date` section to `CHANGELOG.md` from the commit subjects,
 3. commits `chore(release): vX.Y.Z` and tags `vX.Y.Z`,
 
-then runs `npm run dist` to build installers into `dist/`.
+then runs the local release preflight. Push the commit to `main`, wait for CI,
+and push its tag; the tag workflow builds installers for every platform and
+mirrors the completed release. Run `npm run dist` separately only when you
+want a local installer.
+
+The release command refuses to change files when the checkout has uncommitted
+work, is behind `origin/main`, or the target tag already exists. Run
+`git fetch origin main` and integrate the latest `main` before preparing a
+release. If `release:minor` fails after making its release commit, inspect the
+new commit and tag before retrying; do not run it again to repair a failed push.
 
 Preview without changing anything: `node tools/bump-version.cjs auto --dry-run`.
 Bump only (no build): `npm run version:bump -- minor`.

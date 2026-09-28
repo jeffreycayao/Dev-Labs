@@ -1536,11 +1536,15 @@ export class HiveManager {
   }
 
   /** Atomically deliver a message into a recipient agent's inbox.
-   *  Returns false when the recipient has no inbox, so the caller can bounce and
-   *  log the drop rather than let the message vanish. */
-  private deliver(msg: HiveMessage, toId: string): boolean {
+   *  The god mailbox may be addressed before ensureAgent creates it on a cold
+   *  start. Only that mailbox is created on demand; unknown agents still drop. */
+  private deliver(msg: HiveMessage, toId: string, opts?: { createInbox?: boolean }): boolean {
     const inbox = join(this.agentDir(toId), 'inbox');
-    if (!existsSync(inbox)) return false; // unknown recipient — the caller reports it
+    if (!existsSync(inbox)) {
+      if (!opts?.createInbox) return false; // unknown recipient — the caller reports it
+      try { mkdirSync(join(inbox, '.done'), { recursive: true }); }
+      catch { return false; } // unwritable floor — the caller reports the drop
+    }
     this.atomicWriteJson(join(inbox, `${msg.id}.json`), msg);
     return true;
   }
@@ -1590,7 +1594,7 @@ export class HiveManager {
           ...msg,
           to: godId,
           subject: `[bounced — "${t}" is the send-only prep assistant; route work to a real agent] ${msg.subject}`
-        }, godId);
+        }, godId, { createInbox: true });
         continue;
       }
       // A provider without safe-idle lifecycle state (a hookless custom command)
@@ -1605,7 +1609,7 @@ export class HiveManager {
             ...msg,
             to: godId,
             subject: `[undeliverable — "${t}" runs ${reg.agents[t]?.provider ?? 'a hookless CLI'} and the terminal handoff failed (renderer unavailable); relay this to it] ${msg.subject}`
-          }, godId);
+          }, godId, { createInbox: true });
         } else delivered.push(t);
         continue;
       }
@@ -1621,11 +1625,11 @@ export class HiveManager {
             ...msg,
             to: godId,
             subject: `[undeliverable — "${t}" runs ${reg.agents[t]?.provider ?? 'a proxy-tier CLI'} and the terminal handoff failed (renderer unavailable); relay this to it] ${msg.subject}`
-          }, godId);
+          }, godId, { createInbox: true });
         } else delivered.push(t);
         continue;
       }
-      if (this.deliver(msg, t)) { delivered.push(t); continue; }
+      if (this.deliver(msg, t, { createInbox: t === godId })) { delivered.push(t); continue; }
       // No agents/<t>/inbox — an id that isn't on the floor. This was the one
       // delivery failure with neither bounce nor log, so the sender saw a routed
       // message and the mail simply ceased to exist. Record the drop beside the
@@ -1636,7 +1640,7 @@ export class HiveManager {
           ...msg,
           to: godId,
           subject: `[undeliverable — no agent "${t}" on this floor; check the id against the roster] ${msg.subject}`
-        }, godId);
+        }, godId, { createInbox: true });
       }
     }
     this.appendLog({ kind: 'message', from: msg.from, to: msg.to, act: msg.act, subject: msg.subject, id: msg.id, delivered });

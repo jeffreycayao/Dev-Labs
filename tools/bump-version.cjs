@@ -71,6 +71,30 @@ const next = bump(pkg.version, level);
 console.log(`${pkg.version} -> ${next} (${level}${kind === 'auto' ? `, from ${commits.length} commit(s) since ${tag || 'start'}` : ''})`);
 if (dryRun) process.exit(0);
 
+// Refuse a release before touching files if this checkout cannot advance main.
+// A stale checkout used to create a lower-version commit and tag that Git then
+// rejected on push, leaving the operator to untangle both refs by hand.
+const refuse = (message) => { console.error(`Release not prepared: ${message}`); process.exit(1); };
+if (inGit) {
+  if (git('status', '--porcelain')) {
+    refuse('Commit or stash local changes before preparing a release.');
+  }
+  let remoteMain;
+  try { remoteMain = git('ls-remote', 'origin', 'refs/heads/main').split(/\s+/)[0]; }
+  catch { refuse('Could not reach origin. Check Git access and retry.'); }
+  if (!/^[0-9a-f]{40}$/.test(remoteMain)) {
+    refuse('Could not find origin/main. Fetch and check the remote before releasing.');
+  }
+  if (git('rev-parse', 'refs/remotes/origin/main') !== remoteMain) {
+    refuse('Local origin/main is stale. Run git fetch origin main before releasing.');
+  }
+  try { git('merge-base', '--is-ancestor', remoteMain, 'HEAD'); }
+  catch { refuse('This checkout is behind or diverged from origin/main. Integrate main before releasing.'); }
+  if (git('tag', '--list', `v${next}`) || git('ls-remote', 'origin', `refs/tags/v${next}`)) {
+    refuse(`Release tag v${next} already exists. Inspect the existing tag before retrying.`);
+  }
+}
+
 pkg.version = next;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 

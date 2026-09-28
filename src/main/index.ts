@@ -75,6 +75,7 @@ import { resolveGodName } from '../shared/godIdentity';
 import { fetchHireManifest, readHireManifestFiles, fetchFloorManifest, readFloorManifestFile, type FloorResult } from './hire';
 import { parseHireDeepLink, type HireManifest } from '../shared/hire';
 import { isDeliveryId, isDeliveryStatus, canOpenWithSystemApp } from '../shared/delivery';
+import { buildOpenCodeConfig } from '../shared/opencodeConfig';
 import { parseFloorDeepLink, validateFloorManifest, floorFileName, FLOOR_MAX_BYTES, BUILDING_MAX_FLOORS, canAddFloor } from '../shared/floor';
 import { ClosingTimeController } from './closingTime';
 import {
@@ -3213,19 +3214,13 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
     // 3) OpenCode's auto-approve + local provider live in its single config-injection
     //    env var, built dynamically so permission:allow is GATED on autoMode (#2).
     if (provider === 'opencode') {
-      const oc: Record<string, unknown> = { autoupdate: false };
-      if (cfg.autoMode) oc.permission = { edit: 'allow', bash: 'allow', webfetch: 'allow' };
-      const baseUrl = cfg.providerBaseUrls?.opencode;
-      if (baseUrl) {
-        // Register the model id the user actually selects (the part after 'local/')
-        // so `--model local/<id>` resolves; default to 'local'. Without this the
-        // dropdown's `local/llama3` failed against a config that only declared model
-        // 'local' (Jim verify-opencode MUST-FIX #2).
-        const localModel = (prefix === 'local' && modelSlug.slice(6)) || 'local';
-        oc.provider = {
-          local: { npm: '@ai-sdk/openai-compatible', name: 'Local (self-hosted)', options: { baseURL: baseUrl }, models: { [localModel]: { name: localModel } } }
-        };
-      }
+      // Local model id: the part after 'local/' in the selected slug (Jim
+      // verify-opencode MUST-FIX #2). See src/shared/opencodeConfig.ts.
+      const oc = buildOpenCodeConfig({
+        autoMode: !!cfg.autoMode,
+        baseUrl: cfg.providerBaseUrls?.opencode,
+        localModel: prefix === 'local' ? modelSlug.slice(6) : undefined
+      });
       extra.OPENCODE_CONFIG_CONTENT = JSON.stringify(oc);
     }
     opts.env = { ...(opts.env ?? {}), ...extra };

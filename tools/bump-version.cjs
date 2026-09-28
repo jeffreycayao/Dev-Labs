@@ -87,13 +87,21 @@ const date = new Date().toISOString().slice(0, 10);
 const bullets = commits.length
   ? commits.filter((c) => !/^chore\(release\)/.test(c.subject)).map((c) => `- ${c.subject}`).join('\n')
   : '- Maintenance release.';
-const section = `## v${next} — ${date}\n\n${bullets}\n\n`;
 const existing = fs.existsSync(changelogPath) ? fs.readFileSync(changelogPath, 'utf8') : '# Changelog\n\n';
-const headerEnd = existing.indexOf('\n## ');
-fs.writeFileSync(
-  changelogPath,
-  headerEnd === -1 ? existing.trimEnd() + '\n\n' + section : existing.slice(0, headerEnd + 1) + section + existing.slice(headerEnd + 1)
-);
+// Hand-written "## Unreleased" entries become this release's section (they are
+// better than commit subjects); a fresh, empty Unreleased heading stays on top.
+// Without Unreleased entries, fall back to the commit subjects.
+const unreleased = existing.match(/^## Unreleased[ \t]*\r?\n([\s\S]*?)(?=^## |(?![\s\S]))/m);
+const pending = unreleased ? unreleased[1].trim() : '';
+const section = `## v${next} — ${date}\n\n${pending || bullets}\n\n`;
+let updated;
+if (unreleased) {
+  updated = existing.slice(0, unreleased.index) + '## Unreleased\n\n' + section + existing.slice(unreleased.index + unreleased[0].length);
+} else {
+  const headerEnd = existing.indexOf('\n## ');
+  updated = headerEnd === -1 ? existing.trimEnd() + '\n\n' + section : existing.slice(0, headerEnd + 1) + section + existing.slice(headerEnd + 1);
+}
+fs.writeFileSync(changelogPath, updated);
 
 if (inGit) {
   git('add', 'package.json', 'package-lock.json', 'CHANGELOG.md');

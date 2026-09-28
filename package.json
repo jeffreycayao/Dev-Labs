@@ -1,6 +1,6 @@
 {
   "name": "atmt-labs",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "ATMT Labs — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
   "main": "out/main/index.js",
@@ -28,10 +28,11 @@
     "version:major": "node tools/app-version.cjs bump major",
     "version:check": "node tools/app-version.cjs check",
     "hooks:install": "node tools/install-git-hooks.cjs",
-    "release:patch": "node tools/bump-version.cjs patch && npm run dist",
-    "release:minor": "node tools/bump-version.cjs minor && npm run dist",
-    "release:major": "node tools/bump-version.cjs major && npm run dist",
-    "release": "node tools/bump-version.cjs auto && npm run dist"
+    "release:patch": "node tools/bump-version.cjs patch && npm run release:check && npm run dist",
+    "release:minor": "node tools/bump-version.cjs minor && npm run release:check && npm run dist",
+    "release:major": "node tools/bump-version.cjs major && npm run release:check && npm run dist",
+    "release": "node tools/bump-version.cjs auto && npm run release:check && npm run dist",
+    "release:check": "node tools/release-preflight.cjs"
   },
   "dependencies": {
     "@codemirror/lang-css": "^6.3.1",

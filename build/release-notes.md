@@ -1,3 +1,3 @@
-- App updates and What's New now load from the public ATMT Labs releases feed.
-- Installers and release notes mirror automatically after publication.
-- Updating needs no GitHub sign-in or token.
+- Reset your floor from Settings with an optional restorable ZIP backup.
+- Floor reset keeps your license and app preferences.
+- Codex on Windows waits at sandbox setup prompts while you handle UAC.

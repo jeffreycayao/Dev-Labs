@@ -1080,8 +1080,11 @@ export function useHive(config: HarnessConfig | null): void {
     if (!config?.onboardingComplete) return;
     const offSpawn = window.cth.onHiveAgentSpawned?.((rec) => {
       if (!rec?.id) return;
-      // addAgent is idempotent, but bail early if the renderer already carded it.
-      if (useStore.getState().agents.some((a) => a.id === rec.id)) return;
+      // A stopped hire already has a card; a successful respawn refreshes that
+      // card in place. Only a live card makes this broadcast redundant.
+      const roster = useStore.getState();
+      if (roster.agents.some((a) => a.id === rec.id && a.status !== 'ghost')
+        && !roster.restorableAgents.some((a) => a.id === rec.id)) return;
       // An explicit character wins; otherwise infer it from the name, which is
       // what makes "spawn one called Meredith" land on the Meredith avatar with
       // nothing else asked for. The explicit field covers what inference cannot
@@ -1120,11 +1123,26 @@ export function useHive(config: HarnessConfig | null): void {
         recentTextTs: Date.now()
       };
       useStore.getState().addAgent(agent);
+      // The process may have exited before its spawn broadcast was handled.
+      void window.cth.listPtys().then((list) => {
+        if (!list.some((p) => p.id === rec.id)) useStore.getState().markAgentStopped(rec.id);
+      }).catch(() => { /* retain the hire on a transient query failure */ });
     });
     const offArchive = window.cth.onHiveAgentArchived?.((e) => {
       if (e?.id) useStore.getState().archiveAgent(e.id);
     });
-    return () => { offSpawn?.(); offArchive?.(); };
+    const offOffline = window.cth.onHiveAgentOffline?.((e) => {
+      if (!e?.id) return;
+      // A quick restart can reuse the PTY id before this event reaches React.
+      // Check current liveness so an old exit cannot gray out its replacement.
+      void window.cth.listPtys().then((list) => {
+        const current = useStore.getState().agents.find((a) => a.id === e.id);
+        if (current?.ptyId && !list.some((p) => p.id === current.ptyId)) {
+          useStore.getState().markAgentStopped(e.id);
+        }
+      }).catch(() => { /* the next startup reconcile can repair a failed query */ });
+    });
+    return () => { offSpawn?.(); offArchive?.(); offOffline?.(); };
   }, [config?.onboardingComplete]);
 
   // 5c) v0.3.4 voice bridge: main stages queue insertions (clear_context) and

@@ -2,6 +2,8 @@
 
 A **floor** is a team of agents in one file (`*.floor.json`). Share it, and anyone can hire the same team in one click.
 
+The live floor keeps hired agents visible when a CLI stops. A stopped card can be restored with the same agent identity; changing the office theme does not remove it. During normal floor use, only an explicit fire action by the human or Ramon takes a hired agent off the floor. The separately confirmed floor reset clears the whole floor.
+
 - **Spec and validator:** `src/shared/floor.ts`
 - **Example:** [`floors/online-seller-team.floor.json`](floors/online-seller-team.floor.json)
 

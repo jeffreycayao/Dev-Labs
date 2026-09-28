@@ -288,9 +288,6 @@ export function AgentStrip({ config }: AgentStripProps) {
             }}>
               {t('agentStrip.previousSession')}
             </span>
-            {/* Per-agent dismiss wires straight to removeRestorableAgent
-                (filters + persistRestorable), so a dismissed agent never
-                reappears after reload. */}
             {restorableAgents.map((a: Agent) => (
               <span
                 key={a.id}
@@ -309,17 +306,6 @@ export function AgentStrip({ config }: AgentStripProps) {
                 <span style={{ fontSize: 11, color: 'var(--cth-ink-500)', whiteSpace: 'nowrap' }}>
                   {a.description ? a.description.slice(0, 24) : ''}
                 </span>
-                <button
-                  onClick={() => useStore.getState().removeRestorableAgent(a.id)}
-                  title={t('agentStrip.dismiss', { name: a.name })}
-                  aria-label={t('agentStrip.dismissAria', { name: a.name })}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 18, height: 18, padding: 0, lineHeight: 1,
-                    fontSize: 12, color: 'var(--cth-ink-500)',
-                    background: 'transparent', border: 'none', cursor: 'pointer'
-                  }}
-                >✕</button>
               </span>
             ))}
             <PixelButton

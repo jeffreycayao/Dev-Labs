@@ -223,14 +223,14 @@ function resolveAgent(target: string, reg: Registry): ResolvedAgent | { error: s
     return mk(reg.godId, reg.agents[reg.godId] ?? {});
   // exact name, prefer live
   const byName = entries.filter(([, m]) => (m.name || '').toLowerCase() === t);
-  const liveName = byName.filter(([, m]) => !m.archived);
+  const liveName = byName.filter(([, m]) => !m.archived && m.status !== 'gone');
   const namePick = liveName.length ? liveName : byName;
   if (namePick.length === 1) return mk(namePick[0][0], namePick[0][1]);
   if (namePick.length > 1)
     return { error: `${namePick.length} agents are named ${target} — say the exact agent id` };
   // partial contains, live only
   const partial = entries.filter(
-    ([id, m]) => !m.archived && (id.toLowerCase().includes(t) || (m.name || '').toLowerCase().includes(t))
+    ([id, m]) => !m.archived && m.status !== 'gone' && (id.toLowerCase().includes(t) || (m.name || '').toLowerCase().includes(t))
   );
   if (partial.length === 1) return mk(partial[0][0], partial[0][1]);
   if (partial.length > 1) return { error: `several agents match "${target}" — be more specific or say an id` };

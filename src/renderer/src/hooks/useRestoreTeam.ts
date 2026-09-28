@@ -177,6 +177,7 @@ export function useRestoreTeam(config?: HarnessConfig | null): RestoreTeamState 
             // the restorable list rather than reporting a phantom failure.
             alreadyLive++;
             useStore.getState().removeRestorableAgent(a.id);
+            useStore.getState().updateAgent(a.id, { status: 'idle', action: 'running' });
           } else {
             // Leave it restorable so the user can retry — but record WHY so the
             // outcome is shown on the floor, not buried in the devtools console.
@@ -215,9 +216,8 @@ export function useRestoreTeam(config?: HarnessConfig | null): RestoreTeamState 
   // PTY reconcile resolves, so a timer started at mount would look at an empty
   // list, decide there was nothing to do, and never look again.
   //
-  // Only ever fires for agents already on the restorable list — i.e. ones that
-  // had a terminal open when the app last quit. Archived agents (closed tabs)
-  // are never touched.
+  // Only ever fires for agents on the restorable list. Explicitly fired agents
+  // are removed from that list and never restarted.
   useEffect(() => {
     if (autoStarted || !config?.onboardingComplete) return;
     let timer: ReturnType<typeof setTimeout> | null = null;

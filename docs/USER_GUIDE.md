@@ -48,6 +48,8 @@ Then choose one:
 
 Click **add agent**. Give the agent a name, a look, a project folder, an engine and model, and a standing goal. Then press **spawn**.
 
+A hired agent stays on the floor if its terminal stops or cannot restart. Its card shows **stopped** and keeps its identity, memory, restore information and isolated worktree; use **restore team** or **Restart & Continue** to resume it. Changing the office theme keeps your agents. During normal floor use, an agent leaves only after you explicitly **Fire** it or Ramon fires it; the agent's history remains available. **Reset floor** is a separate, confirmed action that clears the whole floor.
+
 | Shortcut | How |
 |---|---|
 | **Role templates** | Pick a ready-made role (Technical or Non-technical) to fill in everything. |

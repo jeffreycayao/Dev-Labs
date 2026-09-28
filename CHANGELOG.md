@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+- **Agents stay hired:** a CLI exit or a startup restore failure leaves the agent visible as stopped, with its identity, restore recipe and isolated worktree intact. Ramon sees stopped hires as unavailable instead of fired. New hires are protected from an older startup PTY snapshot. Switching office themes no longer fires the team; only an explicit human or Ramon fire removes a hired agent from the floor.
+
 ## v0.5.1 — 2026-09-28
 
 - **Release pipeline:** allow the preflight gate to read CI check results, so it can publish the validated installers and public mirror.

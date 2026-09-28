@@ -9,8 +9,10 @@
 export interface BroadcastCandidate {
   /** Ramon's prep assistant — send-only, drains no inbox. */
   isAssistant?: boolean;
-  /** PTY tab closed; the record is retained but the agent is not live. */
+  /** Explicitly fired; retained in history but not on the floor. */
   archived?: boolean;
+  /** The hire remains on the floor, but its terminal cannot receive work. */
+  status?: string;
 }
 
 /**
@@ -43,6 +45,7 @@ export function selectBroadcastTargets(
     if (id === fromId) return false;
     if (agent.isAssistant) return false;
     if (agent.archived) return false;
+    if (agent.status === 'gone') return false;
     return true;
   });
 }

@@ -61,6 +61,7 @@ export function usePtyParser(agentId: string) {
     }
     idleTimerRef.current = window.setTimeout(() => {
       const current = useStore.getState().agents.find((agent) => agent.id === agentId);
+      if (current?.status === 'ghost') return;
       if (current?.action === 'Complete engine setup in Terminal'
         && current.ptyId && terminalShowsStartupPrompt(current.ptyId)) return;
       // No new tool calls for ~4 s → assume the model went idle

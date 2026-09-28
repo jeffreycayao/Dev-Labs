@@ -494,6 +494,14 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
       recentTextTs: Date.now()
     };
     addAgent(agent);
+    // A CLI can exit between main's successful spawn reply and this card being
+    // added. In that order the offline broadcast finds no card to update.
+    void window.cth.listPtys().then((list) => {
+      if (list.some((p) => p.id === ptyId)) return;
+      if (useStore.getState().agents.some((a) => a.id === id && a.ptyId === ptyId)) {
+        useStore.getState().markAgentStopped(id);
+      }
+    }).catch(() => { /* keep the hire when the status query fails */ });
     // Remember the folder for the next hire: promote it to the front of the
     // registeredRepos quick-picks (the modal's default cwd) so back-to-back
     // hires land in the same project without re-picking.

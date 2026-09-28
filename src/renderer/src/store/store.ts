@@ -16,6 +16,7 @@ import { DEFAULT_ORG_TRIGGER, type OrgTriggerConfig, type WebhookTrigger } from 
 import { isCompactionCommand } from '@shared/providerAutomation';
 import { preferredAgentRole } from '@shared/agentRole';
 import { isInboxNudge } from '@shared/hiveNudge';
+import { reconcileHiredRoster, stoppedAgent } from '@shared/agentRoster';
 import { refocusAfterRemoval, focusOnLoad, restoreFocus } from './focusMode';
 import { chooseRosterSource, shouldDiscardFloorCache } from './rosterSource';
 
@@ -99,9 +100,8 @@ export interface Agent {
   contextTokens?: number;
   /** The context-window limit assumed for this agent's model (tokens). */
   contextLimit?: number;
-  /** True once this agent's terminal was closed. Archived agents are retained
-   *  (in the store's `archivedAgents` list + the hive registry) but flagged and
-   *  kept off the floor; only live-PTY agents are 'active'. */
+  /** True after an explicit fire. Stopped terminals leave hired agents on the
+   *  floor with a ghost status; fired agents move to `archivedAgents`. */
   archived?: boolean;
   /** Hive protocol to TYPE into this agent's TUI as its first turn, set at spawn
    *  for `seedDelivery:'type-into-tui'` providers (Crush) whose bare TUI rejects a
@@ -169,15 +169,10 @@ export type GodStatus = 'booting' | 'ready' | 'failed';
 
 interface State {
   agents: Agent[];
-  /** Agents whose terminal was closed — retained + flagged, kept off the active
-   *  roster/floor. The hive registry retains them durably; this mirrors them for
-   *  the renderer's "Archived" view. */
+  /** Explicitly fired agents, retained in history but off the floor. */
   archivedAgents: Agent[];
-  /** Workers from the previous session whose terminal died with the app (quit /
-   *  crash). Kept with their full spawn recipe (id, cwd, model, command) so the
-   *  user can one-click respawn them with the SAME agent id — memory, inbox and
-   *  registry entry reattach by themselves. God/assistant are excluded (they
-   *  auto-respawn). */
+  /** Stopped hires whose spawn recipe can resume the same agent id. Their floor
+   *  cards stay in `agents`; god/assistant auto-respawn through their own path. */
   restorableAgents: Agent[];
   selectedId: string | null;
   feeds: Record<string, string[]>;
@@ -229,9 +224,9 @@ interface State {
   setAgentNote: (id: string, note: string) => void;
   pushFeed: (id: string, line: string) => void;
   addAgent: (agent: Agent) => void;
+  markAgentStopped: (id: string) => void;
   removeAgent: (id: string) => void;
-  /** Archive an agent (its terminal was closed): move it from the active roster
-   *  into `archivedAgents` with its PTY cleared. Retained + flagged, NOT deleted. */
+  /** Explicit fire: move an agent off the floor and into retained history. */
   archiveAgent: (id: string) => void;
   /** Permanently forget an archived agent (drops the renderer entry only; the
    *  hive registry keeps its record). */
@@ -336,10 +331,8 @@ interface State {
   setIdeInitialFile: (path: string | null) => void;
   setSidebarWidth: (px: number) => void;
   setSidebarTab: (tab: SidebarTab) => void;
-  /** Drop persisted agents whose PTY is no longer alive in the main process.
-   *  Called once at startup so a renderer reload (e.g. after the laptop sleeps)
-   *  restores still-running agents and only removes truly-dead ones. */
-  reconcileWithLivePtys: (livePtyIds: string[]) => void;
+  /** At startup, mark missing PTYs stopped while keeping hires on the floor. */
+  reconcileWithLivePtys: (livePtyIds: string[], observedAgentIds: string[]) => void;
 }
 
 const LS_SIDEBAR_WIDTH = 'cth.sidebarWidth';
@@ -673,9 +666,18 @@ const initialPrefersFocusMode = (() => {
 })();
 
 
-const initialAgents = loadPersistedAgents();
+const loadedAgents = loadPersistedAgents();
 const initialArchivedAgents = loadPersistedArchived();
 const initialRestorableAgents = loadPersistedRestorable();
+// Older builds moved stopped hires into a separate restore menu. Put those
+// hires back on the floor immediately, even when their CLI cannot restart.
+const initialAgents = [
+  ...loadedAgents,
+  ...initialRestorableAgents
+    .filter((a) => !loadedAgents.some((live) => live.id === a.id)
+      && !initialArchivedAgents.some((fired) => fired.id === a.id))
+    .map(stoppedAgent)
+];
 const initialSelectedId = loadPersistedSelectedId(initialAgents);
 const initialQueues = loadPersistedQueues();
 
@@ -795,9 +797,11 @@ export const useStore = create<State>((set, get) => ({
     set((s) => {
       // Idempotent by id: a MAIN-initiated spawn broadcast (hive:agentSpawned, e.g.
       // a voice hire) and a renderer-initiated hire (AddAgentModal) can both call
-      // addAgent for the same id — never render a duplicate card. The first writer
-      // (richer local record) wins; the broadcast is a no-op for it.
-      if (s.agents.some((a) => a.id === agent.id)) return s;
+      // addAgent for the same id. A live card wins; a stopped card is refreshed
+      // in place so it keeps its original floor position.
+      const existing = s.agents.find((a) => a.id === agent.id);
+      if (existing && !s.restorableAgents.some((a) => a.id === agent.id)
+        && existing.status !== 'ghost') return s;
       // GOD enters at the HEAD, everyone else at the tail. Ramon's position was
       // otherwise decided by a race he usually lost: useHive's bootstrap removes
       // the restored god entry, then spawns him asynchronously (a setTimeout, a
@@ -812,7 +816,9 @@ export const useStore = create<State>((set, get) => ({
       // order, and a god-first sort at render time would silently override the
       // user's own arrangement every frame. This just makes the head the honest
       // default; a deliberate drag still wins and still persists.
-      const agents = agent.isGod ? [agent, ...s.agents] : [...s.agents, agent];
+      const agents = existing
+        ? s.agents.map((a) => a.id === agent.id ? { ...a, ...agent } : a)
+        : agent.isGod ? [agent, ...s.agents] : [...s.agents, agent];
       // Re-spawning an archived agent un-archives it: an id is active xor archived.
       const archivedAgents = s.archivedAgents.filter((a) => a.id !== agent.id);
       // A live (re)spawn also consumes any restorable entry for the same id.
@@ -828,16 +834,37 @@ export const useStore = create<State>((set, get) => ({
         feeds: { ...s.feeds, [agent.id]: s.feeds[agent.id] ?? [] }
       };
     }),
+  markAgentStopped: (id) =>
+    set((s) => {
+      const target = s.agents.find((a) => a.id === id);
+      if (!target || target.isGod || target.isAssistant) return s;
+      if (target.status === 'ghost' && s.restorableAgents.some((a) => a.id === id)) return s;
+      const agents = s.agents.map((a) => a.id === id ? stoppedAgent(a) : a);
+      // Keep the durable hire on the floor. Its PTY identity and spawn recipe
+      // remain available for Restart & Continue or the next boot restore.
+      const restorableAgents = [
+        ...s.restorableAgents.filter((a) => a.id !== id), target
+      ];
+      persistAgents(agents, s.selectedId);
+      persistRestorable(restorableAgents);
+      return { agents, restorableAgents };
+    }),
   removeAgent: (id) =>
     set((s) => {
+      // This primitive exists for Ramon's bootstrap replacement only. Hired
+      // agents leave the floor through the explicit archive/fire action.
+      const target = s.agents.find((a) => a.id === id);
+      if (target && id !== 'god' && !target.isGod && !target.isAssistant) return s;
       const agents = s.agents.filter(a => a.id !== id);
+      const restorableAgents = s.restorableAgents.filter((a) => a.id !== id);
       const { [id]: _gone, ...feeds } = s.feeds;
       const { [id]: _queueGone, ...messageQueues } = s.messageQueues;
       const selectedId = s.selectedId === id ? (agents[0]?.id ?? null) : s.selectedId;
       const fullscreenAgentId = refocusAfterRemoval(s.fullscreenAgentId, agents, selectedId);
       persistAgents(agents, selectedId);
+      if (restorableAgents.length !== s.restorableAgents.length) persistRestorable(restorableAgents);
       if (_queueGone) persistQueues(messageQueues);
-      return { agents, feeds, selectedId, messageQueues, fullscreenAgentId };
+      return { agents, restorableAgents, feeds, selectedId, messageQueues, fullscreenAgentId };
     }),
   archiveAgent: (id) =>
     set((s) => {
@@ -855,14 +882,16 @@ export const useStore = create<State>((set, get) => ({
         currentStation: undefined
       };
       const archivedAgents = [...s.archivedAgents.filter((a) => a.id !== id), archivedEntry];
+      const restorableAgents = s.restorableAgents.filter((a) => a.id !== id);
       const { [id]: _feedGone, ...feeds } = s.feeds;
       const { [id]: _queueGone, ...messageQueues } = s.messageQueues;
       const selectedId = s.selectedId === id ? (agents[0]?.id ?? null) : s.selectedId;
       const fullscreenAgentId = refocusAfterRemoval(s.fullscreenAgentId, agents, selectedId);
       persistAgents(agents, selectedId);
       persistArchived(archivedAgents);
+      if (restorableAgents.length !== s.restorableAgents.length) persistRestorable(restorableAgents);
       if (_queueGone) persistQueues(messageQueues);
-      return { agents, archivedAgents, feeds, selectedId, messageQueues, fullscreenAgentId };
+      return { agents, archivedAgents, restorableAgents, feeds, selectedId, messageQueues, fullscreenAgentId };
     }),
   removeArchivedAgent: (id) =>
     set((s) => {
@@ -990,31 +1019,15 @@ export const useStore = create<State>((set, get) => ({
       persistQueues(messageQueues);
       return { messageQueues };
     }),
-  reconcileWithLivePtys: (livePtyIds) =>
+  reconcileWithLivePtys: (livePtyIds, observedAgentIds) =>
     set((s) => {
-      const live = new Set(livePtyIds);
-      // Keep agents with no PTY (synthetic) or whose PTY is still alive.
-      const agents = s.agents.filter((a) => !a.ptyId || live.has(a.ptyId));
-      if (agents.length === s.agents.length) return s;
-      // Workers whose terminal died with the previous session become restorable
-      // (full spawn recipe retained) instead of silently vanishing. God and the
-      // prep assistant are excluded — they auto-respawn at boot.
-      const dead = s.agents.filter(
-        (a) => a.ptyId && !live.has(a.ptyId) && !a.isGod && !a.isAssistant
+      const result = reconcileHiredRoster(
+        s.agents, s.restorableAgents, livePtyIds, observedAgentIds
       );
-      const restorableAgents = [
-        ...s.restorableAgents.filter((r) => !dead.some((d) => d.id === r.id)),
-        ...dead
-      ];
-      const feeds: Record<string, string[]> = {};
-      for (const a of agents) feeds[a.id] = s.feeds[a.id] ?? [];
-      const selectedId = agents.some((a) => a.id === s.selectedId)
-        ? s.selectedId
-        : (agents[0]?.id ?? null);
-      const fullscreenAgentId = refocusAfterRemoval(s.fullscreenAgentId, agents, selectedId);
-      persistAgents(agents, selectedId);
-      persistRestorable(restorableAgents);
-      return { agents, feeds, selectedId, restorableAgents, fullscreenAgentId };
+      if (!result.stoppedIds.length) return s;
+      persistAgents(result.agents, s.selectedId);
+      persistRestorable(result.restorable);
+      return { agents: result.agents, restorableAgents: result.restorable };
     }),
   setAddAgentOpen: (open) => set({ addAgentOpen: open }),
   hireQueue: EMPTY_HIRE_QUEUE,

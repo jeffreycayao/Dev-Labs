@@ -459,16 +459,15 @@ interface PreservedWorktree {
 const preservedWorktrees = new Map<string, PreservedWorktree>();
 
 /**
- * Tear down everything tied to a PTY id: archive its hive agent, remove its
- * isolated git worktree, and drop the bookkeeping-map entries. Runs on BOTH an
- * explicit `pty:kill` AND a natural PTY exit (the child finished, crashed, or
+ * Tear down everything tied to a PTY id: mark its hive agent unavailable,
+ * handle an ephemeral worker's worktree, and drop the bookkeeping-map entries.
+ * Runs on both explicit `pty:kill` and a natural PTY exit (finished, crashed, or
  * was killed externally) — without this the agent stays "active" (broadcasts
- * keep mailing a dead inbox), the worktree orphans (plus a dangling `git
- * worktree` registration in the user's real repo), and the maps leak an entry
- * per dead PTY.
+ * keep mailing a dead inbox), and the maps leak an entry per dead PTY. Hired
+ * agents keep their isolated worktrees so a restart can resume uncommitted work.
  *
- * Idempotent: guarded on map presence and the already-idempotent
- * `hive.setArchived`, so a double call is a harmless no-op. NOTE: an explicit
+ * Idempotent: guarded on map presence and the already-idempotent hive state
+ * updates, so a double call is a harmless no-op. NOTE: an explicit
  * `ptyManager.kill()` does NOT reach here via onExit — kill() deletes the
  * session synchronously, so node-pty's later async exit callback fails the
  * session-identity guard and is swallowed. Every kill site must therefore call
@@ -476,7 +475,7 @@ const preservedWorktrees = new Map<string, PreservedWorktree>();
  * step is wrapped so a teardown error can never crash the caller (an IPC
  * handler or node-pty's onExit).
  */
-function teardownPty(id: string): void {
+function teardownPty(id: string, notifyOffline = false): void {
   // Ephemeral-worker flag, read BEFORE the cleanup below deletes the entry. All
   // worker deaths (done-release, idle/token reap, manual stop, crash) funnel
   // through here, so this is the one place their floor card gets archived
@@ -486,7 +485,8 @@ function teardownPty(id: string): void {
   // 0) Revoke this id's broker capability (if any). Idempotent + harmless for a
   //    non-worker PTY; ensures a dead worker's token can never reach an integration.
   try { integrationBroker.revoke(id); } catch { /* best-effort */ }
-  // 1) Archive the agent — retained + flagged; only live-PTY agents are active.
+  // 1) Mark the hire stopped, or archive an ephemeral worker. Both become
+  // unavailable for dispatch while their PTY is gone.
   const agentId = ptyToAgent.get(id);
   if (agentId) {
     ptyToAgent.delete(id);
@@ -503,37 +503,40 @@ function teardownPty(id: string): void {
     // PTY never leaves an orphan loopback listener. No-op for non-proxy agents.
     try { hive.stopProxyBridge(agentId); } catch (e) { console.error('[hive] stopProxyBridge failed:', e); }
     if (hive.enabled()) {
-      try { hive.setArchived(agentId, true); } catch (e) { console.error('[hive] setArchived failed:', e); }
+      try {
+        if (wasWorker) hive.setArchived(agentId, true);
+        else hive.setStopped(agentId);
+      } catch (e) { console.error('[hive] agent stop failed:', e); }
     }
   }
-  // 2) Remove the isolated worktree, if any. Non-blocking; errors are logged.
+  // 2) Ephemeral workers have an automatic worktree lifecycle. A hired agent's
+  // worktree is durable project work: stopping a CLI, switching engines or
+  // firing the agent must not silently delete uncommitted files in it.
   const wtPath = worktreePaths.get(id);
   if (wtPath) {
     const origCwd = worktreeOrigins.get(id) ?? wtPath;
     worktreePaths.delete(id);
     worktreeOrigins.delete(id);
     // Ephemeral workers get a SAFETY-GATED teardown: never auto-remove a worktree
-    // that holds unintegrated work. This sits INSIDE teardownPty so it covers ALL
-    // teardown routes — a worker that finished (controller kill), crashed, or was
-    // idle-reaped all land here. Normal agents keep the immediate force-remove.
+    // that holds unintegrated work. A hired agent keeps its worktree for resume.
     const worker = liveWorkers.get(id);
     if (worker) {
       liveWorkers.delete(id);
       void finalizeWorkerWorktree(wtPath, origCwd, worker);
     } else {
-      void removeWorktree(origCwd, wtPath)
-        .then(r => { if (!r.ok) console.error('[worktree] removeWorktree failed:', r.error); })
-        .catch(e => console.error('[worktree] removeWorktree threw:', e));
+      console.log('[worktree] preserved hired agent worktree for resume:', wtPath);
     }
   }
   // A worker whose isolation failed (non-repo cwd) has no worktree to gate above —
   // still clear its tracking entry so the controller stops watching a dead PTY.
   if (liveWorkers.has(id)) liveWorkers.delete(id);
-  // Archive the dead worker's floor card (mirrors killAgent's voice-kill path;
-  // the renderer's archiveAgent is a no-op if the card is already gone). NOT
-  // done for regular agents: their kill flows already manage their own card.
+  // Ephemeral workers leave the floor when their run ends. A hired agent's CLI
+  // can exit without anyone firing that agent, so keep its card and spawn recipe
+  // visible as stopped. Explicit human/Ramon fire flows archive it separately.
   if (wasWorker) {
     try { liveWebContents()?.send('hive:agentArchived', { id }); } catch { /* window torn down */ }
+  } else if (agentId && notifyOffline) {
+    try { liveWebContents()?.send('hive:agentOffline', { id: agentId }); } catch { /* window torn down */ }
   }
   syncKeepAwake();
 }
@@ -664,7 +667,7 @@ ptyManager.setExitHandler((id, exitCode, info) => {
     // Non-zero exit = install failed; leave its honest manual-fix message on screen.
     analytics.track('agent_install_finished', { provider, rung: pending.rung, outcome: 'install_failed' });
   }
-  teardownPty(id);
+  teardownPty(id, true);
 });
 
 /** Keep the system from suspending the harness while agents are running.
@@ -927,19 +930,10 @@ function syncContextTriggers(): void {
   }
 }
 
-/** Startup migration (#57/#58): archive every agent entry that is `archived:false`
- *  but has NO live PTY. This runs in bootstrapHiveServices, BEFORE the renderer can
- *  respawn anything, so at this point NO agent owns a PTY — every `archived:false`
- *  entry is therefore a stale carry-over from a prior session that quit/crashed
- *  WITHOUT archiving (e.g. the pre-acc13a3 'assistant' Dwight entry). Left as-is
- *  they have no live PTY, so the breaker beat steers them and the steer bounces to
- *  GOD as a requires_reply GOD can't clear → inbox flood.
- *
- *  "No live PTY" = ptyForAgent(id) === undefined (ptyToAgent is populated only at
- *  spawn and pruned on teardown). God is never archived. A user's real agents are
- *  unaffected: the "restore team" flow respawns them through ensureAgent, which
- *  re-clears `archived` — restorability does not depend on the archived flag. */
-function archiveOrphanedAgents(): void {
+/** At startup, mark old non-God sessions with no live PTY stopped. Their hire
+ *  records stay in the registry, but dispatch must treat them as unavailable.
+ *  A successful restore calls ensureAgent and clears the stopped status. */
+function stopOrphanedAgents(): void {
   if (!hive.enabled()) return;
   try {
     const reg = hive.registry();
@@ -947,11 +941,11 @@ function archiveOrphanedAgents(): void {
       if (a.archived) continue;
       if (id === reg.godId) continue;        // god is never archived
       if (ptyForAgent(id)) continue;         // has a live PTY → genuinely active
-      hive.setArchived(id, true);            // stale archived:false orphan → archive
-      console.log('[migration] archived orphaned agent (no live PTY):', id);
+      hive.setStopped(id);
+      console.log('[startup] stopped orphaned agent (no live PTY):', id);
     }
   } catch (e) {
-    console.error('[migration] archiveOrphanedAgents failed:', e);
+    console.error('[startup] stopOrphanedAgents failed:', e);
   }
 }
 
@@ -1152,7 +1146,7 @@ function looksStuck(windowMs: number): boolean {
   const reg = hive.registry();
   const now = Date.now();
   for (const [id, a] of Object.entries(reg.agents)) {
-    if (a.archived || id === reg.godId) continue;
+    if (a.archived || a.status === 'gone' || id === reg.godId) continue;
     const ptyId = ptyForAgent(id);
     if (!ptyId) continue;
     const idle = ptyManager.idleFor(ptyId) ?? Infinity;
@@ -1165,7 +1159,7 @@ function looksStuck(windowMs: number): boolean {
  *  #6.2). A few hundred tokens at most. */
 function buildHeartbeatDigest(quietMs: number, actionable = 0): string {
   const reg = hive.registry();
-  const active = Object.entries(reg.agents).filter(([id, a]) => !a.archived && id !== reg.godId);
+  const active = Object.entries(reg.agents).filter(([id, a]) => !a.archived && a.status !== 'gone' && id !== reg.godId);
   const names = active.map(([, a]) => a.name).join(', ') || '—';
   const boardHead = hive.board().split('\n').slice(0, 10).join('\n').trim();
   const log = hive.logTail(8).map((e) => { try { return JSON.stringify(e); } catch { return ''; } }).filter(Boolean).join('\n');
@@ -1306,7 +1300,7 @@ function runBreakerBeat(progressWindowMs: number): void {
       breakerToast(`${name} constrained`, reason);
     } else if (d.action === 'stop') {
       const ptyId = ptyForAgent(d.state.agentId);
-      if (ptyId) { try { ptyManager.kill(ptyId); } catch { /* already gone */ } teardownPty(ptyId); }
+      if (ptyId) { try { ptyManager.kill(ptyId); } catch { /* already gone */ } teardownPty(ptyId, true); }
       breakerToast(`${name} stopped by circuit breaker`, reason);
     }
   }
@@ -1344,6 +1338,7 @@ function writeFleetSnapshot(): void {
           id,
           name: a.name,
           role: a.role ?? (a.isGod ? 'orchestrator' : 'agent'),
+          status: a.status,
           cwd: a.cwd,
           isGod: !!a.isGod,
           breaker: breaker.levelFor(id),
@@ -3281,7 +3276,7 @@ ipcMain.handle('pty:kill', (_evt, id: string) => {
   // remove its isolated worktree, drop the maps). teardownPty is idempotent, so
   // node-pty firing onExit once the child actually dies is a harmless no-op.
   const res = ptyManager.kill(id);
-  teardownPty(id);
+  if (res.ok || /^no pty:/.test(res.error ?? '')) teardownPty(id);
   return res;
 });
 ipcMain.handle('pty:list', () => ptyManager.list());
@@ -3825,8 +3820,9 @@ ipcMain.handle('hive:deleteTask', (_evt, id: unknown) => {
 ipcMain.handle('hive:setArchived', (_evt, id: unknown, archived: unknown) => {
   if (typeof id !== 'string') return { ok: false, error: 'invalid id' };
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
-  hive.setArchived(id, archived === true);
-  return { ok: true };
+  return hive.setArchived(id, archived === true)
+    ? { ok: true }
+    : { ok: false, error: 'Could not save the agent change. Try again.' };
 });
 ipcMain.handle('hive:patchAgentRole', (_evt, id: unknown, role: unknown) => {
   if (typeof id !== 'string') return { ok: false, error: 'invalid id' };
@@ -4874,7 +4870,9 @@ registerRealtimeActionIpc({
   controlSnapshot: (id) => control.snapshot(id),
   killAgent: (id) => {
     const r = ptyManager.kill(id);
+    if (!r.ok && !/^no pty:/.test(r.error ?? '')) return r;
     teardownPty(id);
+    if (!hive.setArchived(id, true)) return { ok: false, error: 'Could not save the fire decision.' };
     // A voice (MAIN-initiated) kill: the renderer never removed the card itself
     // (unlike a UI kill), so tell the floor to archive it. Mirrors hive:agentSpawned.
     try { liveWebContents()?.send('hive:agentArchived', { id }); } catch { /* window torn down */ }
@@ -4914,7 +4912,15 @@ registerRealtimeActionIpc({
   controlGateTool: (id, toolName, on) => control.gateTool(id, toolName, on),
   setArchived: (id, archived) => {
     if (!hive.enabled()) return { ok: false, error: 'hive disabled' };
-    hive.setArchived(id, archived);
+    if (archived) {
+      const ptyId = ptyForAgent(id);
+      if (ptyId) {
+        const killed = ptyManager.kill(ptyId);
+        if (!killed.ok && !/^no pty:/.test(killed.error ?? '')) return killed;
+        teardownPty(ptyId);
+      }
+    }
+    if (!hive.setArchived(id, archived)) return { ok: false, error: 'Could not save the agent change.' };
     try { liveWebContents()?.send(archived ? 'hive:agentArchived' : 'hive:agentSpawned', { id }); } catch { /* window gone */ }
     return { ok: true };
   },
@@ -5486,7 +5492,7 @@ function bootstrapHiveServices(): void {
     platform: process.platform
   });
   control.replaceAutoDeliveryPauses(readConfig().autoDeliveryPausedAgents ?? []);
-  archiveOrphanedAgents(); // #57/#58: archive stale archived:false entries with no live PTY
+  stopOrphanedAgents(); // #57/#58: keep orphaned hires registered but unavailable
   hive.startRouter();
   startEphemeralWorkerWatcher(); // poll HIVE_ROOT/spawn-requests → ephemeral workers
   // Phase 2: the loopback secret broker. Bind it BEFORE workers spawn so each spawn can

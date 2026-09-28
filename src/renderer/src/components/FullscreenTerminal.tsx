@@ -539,18 +539,6 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
                       }}
                     >
                       {a.name}
-                      <button
-                        onClick={() => useStore.getState().removeRestorableAgent(a.id)}
-                        title={`Dismiss ${a.name} — remove permanently from the restore list`}
-                        aria-label={`Dismiss ${a.name}`}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                          width: 14, height: 14, padding: 0, lineHeight: 1,
-                          fontFamily: 'var(--cth-font-ui)', fontSize: 11,
-                          color: 'var(--cth-ink-500)', background: 'transparent',
-                          border: 'none', cursor: 'pointer'
-                        }}
-                      >✕</button>
                     </span>
                   ))}
                 </div>
@@ -940,10 +928,17 @@ function Header({ agent, onEdit }: { agent: Agent; onEdit: () => void }) {
    *  running process. God is exempt: the floor respawns it immediately, so the
    *  button would read as "restart Ramon" while looking like "close". */
   const onKill = async () => {
-    if (!agent.ptyId) return;
     if (!confirm(t('agentDetail.killConfirm', { name: agent.name }))) return;
-    await window.cth.killPty(agent.ptyId);
-    disposeTerminal(agent.ptyId);
+    if (agent.ptyId) {
+      const result = await window.cth.killPty(agent.ptyId);
+      if (!result.ok && !/^no pty:/.test(result.error ?? '')) {
+        alert(result.error ?? 'Could not fire the agent. Try again.');
+        return;
+      }
+    }
+    const fired = await window.cth.hiveSetArchived(agent.id, true);
+    if (!fired.ok) { alert(fired.error ?? 'Could not fire the agent. Try again.'); return; }
+    if (agent.ptyId) disposeTerminal(agent.ptyId);
     // archiveAgent re-homes focus mode to the next agent, and only leaves it when
     // the last one is gone. Hard-nulling here threw that away, which is why
     // closing an agent from inside focus mode still dropped you to the sidebar
@@ -1032,7 +1027,8 @@ function Header({ agent, onEdit }: { agent: Agent; onEdit: () => void }) {
           style={{ height: 24, padding: '0 8px', lineHeight: '24px' }}
         />
         {!agent.isGod && (
-          <PixelButton variant="destructive" size="sm" onClick={onKill}>
+          <PixelButton variant="destructive" size="sm" onClick={onKill}
+            aria-label={t('fullscreenTerminal.closeAgent', { name: agent.name })}>
             {/* inline-flex + center: the other buttons hold TEXT, whose line box
                 the button centres for free. A bare <Icon> is replaced-content
                 sitting on the text baseline, so it rode low and overhung the

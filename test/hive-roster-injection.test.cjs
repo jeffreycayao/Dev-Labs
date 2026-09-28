@@ -83,6 +83,22 @@ test('the roster line carries the whole floor and its state', async (t) => {
   assert.ok(line.length < 1200, `too long for a 3-agent floor: ${line.length} chars`);
 });
 
+test('a stopped terminal keeps its hire in the registry and tells Ramon not to dispatch', async (t) => {
+  const { hive } = await floor(t);
+  snapshot(hive);
+  hive.setStopped('jim-1');
+  assert.equal(hive.registry().agents['jim-1'].status, 'gone');
+  assert.equal(hive.registry().agents['jim-1'].archived, false);
+  const fleet = JSON.parse(fs.readFileSync(path.join(hive.root(), 'fleet.json'), 'utf8'));
+  assert.equal(fleet.agents.find((a) => a.id === 'jim-1').status, 'gone',
+    'Ramon sees the stopped state immediately, before the next fleet timer');
+  assert.match(hive.rosterContext(), /jim-1[^;]*STOPPED — still hired/);
+  assert.match(hive.rosterContext(), /2 available, 1 stopped hire/);
+  hive.setArchived('jim-1', true);
+  assert.equal(hive.registry().agents['jim-1'].archived, true, 'fire is a separate decision');
+  assert.doesNotMatch(hive.rosterContext(), /jim-1/, 'a fire leaves the injected roster immediately');
+});
+
 test('each agent line carries its live context-window occupancy (ctx NN%)', async (t) => {
   const { hive, fire } = await floor(t);
   snapshot(hive);

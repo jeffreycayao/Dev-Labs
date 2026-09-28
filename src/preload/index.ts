@@ -952,6 +952,12 @@ const api = {
     ipcRenderer.on('hive:agentArchived', listener);
     return () => ipcRenderer.removeListener('hive:agentArchived', listener);
   },
+  /** A hired agent's terminal stopped without a fire. Keep its floor card. */
+  onHiveAgentOffline: (cb: (e: { id: string }) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, payload: { id: string }) => cb(payload);
+    ipcRenderer.on('hive:agentOffline', listener);
+    return () => ipcRenderer.removeListener('hive:agentOffline', listener);
+  },
   /** Register a listener for terminal work-order handoffs (#53) — hive mail to a
    *  hookless provider that can't drain an inbox; the renderer types it into the
    *  agent's REPL as a work order. */

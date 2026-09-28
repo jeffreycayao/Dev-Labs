@@ -12,7 +12,8 @@ const roster = {
   // A worker on a hookless provider (`custom`): no hook bridge, no proxy.
   toby: {},
   prep: { isAssistant: true },
-  creed: { archived: true }
+  creed: { archived: true },
+  kelly: { status: 'gone' }
 };
 
 test('a broadcast reaches every live agent except the sender', () => {
@@ -24,8 +25,12 @@ test('the send-only prep assistant is never a broadcast target', () => {
   assert.ok(!selectBroadcastTargets(roster, 'michael').includes('prep'));
 });
 
-test('an archived agent (closed PTY tab) is skipped', () => {
+test('an explicitly fired agent is skipped', () => {
   assert.ok(!selectBroadcastTargets(roster, 'michael').includes('creed'));
+});
+
+test('a stopped but still hired agent cannot receive a broadcast', () => {
+  assert.ok(!selectBroadcastTargets(roster, 'michael').includes('kelly'));
 });
 
 test('a hookless agent is included — direct mail already reaches it', () => {

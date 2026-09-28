@@ -152,9 +152,8 @@ export interface AgentMeta {
 export interface RegistryAgent extends AgentMeta {
   status: 'idle' | 'working' | 'blocked' | 'gone';
   lastSeen: number;
-  /** True once the agent's terminal/PTY tab is closed. The record is retained
-   *  (not deleted) so its history/memory survive; only agents with a live PTY
-   *  are 'active'. Broadcast fan-out + roster reads skip archived agents. */
+  /** True only after an explicit fire. A stopped terminal uses status 'gone'
+   *  while the agent remains hired and visible on the floor. */
   archived?: boolean;
   /** The human has this agent 1:1 and Ramon must leave it alone until they
    *  flip it back. Held agents stay ACTIVE and keep their terminal — this is
@@ -1030,24 +1029,61 @@ export class HiveManager {
   }
 
   /**
-   * Flip an agent's archived flag and persist the registry. Closing a terminal
-   * tab archives the agent (retained + flagged, NOT deleted); a (re)spawn clears
-   * it. No-op if the agent isn't registered or the flag is already set the way
-   * asked. Best-effort — never throws, so a dying PTY/kill handler can't crash.
+   * Explicitly fire or rehire an agent. A terminal exit alone calls setStopped.
+   * Best-effort — never throws into a lifecycle handler.
    */
-  setArchived(id: string, archived: boolean): void {
+  setArchived(id: string, archived: boolean): boolean {
+    const root = this.root();
+    if (!root) return false;
+    try {
+      const reg = this.registry();
+      const agent = reg.agents[id];
+      if (!agent) return false;
+      if (agent.archived === archived) return true;
+      agent.archived = archived;
+      agent.lastSeen = Date.now();
+      this.atomicWriteJson(join(root, 'registry.json'), reg);
+      if (archived) {
+        const fleetPath = join(root, 'fleet.json');
+        if (existsSync(fleetPath)) {
+          try {
+            const fleet = this.readJson<{ agents?: Array<{ id?: string }> }>(fleetPath, {});
+            if (Array.isArray(fleet.agents)) {
+              fleet.agents = fleet.agents.filter((row) => row.id !== id);
+              this.writeJson(fleetPath, fleet);
+            }
+          } catch { /* fleet is a cache */ }
+        }
+      }
+      this.appendLog({ kind: 'archive', agentId: id, archived });
+      this.commit(`hive: ${archived ? 'archive' : 'unarchive'} ${id}`);
+      return true;
+    } catch { return false; /* never crash a lifecycle handler */ }
+  }
+
+  /** A CLI exited, but nobody fired this agent. Keep the registry identity and
+   * distinguish the stopped state from an explicit archived/fire decision. */
+  setStopped(id: string): void {
     const root = this.root();
     if (!root) return;
     try {
       const reg = this.registry();
       const agent = reg.agents[id];
-      if (!agent || agent.archived === archived) return;
-      agent.archived = archived;
+      if (!agent || agent.archived || agent.status === 'gone') return;
+      agent.status = 'gone';
       agent.lastSeen = Date.now();
       this.atomicWriteJson(join(root, 'registry.json'), reg);
-      this.appendLog({ kind: 'archive', agentId: id, archived });
-      this.commit(`hive: ${archived ? 'archive' : 'unarchive'} ${id}`);
-    } catch { /* best-effort — never crash a lifecycle handler */ }
+      const fleetPath = join(root, 'fleet.json');
+      if (existsSync(fleetPath)) {
+        try {
+          const fleet = this.readJson<{ agents?: Array<{ id?: string; status?: string }> }>(fleetPath, {});
+          const row = fleet.agents?.find((candidate) => candidate.id === id);
+          if (row) { row.status = 'gone'; this.writeJson(fleetPath, fleet); }
+        } catch { /* fleet is a cache */ }
+      }
+      this.appendLog({ kind: 'agent-stopped', agentId: id });
+      this.commit(`hive: stopped ${id}`);
+    } catch { /* a PTY exit must never crash the app */ }
   }
 
   /**
@@ -2608,8 +2644,8 @@ export class HiveManager {
    * god's context as `additionalContext` on SessionStart and every
    * UserPromptSubmit (see HookServer).
    *
-   * Why: fleet.json/registry.json are always fresh on disk (8s snapshot +
-   * archiveOrphanedAgents on boot + PTY-exit archiving), but god's CONTEXT is not.
+   * Why: fleet.json/registry.json are refreshed on disk (8s snapshot +
+   * stopped-session recovery on boot), but god's CONTEXT is not.
    * After an app restart god resumes a session whose transcript still describes
    * the OLD floor, and it will happily message agents that no longer exist. It is
    * told to read fleet.json, but "told to" is not "always knows" — so we push the
@@ -2636,7 +2672,7 @@ export class HiveManager {
       const snap = JSON.parse(raw) as {
         ts?: number;
         agents?: Array<{
-          id: string; name?: string; role?: string; isGod?: boolean;
+          id: string; name?: string; role?: string; isGod?: boolean; status?: string;
           breaker?: string; tokens?: number; usd?: number;
           lastTool?: string | null; lastActiveSecAgo?: number | null; inboxBacklog?: number;
           onHold?: boolean;
@@ -2655,6 +2691,8 @@ export class HiveManager {
       // remainder is still counted, and fleet.json is one Read away.
       const MAX = 24;
       const shown = agents.slice(0, MAX);
+      const stoppedCount = agents.filter((a) => a.status === 'gone').length;
+      const availableCount = agents.length - stoppedCount;
       let anyCtx = false;
       let anyHold = false;
       const rows = shown.map((a) => {
@@ -2664,6 +2702,7 @@ export class HiveManager {
         if (a.usd) bits.push(`$${a.usd.toFixed(2)}`);
         if (a.inboxBacklog) bits.push(`inbox ${a.inboxBacklog}`);
         if (a.breaker && a.breaker !== 'ok' && a.breaker !== 'none') bits.push(`breaker ${a.breaker}`);
+        if (a.status === 'gone') bits.push('STOPPED — still hired; restore before dispatch');
         if (a.isGod) bits.push('you');
         // First in the row after the role would be louder, but this reads in
         // the same scan as `breaker` and `inbox`, and god already treats those
@@ -2685,9 +2724,9 @@ export class HiveManager {
       const age = typeof snap.ts === 'number' ? ago(Math.round((Date.now() - snap.ts) / 1000)) : 'unknown';
 
       return `[LIVE ROSTER — auto-injected from ${join(root, 'fleet.json')}, snapshot ${age}] `
-        + `${agents.length} ACTIVE agent(s): ${rows.join('; ')}.${more} `
+        + `${availableCount} available, ${stoppedCount} stopped hire(s): ${rows.join('; ')}.${more} `
         + 'This is the CURRENT floor and it SUPERSEDES any roster earlier in this conversation — '
-        + 'agents you remember that are absent here have been archived or killed, so do not message them. '
+        + 'verify any agent absent here before messaging them; agents marked STOPPED remain hired but cannot take work until restored. '
         + (anyCtx
           ? '`ctx NN%` = live window occupancy; absent = not yet reported (unknown, not empty). '
           : '')

@@ -255,9 +255,10 @@ export function App() {
   useEffect(() => {
     if (!config?.onboardingComplete) return;
     let cancelled = false;
+    const observedAgentIds = useStore.getState().agents.map((a) => a.id);
     window.cth.listPtys().then((list) => {
       if (cancelled) return;
-      useStore.getState().reconcileWithLivePtys(list.map((p) => p.id));
+      useStore.getState().reconcileWithLivePtys(list.map((p) => p.id), observedAgentIds);
     }).catch(() => { /* ignore — keep restored agents as-is */ });
     return () => { cancelled = true; };
   }, [config?.onboardingComplete]);

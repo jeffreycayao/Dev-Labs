@@ -116,10 +116,17 @@ export function AgentDetailPanel({ agent }: AgentDetailPanelProps) {
   };
 
   const onKill = async () => {
-    if (!agent.ptyId) return;
     if (!confirm(t('agentDetail.killConfirm', { name: agent.name }))) return;
-    await window.cth.killPty(agent.ptyId);
-    disposeTerminal(agent.ptyId);
+    if (agent.ptyId) {
+      const result = await window.cth.killPty(agent.ptyId);
+      if (!result.ok && !/^no pty:/.test(result.error ?? '')) {
+        alert(result.error ?? 'Could not fire the agent. Try again.');
+        return;
+      }
+    }
+    const fired = await window.cth.hiveSetArchived(agent.id, true);
+    if (!fired.ok) { alert(fired.error ?? 'Could not fire the agent. Try again.'); return; }
+    if (agent.ptyId) disposeTerminal(agent.ptyId);
     archiveAgent(agent.id);
   };
 
@@ -214,8 +221,10 @@ export function AgentDetailPanel({ agent }: AgentDetailPanelProps) {
               : compactHeader ? '' : t('agentDetail.open')}
           </span>
         </PixelButton>
-        {isReal && (
-          <PixelButton variant="destructive" size="sm" onClick={onKill}>
+        {(isReal || agent.status === 'ghost') && (
+          <PixelButton variant="destructive" size="sm" onClick={onKill}
+            title={t('fullscreenTerminal.closeAgent', { name: agent.name })}
+            aria-label={t('fullscreenTerminal.closeAgent', { name: agent.name })}>
             <Icon name="x" />
           </PixelButton>
         )}

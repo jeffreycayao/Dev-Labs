@@ -402,7 +402,8 @@
       "graph": "图谱",
       "activity": "动态",
       "skills": "技能",
-      "workers": "工人"
+      "workers": "工人",
+      "deliveries": "交付"
     },
     "terminalFullscreen": "终端已全屏打开。按 Esc 返回。",
     "noTerminal": "{{name}} 没有实时终端。",
@@ -1544,5 +1545,45 @@
     "exportNothing": "暂无可导出的内容。",
     "saveFile": "保存文件…",
     "saved": "已保存到 {{path}}"
+  },
+  "deliveries": {
+    "emptyTitle": "还没有交付。📦",
+    "emptySub": "当智能体为你完成一个文件（HTML、Markdown、PDF、DOCX、图片……）时，会出现在这里，你可以预览、批准，或附上修改意见退回。向 Ramon 要一份交付物，并说明你想要的格式。",
+    "count": "交付：{{count}}",
+    "newCount": "新：{{count}}",
+    "files": "文件：{{count}}",
+    "you": "你",
+    "fromTo": "从 {{from}} 发给 {{to}}",
+    "skipped": "未交付：{{list}}",
+    "yourFeedback": "你要求的修改",
+    "loading": "正在加载预览……",
+    "previewError": "无法读取此文件。请试试“在文件夹中显示”。",
+    "tooLarge": "文件太大，无法在此预览（{{size}}）。请使用“打开”。",
+    "noPreview": "{{name}} 没有预览。请用“打开”在对应应用中查看。",
+    "open": "打开",
+    "openTitle": "用默认应用打开",
+    "revealOnlyTitle": "为了你的安全，这种文件类型不会直接打开，而是在文件夹中显示。",
+    "showInFolder": "在文件夹中显示",
+    "approve": "批准",
+    "approved": "已批准 ✓",
+    "requestChanges": "要求修改",
+    "sendChanges": "发送给智能体",
+    "cancel": "取消",
+    "feedbackPlaceholder": "需要改什么？智能体会收到并交付新版本。（Ctrl+Enter 发送）",
+    "status": {
+      "new": "新",
+      "seen": "已查看",
+      "approved": "已批准",
+      "changes": "需修改"
+    },
+    "reason": {
+      "not-found": "未找到",
+      "not-a-file": "不是文件",
+      "symlink": "不允许链接",
+      "outside-workspace": "不在智能体的文件夹内",
+      "too-large": "超过 50 MB",
+      "too-many": "文件太多",
+      "total-too-large": "交付超过 200 MB"
+    }
   }
 }

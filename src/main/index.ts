@@ -74,6 +74,7 @@ import { inboxNudgeText } from '../shared/hiveNudge';
 import { resolveGodName } from '../shared/godIdentity';
 import { fetchHireManifest, readHireManifestFiles, fetchFloorManifest, readFloorManifestFile, type FloorResult } from './hire';
 import { parseHireDeepLink, type HireManifest } from '../shared/hire';
+import { isDeliveryId, isDeliveryStatus, canOpenWithSystemApp } from '../shared/delivery';
 import { parseFloorDeepLink, validateFloorManifest, floorFileName, FLOOR_MAX_BYTES, BUILDING_MAX_FLOORS, canAddFloor } from '../shared/floor';
 import { ClosingTimeController } from './closingTime';
 import {
@@ -3768,6 +3769,38 @@ ipcMain.handle('hive:send', (_evt, partial: Partial<HiveMessage>, from: unknown)
   // number. Counted AFTER the send so a rejected message is never counted.
   if (sender === 'human') analytics.trackMessageSent('hive');
   return { ok: true, message: msg };
+});
+// ─── IPC: deliveries (finished files agents hand back; src/shared/delivery.ts) ─
+ipcMain.handle('hive:deliveries', () => (hive.enabled() ? hive.deliveries() : []));
+ipcMain.handle('hive:deliveryRead', (_evt, id: unknown, name: unknown) => {
+  if (!isDeliveryId(id) || typeof name !== 'string') return { ok: false, error: 'bad request' };
+  return hive.readDeliveryFile(id, name);
+});
+ipcMain.handle('hive:deliverySetStatus', (_evt, id: unknown, status: unknown, feedback: unknown) => {
+  if (!isDeliveryId(id) || !isDeliveryStatus(status)) return { ok: false, error: 'bad request' };
+  const d = hive.setDeliveryStatus(id, status, typeof feedback === 'string' ? feedback : undefined);
+  return d ? { ok: true, delivery: d } : { ok: false, error: 'not found' };
+});
+/** Open a delivered file in its default app, but ONLY for document/image kinds
+ *  (canOpenWithSystemApp). Anything else, e.g. an agent-supplied .exe, .dmg or
+ *  .sh, is revealed in the file browser instead, never launched (same rule as
+ *  fs:revealPath). */
+ipcMain.handle('hive:deliveryOpen', async (_evt, id: unknown, name: unknown) => {
+  if (!isDeliveryId(id) || typeof name !== 'string') return { ok: false, error: 'bad request' };
+  const p = hive.deliveryFilePath(id, name);
+  if (!p) return { ok: false, error: 'not found' };
+  if (!canOpenWithSystemApp(name)) { shell.showItemInFolder(p); return { ok: true, revealed: true }; }
+  const err = await shell.openPath(p);
+  return err ? { ok: false, error: err } : { ok: true };
+});
+ipcMain.handle('hive:deliveryReveal', (_evt, id: unknown, name: unknown) => {
+  if (!isDeliveryId(id)) return { ok: false, error: 'bad request' };
+  const p = typeof name === 'string' ? hive.deliveryFilePath(id, name) : null;
+  const dir = hive.deliveriesDir();
+  if (p) { shell.showItemInFolder(p); return { ok: true }; }
+  if (!dir) return { ok: false, error: 'not found' };
+  shell.showItemInFolder(join(dir, id, 'delivery.json'));
+  return { ok: true };
 });
 ipcMain.handle('hive:addTask', (_evt, task: unknown) => {
   if (!task || typeof task !== 'object' || Array.isArray(task)

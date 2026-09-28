@@ -402,7 +402,8 @@
       "graph": "graph",
       "activity": "activity",
       "skills": "skills",
-      "workers": "workers"
+      "workers": "workers",
+      "deliveries": "deliveries"
     },
     "terminalFullscreen": "Terminal is open in fullscreen. Press Esc to bring it back.",
     "noTerminal": "{{name}} has no live terminal.",
@@ -1544,5 +1545,45 @@
     "exportNothing": "Nothing to export yet.",
     "saveFile": "save file…",
     "saved": "Saved to {{path}}"
+  },
+  "deliveries": {
+    "emptyTitle": "No deliveries yet. 📦",
+    "emptySub": "When an agent finishes a file for you (HTML, Markdown, PDF, DOCX, an image…), it lands here to preview, approve, or send back with changes. Ask Ramon for a deliverable and say which format you want.",
+    "count": "Deliveries: {{count}}",
+    "newCount": "new: {{count}}",
+    "files": "files: {{count}}",
+    "you": "you",
+    "fromTo": "From {{from}} to {{to}}",
+    "skipped": "Not delivered: {{list}}",
+    "yourFeedback": "Your requested changes",
+    "loading": "Loading preview…",
+    "previewError": "This file couldn't be read. Try “Show in folder”.",
+    "tooLarge": "Too large to preview here ({{size}}). Use “Open”.",
+    "noPreview": "No preview for {{name}}. Use “Open” to view it in its app.",
+    "open": "Open",
+    "openTitle": "Open in its default app",
+    "revealOnlyTitle": "This file type isn't opened directly, for your safety. It will be shown in its folder.",
+    "showInFolder": "Show in folder",
+    "approve": "Approve",
+    "approved": "Approved ✓",
+    "requestChanges": "Request changes",
+    "sendChanges": "Send to agent",
+    "cancel": "Cancel",
+    "feedbackPlaceholder": "What should change? The agent gets this and delivers a new version. (Ctrl+Enter to send)",
+    "status": {
+      "new": "new",
+      "seen": "seen",
+      "approved": "approved",
+      "changes": "changes"
+    },
+    "reason": {
+      "not-found": "not found",
+      "not-a-file": "not a file",
+      "symlink": "link not allowed",
+      "outside-workspace": "outside the agent's folders",
+      "too-large": "over 50 MB",
+      "too-many": "too many files",
+      "total-too-large": "delivery over 200 MB"
+    }
   }
 }

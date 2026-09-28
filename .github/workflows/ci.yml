@@ -1,15 +1,28 @@
 name: CI
 
+# Runs on Linux: macOS minutes are billed at 10x on private repos, and these
+# checks don't need a Mac (release.yml still builds the real macOS installers).
+# site/** is skipped: the website has its own Vercel preview on every PR.
 on:
   push:
     branches: [main, 'release/**']
+    paths-ignore: ['site/**']
   pull_request:
     branches: [main, 'release/**']
+    paths-ignore: ['site/**']
+    # Draft PRs run nothing; CI starts when you click "Ready for review".
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# A new push to the same PR cancels the older run instead of paying for both.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   typecheck:
     name: Typecheck
-    runs-on: macos-latest
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,8 +42,10 @@ jobs:
 
   build:
     name: Build
-    runs-on: macos-latest
-    # Build exercises the native node-pty rebuild; allowed to fail without blocking.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    # Build exercises the native node-pty rebuild (Linux here; release.yml covers
+    # macOS and Windows). Allowed to fail without blocking.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +58,7 @@ jobs:
 
   licensing:
     name: Licensing service
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     defaults:
       run:

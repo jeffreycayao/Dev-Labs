@@ -8,16 +8,70 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      platforms:
+        description: Dry-build platforms (macOS minutes cost 10x, Windows 2x)
+        type: choice
+        default: linux
+        options: [linux, linux+windows, all]
 
 permissions:
   contents: write
 
+# One release run per tag; a second push of the same tag waits, never doubles the bill.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  prepare:
-    name: Prepare private draft release
+  # Release gate: cheap Linux checks that must pass before any macOS (10x) or
+  # Windows (2x) build starts. Tag = package.json, CHANGELOG section and
+  # "What's new" notes are final, tag commit is on main, and CI passed on it.
+  # Same checks run locally with `npm run release:check`.
+  preflight:
+    name: Release preflight (gate)
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check the release is final
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/release-preflight.cjs "$GITHUB_REF_NAME" --ci
+
+  prepare:
+    name: Prepare private draft release
+    needs: preflight
+    # Tags must pass preflight; manual dry builds skip it (preflight is skipped).
+    if: ${{ !cancelled() && (needs.preflight.result == 'success' || (github.event_name == 'workflow_dispatch' && needs.preflight.result == 'skipped')) }}
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Choose platforms
+        id: matrix
+        shell: bash
+        env:
+          PLATFORMS: ${{ github.event_name == 'workflow_dispatch' && inputs.platforms || 'all' }}
+        run: |
+          linux='{"os":"ubuntu-latest","args":"--linux"}'
+          win='{"os":"windows-2022","args":"--win"}'
+          mac='{"os":"macos-latest","args":"--mac"}'
+          case "$PLATFORMS" in
+            linux) list="$linux" ;;
+            linux+windows) list="$linux,$win" ;;
+            *) list="$mac,$win,$linux" ;;
+          esac
+          echo "matrix={\"include\":[$list]}" >> "$GITHUB_OUTPUT"
+          echo "Building: $PLATFORMS"
 
       - name: Create draft for a tag
         if: startsWith(github.ref, 'refs/tags/')
@@ -42,14 +96,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            args: --mac
-          - os: windows-2022
-            args: --win
-          - os: ubuntu-latest
-            args: --linux
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
 

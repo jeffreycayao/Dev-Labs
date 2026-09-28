@@ -1,13 +1,24 @@
 name: App version
 
+# Pull requests are checked against their base; direct pushes to main and
+# release branches against the previous commit. (Pushing to any branch AND
+# opening a PR used to run this twice per push. The local pre-push hook still
+# checks every branch.)
 on:
   push:
-    branches: ['**']
+    branches: [main, 'release/**']
   pull_request:
+    # Draft PRs run nothing; the check starts on "Ready for review".
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: app-version-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:
     name: Version increases on every source push
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -20,6 +20,29 @@ then runs `npm run dist` to build installers into `dist/`.
 Preview without changing anything: `node tools/bump-version.cjs auto --dry-run`.
 Bump only (no build): `npm run version:bump -- minor`.
 
+## Release gate (saves CI minutes)
+
+Before the tag workflow spends any macOS (10x billed) or Windows (2x) minutes,
+a cheap Linux **preflight** job must pass. It fails the release, with nothing
+built, unless:
+
+- the tag matches `package.json` (`v0.4.0` ↔ `"version": "0.4.0"`);
+- `CHANGELOG.md` has a `## v0.4.0` section and nothing is left under `## Unreleased`
+  (`bump-version.cjs` now turns your Unreleased entries into the release section);
+- `build/release-notes.md` has 1–5 bullets and changed since the last release;
+- every download link and version string in the docs matches (`check:links`);
+- the tagged commit is on `main` and CI (Typecheck, Licensing service) passed on it.
+
+Run the same checks locally, free, before pushing a tag: `npm run release:check`.
+The `release:*` scripts run it automatically before `npm run dist`.
+
+Other cost rules:
+- Draft PRs run no CI. Checks start when you click **Ready for review**.
+- A newer push to a PR cancels the older CI run.
+- Website-only changes (`site/**`) skip app CI; Vercel previews them.
+- Manual dry builds (**Actions → Release → Run workflow**) build Linux only by
+  default; pick `linux+windows` or `all` when you really need them.
+
 Publish: `git push --follow-tags`. The tag workflow creates the private
 release, then mirrors its notes and assets to the public distribution
 repository. See [Public release distribution](docs/RELEASE_DISTRIBUTION.md)

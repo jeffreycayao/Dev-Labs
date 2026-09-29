@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+## v0.7.0 — 2026-09-29
+
 - **New project floor.** Settings → General can create a fresh floor for an existing repo or folder. The app saves the current floor, stops its sessions, and reopens with separate agents, tasks and memory. The project becomes the new floor's default folder, Ramon is told its path, and each floor restores its own project quick-picks and automation settings when reopened.
 
 ## v0.6.1 — 2026-09-29

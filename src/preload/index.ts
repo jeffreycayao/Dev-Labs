@@ -281,6 +281,8 @@ export interface HarnessConfig {
   /** Recently-opened hive home folders (most-recent first). Mirrors src/main/config.ts. */
   recentHives?: string[];
   registeredRepos: string[];
+  floorRepoSelections?: Record<string, string[]>;
+  floorAutomation?: Record<string, { missions: ScheduledMission[]; slackEnabled: boolean; webhookEnabled: boolean; webhookTriggers: WebhookTrigger[] }>;
   autoMode: boolean;
   defaultCommand: string;
   defaultModel?: string;
@@ -688,6 +690,9 @@ const api = {
    *  on failure (e.g. copy error) returns { ok: false, error }. */
   changeHome: (newHome: string, mode: 'move' | 'fresh'): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('config:changeHome', { newHome, mode }),
+  prepareProjectFloor: (projectPath: string): Promise<
+    { ok: true; home: string; projectPath: string } | { ok: false; error: string }
+  > => ipcRenderer.invoke('config:prepareProjectFloor', projectPath),
 
   // ─── Filesystem (sandboxed to cwd) ───────────────────────────────────────
   listDir: (root: string, rel: string): Promise<

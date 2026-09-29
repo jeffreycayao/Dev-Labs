@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import {
   rmSync, existsSync, readFileSync, readdirSync, statSync, cpSync, writeFileSync,
   unlinkSync, mkdirSync, renameSync, createWriteStream, copyFileSync, lstatSync,
-  readlinkSync, symlinkSync
+  readlinkSync, symlinkSync, realpathSync
 } from 'node:fs';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { join, resolve, relative, sep, basename, dirname, isAbsolute } from 'node:path';
@@ -66,6 +66,7 @@ import { MCP_CATALOG, mcpCatalogEntry, mcpSecretRef, mcpBrokerId, mcpUpstream, i
 import type { IntegrationRecord } from '../shared/integrations';
 import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';
 import { RosterStore } from './roster';
+import { prepareProjectFloorSelections, settingsForFloorSwitch } from './projectFloor';
 import { createFloorBackup, restoreStagedFloor, stageFloorData } from './floorBackup';
 import { buildWorkerLaunch } from './workerLaunch';
 import { isEphemeralSpawnRequest } from '../shared/workerLifecycle';
@@ -3493,6 +3494,52 @@ ipcMain.handle('config:ensureHome', (_evt, path: unknown) => {
   return ensureHarnessHome(path);
 });
 
+/** Prepare an independent floor for an existing project folder. No source files
+ *  are copied or changed; the current hive remains at its original home. The
+ *  renderer confirms the switch before calling this, then uses changeHome. */
+ipcMain.handle('config:prepareProjectFloor', (_evt, selectedPath: unknown) => {
+  if (typeof selectedPath !== 'string' || !selectedPath.trim()) {
+    return { ok: false, error: 'Choose a project folder first.' };
+  }
+  let projectPath: string;
+  try {
+    projectPath = realpathSync(resolve(expandTilde(selectedPath)));
+    if (!statSync(projectPath).isDirectory()) return { ok: false, error: 'Choose a folder, not a file.' };
+  } catch { return { ok: false, error: 'That project folder is no longer available.' }; }
+
+  const cfg = readConfig();
+  const oldHome = cfg.harnessHome;
+  if (!oldHome) return { ok: false, error: 'Open a floor before creating another one.' };
+  const key = (p: string) => process.platform === 'win32' ? p.toLowerCase() : p;
+  const projectKey = key(projectPath);
+  for (const home of [oldHome, ...(cfg.recentHives ?? []), app.getPath('userData')]) {
+    let homePath: string;
+    try { homePath = key(realpathSync(resolve(expandTilde(home)))); } catch { continue; }
+    if (projectKey === homePath || projectKey.startsWith(homePath + sep) || homePath.startsWith(projectKey + sep)) {
+      return { ok: false, error: 'Choose a project folder separate from ATMT Labs floor data.' };
+    }
+  }
+  const slug = basename(projectPath).replace(/[^A-Za-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'project';
+  const newHome = join(app.getPath('userData'), 'project-floors', `${slug}-${randomBytes(4).toString('hex')}`);
+  const old = resolve(oldHome).toLowerCase() + sep;
+  const next = resolve(newHome).toLowerCase() + sep;
+  if (old.startsWith(next) || next.startsWith(old)) {
+    return { ok: false, error: 'The app data folder is inside the current floor. Change the home folder first.' };
+  }
+  const ensured = ensureHarnessHome(newHome);
+  if (!ensured.ok) return ensured;
+  try {
+    writeFileSync(join(newHome, 'project-floor.json'), JSON.stringify({ version: 1, projectPath, createdAt: new Date().toISOString() }, null, 2), 'utf8');
+    writeConfig(prepareProjectFloorSelections(
+      cfg, resolve(oldHome), newHome, projectPath,
+      [{ ...OPS_STANDUP_MISSION, lastFiredAt: Date.now() }, HEARTBEAT_MISSION]
+    ));
+    return { ok: true, home: newHome, projectPath };
+  } catch (e) {
+    return { ok: false, error: `Could not prepare the new floor: ${e instanceof Error ? e.message : String(e)}` };
+  }
+});
+
 // Change the harnessHome folder. Because every derived path (hive root, palace,
 // sock, agent dirs) resolves lazily through getHome(), the only real work is
 // optionally MOVING the existing hive + palace and relaunching so every service
@@ -3566,7 +3613,7 @@ ipcMain.handle('config:changeHome', async (_evt, payload: unknown) => {
   // Repoint config and relaunch so every service re-bootstraps against newHome.
   // (Identical recovery path to resetAll — relaunch is the clean re-bind.)
   allowQuit = true;
-  writeConfig({ harnessHome: newHome });
+  writeConfig(settingsForFloorSwitch(readConfig(), oldHome, newHome, mode));
   try { ptyManager.killAll(); } catch (e) { console.error('[changeHome] killAll:', e); }
   app.relaunch();
   app.exit(0);

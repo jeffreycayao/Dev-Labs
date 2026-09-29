@@ -6,6 +6,10 @@ The live floor keeps hired agents visible when a CLI stops. A stopped card can b
 
 Ramon's `spawn-requests/<id>.json` creates a durable hire by default, including after a task is done or the terminal has been quiet. Only a request with `"ephemeral": true` is a one-off worker whose completion or idle timeout automatically releases its floor card.
 
+## Start a floor for another project
+
+**Settings → General → new project floor…** accepts any existing repo or folder. Confirming saves the current roster, stops its running sessions, creates a separate home under the app's `project-floors/` directory and restarts there. The old home is kept intact and can be reopened from the launch-time config picker. The new home starts with fresh agents, conversations, tasks and memory; new hires default to the selected folder, and Ramon receives that project path in his starting instructions. Project quick-picks, schedules, Slack intake and webhook intake are saved per home when switching. Account and license settings are shared across homes. Choosing **add agent → add project** instead registers another folder on the current floor without restarting it.
+
 - **Spec and validator:** `src/shared/floor.ts`
 - **Example:** [`floors/online-seller-team.floor.json`](floors/online-seller-team.floor.json)
 

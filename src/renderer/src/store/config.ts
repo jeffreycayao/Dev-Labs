@@ -67,6 +67,8 @@ export interface HarnessConfig {
    *  Mirrors src/main/config.ts. */
   recentHives?: string[];
   registeredRepos: string[];
+  floorRepoSelections?: Record<string, string[]>;
+  floorAutomation?: Record<string, { missions: ScheduledMission[]; slackEnabled: boolean; webhookEnabled: boolean; webhookTriggers: WebhookTrigger[] }>;
   autoMode: boolean;
   /** May the orchestrator ("Ramon") spin up agents on its own? Default FALSE,
    *  so an absent value reads as off. Mirrors src/main/config.ts. */

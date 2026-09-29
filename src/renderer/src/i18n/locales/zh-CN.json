@@ -228,6 +228,16 @@
       "backupAndReset": "备份 ZIP 并重置",
       "withoutBackup": "不备份直接重置"
     },
+    "projectFloor": {
+      "projectLabel": "项目",
+      "section": "项目楼层",
+      "description": "为另一个仓库或文件夹创建独立楼层。当前智能体和历史记录会保留在这里。",
+      "button": "新建项目楼层…",
+      "title": "新建项目楼层",
+      "body": "这会停止当前智能体，并在该文件夹的新楼层中重启应用。当前楼层的智能体、对话、任务和记忆会保留。下次启动时可从楼层选择器重新打开。",
+      "create": "创建楼层并重启",
+      "opening": "正在打开…"
+    },
     "general": {
       "homeFolder": "主文件夹",
       "environment": "环境",

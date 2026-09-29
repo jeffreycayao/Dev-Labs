@@ -228,6 +228,16 @@
       "backupAndReset": "back up ZIP & reset",
       "withoutBackup": "reset without backup"
     },
+    "projectFloor": {
+      "projectLabel": "Project",
+      "section": "Project floors",
+      "description": "Start a separate floor for another repo or folder. Your current agents and history stay here.",
+      "button": "new project floor…",
+      "title": "NEW PROJECT FLOOR",
+      "body": "This will stop the current agents and restart the app in a fresh floor for this folder. The current floor, its agents, conversations, tasks and memory remain saved. You can reopen it from the floor picker when the app starts.",
+      "create": "create floor & restart",
+      "opening": "opening…"
+    },
     "general": {
       "homeFolder": "Home folder",
       "environment": "Environment",

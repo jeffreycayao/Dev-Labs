@@ -1,2 +1,3 @@
-- Agents Ramon hires now stay on your floor when a task ends or they sit idle. Only agents he explicitly creates for one-off work are released automatically.
-- To recover an agent already removed this way, open Command Center → Archived, choose Return to floor, then Restore Team. Its saved identity and memory remain intact.
+- Start a new project floor from Settings → General by choosing an existing repo or folder.
+- Your old floor stays available; the new one starts with fresh agents, conversations, tasks and memory. New hires default to the chosen project.
+- Each floor restores its own project list, schedules and inbound triggers. Ramon knows which project the new floor owns.

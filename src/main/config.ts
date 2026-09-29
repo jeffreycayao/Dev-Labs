@@ -188,6 +188,17 @@ export interface HarnessConfig {
   recentHives?: string[];
   /** Folders the user registered during onboarding (used as quick-picks). */
   registeredRepos: string[];
+  /** Per-hive project quick-picks, so switching floors restores each floor's
+   *  own default folder instead of carrying the last floor's repo across. */
+  floorRepoSelections?: Record<string, string[]>;
+  /** Saved automation state for each home. Inbound work from one project must
+   *  not start running against another project's fresh hive. */
+  floorAutomation?: Record<string, {
+    missions: ScheduledMission[];
+    slackEnabled: boolean;
+    webhookEnabled: boolean;
+    webhookTriggers: WebhookTrigger[];
+  }>;
   /** When true, new agents are spawned with --permission-mode bypassPermissions. */
   autoMode: boolean;
   /** May the orchestrator ("Ramon") spin up agents on its own?
@@ -705,6 +716,12 @@ export function writeConfig(patch: Partial<HarnessConfig>): HarnessConfig {
     next.registeredRepos = patch.registeredRepos
       .map((r) => expandTilde(r))
       .filter((r) => r && !seen.has(r) && (seen.add(r), true));
+    const home = typeof patch.harnessHome === 'string' && patch.harnessHome
+      ? expandTilde(patch.harnessHome) : current.harnessHome;
+    if (home) next.floorRepoSelections = {
+      ...(next.floorRepoSelections ?? {}),
+      [home]: next.registeredRepos
+    };
   }
   // The HIVE HOME needs the exact same treatment as registeredRepos above, and for
   // years it did not get it (#140). Onboarding SUGGESTS `~/HarnessAgents` and the

@@ -44,6 +44,8 @@ Then choose one:
 2. **Set up, in 4 steps:** a home for the app, Ramon's engine, your projects, and permissions.
 3. **You land on the office floor.** Ramon boots at the head desk.
 
+To work on another repo with a clean team, open **Settings → General → new project floor…** and choose the existing repo or folder. Confirm the restart: running agents stop, and the app opens a new floor with fresh conversations, tasks and memory. Your previous floor remains on disk and appears in the config picker next time the app starts. New hires default to the chosen folder; Ramon is told which project this floor owns. Each floor restores its own project list, schedules and inbound trigger state. App account and license settings remain shared. To add a second repo to the current floor instead, use **add agent → add project**.
+
 ## 4. Hire agents
 
 Click **add agent**. Give the agent a name, a look, a project folder, an engine and model, and a standing goal. Then press **spawn**.

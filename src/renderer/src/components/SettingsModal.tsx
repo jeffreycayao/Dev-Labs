@@ -209,6 +209,9 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
   const [changeMode, setChangeMode] = useState<'move' | 'fresh'>('move');
   const [changeBusy, setChangeBusy] = useState(false);
   const [changeErr, setChangeErr] = useState('');
+  const [projectFloorPath, setProjectFloorPath] = useState<string | null>(null);
+  const [projectFloorBusy, setProjectFloorBusy] = useState(false);
+  const [projectFloorError, setProjectFloorError] = useState('');
 
   // `notifications` is an optional field on the main-process config; the renderer
   // mirror type may not declare it yet, so read it defensively.
@@ -838,8 +841,36 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
     }
   };
 
+  const pickProjectFloor = async () => {
+    setProjectFloorError('');
+    const res = await window.cth.chooseFolder();
+    if (res.ok) setProjectFloorPath(res.path);
+    else if (res.error !== 'cancelled') setProjectFloorError(res.error);
+  };
+
+  const createProjectFloor = async () => {
+    if (!projectFloorPath) return;
+    setProjectFloorBusy(true);
+    setProjectFloorError('');
+    try {
+      // Preserve the current floor's most recent roster edit before the restart.
+      await flushPendingRosterForBackup();
+      const prepared = await window.cth.prepareProjectFloor(projectFloorPath);
+      if (!prepared.ok) throw new Error(prepared.error);
+      window.localStorage.setItem('cth.skipHivePickerOnce', '1');
+      const switched = await window.cth.changeHome(prepared.home, 'fresh');
+      if (!switched.ok) throw new Error(switched.error ?? 'Could not open the new floor.');
+    } catch (e) {
+      window.localStorage.removeItem('cth.skipHivePickerOnce');
+      setProjectFloorError(e instanceof Error ? e.message : String(e));
+      setProjectFloorBusy(false);
+    }
+  };
+
   const modalTitle = changeHome
     ? t('settings.changeHomeTitle')
+    : projectFloorPath
+      ? t('settings.projectFloor.title')
     : confirmingFloor
       ? t('settings.floorReset.title')
     : confirming
@@ -923,6 +954,22 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                 </PixelButton>
                 <PixelButton variant="primary" size="md" onClick={applyChangeHome} disabled={changeBusy}>
                   {changeBusy ? t('settings.apply') : (changeMode === 'move' ? t('settings.moveAndRestart') : t('settings.switchAndRestart'))}
+                </PixelButton>
+              </div>
+            </div>
+
+          /* === New project floor confirmation === */
+          ) : projectFloorPath ? (
+            <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ fontSize: 14, lineHeight: '21px', color: 'var(--cth-ink-700)' }}>
+                {t('settings.projectFloor.body')}
+              </div>
+              <code style={{ fontFamily: 'var(--cth-font-mono, monospace)', fontSize: 12, wordBreak: 'break-all' }}>{projectFloorPath}</code>
+              {projectFloorError && <div role="alert" style={{ color: 'var(--cth-coral)', fontSize: 13 }}>{projectFloorError}</div>}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <PixelButton variant="secondary" size="md" onClick={() => setProjectFloorPath(null)} disabled={projectFloorBusy}>{t('common.cancel')}</PixelButton>
+                <PixelButton variant="primary" size="md" onClick={() => { void createProjectFloor(); }} disabled={projectFloorBusy}>
+                  {projectFloorBusy ? t('settings.projectFloor.opening') : t('settings.projectFloor.create')}
                 </PixelButton>
               </div>
             </div>
@@ -1064,6 +1111,21 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                       <div style={{ height: 1, background: 'var(--cth-ink-300)' }} />
 
                       {/* Environment — settings that used to be trapped in onboarding */}
+                      <div>
+                        <div style={sectionHead}>{t('settings.projectFloor.section')}</div>
+                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                          <span style={{ flex: 1, fontSize: 12, lineHeight: '18px', color: 'var(--cth-ink-500)' }}>
+                            {t('settings.projectFloor.description')}
+                          </span>
+                          <PixelButton variant="secondary" size="sm" onClick={() => { void pickProjectFloor(); }}>
+                            {t('settings.projectFloor.button')}
+                          </PixelButton>
+                        </div>
+                        {projectFloorError && <div role="alert" style={{ color: 'var(--cth-coral)', fontSize: 12 }}>{projectFloorError}</div>}
+                      </div>
+
+                      <div style={{ height: 1, background: 'var(--cth-ink-300)' }} />
+
                       <div>
                         <div style={sectionHead}>
                           {t('settings.general.environment')}

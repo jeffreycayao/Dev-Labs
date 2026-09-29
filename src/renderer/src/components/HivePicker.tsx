@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
 import { Icon } from './Icon';
@@ -16,7 +17,7 @@ export interface HivePickerProps {
 const SKIP_KEY = 'cth.skipHivePickerOnce';
 
 function folderName(path: string): string {
-  return path.split('/').filter(Boolean).pop() ?? path;
+  return path.split(/[\\/]/).filter(Boolean).pop() ?? path;
 }
 
 /**
@@ -28,6 +29,7 @@ function folderName(path: string): string {
  * every switch is a clean process restart (cheap here, before any work is live).
  */
 export function HivePicker({ config, onOpenCurrent }: HivePickerProps) {
+  const { t } = useTranslation();
   const current = config.harnessHome;
   const recents = (config.recentHives ?? []).filter((h) => h && h !== current);
   const [busy, setBusy] = useState<string | undefined>();
@@ -98,6 +100,11 @@ export function HivePicker({ config, onOpenCurrent }: HivePickerProps) {
                     <div style={{ fontFamily: 'var(--cth-font-display)', fontSize: 11, lineHeight: '15px' }}>
                       {folderName(current)}
                     </div>
+                    {config.floorRepoSelections?.[current]?.[0] && (
+                      <div style={{ fontSize: 11, color: 'var(--cth-ink-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {t('settings.projectFloor.projectLabel')}: {config.floorRepoSelections[current][0]}
+                      </div>
+                    )}
                     <div style={{
                       fontFamily: 'var(--cth-font-mono)', fontSize: 11, color: 'var(--cth-ink-500)',
                       whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', direction: 'rtl', textAlign: 'left'
@@ -135,6 +142,11 @@ export function HivePicker({ config, onOpenCurrent }: HivePickerProps) {
                         <div style={{ fontFamily: 'var(--cth-font-ui)', fontSize: 12, fontWeight: 600, color: 'var(--cth-ink-900)' }}>
                           {folderName(h)}
                         </div>
+                          {config.floorRepoSelections?.[h]?.[0] && (
+                            <div style={{ fontSize: 11, color: 'var(--cth-ink-700)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {t('settings.projectFloor.projectLabel')}: {config.floorRepoSelections[h][0]}
+                            </div>
+                          )}
                         <div style={{
                           fontFamily: 'var(--cth-font-mono)', fontSize: 11, color: 'var(--cth-ink-500)',
                           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', direction: 'rtl', textAlign: 'left'

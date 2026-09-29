@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+- **New project floor.** Settings → General can create a fresh floor for an existing repo or folder. The app saves the current floor, stops its sessions, and reopens with separate agents, tasks and memory. The project becomes the new floor's default folder, Ramon is told its path, and each floor restores its own project quick-picks and automation settings when reopened.
+
 ## v0.6.1 — 2026-09-29
 
 - **Ramon's new agents stay hired.** Agents Ramon spawns through a request now remain on the floor after finishing a task or sitting idle. The 20-minute idle reaper applies only when Ramon explicitly requests a one-off worker (`ephemeral: true`). A stopped durable agent keeps its card and can be restored; only an explicit Fire removes it. Archived agents can be returned to the floor with their saved identity and memory from Command Center.

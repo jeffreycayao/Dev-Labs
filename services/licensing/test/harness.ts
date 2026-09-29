@@ -18,11 +18,6 @@ export const REDIRECT = 'atmtlabs://auth/callback';
 
 const schema = readFileSync(new URL('../db/schema.sql', import.meta.url), 'utf8');
 
-export class CardError extends Error {
-  type = 'StripeCardError';
-  constructor(public code: string) { super(code); }
-}
-
 export async function harness(env: Record<string, string> = {}) {
   const clock = { now: Date.UTC(2026, 8, 27, 3, 0, 0) };
   const db = new PGlite();
@@ -39,8 +34,6 @@ export async function harness(env: Record<string, string> = {}) {
     LICENSE_SIGNING_KID: 'k1',
     GOOGLE_CLIENT_ID: 'gcid', GOOGLE_CLIENT_SECRET: 'gsec',
     YAHOO_CLIENT_ID: 'ycid', YAHOO_CLIENT_SECRET: 'ysec',
-    STRIPE_SECRET_KEY: 'sk_test_x', STRIPE_WEBHOOK_SECRET: 'whsec_x', STRIPE_PRICE_ID: 'price_lifetime',
-    CRON_SECRET: 'c'.repeat(24),
     ...env
   });
 
@@ -83,52 +76,7 @@ export async function harness(env: Record<string, string> = {}) {
 
   // ── fake Stripe ──────────────────────────────────────────────────────────
   let n = 0;
-  const stripeLog = {
-    sessions: [] as any[],
-    paymentIntents: [] as { params: any; opts: any }[],
-    customers: [] as any[],
-    customerUpdates: [] as any[],
-    cancelled: [] as string[]
-  };
-  const stripeState = {
-    setupIntents: new Map<string, { pm: string; fingerprint: string }>(),
-    charges: new Map<string, { customer: string }>(),
-    /** What the next off-session charge does. */
-    nextCharge: 'succeed' as 'succeed' | 'authentication_required' | 'card_declined' | 'network'
-  };
-  const stripe: any = {
-    customers: {
-      create: async (p: any) => { const c = { id: `cus_${++n}` }; stripeLog.customers.push(p); return c; },
-      update: async (id: string, p: any) => { stripeLog.customerUpdates.push({ id, p }); return {}; }
-    },
-    checkout: { sessions: { create: async (p: any) => { stripeLog.sessions.push(p); return { id: `cs_${++n}`, url: `https://checkout.stripe.com/c/pay/cs_${n}` }; } } },
-    setupIntents: {
-      retrieve: async (id: string) => {
-        const si = stripeState.setupIntents.get(id)!;
-        return { id, payment_method: { id: si.pm, card: { fingerprint: si.fingerprint } } };
-      }
-    },
-    paymentIntents: {
-      cancel: async (id: string) => { stripeLog.cancelled.push(id); return { id, status: 'canceled' }; },
-      create: async (params: any, opts: any) => {
-        stripeLog.paymentIntents.push({ params, opts });
-        if (stripeState.nextCharge === 'network') throw new Error('ECONNRESET');
-        if (stripeState.nextCharge !== 'succeed') throw new CardError(stripeState.nextCharge);
-        return { id: `pi_${++n}`, status: 'succeeded', amount: params.amount, currency: params.currency };
-      }
-    },
-    prices: { retrieve: async () => ({ id: 'price_lifetime', type: 'one_time', unit_amount: 4900, currency: 'usd' }) },
-    charges: { retrieve: async (id: string) => ({ id, customer: stripeState.charges.get(id)?.customer ?? null }) },
-    billingPortal: { sessions: { create: async () => ({ url: 'https://billing.stripe.com/p/session/x' }) } },
-    webhooks: {
-      constructEvent: (raw: string, sig: string) => {
-        if (sig !== 'good-signature') throw new Error('No signatures found matching the expected signature');
-        return JSON.parse(raw);
-      }
-    }
-  };
-
-  const app = createApp({ cfg, store, stripe, oidc, now: () => clock.now });
+  const app = createApp({ cfg, store, oidc, now: () => clock.now });
 
   // ── cookie-jar browser ───────────────────────────────────────────────────
   function browser() {
@@ -232,23 +180,6 @@ export async function harness(env: Record<string, string> = {}) {
     return s;
   }
 
-  async function webhook(event: object, sig = 'good-signature') {
-    return app.request(`${API}/v1/stripe/webhook`, {
-      method: 'POST', headers: { 'stripe-signature': sig, 'content-type': 'application/json' }, body: JSON.stringify(event)
-    });
-  }
-
-  let ev = 0;
-  /** Simulate the user finishing trial Checkout with a card. */
-  async function completeTrialCheckout(accountId: string, customer: string, fingerprint: string) {
-    const si = `seti_${++n}`;
-    stripeState.setupIntents.set(si, { pm: `pm_${n}`, fingerprint });
-    return webhook({
-      id: `evt_${++ev}`, type: 'checkout.session.completed',
-      data: { object: { mode: 'setup', setup_intent: si, customer, metadata: { account_id: accountId, purpose: 'trial' } } }
-    });
-  }
-
   async function accountIdFor(email: string) {
     return (await db.query<{ id: string }>(`SELECT id FROM accounts WHERE email = $1`, [email])).rows[0]?.id;
   }
@@ -258,8 +189,7 @@ export async function harness(env: Record<string, string> = {}) {
   }
 
   return {
-    app, cfg, store, db, clock, idp, stripe, stripeLog, stripeState, licensePublic,
-    browser, webSignIn, desktopSignIn, license, renew, webhook, completeTrialCheckout, accountIdFor, licenseRow,
-    nextEventId: () => `evt_${++ev}`
+    app, cfg, store, db, clock, idp, licensePublic,
+    browser, webSignIn, desktopSignIn, license, renew, accountIdFor, licenseRow
   };
 }

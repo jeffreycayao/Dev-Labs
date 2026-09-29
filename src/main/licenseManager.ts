@@ -1,5 +1,5 @@
 /**
- * LicenseManager — the sign-in / license lifecycle as a small state machine.
+ * LicenseManager — the sign-in / free-account lifecycle as a small state machine.
  *
  * Electron-free by design (like integrationBroker.ts): storage, the browser,
  * fetch and the clock are injected, so every flow — sign in, callback, refresh
@@ -12,18 +12,11 @@
  *   handleCallback() atmtlabs://auth/callback?code&state → tokens → license
  *   refresh()        rotate refresh token → POST /v1/licenses → new license
  *   tick()           periodic: renew past half-life, re-evaluate expiry
- *   openBilling()    Stripe Checkout (trial / one-time purchase) via the API
- *   signOut()        release the device seat, revoke, forget
- *
- * Once the machine holds a PERPETUAL (paid) license it is stamped for good:
- * init/tick/refresh make no network calls at all, ever. The stamp is bound
- * to a hardware-derived device id, so copying the license file to another
- * computer does not carry the license with it.
+ *   openAccount()    show the account page in the system browser
+ *   signOut()        release the signed-in computer, revoke, forget
  */
 import {
   buildAuthorizeUrl,
-  createBillingSession,
-  redeemUnlockCode,
   createPkce,
   exchangeCode,
   fetchLicense,
@@ -42,7 +35,6 @@ import {
 } from './licenseCore';
 import {
   evaluateClaims,
-  isPerpetual,
   shouldRefresh,
   statusAllowsAgents,
   type LicenseErrorCode,
@@ -65,7 +57,7 @@ export interface LicenseStore {
 }
 
 export interface LicenseManagerDeps {
-  /** Block agents until licensed. False → state 'disabled', no network at all. */
+  /** Block agents until signed in. False → state 'disabled', no network at all. */
   enforced: boolean;
   endpoints: LicensingEndpoints & { siteOrigin: string };
   verify: TokenVerifyConfig;
@@ -95,10 +87,6 @@ export interface LoopbackListener {
 
 /** How long a browser sign-in may take before the gate gives up waiting. */
 export const SIGN_IN_TIMEOUT_MS = 10 * 60 * 1000;
-/** After opening Stripe Checkout, re-check this often for the new subscription. */
-export const CHECKOUT_POLL_MS = 10 * 1000;
-export const CHECKOUT_POLL_FOR_MS = 20 * 60 * 1000;
-
 interface PendingSignIn {
   verifier: string;
   state: string;
@@ -116,7 +104,6 @@ export class LicenseManager {
   private status: LicenseStatus = { enforced: false, state: 'disabled' };
   private pending: PendingSignIn | null = null;
   private pendingTimer: { cancel(): void } | null = null;
-  private checkoutPoll: { cancel(): void } | null = null;
   private tokens: OAuthTokens | null = null;
   private inflight: Promise<LicenseStatus> | null = null;
   private readonly listeners = new Set<(s: LicenseStatus) => void>();
@@ -178,22 +165,15 @@ export class LicenseManager {
     return this.getStatus();
   }
 
-  /** True once this machine holds a verified, paid lifetime license. */
-  isStamped(): boolean {
-    const c = this.currentClaims();
-    return !!c && isPerpetual(c) && this.status.state === 'licensed';
-  }
-
-  /** Whether a background refresh is worth attempting right now. Never for a
-   *  stamped (paid) machine — it does not talk to the server again. */
+  /** Whether a background account refresh is worth attempting right now. */
   canRefresh(): boolean {
-    return this.status.enforced && this.status.state !== 'error' && !!this.persisted.refreshToken && !this.isStamped();
+    return this.status.enforced && this.status.state !== 'error' && !this.status.perpetual && !!this.persisted.refreshToken;
   }
 
-  /** Periodic: renew past half-life (or when not licensed but signed in), and
+  /** Periodic: renew past half-life (or when not yet unlocked but signed in), and
    *  re-evaluate so an expiry that happened while idle is noticed. */
   async tick(): Promise<void> {
-    if (!this.status.enforced || this.status.state === 'error' || this.pending || this.isStamped()) return;
+    if (!this.status.enforced || this.status.state === 'error' || this.pending) return;
     const claims = this.currentClaims();
     const due = !claims || shouldRefresh(claims, this.now()) || this.status.state !== 'licensed';
     if (due && this.persisted.refreshToken) await this.refresh();
@@ -202,7 +182,7 @@ export class LicenseManager {
 
   /** Rotate the refresh token and fetch a new license. De-duplicated. */
   refresh(): Promise<LicenseStatus> {
-    if (!this.status.enforced || this.isStamped()) return Promise.resolve(this.getStatus());
+    if (!this.status.enforced) return Promise.resolve(this.getStatus());
     if (!this.inflight) {
       this.inflight = this.doRefresh().finally(() => { this.inflight = null; });
     }
@@ -346,86 +326,19 @@ export class LicenseManager {
     return true;
   }
 
-  // ─── billing ──────────────────────────────────────────────────────────────
-
-  /**
-   * 'checkout' → Stripe Checkout: the 7-day card trial, or the one-time
-   *              purchase when the trial is used up / the day-7 charge failed.
-   * 'portal'   → the account page (cancel trial, card, receipts, devices).
-   * Signed out, or the API unreachable → the public pricing/account page.
-   */
-  async openBilling(kind: 'checkout' | 'portal'): Promise<{ ok: boolean; error?: LicenseErrorCode }> {
-    const fallback = kind === 'checkout'
-      ? new URL('/pricing', this.deps.endpoints.siteOrigin).toString()
-      : new URL('/account', this.deps.endpoints.authOrigin).toString();
-    if (!this.persisted.refreshToken) {
-      await this.deps.openExternal(fallback);
-      return { ok: true };
-    }
-    try {
-      const url = await this.withAccess((access) =>
-        createBillingSession(this.deps.fetch, this.deps.endpoints, access, kind));
-      await this.deps.openExternal(url);
-      if (kind === 'checkout') this.pollForSubscription();
-      return { ok: true };
-    } catch (e) {
-      const code = e instanceof LicenseApiError ? e.code : 'server_error';
-      if (code === 'session_expired') {
-        this.handleError(e);
-        return { ok: false, error: 'session_expired' };
-      }
-      await this.deps.openExternal(fallback);
-      return { ok: true };
-    }
-  }
-
-  /** Stripe Checkout completes in the browser; the webhook lands on the API a
-   *  moment later. Re-check quietly until the trial shows up or we give up. */
-  private pollForSubscription(): void {
-    this.checkoutPoll?.cancel();
-    const until = this.now() + CHECKOUT_POLL_FOR_MS;
-    const step = () => {
-      this.checkoutPoll = this.setTimer(async () => {
-        if (this.status.state === 'licensed' || !this.persisted.refreshToken) return;
-        const next = await this.refresh();
-        if (next.state !== 'licensed' && this.now() < until) step();
-      }, CHECKOUT_POLL_MS);
-    };
-    step();
-  }
-
-  // ─── unlock codes ─────────────────────────────────────────────────────────
-
-  /** Redeem a voucher, then pull the (now perpetual) license so this machine
-   *  is stamped right away. Errors come back for the code field, not the gate. */
-  async redeemCode(code: string): Promise<{ ok: boolean; error?: LicenseErrorCode }> {
-    if (!this.status.enforced) return { ok: false, error: 'misconfigured' };
-    if (!this.persisted.refreshToken) return { ok: false, error: 'session_expired' };
-    try {
-      await this.withAccess((access) => redeemUnlockCode(this.deps.fetch, this.deps.endpoints, access, code));
-    } catch (e) {
-      const c = e instanceof LicenseApiError ? e.code : 'server_error';
-      if (c === 'session_expired') this.handleError(e);
-      return { ok: false, error: c === 'unauthorized' ? 'session_expired' : c };
-    }
-    try {
-      await this.pullLicense();
-      this.recompute();
-    } catch (e) {
-      this.handleError(e);
-    }
-    return { ok: true };
+  /** Open the signed-in account page in the system browser. */
+  async openAccount(): Promise<void> {
+    await this.deps.openExternal(new URL('/account', this.deps.endpoints.authOrigin).toString());
   }
 
   // ─── sign out ─────────────────────────────────────────────────────────────
 
   async signOut(): Promise<LicenseStatus> {
     this.clearPending();
-    this.checkoutPoll?.cancel();
     const rt = this.persisted.refreshToken;
     const deviceId = this.persisted.deviceId;
     if (rt && deviceId) {
-      // Best effort: free the seat, then kill the session server side. The
+      // Best effort: remove the computer, then kill the session server side. The
       // local sign-out happens regardless — being offline must not trap a user.
       try {
         await this.withAccess((access) => releaseDevice(this.deps.fetch, this.deps.endpoints, access, deviceId));
@@ -482,7 +395,9 @@ export class LicenseManager {
           deviceId: this.persisted.deviceId ?? '',
           lastSeenAt: this.persisted.lastSeenAt
         });
-        next = { enforced: true, ...evald };
+        next = this.persisted.refreshToken || evald.perpetual
+          ? { enforced: true, ...evald }
+          : { enforced: true, state: 'signed_out', error: 'session_expired' };
         if (next.state !== 'licensed' && error && !next.error) next.error = error;
       }
     }

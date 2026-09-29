@@ -22,21 +22,13 @@ You need **at least one AI coding tool** installed and signed in on your compute
 
 ATMT Labs doesn't include AI usage. **Each tool bills you through your own account with that company.**
 
-## 2. Get a license
+## 2. Sign in to your free account
 
 When ATMT Labs opens, it asks you to sign in. Signing in happens in your browser, with **Google or Yahoo**; afterwards the browser sends you back to the app.
 
-Then choose one:
+All app features are available for free after sign-in. No payment card, trial, purchase or unlock code is needed.
 
-| Option | What happens |
-|---|---|
-| **Start 7-day free trial** | Enter a card on Stripe's secure page. **Nothing is charged for 7 days.** On day 7 your card is charged **once** for a lifetime license. Cancel before then with **Account → Cancel Free Trial…** in the app menu (or at `auth.labs.atmt.dev/account`) and you pay nothing. One trial per person and per card. |
-| **Buy lifetime license** | Pay once. No subscription, no renewals. |
-| **Have an unlock code?** | Click it on the sign-in screen (after signing in), paste the code (`ATMT-XXXXX-XXXXX-XXXXX-XXXXX`) and press **redeem**. You get a free lifetime license. Each code works once. If you got a link like `auth.labs.atmt.dev/redeem?code=…`, open it, sign in, and press **Redeem code**. |
-
-**Your license belongs to your email.** Sign in with the same email on another computer to use it there, up to **3 computers**. Free a seat at `auth.labs.atmt.dev/account` → **Computers** → **Remove**.
-
-**Once a computer has a lifetime license, it never needs the internet again for licensing.** It's activated for good. Reinstalling your operating system counts as a new computer: sign in again.
+Use the same account on your other computers. The app checks your account periodically, so connect to the internet to renew an expired session. Manage signed-in computers at `auth.labs.atmt.dev/account`.
 
 ## 3. First run
 
@@ -77,7 +69,7 @@ A **floor** is a whole team saved in one file (`.floor.json`).
 
 **Export your floor:** **add agent** → **export floor…** → name it → **save file…** The file includes each agent's name, role, goal, look, engine, model and token budget. It never includes your folders, keys, memory or conversations.
 
-**Reset your floor:** **Settings → General → reset floor**. Confirm with **back up ZIP & reset** or **reset without backup**. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your license, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.
+**Reset your floor:** **Settings → General → reset floor**. Confirm with **back up ZIP & reset** or **reset without backup**. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your account, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.
 
 The ZIP contains `floor/` (roster, hive and shared memory), matching Claude session transcripts under `claude-projects/`, a manifest and `RESTORE.txt`. It can contain private prompts and messages, so keep it in a private place. To restore, quit ATMT Labs, extract `floor/` into the original home folder named in the manifest and `claude-projects/` into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and account credentials are not bundled.
 
@@ -157,7 +149,7 @@ Today, connectors only reach **Claude Code** agents.
 ## 10. Privacy
 
 - Your code, prompts, agent output and connector keys stay on your computer.
-- Licensing only knows your email, your license status, and which computers are activated.
+- The account service knows your email and which computers have signed in.
 - Anonymous usage stats are optional: Settings → General → **Anonymous usage stats**.
 
 Details: [Privacy Policy](https://labs.atmt.dev/privacy) · [Terms / License Agreement](https://labs.atmt.dev/terms) · [Telemetry](../TELEMETRY.md).
@@ -176,10 +168,7 @@ page. The app does not need a GitHub sign-in or token for updates.
 
 | You see | Do this |
 |---|---|
-| "Your plan's device limit is reached" | Remove an old computer at `auth.labs.atmt.dev/account`, then **try again**. |
-| "That code has already been used" | Each unlock code works once. Ask the person who gave it to you for a new one. |
-| "Your account already has a lifetime license, so the code was not used" | You're all set. The code still works, so pass it on. |
-| "LICENSE CHECK NEEDED" | A trial computer needs to go online briefly. Lifetime computers never see this. |
+| "ACCOUNT CHECK NEEDED" | Connect to the internet and try again. Your free account session needs to renew. |
 | An agent exits right away | Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name. |
 | Codex says "Set up Agent sandbox to continue" on Windows | Open the agent's terminal, choose **Set up**, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's `unelevated` sandbox fallback (below). |
 | A delivery says "Not delivered: … (outside the agent's folders)" | Ask the agent to save the file inside its project folder and deliver again. |

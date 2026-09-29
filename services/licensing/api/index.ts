@@ -5,7 +5,6 @@
  */
 import { neon } from '@neondatabase/serverless';
 import { handle } from 'hono/vercel';
-import Stripe from 'stripe';
 import { createApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
 import { Oidc } from '../src/oidc.js';
@@ -18,8 +17,7 @@ function getApp() {
   const cfg = loadConfig();
   const sql = neon(cfg.databaseUrl);
   const store = new Store((text, params) => sql.query(text, params ?? []) as Promise<Record<string, any>[]>);
-  const stripe = new Stripe(cfg.stripe.secretKey, { maxNetworkRetries: 2 });
-  app = createApp({ cfg, store, stripe, oidc: new Oidc({ fetch }) });
+  app = createApp({ cfg, store, oidc: new Oidc({ fetch }) });
   return app;
 }
 

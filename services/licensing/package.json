@@ -15,14 +15,12 @@
     "db:migrate": "node scripts/migrate.mjs",
     "env:push": "node scripts/push-env.mjs",
     "dev": "vercel dev",
-    "codes": "node --import tsx scripts/codes.ts",
     "brand:assets": "node scripts/brand-assets.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "hono": "^4.13.9",
-    "jose": "^6.2.12",
-    "stripe": "^22.6.2"
+    "jose": "^6.2.12"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",

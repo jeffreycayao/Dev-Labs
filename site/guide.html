@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>User Guide · ATMT Labs Floor</title>
-<meta name="description" content="How to install, license and use ATMT Labs Floor: hire AI agents, build floors and a whole building, connect apps, and stay safe.">
+<meta name="description" content="How to install, sign in and use ATMT Labs Floor: hire AI agents, build floors and a whole building, connect apps, and stay safe.">
 <meta property="og:title" content="User Guide · ATMT Labs Floor">
 <meta property="og:url" content="https://labs.atmt.dev/guide">
 <meta name="theme-color" content="#0a0e0b">
@@ -26,9 +26,9 @@
     <nav aria-label="Main">
       <a class="hide-sm" href="/#building">How it works</a>
       <a class="hide-sm" href="/guide">User guide</a>
-      <a class="hide-sm" href="/#pricing">Pricing</a>
+      <a class="hide-sm" href="/#download">Download</a>
       <a class="hide-sm" href="https://auth.labs.atmt.dev/account">Sign in</a>
-      <a class="btn primary" href="https://auth.labs.atmt.dev/start?plan=trial">Start free trial</a>
+      <a class="btn primary" href="/#download">Download free</a>
     </nav>
   </div>
 </header>
@@ -43,7 +43,7 @@
       <h4>Contents</h4>
       <ol>
         <li><a href="#before">Before you start</a></li>
-        <li><a href="#license">Get a license</a></li>
+        <li><a href="#license">Sign in to your free account</a></li>
         <li><a href="#first-run">First run</a></li>
         <li><a href="#hire">Hire agents</a></li>
         <li><a href="#floors">Floors: hire a whole team</a></li>
@@ -71,18 +71,9 @@
     </table></div>
     <p>ATMT Labs doesn't include AI usage. <strong>Each tool bills you through your own account with that company.</strong></p>
 
-    <h2 id="license">2. Get a license</h2>
-    <p>When ATMT Labs opens, it asks you to sign in. Signing in happens in your browser, with <strong>Google or Yahoo</strong>; afterwards the browser sends you back to the app. Then choose one:</p>
-    <div class="table"><table>
-      <thead><tr><th>Option</th><th>What happens</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Start 7-day free trial</strong></td><td>Enter a card on Stripe's secure page. <strong>Nothing is charged for 7 days.</strong> On day 7 your card is charged <strong>once</strong> for a lifetime license. Cancel before then with <strong>Account → Cancel Free Trial…</strong> in the app menu (or at <code>auth.labs.atmt.dev/account</code>) and you pay nothing. One trial per person and per card.</td></tr>
-        <tr><td><strong>Buy lifetime license</strong></td><td>Pay once. No subscription, no renewals.</td></tr>
-        <tr><td><strong>Have an unlock code?</strong></td><td>Click it on the sign-in screen (after signing in), paste the code (<code>ATMT-XXXXX-XXXXX-XXXXX-XXXXX</code>) and press <strong>redeem</strong>. You get a free lifetime license. Each code works once. If you got a link like <code>auth.labs.atmt.dev/redeem?code=…</code>, open it, sign in, and press <strong>Redeem code</strong>.</td></tr>
-      </tbody>
-    </table></div>
-    <p><strong>Your license belongs to your email.</strong> Sign in with the same email on another computer to use it there, up to <strong>3 computers</strong>. Free a seat at <code>auth.labs.atmt.dev/account</code> → <strong>Computers</strong> → <strong>Remove</strong>.</p>
-    <p><strong>Once a computer has a lifetime license, it never needs the internet again for licensing.</strong> It's activated for good. Reinstalling your operating system counts as a new computer: sign in again.</p>
+    <h2 id="license">2. Sign in to your free account</h2>
+    <p>When ATMT Labs opens, sign in with <strong>Google or Yahoo</strong> in your browser. The browser sends you back to the app. All app features are then available for free; no card, purchase or unlock code is needed.</p>
+    <p>Use the same account on your other computers. The app checks your account periodically, so connect to the internet to renew an expired session. Manage signed-in computers at <code>auth.labs.atmt.dev/account</code>.</p>
 
     <h2 id="first-run">3. First run</h2>
     <ol>
@@ -112,7 +103,7 @@
       <li><strong>cancel:</strong> hires nobody.</li>
     </ul>
     <p><strong>Export your floor:</strong> <strong>add agent</strong> → <strong>export floor…</strong> → name it → <strong>save file…</strong> The file includes each agent's name, role, goal, look, engine, model and token budget. It never includes your folders, keys, memory or conversations.</p>
-    <p><strong>Reset your floor:</strong> <strong>Settings → General → reset floor</strong>. Confirm with <strong>back up ZIP &amp; reset</strong> or <strong>reset without backup</strong>. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your license, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.</p>
+    <p><strong>Reset your floor:</strong> <strong>Settings → General → reset floor</strong>. Confirm with <strong>back up ZIP &amp; reset</strong> or <strong>reset without backup</strong>. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your account, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.</p>
     <p>The ZIP contains <code>floor/</code> (roster, hive and shared memory), matching Claude session transcripts under <code>claude-projects/</code>, a manifest and <code>RESTORE.txt</code>. It can contain private prompts and messages, so keep it in a private place. To restore, quit ATMT Labs, extract <code>floor/</code> into the original home folder named in the manifest and <code>claude-projects/</code> into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and account credentials are not bundled.</p>
     <p><strong>Try it:</strong> the <em>Online Seller Team</em> is a shop manager, a landing-page designer and a product copywriter. It's built for Pancake POS and Webcake.</p>
 
@@ -190,7 +181,7 @@
     <h2 id="privacy">10. Privacy</h2>
     <ul>
       <li>Your code, prompts, agent output and connector keys stay on your computer.</li>
-      <li>Licensing only knows your email, your license status, and which computers are activated.</li>
+      <li>The account service knows your email and which computers have signed in.</li>
       <li>Anonymous usage stats are optional: Settings → General → <strong>Anonymous usage stats</strong>.</li>
     </ul>
     <p>Details: <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms and License Agreement</a>.</p>
@@ -202,10 +193,7 @@
     <div class="table"><table>
       <thead><tr><th>You see</th><th>Do this</th></tr></thead>
       <tbody>
-        <tr><td>"Your plan's device limit is reached"</td><td>Remove an old computer at <code>auth.labs.atmt.dev/account</code>, then <strong>try again</strong>.</td></tr>
-        <tr><td>"That code has already been used"</td><td>Each unlock code works once. Ask the person who gave it to you for a new one.</td></tr>
-        <tr><td>"Your account already has a lifetime license, so the code was not used"</td><td>You're all set. The code still works, so pass it on.</td></tr>
-        <tr><td>"LICENSE CHECK NEEDED"</td><td>A trial computer needs to go online briefly. Lifetime computers never see this.</td></tr>
+        <tr><td>"ACCOUNT CHECK NEEDED"</td><td>Connect to the internet and try again. Your free account session needs to renew.</td></tr>
         <tr><td>An agent exits right away</td><td>Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name.</td></tr>
         <tr><td>Codex says "Set up Agent sandbox to continue" on Windows</td><td>Open the agent's terminal, choose <strong>Set up</strong>, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's <code>unelevated</code> sandbox fallback (below).</td></tr>
         <tr><td>A delivery says "Not delivered: … (outside the agent's folders)"</td><td>Ask the agent to save the file inside its project folder and deliver again.</td></tr>
@@ -226,8 +214,8 @@ sandbox = "unelevated"</code></pre>
       <img src="/assets/logo-on-dark.webp" alt="automatika" width="174" height="28">
       <p class="fine">ATMT Labs Floor: a harness that runs a whole building of AI agents on your own computer.</p>
     </div>
-    <div><h4>Product</h4><a href="/#building">How it works</a><a href="/#tour">Features</a><a href="/#pricing">Pricing</a><a href="/guide">User guide</a></div>
-    <div><h4>Account</h4><a href="https://auth.labs.atmt.dev/start?plan=trial">Start free trial</a><a href="https://auth.labs.atmt.dev/account">Sign in</a><a href="https://auth.labs.atmt.dev/account">Redeem a code</a></div>
+    <div><h4>Product</h4><a href="/#building">How it works</a><a href="/#tour">Features</a><a href="/#download">Download</a><a href="/guide">User guide</a></div>
+    <div><h4>Account</h4><a href="https://auth.labs.atmt.dev/account">Sign in</a></div>
     <div><h4>Company</h4><a href="https://automatika.ph">Automatika</a><a href="mailto:hello@automatika.ph">Contact</a><a href="/terms">Terms &amp; License</a><a href="/privacy">Privacy Policy</a></div>
     <div class="legal">© 2026 Automatika Consulting. ATMT Labs Floor is proprietary software. Claude, Codex, Gemini, Cursor and other names belong to their owners and are used only to describe compatibility.</div>
   </div>

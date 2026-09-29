@@ -1,8 +1,8 @@
 /**
- * The licensing service: one Hono app, two hostnames.
+ * The account service: one Hono app, two hostnames.
  *
- *   auth.labs.atmt.dev  /oauth/*, /login*, /account*, /start, /logout, /admin*
- *   api.labs.atmt.dev   /v1/*, /api/cron/*
+ *   auth.labs.atmt.dev  /oauth/*, /login*, /account*, /logout
+ *   api.labs.atmt.dev   /v1/*
  *
  * On those two production hosts each only serves its own routes; any other
  * host (vercel preview URLs, localhost) serves everything. Contract:
@@ -11,11 +11,9 @@
 import { Hono, type Context } from 'hono';
 import { deleteCookie, getCookie, getSignedCookie, setCookie, setSignedCookie } from 'hono/cookie';
 import type { Config, ProviderId } from './config.js';
-import { Billing, type StripeLike } from './billing.js';
 import { Oidc } from './oidc.js';
-import { ADMIN_MANIFEST, PAGE_HEADERS, accountPage, adminPage, loginPage, messagePage, returnToAppPage } from './pages.js';
+import { PAGE_HEADERS, accountPage, loginPage, messagePage, returnToAppPage } from './pages.js';
 import { BRAND_ASSETS } from './brandAssets.js';
-import { REDEEM_MESSAGES, hashUnlockCode, mintUnlockCodes, normalizeUnlockCode } from './codes.js';
 import type { AccountRow, Store } from './store.js';
 import {
   CODE_TTL_MS, REFRESH_TTL_MS, SESSION_TTL_MS, ACCESS_TTL_S,
@@ -25,7 +23,6 @@ import {
 export interface AppDeps {
   cfg: Config;
   store: Store;
-  stripe: StripeLike;
   oidc: Oidc;
   now?: () => number;
 }
@@ -34,10 +31,6 @@ const SESSION_COOKIE = 'atmt_session';
 const AUTHZ_COOKIE = 'atmt_authz';
 const IDP_COOKIE = 'atmt_idp';
 const FLOW_TTL_MS = 10 * 60 * 1000;
-const ENTITLED = new Set(['trialing', 'active']);
-/** /admin wants a Google sign-in from the last 12 hours, not a 30-day-old session. */
-const ADMIN_FRESH_MS = 12 * 3600 * 1000;
-
 const API_PATHS = /^\/(v1\/|api\/cron\/|health$)/;
 
 /** Favicons, logos and fonts (src/brandAssets.ts), decoded once per instance. */
@@ -54,13 +47,12 @@ function oauthJson(c: Context, body: object, status = 200) {
 /** Only same-site relative paths we actually serve after login. */
 function safeNext(next: string | undefined): string {
   if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return '/account';
-  return /^\/(oauth\/continue|account|start|redeem|admin)(\?|$|\/)/.test(next) ? next : '/account';
+  return /^\/(oauth\/continue|account)(\?|$|\/)/.test(next) ? next : '/account';
 }
 
 export function createApp(deps: AppDeps): Hono {
-  const { cfg, store, stripe, oidc } = deps;
+  const { cfg, store, oidc } = deps;
   const now = deps.now ?? Date.now;
-  const billing = new Billing(cfg, store, stripe, now);
   const app = new Hono();
   const authHost = new URL(cfg.authOrigin).host;
   const apiHost = new URL(cfg.apiOrigin).host;
@@ -71,8 +63,6 @@ export function createApp(deps: AppDeps): Hono {
     const host = new URL(c.req.url).host;
     const path = new URL(c.req.url).pathname;
     if (host === apiHost && host !== authHost && !API_PATHS.test(path)) return c.json({ error: 'not_found' }, 404);
-    // /api/cron stays reachable on every host: Vercel may call it on either
-    // domain, and it is guarded by CRON_SECRET anyway.
     if (host === authHost && host !== apiHost && /^\/v1\//.test(path)) return c.json({ error: 'not_found' }, 404);
     await next();
     c.header('strict-transport-security', 'max-age=31536000; includeSubDomains');
@@ -270,7 +260,7 @@ export function createApp(deps: AppDeps): Hono {
       who = await oidc.complete(p, d, { code: q.code, redirectUri: `${cfg.authOrigin}/login/${p.id}/callback`, verifier: flow.verifier, nonce: flow.nonce, now: now() });
     } catch (e) {
       const msg = /email/.test((e as Error).message)
-        ? `${p.label} did not share a verified email address, which your license is tied to.`
+        ? `${p.label} did not share a verified email address, which your account requires.`
         : 'Sign-in failed. Please try again.';
       return html(c, loginPage({ site: cfg.siteOrigin, providers: cfg.providers, next: flow.next, signup: false, error: msg }), 400);
     }
@@ -295,12 +285,11 @@ export function createApp(deps: AppDeps): Hono {
   // ─── account (web) ──────────────────────────────────────────────────────
   app.get('/', (c) => c.redirect('/account', 302));
 
-  async function renderAccount(c: Context, acct: AccountRow, extra: { code?: string } = {}) {
-    const [license, devices, price] = await Promise.all([store.license(acct.id), store.devices(acct.id), billing.priceInfo()]);
+  async function renderAccount(c: Context, acct: AccountRow) {
     return html(c, accountPage({
-      account: acct, license, devices, maxDevices: cfg.maxDevices, price: price.label,
-      trialDays: cfg.trialDays, canTrial: billing.canTrial(license),
-      notice: c.req.query('notice')?.slice(0, 200), ok: c.req.query('ok') === '1', code: extra.code
+      account: acct,
+      devices: await store.devices(acct.id),
+      notice: c.req.query('notice')?.slice(0, 200)
     }));
   }
 
@@ -310,23 +299,16 @@ export function createApp(deps: AppDeps): Hono {
     return renderAccount(c, acct);
   });
 
-  /** Shareable voucher link: /redeem?code=ATMT-… — sign in, then the account
-   *  page with the code filled in. Never redeems on GET (link previews and
-   *  prefetchers would spend it); the user presses the button. */
-  app.get('/redeem', async (c) => {
-    const code = (c.req.query('code') ?? '').slice(0, 64);
-    const acct = await sessionAccount(c);
-    if (!acct) return c.redirect(`/login?signup=1&next=${encodeURIComponent(`/redeem?code=${code}`)}`, 302);
-    return renderAccount(c, acct, { code });
-  });
+  // Old marketing links lead to the free account. They never open Checkout.
+  app.get('/start', async (c) => c.redirect('/account', 302));
+  app.get('/redeem', async (c) => c.redirect('/account', 302));
 
-  /** Web funnel entry from labs.atmt.dev: /start?plan=trial|buy */
-  app.get('/start', async (c) => {
-    const plan = c.req.query('plan') === 'buy' ? 'buy' : 'trial';
-    const acct = await sessionAccount(c);
-    if (!acct) return c.redirect(`/login?signup=1&next=${encodeURIComponent(`/start?plan=${plan}`)}`, 302);
-    return c.redirect(await billing.checkoutUrl(acct, plan), 303);
-  });
+  const retired = (c: Context) => c.json({ error: 'purchases_retired' }, 410);
+  app.post('/account/trial', retired);
+  app.post('/account/buy', retired);
+  app.post('/account/billing', retired);
+  app.post('/account/redeem', retired);
+  app.post('/account/trial/cancel', retired);
 
   const accountPost = (fn: (c: Context, acct: AccountRow) => Promise<Response>) => async (c: Context) => {
     if (!sameOrigin(c)) return c.text('Forbidden', 403);
@@ -334,101 +316,12 @@ export function createApp(deps: AppDeps): Hono {
     if (!acct) return c.redirect('/login?next=/account', 303);
     return fn(c, acct);
   };
-
-  app.post('/account/trial', accountPost(async (c, a) => c.redirect(await billing.checkoutUrl(a, 'trial'), 303)));
-  app.post('/account/buy', accountPost(async (c, a) => c.redirect(await billing.checkoutUrl(a, 'buy'), 303)));
-  app.post('/account/billing', accountPost(async (c, a) => c.redirect(await billing.portalUrl(a), 303)));
-  app.post('/account/trial/cancel', accountPost(async (c, a) => {
-    await billing.cancelTrial(a.id);
-    return c.redirect('/account', 303);
-  }));
-  app.post('/account/redeem', accountPost(async (c, a) => {
-    const f = (await c.req.parseBody()) as Record<string, string>;
-    const r = await billing.redeemUnlockCode(a.id, String(f.code ?? ''));
-    const notice = r.ok ? 'Code accepted. Your lifetime license is active.' : REDEEM_MESSAGES[r.error];
-    return c.redirect(`/account?${r.ok ? 'ok=1&' : ''}notice=${encodeURIComponent(notice)}`, 303);
-  }));
   app.post('/account/devices/:id/remove', accountPost(async (c, a) => {
     await store.releaseDevice(a.id, c.req.param('id') ?? '');
     return c.redirect('/account', 303);
   }));
 
-  // ─── owner admin: unlock codes ──────────────────────────────────────────
-  // Only for ADMIN_EMAILS, and only through Google (which always verifies the
-  // email; Yahoo may not say). An owner session that is older than 12 h or
-  // came from Yahoo is sent through Google again. Everyone else gets a 404,
-  // so the page doesn't advertise itself.
-  type AdminGate = { ok: true; acct: AccountRow } | { ok: false; res: Response };
-  async function adminGate(c: Context, method: 'GET' | 'POST'): Promise<AdminGate> {
-    const notFound = () => html(c, messagePage('Not found', 'There is nothing here.'), 404);
-    if (method === 'POST' && !sameOrigin(c)) return { ok: false, res: c.text('Forbidden', 403) };
-    const s = await webSession(c);
-    if (!s) return { ok: false, res: method === 'GET' ? c.redirect('/login?next=/admin', 302) : c.text('Forbidden', 403) };
-    if (!cfg.adminEmails.includes(s.acct.email.toLowerCase())) return { ok: false, res: notFound() };
-    if (s.provider !== 'google' || now() - s.createdAt.getTime() > ADMIN_FRESH_MS) {
-      if (!cfg.providers.some((p) => p.id === 'google')) return { ok: false, res: notFound() };
-      return { ok: false, res: method === 'GET' ? c.redirect('/login/google?next=/admin', 302) : c.text('Sign in again', 403) };
-    }
-    return { ok: true, acct: s.acct };
-  }
-
-  const ADMIN_HEADERS = { ...PAGE_HEADERS, 'x-robots-tag': 'noindex, nofollow' };
-  async function renderAdmin(c: Context, acct: AccountRow, extra: { created?: { codes: string[]; label: string | null; expires: string | null }; notice?: string; ok?: boolean } = {}, status = 200) {
-    return c.body(adminPage({
-      email: acct.email, authOrigin: cfg.authOrigin, codes: await store.listUnlockCodes(), now: new Date(now()),
-      notice: extra.notice ?? c.req.query('notice')?.slice(0, 200), ok: extra.ok ?? c.req.query('ok') === '1', created: extra.created
-    }), status as 200, ADMIN_HEADERS);
-  }
-
-  app.get('/admin', async (c) => {
-    const g = await adminGate(c, 'GET');
-    return g.ok ? renderAdmin(c, g.acct) : g.res;
-  });
-
-  // Fetched by the browser with the session cookie (crossorigin=use-credentials).
-  // Owner email only; a stale or Yahoo session still gets it, because the
-  // page itself sends those through Google again.
-  app.get('/admin/manifest.webmanifest', async (c) => {
-    const s = await webSession(c);
-    if (!s || !cfg.adminEmails.includes(s.acct.email.toLowerCase())) return c.json({ error: 'not_found' }, 404);
-    return c.body(JSON.stringify(ADMIN_MANIFEST), 200, {
-      'content-type': 'application/manifest+json',
-      'cache-control': 'private, no-cache',
-      'x-robots-tag': 'noindex, nofollow'
-    });
-  });
-
-  app.post('/admin/codes', async (c) => {
-    const g = await adminGate(c, 'POST');
-    if (!g.ok) return g.res;
-    const f = (await c.req.parseBody()) as Record<string, string>;
-    const count = Number(f.count ?? '1');
-    const label = String(f.label ?? '').trim().slice(0, 120) || null;
-    const expires = String(f.expires ?? '').trim() || null;
-    const expiresAt = expires ? new Date(`${expires}T23:59:59Z`) : null;
-    if (!Number.isInteger(count) || count < 1 || count > 500) return renderAdmin(c, g.acct, { notice: 'Choose between 1 and 500 codes.' }, 400);
-    if (expires && (!/^\d{4}-\d{2}-\d{2}$/.test(expires) || Number.isNaN(expiresAt!.getTime()) || expiresAt!.getTime() <= now())) {
-      return renderAdmin(c, g.acct, { notice: 'The expiry date must be a date in the future.' }, 400);
-    }
-    const codes = await mintUnlockCodes(store, count, label, expiresAt);
-    console.log('[admin] minted', count, 'unlock code(s) by', g.acct.email);
-    // Rendered from the POST itself: the codes never go into a URL or a cookie.
-    return renderAdmin(c, g.acct, { created: { codes, label, expires } });
-  });
-
-  app.post('/admin/codes/revoke', async (c) => {
-    const g = await adminGate(c, 'POST');
-    if (!g.ok) return g.res;
-    const f = (await c.req.parseBody()) as Record<string, string>;
-    const n = f.code ? normalizeUnlockCode(String(f.code)) : null;
-    const hash = n ? hashUnlockCode(n) : /^[0-9a-f]{64}$/.test(String(f.hash ?? '')) ? String(f.hash) : null;
-    const done = hash ? await store.revokeUnlockCode(hash) : false;
-    if (done) console.log('[admin] revoked unlock code', hash!.slice(0, 10), 'by', g.acct.email);
-    const notice = done ? 'Code revoked. It can no longer be redeemed.' : 'Not revoked: unknown code, or it was already used or revoked.';
-    return c.redirect(`/admin?${done ? 'ok=1&' : ''}notice=${encodeURIComponent(notice)}`, 303);
-  });
-
-  // ─── licensing API (bearer) ─────────────────────────────────────────────
+  // ─── account API (bearer) ───────────────────────────────────────────────
   async function bearerAccount(c: Context): Promise<AccountRow | null> {
     const h = c.req.header('authorization') ?? '';
     const m = /^Bearer (.+)$/.exec(h);
@@ -445,32 +338,19 @@ export function createApp(deps: AppDeps): Hono {
     if (!/^[A-Za-z0-9_-]{8,128}$/.test(deviceId)) return c.json({ error: 'invalid_request' }, 400);
     const str = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : undefined);
 
-    let license = await store.license(acct.id);
-    // Day 7 reached and the app is online: charge now instead of waiting for the cron.
-    if (license.status === 'trialing' && license.trial_end && license.trial_end.getTime() <= now()) {
-      try { license = await billing.convertTrial(license, acct); } catch { /* cron retries */ }
-    }
-    if (ENTITLED.has(license.status)) {
-      const r = await store.activateDevice(acct.id, {
-        deviceId,
-        name: str(body.device_name, 64),
-        platform: str(body.platform, 16),
-        appVersion: str(body.app_version, 32)
-      }, cfg.maxDevices);
-      if (r === 'limit') return c.json({ error: 'device_limit' }, 403);
-    }
-    const token = await mintLicense(cfg, { accountId: acct.id, email: acct.email, name: acct.name, deviceId }, license, now());
+    // Every signed-in account receives free access. Keep a device inventory for
+    // the account page, without the old paid-plan seat limit.
+    await store.activateDevice(acct.id, {
+      deviceId,
+      name: str(body.device_name, 64),
+      platform: str(body.platform, 16),
+      appVersion: str(body.app_version, 32)
+    });
+    const token = await mintLicense(cfg, { accountId: acct.id, email: acct.email, name: acct.name, deviceId }, now());
     return c.json({ license: token }, 200, { 'cache-control': 'no-store' });
   });
 
-  app.post('/v1/redeem', async (c) => {
-    const acct = await bearerAccount(c);
-    if (!acct) return c.json({ error: 'invalid_token' }, 401);
-    const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-    const r = await billing.redeemUnlockCode(acct.id, typeof body.code === 'string' ? body.code : '');
-    if (!r.ok) return c.json({ error: r.error }, r.error === 'code_invalid' ? 400 : 409);
-    return c.json({ ok: true, status: r.license.status }, 200, { 'cache-control': 'no-store' });
-  });
+  app.post('/v1/redeem', retired);
 
   app.delete('/v1/devices/:id', async (c) => {
     const acct = await bearerAccount(c);
@@ -479,48 +359,15 @@ export function createApp(deps: AppDeps): Hono {
     return c.body(null, 204);
   });
 
-  app.post('/v1/billing/checkout', async (c) => {
-    const acct = await bearerAccount(c);
-    if (!acct) return c.json({ error: 'invalid_token' }, 401);
-    return c.json({ url: await billing.appCheckoutUrl(acct) });
-  });
-
-  app.post('/v1/billing/portal', async (c) => {
-    const acct = await bearerAccount(c);
-    if (!acct) return c.json({ error: 'invalid_token' }, 401);
-    return c.json({ url: `${cfg.authOrigin}/account` });
-  });
-
-  app.post('/v1/stripe/webhook', async (c) => {
-    const sig = c.req.header('stripe-signature');
-    if (!sig) return c.json({ error: 'missing_signature' }, 400);
-    const raw = await c.req.text();
-    let event;
-    try {
-      event = billing.verifyWebhook(raw, sig);
-    } catch {
-      return c.json({ error: 'bad_signature' }, 400);
-    }
-    if (!(await store.firstSighting(event.id))) return c.json({ received: true, duplicate: true });
-    try {
-      await billing.handleEvent(event);
-    } catch (e) {
-      // Let Stripe retry: forget we saw it.
-      await store.forgetEvent(event.id);
-      console.error('[webhook] failed', event.type, (e as Error).message);
-      return c.json({ error: 'handler_failed' }, 500);
-    }
-    return c.json({ received: true });
-  });
-
-  // Vercel Cron sends `Authorization: Bearer $CRON_SECRET`.
-  app.get('/api/cron/charge-trials', async (c) => {
-    if (c.req.header('authorization') !== `Bearer ${cfg.cronSecret}`) return c.json({ error: 'unauthorized' }, 401);
-    return c.json(await billing.runDueTrials());
-  });
+  app.post('/v1/billing/checkout', retired);
+  app.post('/v1/billing/portal', retired);
+  // Acknowledge delayed Stripe retries from old sessions without creating any
+  // charge or entitlement. The scheduled trial-charge endpoint is retired.
+  app.post('/v1/stripe/webhook', (c) => c.json({ received: true, retired: true }));
+  app.get('/api/cron/charge-trials', retired);
 
   app.onError((err, c) => {
-    console.error('[licensing]', err);
+    console.error('[accounts]', err);
     return c.json({ error: 'server_error' }, 500);
   });
 

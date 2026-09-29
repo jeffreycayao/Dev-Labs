@@ -11,7 +11,7 @@
  */
 
 /**
- * Where the account's ONE-TIME purchase stands (services/licensing/db/schema.sql):
+ * Current free status and historical purchase states kept for migration:
  *   none              never started a trial or bought
  *   trialing          7-day trial, card on file, charged once on day 7
  *   active            paid — a lifetime license
@@ -20,10 +20,10 @@
  *   canceled          trial canceled before day 7
  *   refunded          refunded or disputed
  */
-export type PurchaseStatus = 'none' | 'trialing' | 'active' | 'payment_required' | 'canceled' | 'refunded';
+export type PurchaseStatus = 'free' | 'none' | 'trialing' | 'active' | 'payment_required' | 'canceled' | 'refunded';
 
 /** States that unlock the app. */
-export const ENTITLED_STATUSES: ReadonlySet<PurchaseStatus> = new Set<PurchaseStatus>(['trialing', 'active']);
+export const ENTITLED_STATUSES: ReadonlySet<PurchaseStatus> = new Set<PurchaseStatus>(['free']);
 
 export function isEntitledStatus(s: string | undefined): boolean {
   return !!s && ENTITLED_STATUSES.has(s as PurchaseStatus);
@@ -36,11 +36,11 @@ export interface LicenseClaims {
   /** Account id on the licensing server. */
   sub: string;
   iat: number;
-  /** Absent only on a perpetual (paid) license. */
+  /** Absent only on a legacy perpetual paid token. */
   exp?: number;
   /**
-   * A paid lifetime license, stamped to this machine: no `exp`, never renewed,
-   * never checked online again. Only honoured together with status 'active'.
+   * Existing paid or unlock-code activation on this signed-in computer.
+   * It keeps the original offline grant without a new server check.
    */
   perpetual?: boolean;
   paid_at?: number;
@@ -51,7 +51,7 @@ export interface LicenseClaims {
   /** Hardware-derived id of the machine this token was issued to. A token
    *  (or the whole license file) copied to another machine fails. */
   did: string;
-  /** Plan slug: 'lifetime'. */
+  /** New tokens use plan slug 'free'; old tokens may carry 'lifetime'. */
   plan: string;
   status: PurchaseStatus;
   /** Feature flags the plan unlocks. Empty/absent = the plan's defaults. */
@@ -71,9 +71,9 @@ export type LicenseState =
   | 'signed_out'
   /** Browser sign-in in progress; waiting for the atmtlabs://auth/callback link. */
   | 'signing_in'
-  /** Entitled: a paid lifetime license, or a running trial with an unexpired token. */
+  /** Signed in with a free-account token or an existing perpetual activation. */
   | 'licensed'
-  /** Signed in, but not entitled (never bought, trial canceled, payment needed, refunded). */
+  /** A legacy nonperpetual purchase-state token that must be renewed. */
   | 'inactive'
   /** Last token expired and the server could not be reached to renew it. */
   | 'offline_expired'
@@ -93,7 +93,7 @@ export type LicenseErrorCode =
   | 'invalid_token'
   | 'clock_rollback'
   | 'misconfigured'
-  // Unlock-code redemption (shown inline next to the code field).
+  // Historical errors retained for compatibility with old status records.
   | 'code_invalid'
   | 'code_used'
   | 'code_expired'
@@ -108,12 +108,12 @@ export interface LicenseStatus {
   plan?: string;
   purchase?: PurchaseStatus;
   features?: string[];
-  /** Paid lifetime license stamped to this machine: nothing to renew, ever. */
+  /** Existing paid activation that retains its original offline grant. */
   perpetual?: boolean;
   /** Epoch MILLISECONDS (renderer-friendly). */
   trialEndsAt?: number;
   paidAt?: number;
-  /** When the current token stops working offline. Absent when perpetual. */
+  /** When the current free account token stops working offline. */
   expiresAt?: number;
   error?: LicenseErrorCode;
 }
@@ -127,7 +127,7 @@ export const CLOCK_ROLLBACK_MS = 60 * 60 * 1000;
  * Derive what the user sees from verified claims.
  *
  * `claims` MUST already have passed signature, issuer and audience checks —
- * this only looks at time, device and purchase state.
+ * this only looks at time, device and free account status.
  */
 export function evaluateClaims(
   claims: LicenseClaims,
@@ -148,10 +148,9 @@ export function evaluateClaims(
   if (claims.did !== opts.deviceId) {
     return { state: 'signed_out', error: 'device_mismatch' };
   }
-  // Paid and stamped to this machine: valid forever, whatever the clock says.
-  if (perpetual) {
-    return { ...base, state: 'licensed' };
-  }
+  // An existing machine-bound paid activation came from an earlier account
+  // sign-in and keeps its original offline grant until the user signs out.
+  if (perpetual) return { ...base, state: 'licensed' };
   if (clockRolledBack(opts.now, opts.lastSeenAt)) {
     return { ...base, state: 'offline_expired', error: 'clock_rollback' };
   }
@@ -170,8 +169,8 @@ export function clockRolledBack(now: number, lastSeenAt: number | undefined): bo
 }
 
 /**
- * Renew once half the token's lifetime is gone (trial tokens). A perpetual
- * license is never renewed — the machine does not contact the server again.
+ * Renew once half the free token's lifetime is gone. Existing paid stamps
+ * retain their original offline grant and never renew automatically.
  */
 export function shouldRefresh(claims: Pick<LicenseClaims, 'iat' | 'exp' | 'perpetual' | 'status'>, now: number): boolean {
   if (isPerpetual(claims)) return false;

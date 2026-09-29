@@ -11,7 +11,7 @@
  *     ATMT_LICENSE_PUBLIC_KEY / ATMT_LICENSE_KID overrides (for a local or
  *     staging licensing server).
  *   - IPC: license:current / signIn / cancelSignIn / refresh / signOut /
- *     openBilling, plus the `license:status` push. No token ever crosses IPC.
+ *     account:open, plus the `license:status` push. No token ever crosses IPC.
  *
  * Design: docs/licensing/DESIGN.md. Server contract: docs/licensing/API.md.
  */
@@ -144,8 +144,7 @@ function focusApp(): void {
 }
 
 function openExternal(url: string): Promise<void> {
-  // Only ever our own origins or Stripe (licenseCore validates API-supplied
-  // URLs). Plain http only for a local licensing server in a dev build.
+  // Only open HTTPS pages or a local account server during development.
   const devLoopback = !app.isPackaged && /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//i.test(url);
   if (!/^https:\/\//i.test(url) && !devLoopback) return Promise.resolve();
   return shell.openExternal(url);
@@ -186,7 +185,8 @@ export function initLicensing(): LicenseManager {
   manager.onChange(broadcast);
   const status = manager.init();
   if (status.enforced) {
-    // A stamped (paid) machine makes no network call here or in tick().
+    // Free account tokens renew through the account session. Existing paid
+    // stamps keep their original offline grant on the signed-in computer.
     if (manager.canRefresh()) void manager.refresh();
     const timer = setInterval(() => { void manager?.tick(); }, TICK_MS);
     timer.unref?.();
@@ -207,11 +207,9 @@ export function handleLicenseLink(url: string): Promise<boolean> {
   return manager.handleCallback(url);
 }
 
-/** App menu → Account: the web account page (cancel the trial, card,
- *  receipts, computers, unlock code) or Checkout (trial / buy). Opens in the
- *  browser; signed out, it falls back to the public page. */
-export function openAccountPage(kind: 'portal' | 'checkout'): void {
-  void (manager ?? initLicensing()).openBilling(kind);
+/** App menu → Account in the system browser. */
+export function openAccountPage(): void {
+  void (manager ?? initLicensing()).openAccount();
 }
 
 export function registerLicenseIpc(): void {
@@ -222,8 +220,5 @@ export function registerLicenseIpc(): void {
   ipcMain.handle('license:cancelSignIn', () => m().cancelSignIn());
   ipcMain.handle('license:refresh', () => m().refresh());
   ipcMain.handle('license:signOut', () => m().signOut());
-  ipcMain.handle('license:openBilling', (_evt, kind: unknown) =>
-    m().openBilling(kind === 'portal' ? 'portal' : 'checkout'));
-  ipcMain.handle('license:redeem', (_evt, code: unknown) =>
-    m().redeemCode(typeof code === 'string' ? code : ''));
+  ipcMain.handle('account:open', () => m().openAccount());
 }

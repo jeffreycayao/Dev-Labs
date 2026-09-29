@@ -2667,8 +2667,7 @@ function openFloor(): BrowserWindow | null {
 }
 
 /** Build + install the application menu. Uses standard role-based items so
- *  copy/paste/quit/etc. work per-platform, an Account menu (subscription and
- *  trial live on the web account page), and — only when multiWindow is on —
+ *  copy/paste/quit/etc. work per-platform, an Account menu, and — only when multiWindow is on —
  *  the "New Floor" item (Cmd/Ctrl+Shift+N). */
 function installAppMenu(multiWindow: boolean): void {
   const isMac = process.platform === 'darwin';
@@ -2714,11 +2713,7 @@ function installAppMenu(multiWindow: boolean): void {
     {
       label: 'Account',
       submenu: [
-        { label: 'Manage Account & Subscription…', click: () => openAccountPage('portal') },
-        { label: 'Cancel Free Trial…', click: () => openAccountPage('portal') },
-        { label: 'Redeem Unlock Code…', click: () => openAccountPage('portal') },
-        { type: 'separator' as const },
-        { label: 'Start Free Trial / Buy…', click: () => openAccountPage('checkout') }
+        { label: 'Manage Account…', click: () => openAccountPage() }
       ]
     },
     {
@@ -2828,11 +2823,11 @@ ipcMain.handle('pty:spawn', async (evt, opts: AgentSpawnOptions) => {
  *  no renderer `evt`). `owner` is the window that should receive this PTY's output
  *  (null → the primary window). Behavior-identical to the prior inline handler. */
 async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebContents | null): Promise<{ ok: boolean; error?: string; cwd?: string; worktreePath?: string; resumeNotFound?: boolean; resumed?: boolean; seedPrompt?: string; setup?: 'installing' | 'manual' }> {
-  // The paywall lives HERE, not only in the renderer: every agent — the floor,
+  // The sign-in gate lives HERE, not only in the renderer: every agent — the floor,
   // god, ephemeral workers, Slack/webhook/schedule triggers — starts through
   // this one function.
   if (!licenseAllowsAgents()) {
-    return { ok: false, error: 'An ATMT Labs license is required. Sign in to start your free trial, buy a lifetime license, or redeem an unlock code.' };
+    return { ok: false, error: 'Sign in to your free ATMT Labs account to start an agent.' };
   }
   // ── cwd INGESTION — expand `~` exactly once, here ───────────────────────────
   // This is the single door every agent spawn comes through (`pty:spawn` IPC and
@@ -5817,7 +5812,7 @@ app.whenReady().then(() => {
   powerMonitor.on('unlock-screen', () => onSystemResume('unlock-screen'));
   powerMonitor.on('suspend', () => { lastSuspendAt = Date.now(); console.log('[power] suspend — system sleeping'); });
   powerMonitor.on('lock-screen', () => { lastSuspendAt = Date.now(); console.log('[power] lock-screen'); });
-  // App menu: Account (subscription / trial / unlock code) always; "New Floor"
+  // App menu: Account always; "New Floor"
   // only with multi-window floors on.
   installAppMenu(!!readConfig().multiWindow);
   createWindow();

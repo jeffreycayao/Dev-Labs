@@ -9,16 +9,13 @@
 import { createHash, createPrivateKey, randomBytes, type KeyObject } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import type { Config } from './config.js';
-import type { LicenseRow } from './store.js';
 
 export const ACCESS_TTL_S = 15 * 60;
 export const REFRESH_TTL_MS = 90 * 24 * 3600 * 1000;
 export const CODE_TTL_MS = 60 * 1000;
 export const SESSION_TTL_MS = 30 * 24 * 3600 * 1000;
-/** Offline allowance for anything that is not a paid lifetime license. */
+/** A free account token may work offline for this long before renewal. */
 const SHORT_LICENSE_S = 24 * 3600;
-/** After the trial ends, keep working this long while the day-7 charge lands. */
-const TRIAL_GRACE_S = 2 * 24 * 3600;
 
 export function randomToken(bytes = 32): string {
   return randomBytes(bytes).toString('base64url');
@@ -49,33 +46,19 @@ export interface LicenseSubject {
 }
 
 /**
- * Mint the license the app stamps onto a machine.
- *
- * A PAID license (status 'active') is PERPETUAL: `perpetual: true` and no
- * `exp`, so the app never has to contact the server again on that machine.
- * Everything else is short-lived and renewed by the app.
+ * Mint a signed, short-lived proof of a signed-in free account for this machine.
  */
-export async function mintLicense(cfg: Config, who: LicenseSubject, lic: LicenseRow, nowMs: number): Promise<string> {
+export async function mintLicense(cfg: Config, who: LicenseSubject, nowMs: number): Promise<string> {
   const now = Math.floor(nowMs / 1000);
   const payload: Record<string, unknown> = {
     email: who.email,
     name: who.name ?? undefined,
     did: who.deviceId,
-    plan: 'lifetime',
-    status: lic.status,
+    plan: 'free',
+    status: 'free',
     features: []
   };
-  let exp: number | undefined;
-  if (lic.status === 'active') {
-    payload.perpetual = true;
-    if (lic.paid_at) payload.paid_at = Math.floor(new Date(lic.paid_at).getTime() / 1000);
-  } else if (lic.status === 'trialing' && lic.trial_end) {
-    const trialEnd = Math.floor(new Date(lic.trial_end).getTime() / 1000);
-    payload.trial_end = trialEnd;
-    exp = Math.max(trialEnd + TRIAL_GRACE_S, now + 3600);
-  } else {
-    exp = now + SHORT_LICENSE_S;
-  }
+  const exp = now + SHORT_LICENSE_S;
   let jwt = new SignJWT(payload)
     .setProtectedHeader({ alg: 'EdDSA', kid: cfg.license.kid, typ: 'JWT' })
     .setIssuer(cfg.license.issuer)
@@ -83,7 +66,7 @@ export async function mintLicense(cfg: Config, who: LicenseSubject, lic: License
     .setSubject(who.accountId)
     .setIssuedAt(now)
     .setJti(randomToken(12));
-  if (exp !== undefined) jwt = jwt.setExpirationTime(exp);
+  jwt = jwt.setExpirationTime(exp);
   return jwt.sign(signingKey(cfg.license.privateKeyPem));
 }
 

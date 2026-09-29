@@ -173,12 +173,11 @@ export class Store {
 
   // ─── devices ────────────────────────────────────────────────────────────
 
-  /** Stamp (or re-stamp) a machine. 'limit' when a NEW machine would exceed the cap. */
+  /** Record a signed-in computer for account management. */
   async activateDevice(
     accountId: string,
-    d: { deviceId: string; name?: string; platform?: string; appVersion?: string },
-    maxDevices: number
-  ): Promise<'ok' | 'limit'> {
+    d: { deviceId: string; name?: string; platform?: string; appVersion?: string }
+  ): Promise<void> {
     const existing = await this.q(
       `SELECT revoked_at FROM devices WHERE account_id = $1 AND device_id = $2`,
       [accountId, d.deviceId]
@@ -189,13 +188,8 @@ export class Store {
          WHERE account_id = $1 AND device_id = $2`,
         [accountId, d.deviceId, d.name ?? null, d.platform ?? null, d.appVersion ?? null]
       );
-      return 'ok';
+      return;
     }
-    const count = await this.q(
-      `SELECT count(*)::int AS n FROM devices WHERE account_id = $1 AND revoked_at IS NULL`,
-      [accountId]
-    );
-    if ((count[0]?.n ?? 0) >= maxDevices) return 'limit';
     await this.q(
       `INSERT INTO devices (account_id, device_id, name, platform, app_version) VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (account_id, device_id) DO UPDATE
@@ -203,7 +197,6 @@ export class Store {
              platform = EXCLUDED.platform, app_version = EXCLUDED.app_version`,
       [accountId, d.deviceId, d.name ?? null, d.platform ?? null, d.appVersion ?? null]
     );
-    return 'ok';
   }
 
   async devices(accountId: string): Promise<DeviceRow[]> {

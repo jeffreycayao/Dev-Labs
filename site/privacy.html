@@ -26,9 +26,9 @@
     <nav aria-label="Main">
       <a class="hide-sm" href="/#building">How it works</a>
       <a class="hide-sm" href="/guide">User guide</a>
-      <a class="hide-sm" href="/#pricing">Pricing</a>
+      <a class="hide-sm" href="/#download">Download</a>
       <a class="hide-sm" href="https://auth.labs.atmt.dev/account">Sign in</a>
-      <a class="btn primary" href="https://auth.labs.atmt.dev/start?plan=trial">Start free trial</a>
+      <a class="btn primary" href="/#download">Download free</a>
     </nav>
   </div>
 </header>
@@ -37,9 +37,9 @@
   <article class="wrap doc">
     <div class="eyebrow"><span class="dot"></span>Legal</div>
     <h1>Privacy Policy</h1>
-    <p class="meta">Effective September 28, 2026 · Last updated September 28, 2026</p>
+    <p class="meta">Effective September 30, 2026 · Last updated September 30, 2026</p>
 
-    <p>This policy explains how <strong>Automatika Consulting</strong> ("ATMT Labs", "we", "us") handles personal data when you use the ATMT Labs Floor desktop app ("the App"), this website (<code>labs.atmt.dev</code>), and our account and licensing service (<code>auth.labs.atmt.dev</code>, <code>api.labs.atmt.dev</code>), together "the Service".</p>
+    <p>This policy explains how <strong>Automatika Consulting</strong> ("ATMT Labs", "we", "us") handles personal data when you use the ATMT Labs Floor desktop app ("the App"), this website (<code>labs.atmt.dev</code>), and our account service (<code>auth.labs.atmt.dev</code>, <code>api.labs.atmt.dev</code>), together "the Service".</p>
 
     <nav class="toc" aria-label="Contents">
       <h4>Contents</h4>
@@ -48,7 +48,7 @@
         <li><a href="#collect">What we collect and why</a></li>
         <li><a href="#google">Data from Google sign-in</a></li>
         <li><a href="#yahoo">Data from Yahoo sign-in</a></li>
-        <li><a href="#payments">Payments</a></li>
+        <li><a href="#payments">Historical payments</a></li>
         <li><a href="#local">What stays on your computer</a></li>
         <li><a href="#telemetry">Anonymous usage statistics</a></li>
         <li><a href="#cookies">Cookies</a></li>
@@ -66,8 +66,8 @@
     <h2 id="short">1. The short version</h2>
     <ul>
       <li><strong>Your work stays on your computer.</strong> Your projects, files, prompts, agent conversations and output, agent memory, and the keys you paste for connectors are never sent to us.</li>
-      <li><strong>We keep only what licensing needs:</strong> your email, your name, your license status, and which computers are activated.</li>
-      <li><strong>Card details go to Stripe.</strong> We never see your full card number.</li>
+      <li><strong>We keep account details:</strong> your email, name, sign-in sessions and signed-in computers.</li>
+      <li><strong>ATMT Labs is free.</strong> We no longer collect payment details for new app access.</li>
       <li><strong>We don't sell or share personal data</strong>, and we don't use it for advertising or to train AI models.</li>
       <li><strong>Usage statistics are anonymous and optional.</strong> You can turn them off in the App.</li>
     </ul>
@@ -76,13 +76,10 @@
     <div class="table"><table>
       <thead><tr><th>Data</th><th>Source</th><th>Why we use it</th><th>Legal basis</th></tr></thead>
       <tbody>
-        <tr><td>Email address, name, and the account ID your sign-in provider gives us</td><td>Google or Yahoo, when you sign in</td><td>Creating your account; tying your license to your email; support</td><td>Contract</td></tr>
-        <tr><td>License status, trial dates, purchase date, amount and currency</td><td>Our licensing service and Stripe</td><td>Deciding whether the App is licensed; receipts; support</td><td>Contract; legal obligation (tax and accounting records)</td></tr>
-        <tr><td>Stripe customer ID and saved payment-method ID (not the card number)</td><td>Stripe</td><td>Charging the trial once on day 7; purchases</td><td>Contract</td></tr>
-        <tr><td>Stripe card fingerprint (an opaque ID Stripe derives from the card, not the card number)</td><td>Stripe</td><td>Allowing one free trial per card</td><td>Legitimate interest (preventing trial abuse)</td></tr>
-        <tr><td>For each activated computer: a hashed hardware ID, computer name, operating system, app version, first and last activation time</td><td>The App, when it activates</td><td>Binding the license to your computers; enforcing the device limit</td><td>Contract</td></tr>
-        <tr><td>Unlock code redemptions: which account redeemed which code, and when</td><td>Our licensing service</td><td>Making each code single-use</td><td>Contract</td></tr>
-        <tr><td>Sign-in sessions and refresh tokens (stored hashed)</td><td>Our licensing service</td><td>Keeping you signed in</td><td>Contract</td></tr>
+        <tr><td>Email address, name, and the account ID your sign-in provider gives us</td><td>Google or Yahoo, when you sign in</td><td>Creating your account and providing support</td><td>Contract</td></tr>
+        <tr><td>Historical purchase, trial and payment records, if you used an earlier paid version</td><td>Our records and Stripe</td><td>Receipts, support and legal accounting duties</td><td>Legal obligation; contract</td></tr>
+        <tr><td>For each signed-in computer: a hashed hardware ID, computer name, operating system, app version, first and last access time</td><td>The App, when you sign in</td><td>Managing your account and renewing sessions</td><td>Contract</td></tr>
+        <tr><td>Sign-in sessions and refresh tokens (stored hashed)</td><td>Our account service</td><td>Keeping you signed in</td><td>Contract</td></tr>
         <tr><td>Request logs: IP address, browser, time, page requested</td><td>Our hosting provider, automatically</td><td>Security, abuse prevention, fixing errors</td><td>Legitimate interest (keeping the Service secure)</td></tr>
         <tr><td>Anonymous usage events (no identity)</td><td>The App, only if enabled</td><td>Understanding which features are used</td><td>Consent (you can turn it off at any time)</td></tr>
         <tr><td>Messages you send us</td><td>You, by email</td><td>Answering you</td><td>Legitimate interest; contract</td></tr>
@@ -96,12 +93,12 @@
       <thead><tr><th>What we receive from Google</th><th>What we do with it</th></tr></thead>
       <tbody>
         <tr><td>Your Google account ID (a number that identifies your account)</td><td>Recognising you the next time you sign in</td></tr>
-        <tr><td>Your email address and whether Google has verified it</td><td>Your account and license are tied to your verified email. We also use it to send receipts and answer support requests.</td></tr>
+        <tr><td>Your email address and whether Google has verified it</td><td>Your account is tied to your verified email. We also use it to answer support requests.</td></tr>
         <tr><td>Your name</td><td>Showing who is signed in on your account page</td></tr>
       </tbody>
     </table></div>
     <ul>
-      <li><strong>Only for sign-in and licensing.</strong> We use Google user data only to sign you in, run your account and license, and provide support.</li>
+      <li><strong>Only for sign-in and accounts.</strong> We use Google user data only to sign you in, run your account and provide support.</li>
       <li><strong>Never sold, never used for advertising.</strong> We don't sell Google user data, use it for advertising, or transfer it to data brokers or information resellers.</li>
       <li><strong>Never used to train AI.</strong> We don't use Google user data to develop, improve or train generalised or non-personalised AI or machine-learning models.</li>
       <li><strong>Shared only as needed to run the Service.</strong> It's stored with our hosting and database providers (<a href="#processors">section 9</a>), and we disclose it only if the law requires us to.</li>
@@ -114,8 +111,8 @@
     <h2 id="yahoo">4. Data from Yahoo sign-in</h2>
     <p>If you sign in with Yahoo, we request the same standard scopes (<code>openid</code>, <code>email</code>, <code>profile</code>) and receive the same three things: your Yahoo account ID, verified email address and name. We use them exactly as described for Google above. You can remove our access in your Yahoo account's security settings.</p>
 
-    <h2 id="payments">5. Payments</h2>
-    <p>Payments are handled by <a href="https://stripe.com/privacy">Stripe</a>. You enter your card on Stripe's page, not ours. Stripe sends us only what we list in <a href="#collect">section 2</a>. Stripe processes your payment data under its own privacy policy, including for fraud prevention.</p>
+    <h2 id="payments">5. Historical payments</h2>
+    <p>ATMT Labs no longer takes payment for app access. If you used an earlier paid version, we may retain transaction records for support and legal accounting duties. Earlier payments were handled by <a href="https://stripe.com/privacy">Stripe</a>; we did not receive your full card number.</p>
 
     <h2 id="local">6. What stays on your computer</h2>
     <p>The App runs on your computer. Your projects, files, prompts, agent conversations and output, agent memory, floor and hire files, and connector keys stay there. Connector keys are encrypted with your operating system's keychain.</p>
@@ -140,9 +137,9 @@
     <div class="table"><table>
       <thead><tr><th>Company</th><th>What they do</th><th>Where</th></tr></thead>
       <tbody>
-        <tr><td>Vercel</td><td>Hosts this website and the licensing service</td><td>Licensing service in Singapore; website on Vercel's global network</td></tr>
+        <tr><td>Vercel</td><td>Hosts this website and the account service</td><td>Account service in Singapore; website on Vercel's global network</td></tr>
         <tr><td>Neon</td><td>Database</td><td>Singapore (AWS ap-southeast-1)</td></tr>
-        <tr><td>Stripe</td><td>Payments</td><td>Stripe's regions</td></tr>
+        <tr><td>Stripe</td><td>Historical payments only</td><td>Stripe's regions</td></tr>
         <tr><td>Google, Yahoo</td><td>Sign-in</td><td>Their regions</td></tr>
         <tr><td>PostHog</td><td>Anonymous usage statistics, only if enabled</td><td>United States</td></tr>
       </tbody>
@@ -152,9 +149,9 @@
 
     <h2 id="retention">10. How long we keep it</h2>
     <ul>
-      <li><strong>Account and license data:</strong> while your account exists.</li>
-      <li><strong>Payment and purchase records:</strong> as long as tax and accounting law requires, even after you delete your account.</li>
-      <li><strong>Activated computers:</strong> until you remove the computer or delete your account.</li>
+      <li><strong>Account data:</strong> while your account exists.</li>
+      <li><strong>Historical payment and purchase records:</strong> as long as tax and accounting law requires, even after you delete your account.</li>
+      <li><strong>Signed-in computers:</strong> until you remove the computer or delete your account.</li>
       <li><strong>Sign-in sessions:</strong> up to 30 days; refresh tokens up to 90 days.</li>
       <li><strong>Request logs:</strong> for the period our hosting provider keeps them.</li>
     </ul>
@@ -176,14 +173,14 @@
 
     <h2 id="delete">12. Deleting your account</h2>
     <p>Email <a href="mailto:hello@automatika.ph">hello@automatika.ph</a> from your account email and ask us to delete your account. We delete your account data, including data received from Google or Yahoo, within 30 days, except records the law requires us to keep (such as payment records).</p>
-    <p>Deleting your account deletes your license. Computers already activated with a lifetime license keep working offline (see the <a href="/terms#offline">Terms</a>), but can't be activated again.</p>
-    <p>You can remove computers yourself, and cancel a trial, at <a href="https://auth.labs.atmt.dev/account">auth.labs.atmt.dev/account</a>. To remove data from your own computer, uninstall the App and delete its folders.</p>
+    <p>Deleting your account ends access when the short-lived account token on your computer expires.</p>
+    <p>You can remove computers yourself at <a href="https://auth.labs.atmt.dev/account">auth.labs.atmt.dev/account</a>. To remove data from your own computer, uninstall the App and delete its folders.</p>
 
     <h2 id="security">13. Security</h2>
     <ul>
       <li>All traffic uses HTTPS.</li>
-      <li>Tokens and unlock codes are stored hashed.</li>
-      <li>License files are signed and bound to one computer.</li>
+      <li>Sign-in and refresh tokens are stored hashed on the server.</li>
+      <li>Short-lived app access tokens are signed and bound to one computer.</li>
       <li>Connector keys are encrypted with your operating system's keychain and never leave your computer.</li>
       <li>Access to production data is limited to the people who run the Service.</li>
     </ul>
@@ -210,8 +207,8 @@
       <img src="/assets/logo-on-dark.webp" alt="automatika" width="174" height="28">
       <p class="fine">ATMT Labs Floor: a harness that runs a whole building of AI agents on your own computer.</p>
     </div>
-    <div><h4>Product</h4><a href="/#building">How it works</a><a href="/#tour">Features</a><a href="/#pricing">Pricing</a><a href="/guide">User guide</a></div>
-    <div><h4>Account</h4><a href="https://auth.labs.atmt.dev/start?plan=trial">Start free trial</a><a href="https://auth.labs.atmt.dev/account">Sign in</a><a href="https://auth.labs.atmt.dev/account">Redeem a code</a></div>
+    <div><h4>Product</h4><a href="/#building">How it works</a><a href="/#tour">Features</a><a href="/#download">Download</a><a href="/guide">User guide</a></div>
+    <div><h4>Account</h4><a href="https://auth.labs.atmt.dev/account">Sign in</a></div>
     <div><h4>Company</h4><a href="https://automatika.ph">Automatika</a><a href="mailto:hello@automatika.ph">Contact</a><a href="/terms">Terms &amp; License</a><a href="/privacy">Privacy Policy</a></div>
     <div class="legal">© 2026 Automatika Consulting. ATMT Labs Floor is proprietary software. Claude, Codex, Gemini, Cursor and other names belong to their owners and are used only to describe compatibility.</div>
   </div>

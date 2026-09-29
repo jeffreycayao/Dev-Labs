@@ -30,7 +30,7 @@ function mint(claims, { kid = 'k1', key = privateKey, alg = 'EdDSA' } = {}) {
 function claims(over = {}) {
   return {
     iss: CFG.issuer, aud: CFG.audience, sub: 'usr_1', email: 'a@b.c', did: 'dev-1',
-    plan: 'pro', status: 'trialing', iat: SEC, exp: SEC + 7 * 86400, trial_end: SEC + 7 * 86400,
+    plan: 'free', status: 'free', iat: SEC, exp: SEC + 86400,
     ...over
   };
 }
@@ -89,7 +89,7 @@ test('callback parsing: code, OAuth error, and a missing state', () => {
 test('a well-formed token verifies and returns its claims', () => {
   const v = core.verifyLicenseToken(mint(claims()), CFG, NOW);
   assert.equal(v.ok, true);
-  assert.equal(v.claims.plan, 'pro');
+  assert.equal(v.claims.plan, 'free');
 });
 
 test('an expired token still verifies (expiry is a policy decision, not a forgery)', () => {
@@ -133,11 +133,11 @@ test('a non-Ed25519 public key configured under a kid is refused', () => {
 
 // ── entitlement decision ─────────────────────────────────────────────────────
 
-test('trialing and active unlock; everything else does not', () => {
-  for (const s of ['trialing', 'active']) {
+test('free-account tokens unlock; old nonperpetual purchase states do not', () => {
+  for (const s of ['free']) {
     assert.equal(lic.evaluateClaims(claims({ status: s }), { now: NOW, deviceId: 'dev-1' }).state, 'licensed', s);
   }
-  for (const s of ['none', 'payment_required', 'canceled', 'refunded']) {
+  for (const s of ['none', 'trialing', 'active', 'payment_required', 'canceled', 'refunded']) {
     assert.equal(lic.evaluateClaims(claims({ status: s }), { now: NOW, deviceId: 'dev-1' }).state, 'inactive', s);
   }
 });
@@ -177,23 +177,23 @@ test('only a PAID license may omit exp — a forged "perpetual trial" is refused
   assert.equal(core.verifyLicenseToken(mint(lifetime({ perpetual: 'yes' })), CFG, NOW).reason, 'bad_claims');
 });
 
-test('a perpetual license stays licensed forever, whatever the clock, but only on its machine', () => {
+test('an existing perpetual paid token retains its offline grant on the same computer', () => {
   const c = lifetime();
   for (const now of [NOW, NOW + 10 * 365 * 86400_000]) {
     const s = lic.evaluateClaims(c, { now, deviceId: 'dev-1', lastSeenAt: NOW + 50 * 365 * 86400_000 });
     assert.equal(s.state, 'licensed');
     assert.equal(s.perpetual, true);
   }
-  assert.equal(lic.shouldRefresh(c, NOW + 10 * 365 * 86400_000), false, 'never renews');
+  assert.equal(lic.shouldRefresh(c, NOW + 10 * 365 * 86400_000), false, 'must keep its original offline grant');
   const moved = lic.evaluateClaims(c, { now: NOW, deviceId: 'other-machine' });
   assert.deepEqual([moved.state, moved.error], ['signed_out', 'device_mismatch']);
 });
 
 test('status carries trial and paid dates in milliseconds for the UI', () => {
   const s = lic.evaluateClaims(claims(), { now: NOW, deviceId: 'dev-1' });
-  assert.equal(s.trialEndsAt, (SEC + 7 * 86400) * 1000);
+  assert.equal(s.trialEndsAt, undefined);
   assert.equal(lic.evaluateClaims(lifetime(), { now: NOW, deviceId: 'dev-1' }).paidAt, SEC * 1000);
-  assert.equal(lic.daysUntil(s.trialEndsAt, NOW), 7);
+  assert.equal(lic.daysUntil(s.trialEndsAt, NOW), undefined);
   assert.equal(lic.daysUntil(NOW - 1, NOW), 0);
 });
 
@@ -209,18 +209,6 @@ test('a disabled gate always allows agents; an enforced one only when licensed',
   for (const state of ['signed_out', 'signing_in', 'inactive', 'offline_expired', 'error']) {
     assert.equal(lic.statusAllowsAgents({ enforced: true, state }), false, state);
   }
-});
-
-// ── billing URL allowlist ────────────────────────────────────────────────────
-
-test('only Stripe and our own https origins may be opened from an API response', () => {
-  assert.equal(core.isAllowedBillingUrl('https://checkout.stripe.com/c/pay/cs_test_1'), true);
-  assert.equal(core.isAllowedBillingUrl('https://billing.stripe.com/p/session/x'), true);
-  assert.equal(core.isAllowedBillingUrl('https://labs.atmt.dev/welcome'), true);
-  assert.equal(core.isAllowedBillingUrl('http://checkout.stripe.com/x'), false);
-  assert.equal(core.isAllowedBillingUrl('https://evil.com/?checkout.stripe.com'), false);
-  assert.equal(core.isAllowedBillingUrl('https://atmt.dev.evil.com/'), false);
-  assert.equal(core.isAllowedBillingUrl('file:///etc/passwd'), false);
 });
 
 // ── brand config guard ───────────────────────────────────────────────────────

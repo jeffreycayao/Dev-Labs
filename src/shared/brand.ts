@@ -27,19 +27,16 @@ export function rawRepoUrl(path: string): string {
 }
 
 /**
- * Accounts + licensing (see docs/licensing/DESIGN.md).
+ * Account sign-in and access (see docs/licensing/DESIGN.md).
  *
- *   labs.atmt.dev       marketing, pricing, downloads, release notes
+ *   labs.atmt.dev       marketing, downloads, release notes
  *   auth.labs.atmt.dev  OAuth 2.0 authorization server: Google/Yahoo sign-in,
  *                       /oauth/authorize, /oauth/token, /oauth/revoke
- *   api.labs.atmt.dev   licensing API: signed license tokens, devices, Stripe
- *                       checkout/portal sessions, Stripe webhooks
+ *   api.labs.atmt.dev   account API: signed free access tokens and devices
  *
- * `enabled` is the ONE switch that turns the sign-in gate on in packaged builds.
- * Leave it false until api.labs.atmt.dev is live AND its Ed25519 public key is
- * pasted into `publicKeys` — a build with the gate on and no key refuses to
- * start agents for everyone. test/license-core.test.cjs fails the build if
- * `enabled` is true while `publicKeys` is empty.
+ * `enabled` turns on the sign-in gate in packaged builds. A build with the
+ * gate on and no Ed25519 public key refuses to start agents; the test enforces
+ * that the keys remain configured.
  */
 export const LICENSING = {
   enabled: true,

@@ -73,5 +73,5 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck
-      - name: Test (real SQL on PGlite, fake Stripe + IdPs)
+      - name: Test (real SQL on PGlite, fake IdPs)
         run: npm test

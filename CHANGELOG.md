@@ -4,6 +4,11 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+## v1.0.0 — 2026-09-30
+
+- **ATMT Labs is free with account sign-in.** Google/Yahoo sign-in remains required for new accounts; every signed-in account gets every app feature. New accounts renew a short-lived token. Existing machine-bound paid activations keep their original offline grant.
+- **Purchases retired.** Removed checkout, trial charging, unlock-code redemption, account purchase controls and the billing cron. Website, account pages, customer guide, terms and privacy copy now describe free access. Historical payment records remain for support and legal retention.
+
 ## v0.7.0 — 2026-09-29
 
 - **New project floor.** Settings → General can create a fresh floor for an existing repo or folder. The app saves the current floor, stops its sessions, and reopens with separate agents, tasks and memory. The project becomes the new floor's default folder, Ramon is told its path, and each floor restores its own project quick-picks and automation settings when reopened.

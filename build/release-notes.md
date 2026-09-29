@@ -1,3 +1,4 @@
-- Start a new project floor from Settings → General by choosing an existing repo or folder.
-- Your old floor stays available; the new one starts with fresh agents, conversations, tasks and memory. New hires default to the chosen project.
-- Each floor restores its own project list, schedules and inbound triggers. Ramon knows which project the new floor owns.
+- ATMT Labs is now free to use with a Google or Yahoo account.
+- Sign in to unlock every app feature; no card, trial or code is needed.
+- The account page now shows your signed-in computers without purchase controls.
+- Existing paid accounts can keep using the app after signing in.

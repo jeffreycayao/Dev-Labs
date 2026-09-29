@@ -37,16 +37,6 @@ export interface Config {
     redirectUri: string;
   };
   providers: ProviderConfig[];
-  stripe: {
-    secretKey: string;
-    webhookSecret: string;
-    priceId: string;
-  };
-  cronSecret: string;
-  /** Who may open /admin (unlock codes). Google sign-in only; see app.ts. */
-  adminEmails: string[];
-  trialDays: number;
-  maxDevices: number;
 }
 
 type Env = Record<string, string | undefined>;
@@ -64,14 +54,6 @@ function origin(env: Env, name: string, fallback: string): string {
   const u = new URL(v);
   if (u.origin !== v) throw new Error(`${name} must be a bare origin like https://example.com`);
   return v;
-}
-
-function int(env: Env, name: string, fallback: number, min: number, max: number): number {
-  const raw = env[name]?.trim();
-  if (!raw) return fallback;
-  const n = Number(raw);
-  if (!Number.isInteger(n) || n < min || n > max) throw new Error(`${name} must be an integer ${min}..${max}`);
-  return n;
 }
 
 /** PEMs pasted into Vercel/`.env` often arrive with literal `\n`. */
@@ -123,16 +105,6 @@ export function loadConfig(env: Env = process.env): Config {
       clientId: env.DESKTOP_CLIENT_ID?.trim() || 'atmt-labs-desktop',
       redirectUri: env.DESKTOP_REDIRECT_URI?.trim() || 'atmtlabs://auth/callback'
     },
-    providers,
-    stripe: {
-      secretKey: req(env, 'STRIPE_SECRET_KEY'),
-      webhookSecret: req(env, 'STRIPE_WEBHOOK_SECRET'),
-      priceId: req(env, 'STRIPE_PRICE_ID')
-    },
-    cronSecret: req(env, 'CRON_SECRET', 16),
-    adminEmails: (env.ADMIN_EMAILS?.trim() || 'jeffreycayao@gmail.com')
-      .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
-    trialDays: int(env, 'TRIAL_DAYS', 7, 1, 30),
-    maxDevices: int(env, 'MAX_DEVICES', 3, 1, 100)
+    providers
   };
 }

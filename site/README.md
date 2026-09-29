@@ -10,9 +10,9 @@ The auth pages currently use a separate, older brand treatment.
 | Path | File | Who links to it |
 |---|---|---|
 | `/` | `index.html` | Everything: the landing page and funnel |
-| `/welcome` | `welcome.html` | Stripe Checkout success (`?trial=1` / `?paid=1`): downloads and first steps |
+| `/welcome` | `welcome.html` | Legacy link, now shows free-account downloads and first steps |
 | `/download/:os` | `api/download.js` | Welcome page buttons. Redirects to the installer in the **latest public release** (see below) |
-| `/pricing` | `pricing.html` | The app, when signed out or offline |
+| `/pricing` | `pricing.html` | Legacy link, now explains free access |
 | `/guide` | `guide.html` | Footer, welcome page. HTML copy of `docs/USER_GUIDE.md`; update both together |
 | `/terms` | `terms.html` | Sign-in page, app license screen, footer. Published Terms of Service + license (based on `EULA.md`) |
 | `/privacy` | `privacy.html` | Sign-in page, app license screen, footer, Google OAuth consent screen. Published Privacy Policy (based on `PRIVACY.md`) |
@@ -25,8 +25,7 @@ The auth pages currently use a separate, older brand treatment.
 ## Before launch, fill in
 
 - **Video:** replace the placeholder in `index.html` (search `VIDEO PLACEHOLDER`). If you embed YouTube or Vimeo, add that host to `frame-src` in `vercel.json`'s Content-Security-Policy.
-- **Price:** replace "Pay once" with the amount of your Stripe price (search `PRICE:` in `index.html`).
-- **Legal:** `terms.html` and `privacy.html` are in force from September 28, 2026. When you change them, update the "Last updated" date and the markdown copies (`EULA.md`, `PRIVACY.md`).
+- **Legal:** `terms.html` and `privacy.html` describe free account access from September 30, 2026. When you change them, update the "Last updated" date and the markdown copies (`EULA.md`, `PRIVACY.md`).
 - **Google sign-in verification:** in Google Cloud → OAuth consent screen, set the homepage to `https://labs.atmt.dev`, privacy policy to `https://labs.atmt.dev/privacy`, terms to `https://labs.atmt.dev/terms`, and add `labs.atmt.dev` and `atmt.dev` as authorised domains (verify the domain in Search Console).
 
 ## Download links (automatic)

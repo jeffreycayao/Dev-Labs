@@ -1,40 +1,19 @@
-/**
- * Settings → General → "Account": who is signed in, whether this computer
- * holds a lifetime license or a running trial (and when the one-time charge
- * lands), and the two actions that belong here — manage account (cancel
- * trial, card, receipts, devices) and sign out.
- *
- * Renders nothing when licensing is not enforced, so builds without the gate
- * look exactly as they did before.
- */
+/** Signed-in account summary in Settings. */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { daysUntil } from '@shared/license';
 import { useLicenseStatus } from '@/hooks/useLicenseStatus';
 import { PixelButton } from './PixelButton';
 
 export function AccountSection() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const status = useLicenseStatus();
   const [busy, setBusy] = useState(false);
   if (!status?.enforced || status.state !== 'licensed') return null;
-
-  const fmt = (ms: number | undefined) =>
-    typeof ms === 'number' ? new Date(ms).toLocaleDateString(i18n.language, { dateStyle: 'medium' }) : '';
-  const now = Date.now();
-
-  let line: string;
-  if (status.perpetual || status.purchase === 'active') {
-    line = t('license.account.lifetime');
-  } else {
-    line = t('license.account.trialing', { date: fmt(status.trialEndsAt), days: daysUntil(status.trialEndsAt, now) ?? 0 });
-  }
-
   const act = async (fn: () => Promise<unknown>) => {
     setBusy(true);
-    try { await fn(); } catch { /* status push covers it */ } finally { setBusy(false); }
+    try { await fn(); } catch { /* status push covers it */ }
+    finally { setBusy(false); }
   };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ fontFamily: 'var(--cth-font-display)', fontSize: 10, color: 'var(--cth-ink-900)' }}>
@@ -42,19 +21,10 @@ export function AccountSection() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 12.5, color: 'var(--cth-ink-900)' }}>
-            {status.email ?? status.name ?? ''}
-            {status.plan && (
-              <span style={{
-                marginInlineStart: 8, fontFamily: 'var(--cth-font-mono)', fontSize: 9, letterSpacing: '.12em',
-                textTransform: 'uppercase', padding: '2px 7px', background: 'var(--cth-mint-light)',
-                boxShadow: 'inset 0 0 0 1px var(--cth-mint)'
-              }}>{status.plan}</span>
-            )}
-          </div>
-          <div style={{ fontSize: 12, marginTop: 4, color: 'var(--cth-ink-700)' }}>{line}</div>
+          <div style={{ fontSize: 12.5, color: 'var(--cth-ink-900)' }}>{status.email ?? status.name ?? ''}</div>
+          <div style={{ fontSize: 12, marginTop: 4, color: 'var(--cth-ink-700)' }}>{t('license.account.free')}</div>
         </div>
-        <PixelButton variant="secondary" size="sm" disabled={busy} onClick={() => act(() => window.cth.licenseOpenBilling('portal'))}>
+        <PixelButton variant="secondary" size="sm" disabled={busy} onClick={() => act(() => window.cth.accountOpen())}>
           {t('license.manageAccount')}
         </PixelButton>
         <PixelButton variant="ghost" size="sm" disabled={busy} onClick={() => act(() => window.cth.licenseSignOut())}>

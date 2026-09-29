@@ -9,7 +9,7 @@ if (!existsSync(ENV_FILE)) copyFileSync(new URL('../.env.example', import.meta.u
 const env = readEnv();
 const set = {};
 const secret = () => randomBytes(32).toString('base64url');
-for (const k of ['SESSION_SECRET', 'ACCESS_TOKEN_SECRET', 'CRON_SECRET']) if (!env[k]) set[k] = secret();
+for (const k of ['SESSION_SECRET', 'ACCESS_TOKEN_SECRET']) if (!env[k]) set[k] = secret();
 
 let privatePem = env.LICENSE_SIGNING_KEY?.replace(/\\n/g, '\n');
 let kid = env.LICENSE_SIGNING_KID;

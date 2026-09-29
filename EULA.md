@@ -1,122 +1,55 @@
-# ATMT Labs — End User License Agreement
+# ATMT Labs — Terms of Service and License Agreement
 
-> **Published version:** https://labs.atmt.dev/terms (`site/terms.html`). That page is the text users agree to. This file is a markdown copy; change both together.
+> Published terms: https://labs.atmt.dev/terms (`site/terms.html`). Keep this bundled copy aligned with that page.
 
-**Version:** 1.0 · **Effective / last updated:** September 28, 2026
+**Version:** 1.1 · **Effective / last updated:** September 30, 2026
 
-This End User License Agreement ("Agreement") is between **Automatika Consulting**
-(trading as ATMT Labs / Automatika PH Labs) ("**we**", "**us**") and you, the
-person or entity that installs or uses ATMT Labs ("**you**").
+These Terms are between **Automatika Consulting** (trading as ATMT Labs) and the person or organisation using ATMT Labs Floor. They cover the desktop app, updates, bundled content, documentation, website and account service. By creating an account, installing or using the Software, you agree to these Terms and the [Privacy Policy](PRIVACY.md). If you accept for an organisation, you confirm that you may bind it.
 
-By creating an account, starting a trial, buying a license, redeeming an unlock
-code, or installing or using the software, you agree to this Agreement. If you
-don't agree, don't use the software.
+## 1. Your account
 
-## 1. What this covers
+Sign in with Google or Yahoo using your verified email address. You must be at least 21 years old. Keep your sign-in account secure, use your own account and provide accurate information. You are responsible for activity under your account.
 
-"**Software**" means the ATMT Labs desktop application, its updates, the bundled
-content that ships with it (including role templates, example floors and
-bundled skills), and its documentation.
+## 2. Software use
 
-The online account and licensing services at `auth.labs.atmt.dev` and
-`api.labs.atmt.dev` are part of how the Software is licensed. They are
-covered by this Agreement and the [Privacy Policy](PRIVACY.md).
+While you follow these Terms, we grant you a personal, non-exclusive, non-transferable, non-sublicensable license to install and use the Software. **ATMT Labs is free to use after sign-in.** No payment card, trial, purchase or unlock code is required. Each account is for one person; each co-worker needs their own account. You may sign in on multiple computers and use the Software for business and client work. This grant does not allow redistribution.
 
-## 2. The license we grant you
+## 3. Account checks
 
-As long as you follow this Agreement, we grant you a personal, non-exclusive,
-non-transferable, non-sublicensable license to install and use the Software.
+The app stores a short-lived signed account token bound to your computer. It may work briefly offline while that token is valid, then needs an internet connection to renew your account session.
 
-| Type | What you get |
-|---|---|
-| **Free trial** | Full use for **7 days**. A payment card is required to start. Unless you cancel before the trial ends, the card is charged **once**, for the lifetime license price shown at checkout. One trial per account and per card. |
-| **Lifetime license** (one-time purchase) | Perpetual use of the Software version you have and of updates we choose to release. There is no subscription and no renewal. |
-| **Unlock code** | A single-use code we issue at our discretion. It grants a lifetime license to the account that redeems it, at no charge. Codes have no cash value, can't be exchanged or resold, can be used once, and may carry an expiry date. |
+## 4. Restrictions
 
-- **Tied to your email.** A license belongs to the verified email address of the account that bought or redeemed it. Signing in with Google or Yahoo using the same email reaches the same license.
-- **Devices.** You may activate the Software on up to **3 computers** at a time. You can free a seat from your account page.
-- **Commercial use.** You may use the Software in your business and for client work. Each license is for one person only and can't be shared with or used by other people, including a team. It isn't a license to redistribute the Software.
+You may not copy, distribute, sell, rent, lease, lend, sublicense or share the Software except as these Terms allow; reverse engineer it except where law permits; bypass sign-in checks or share account tokens; remove proprietary notices; attack the Service; or use it to break the law, infringe rights, create malware, send spam, or violate a connected service's terms.
 
-## 3. Offline activation ("stamping")
+## 5. Third-party tools
 
-Once a lifetime license is active on a computer, the Software stores a signed license bound to that computer's hardware ID and stops checking with our servers.
+You install and sign in to AI tools such as Claude Code, Codex, Gemini, Antigravity and Cursor yourself. They have their own terms, privacy policies and possible fees. We do not control their availability or output. Product names belong to their owners and imply no affiliation. Open-source components retain their own licenses in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-- It keeps working offline, even if our servers are unavailable.
-- Because the computer no longer checks in, a refund, chargeback or device removal can't switch off a computer that is already activated. **You agree not to keep using the Software on any computer after the license is refunded or charged back.**
+## 6. Agents on your computer
 
-## 4. What you may not do
+Agents run with your user permissions. Depending on settings, they can read, change or delete files, run commands and act in connected services. AI output can be wrong. Choose their folders and permissions, review their work and keep backups. Review shared hire and floor configurations before using them.
 
-You may not, and may not let anyone else:
+## 7. Free access
 
-1. copy, distribute, sell, rent, lease, lend, sublicense or share the Software or a license, except as this Agreement allows;
-2. reverse engineer, decompile or disassemble the Software, except where applicable law expressly permits it despite this restriction;
-3. remove, bypass, disable or tamper with licensing, activation or device checks, or share license files, tokens or unlock codes;
-4. remove or alter any proprietary, copyright or attribution notices;
-5. use the Software to break the law or to violate the terms of any third-party service you connect it to.
+ATMT Labs does not charge for app access. Third-party AI tools and connected services may charge under their own terms. If you previously paid ATMT Labs, contact [hello@automatika.ph](mailto:hello@automatika.ph) about that transaction.
 
-## 5. Third-party AI tools and services
+Earlier lifetime purchases keep the rights granted under their original terms for the versions they covered. This free release does not cancel those grants or create a new charge.
 
-The Software runs AI coding agents that **you** install and sign in to yourself: Claude Code, Codex, Gemini/Antigravity, Cursor and others. It can also connect to services such as Pancake POS and Webcake using keys you provide.
+## 8. Updates and data
 
-- Those tools and services are provided by other companies under **their own terms and pricing**. You're responsible for your accounts with them, for following their terms, and for any fees they charge.
-- We don't control them and aren't responsible for them, their availability, or their output.
-- Third-party open-source components are licensed under their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSE-ASSETS](LICENSE-ASSETS).
+We may release updates; the app can check for and download them, and you choose when to install. Our [Privacy Policy](PRIVACY.md) covers account data and historical payment records. Your projects, prompts, agent output and connector keys stay on your computer. Anonymous usage statistics are optional and can be disabled in the app.
 
-## 6. Agents act on your computer — your responsibility
+## 9. Ownership and termination
 
-AI agents run with **your** user permissions. Depending on your settings ("auto mode"), they can read, change and delete files, run commands, and act inside connected services, including making live changes to shops and published pages. AI output can be wrong.
+The Software is licensed, not sold. We and our licensors retain all intellectual-property rights. Your work remains yours, subject to the AI tool's terms for its output. We may use feedback you send us. You may stop using and delete the Software and ask us to delete your account. We may end your account and right to use the Software by notice if you materially break these Terms. On termination, stop using and delete the Software.
 
-- You decide what folders, tools and connectors each agent may use.
-- **You're responsible for reviewing what agents do** and for keeping backups.
-- Shared "hires" and "floors" from other people are configurations, not software from us. Review them before hiring; the Software never starts them without your click.
+## 10. Warranty and liability
 
-## 7. Payments, trials and refunds
+To the maximum extent law allows, the Service is provided **as is** and **as available**, without warranties of merchantability, fitness, non-infringement or uninterrupted operation. We do not warrant AI output or third-party services. We are not liable for indirect, incidental, special, consequential or punitive losses, or lost profits, revenue, data or business. To the maximum extent law allows, total liability under these Terms is limited to the amount you paid us for ATMT Labs in the 12 months before the claim. Nothing limits liability that cannot legally be limited. To the extent law allows, you will cover reasonable costs of third-party claims caused by your breach or use of the Software and its agents.
 
-- Prices are shown at checkout and charged in the currency shown there. Payments are processed by Stripe; we never receive your full card number.
-- A trial can be cancelled at any time before it ends from your account page, and you won't be charged.
-- **No refunds.** Use the 7-day free trial to try the Software. Once you are charged, all sales are final, except where the law requires a refund. EU/UK consumers agree to immediate supply and lose the 14-day right of withdrawal once the license is active.
-- Taxes: prices don't include sales tax, VAT, GST or similar taxes; where they apply they are added at checkout or are your responsibility.
+## 11. General
 
-## 8. Updates
+New Mexico, USA law and applicable US federal law govern these Terms. State and federal courts in Bernalillo County, New Mexico have jurisdiction, subject to consumer rights where you live. Follow applicable export and sanctions law. We will announce material changes before they take effect; continued use after that accepts the changes. These Terms and the Privacy Policy are the whole agreement for the free Service, subject to earlier paid grants described above. If a provision is unenforceable, the rest applies. A failure to enforce is not a waiver. You cannot transfer these Terms without consent; we may transfer them if the business is sold.
 
-We may release updates. The Software can check for and download them. Your lifetime license includes all future updates, including new major versions, at no extra charge.
-
-## 9. Your data
-
-- How we handle account, license and payment data is described in the [Privacy Policy](PRIVACY.md).
-- Anonymous usage statistics are described in [TELEMETRY.md](TELEMETRY.md), and you can turn them off.
-- Your projects, prompts, agent output and connector keys stay on your computer. They're never sent to us.
-
-## 10. Ownership
-
-- **The Software.** It is licensed, not sold. We and our licensors own it, including all intellectual property rights. Everything not expressly granted here is reserved.
-- **Your work.** You own what you create with the Software. Your rights in AI-generated output also depend on the terms of the AI tool that produced it.
-
-## 11. Termination
-
-- **By you:** stop using the Software and delete it.
-- **By us:** if you materially break this Agreement, we may end your license by notice. This includes bypassing licensing, sharing codes or licenses, and using the Software after a refund or chargeback.
-- **On termination:** you must stop using the Software and delete it. Sections 4 to 6 and 10 to 14 survive termination.
-
-## 12. No warranty
-
-To the maximum extent the law allows, the Software is provided **"as is" and "as available"**, without warranties of any kind. That includes merchantability, fitness for a particular purpose, non-infringement, and that it will be error-free or uninterrupted. We don't warrant the output of any AI agent or third-party service.
-
-## 13. Limitation of liability
-
-To the maximum extent the law allows:
-
-- **No indirect or special losses.** We aren't liable for indirect, incidental, special, consequential or punitive damages, or for lost profits, revenue, data or business. This includes losses caused by an agent's actions or a connected service.
-- **Cap.** Our total liability under this Agreement is limited to the amount you paid us for the license in the 12 months before the claim. If you paid nothing (for example, during a trial or with an unlock code), we have no liability to you.
-
-Nothing here limits liability that can't be limited by law.
-
-## 14. General
-
-- **Governing law:** the laws of the State of New Mexico, USA, and applicable US federal law.
-- **Venue:** the state and federal courts in Bernalillo County, New Mexico, USA.
-- **Export and sanctions:** you'll comply with export control and sanctions laws that apply to you.
-- **Changes:** we may update this Agreement. Material changes will be announced on labs.atmt.dev or in the app before they take effect. Continuing to use the Software after that means you accept the change.
-- **Entire agreement:** this Agreement and the Privacy Policy are the whole agreement between us about the Software.
-- **Severability:** if any part of it is unenforceable, the rest still applies.
-- **Contact:** Automatika Consulting, 1209 Mountain Road PL NE, Albuquerque, New Mexico 87110, USA, +1 520 413 9685, **hello@automatika.ph**.
+**Contact:** Automatika Consulting, 1209 Mountain Road PL NE, Albuquerque, New Mexico 87110, USA · +1 520 413 9685 · [hello@automatika.ph](mailto:hello@automatika.ph).

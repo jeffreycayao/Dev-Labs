@@ -1,8 +1,8 @@
 'use strict';
 
 // LicenseManager end to end against a fake auth.labs.atmt.dev + api.labs.atmt.dev:
-// browser sign-in with PKCE, refresh-token rotation, offline behaviour, Stripe
-// checkout/portal hand-off, and sign-out. No network, no electron.
+// browser sign-in with PKCE, refresh-token rotation, offline behaviour,
+// existing perpetual activations, and sign-out. No network, no electron.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -22,10 +22,10 @@ function mint(claims) {
   return `${h}.${p}.${b64u(sign(null, Buffer.from(`${h}.${p}`), privateKey))}`;
 }
 
-/** A fake licensing backend with just enough state to exercise every path. */
+/** A fake account backend with just enough state to exercise every path. */
 function backend(clock) {
   const s = {
-    status: 'trialing',
+    status: 'free',
     offline: false,
     codes: new Map(),          // code -> challenge
     refresh: new Set(['rt-0']),
@@ -34,7 +34,6 @@ function backend(clock) {
     revoked: [],
     released: [],
     failLicenseOnce401: false,
-    billingUrl: 'https://checkout.stripe.com/c/pay/cs_test_1',
     deviceOverride: null,
     calls: []
   };
@@ -76,25 +75,15 @@ function backend(clock) {
       const now = Math.floor(clock.now / 1000);
       const base = {
         iss: 'https://api.test', aud: 'atmt-labs-desktop', sub: 'usr_1', email: 'jo@example.com',
-        did: s.deviceOverride ?? body.device_id, plan: 'lifetime', status: s.status, iat: now
+        did: s.deviceOverride ?? body.device_id, plan: 'free', status: s.status, iat: now
       };
-      // Mirrors services/licensing/src/tokens.ts: paid = perpetual, no exp.
+      // Simulate an old machine-bound paid token alongside current free tokens.
       const claims = s.status === 'active'
         ? { ...base, perpetual: true, paid_at: now }
-        : { ...base, exp: now + 7 * 86400, trial_end: now + 7 * 86400 };
+        : { ...base, exp: now + 86400 };
       return json(200, { license: mint(claims) });
     }
-    if (u.href === 'https://api.test/v1/redeem') {
-      const { code } = JSON.parse(init.body);
-      if (s.status === 'active') return json(409, { error: 'already_licensed' });
-      if (code === 'ATMT-GOOD') { s.status = 'active'; return json(200, { ok: true, status: 'active' }); }
-      if (code === 'ATMT-USED') return json(409, { error: 'code_used' });
-      return json(400, { error: 'code_invalid' });
-    }
     if (u.pathname.startsWith('/v1/devices/')) { s.released.push(decodeURIComponent(u.pathname.split('/').pop())); return json(204, {}); }
-    if (u.href === 'https://api.test/v1/billing/checkout' || u.href === 'https://api.test/v1/billing/portal') {
-      return json(200, { url: s.billingUrl });
-    }
     return json(404, { error: 'not_found' });
   };
   return s;
@@ -169,7 +158,7 @@ test('browser sign-in with PKCE ends licensed with the refresh token persisted',
   assert.equal(await signIn(h, 'signup'), true);
   const s = h.m.getStatus();
   assert.equal(s.state, 'licensed');
-  assert.equal(s.purchase, 'trialing');
+  assert.equal(s.purchase, 'free');
   assert.equal(s.email, 'jo@example.com');
   assert.equal(h.m.allowsAgents(), true);
   assert.equal(h.disk.data.refreshToken, 'rt-1');
@@ -330,10 +319,10 @@ test('offline with a valid license stays licensed; offline past expiry blocks', 
   h.m.init();
   await signIn(h);
   h.api.offline = true;
-  h.clock.now = T0 + 5 * 86400_000;
+  h.clock.now = T0 + 12 * 3600_000;
   await h.m.tick();
   assert.equal(h.m.getStatus().state, 'licensed');
-  h.clock.now = T0 + 8 * 86400_000;
+  h.clock.now = T0 + 25 * 3600_000;
   await h.m.tick();
   assert.deepEqual([h.m.getStatus().state, h.m.getStatus().error], ['offline_expired', 'network']);
   assert.equal(h.m.allowsAgents(), false);
@@ -394,33 +383,14 @@ test('a tampered stored license is dropped', () => {
   void first;
 });
 
-test('start trial opens Stripe Checkout, then polls until the webhook lands', async () => {
+test('account page opens without a purchase flow', async () => {
   const h = harness();
   h.m.init();
-  h.api.status = 'none';
-  await signIn(h);
-  assert.equal(h.m.getStatus().state, 'inactive');
-  const r = await h.m.openBilling('checkout');
-  assert.equal(r.ok, true);
-  assert.equal(h.opened.at(-1), 'https://checkout.stripe.com/c/pay/cs_test_1');
-  // Webhook arrives; the next poll tick picks it up.
-  h.api.status = 'trialing';
-  await h.runTimers(h.clock.now + 10_000);
-  assert.equal(h.m.getStatus().state, 'licensed');
-});
-
-test('billing falls back to the public page when signed out or the URL is not allowed', async () => {
-  const h = harness();
-  h.m.init();
-  await h.m.openBilling('checkout');
-  assert.equal(h.opened.at(-1), 'https://site.test/pricing');
-  await signIn(h);
-  h.api.billingUrl = 'https://evil.example/phish';
-  await h.m.openBilling('portal');
+  await h.m.openAccount();
   assert.equal(h.opened.at(-1), 'https://auth.test/account');
 });
 
-test('sign-out frees the device seat, revokes the session and forgets it', async () => {
+test('sign-out removes the computer, revokes the session and forgets it', async () => {
   const h = harness();
   h.m.init();
   await signIn(h);
@@ -440,105 +410,38 @@ test('sign-out works offline', async () => {
   assert.equal((await h.m.signOut()).state, 'signed_out');
 });
 
-// ── lifetime license: stamped to the machine, never checked again ────────────
-
-async function buyLifetime(h) {
+test('an existing paid stamp keeps its offline grant until sign-out', async () => {
+  const h = harness();
   h.m.init();
   h.api.status = 'active';
   await signIn(h);
   assert.equal(h.m.getStatus().state, 'licensed');
-  assert.equal(h.m.getStatus().perpetual, true);
-}
-
-test('a paid machine is stamped: no network on restart, on tick, or on refresh — even years later', async () => {
-  const first = harness();
-  await buyLifetime(first);
-  const h = harness({ stored: first.disk.data });
-  h.api.offline = true; // would throw if anything tried the network
-  assert.equal(h.m.init().state, 'licensed');
-  assert.equal(h.m.canRefresh(), false);
-  h.clock.now = T0 + 5 * 365 * 86400_000;
-  await h.m.tick();
-  await h.m.refresh();
-  assert.equal(h.m.getStatus().state, 'licensed');
-  assert.deepEqual(h.api.calls, [], 'zero calls to the licensing server');
   assert.equal(h.m.allowsAgents(), true);
-});
-
-test('the stamp does not travel: the same license file on another computer is not licensed', async () => {
-  const first = harness();
-  await buyLifetime(first);
-  const other = harness({ stored: first.disk.data, machine: 'machine-B' });
-  const s = other.m.init();
-  assert.deepEqual([s.state, s.error], ['signed_out', 'device_mismatch']);
-  assert.equal(other.m.allowsAgents(), false);
-});
-
-test('when the OS will not give a machine id, a random per-install id is used and kept', () => {
-  const h = harness({ machine: '' });
-  h.m.init();
-  assert.equal(h.disk.data.deviceId, 'random-fallback');
-});
-
-test('a trial that converts on day 7 becomes a stamped lifetime license', async () => {
-  const h = harness();
-  h.m.init();
-  await signIn(h);
-  assert.equal(h.m.getStatus().purchase, 'trialing');
-  h.api.status = 'active';
-  h.clock.now = T0 + 7 * 86400_000 + 1000;
+  assert.equal(h.m.canRefresh(), false);
+  h.api.offline = true;
   await h.m.tick();
-  assert.equal(h.m.getStatus().perpetual, true);
-  const calls = h.api.calls.length;
-  h.clock.now += 400 * 86400_000;
-  await h.m.tick();
-  assert.equal(h.api.calls.length, calls, 'no more calls once stamped');
-});
-
-test('a failed day-7 payment shows payment_required and blocks', async () => {
-  const h = harness();
-  h.m.init();
-  await signIn(h);
-  h.api.status = 'payment_required';
-  h.clock.now = T0 + 7 * 86400_000 + 1000;
-  await h.m.tick();
-  assert.deepEqual([h.m.getStatus().state, h.m.getStatus().purchase], ['inactive', 'payment_required']);
+  assert.equal(h.m.allowsAgents(), true);
+  await h.m.signOut();
   assert.equal(h.m.allowsAgents(), false);
 });
 
-// ── unlock codes ─────────────────────────────────────────────────────────────
-
-test('an unlock code turns an inactive account into a stamped lifetime license right away', async () => {
-  const h = harness();
-  h.m.init();
-  h.api.status = 'canceled';
-  await signIn(h);
-  assert.equal(h.m.getStatus().state, 'inactive');
-  const r = await h.m.redeemCode('ATMT-GOOD');
-  assert.deepEqual(r, { ok: true });
-  assert.equal(h.m.getStatus().state, 'licensed');
-  assert.equal(h.m.getStatus().perpetual, true);
+test('an existing paid stamp on disk works offline without a refresh session', () => {
+  const h = harness({ stored: { deviceId: 'machine-A', license: mint({
+    iss: 'https://api.test', aud: 'atmt-labs-desktop', sub: 'usr_1',
+    did: 'machine-A', plan: 'lifetime', status: 'active', perpetual: true,
+    iat: Math.floor(T0 / 1000)
+  }) } });
+  assert.equal(h.m.init().state, 'licensed');
   assert.equal(h.m.allowsAgents(), true);
-  // Stamped: the next restart never calls home.
-  const again = harness({ stored: h.disk.data });
-  again.api.offline = true;
-  assert.equal(again.m.init().state, 'licensed');
+  assert.equal(h.m.canRefresh(), false);
 });
 
-test('a bad or used code comes back for the code field; the gate status is untouched', async () => {
-  const h = harness();
-  h.m.init();
-  h.api.status = 'canceled';
-  await signIn(h);
-  assert.deepEqual(await h.m.redeemCode('nope'), { ok: false, error: 'code_invalid' });
-  assert.deepEqual(await h.m.redeemCode('ATMT-USED'), { ok: false, error: 'code_used' });
-  assert.equal(h.m.getStatus().state, 'inactive');
-  assert.equal(h.m.getStatus().error, undefined, 'no gate-level error for a typo');
-});
-
-test('redeeming needs a signed-in account', async () => {
-  const h = harness();
-  h.m.init();
-  assert.deepEqual(await h.m.redeemCode('ATMT-GOOD'), { ok: false, error: 'session_expired' });
-  assert.deepEqual(h.api.calls, []);
+test('a stored token without a refresh session cannot unlock agents', () => {
+  const h = harness({ stored: { deviceId: 'machine-A', license: mint({
+    iss: 'https://api.test', aud: 'atmt-labs-desktop', sub: 'usr_1',
+    did: 'machine-A', plan: 'free', status: 'free', iat: Math.floor(T0 / 1000),
+    exp: Math.floor(T0 / 1000) + 86400
+  }) } });
+  assert.equal(h.m.init().state, 'signed_out');
+  assert.equal(h.m.allowsAgents(), false);
 });

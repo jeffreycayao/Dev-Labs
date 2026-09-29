@@ -2,19 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { API, AUTH, REDIRECT, harness } from './harness.js';
 
-const DAY = 86_400_000;
-
-async function startTrial(h: Awaited<ReturnType<typeof harness>>, email: string, fingerprint = `fp-${email}`) {
-  const s = await h.desktopSignIn(email);
-  const res = await h.app.request(`${API}/v1/billing/checkout`, { method: 'POST', headers: { authorization: `Bearer ${s.access_token}` } });
-  const { url } = (await res.json()) as { url: string };
-  const accountId = (await h.accountIdFor(email))!;
-  const row = await h.licenseRow(accountId);
-  const wh = await h.completeTrialCheckout(accountId, row.stripe_customer_id!, fingerprint);
-  assert.equal(wh.status, 200);
-  return { ...s, accountId, checkoutUrl: url };
-}
-
 // ── sign-in ──────────────────────────────────────────────────────────────────
 
 test('desktop sign-in: authorize → Google → code → tokens → license for a new account', async () => {
@@ -24,10 +11,11 @@ test('desktop sign-in: authorize → Google → code → tokens → license for 
   assert.ok(s.access_token && s.refresh_token);
   const l = await h.license(s.access_token);
   assert.equal(l.status, 200);
-  assert.equal(l.claims!.status, 'none');
-  assert.equal(l.claims!.email, 'jeff@example.com', 'license is bound to the lower-cased email');
+  assert.equal(l.claims!.status, 'free');
+  assert.equal(l.claims!.plan, 'free');
+  assert.equal(l.claims!.email, 'jeff@example.com', 'account is bound to the lower-cased email');
   assert.equal(l.claims!.did, 'machine-aaaaaaaa');
-  assert.ok(l.claims!.exp, 'an unpaid license is short-lived');
+  assert.ok(l.claims!.exp, 'free account token expires for renewal');
   // Google got PKCE + Basic client auth; the id_token nonce was checked.
   assert.equal(h.idp.tokenCalls.at(-1)!.auth?.startsWith('Basic '), true);
   assert.match(h.idp.tokenCalls.at(-1)!.body, /code_verifier=/);
@@ -168,220 +156,48 @@ test('bad or missing access token → 401', async () => {
   assert.equal(r.status, 401);
 });
 
-// ── trial + one-time purchase ────────────────────────────────────────────────
+// ── free access and retired purchase paths ────────────────────────────────
 
-test('trial checkout saves a card and says plainly what is charged when', async () => {
+test('every signed-in account gets free access regardless of old purchase state', async () => {
   const h = await harness();
-  const t = await startTrial(h, 'trial@example.com');
-  assert.match(t.checkoutUrl, /^https:\/\/checkout\.stripe\.com\//);
-  const s = h.stripeLog.sessions.at(-1);
-  assert.equal(s.mode, 'setup');
-  assert.deepEqual(s.payment_method_types, ['card']);
-  assert.match(s.custom_text.submit.message, /Nothing is charged today.*7 days.*\$49\.00 once/);
-  const row = await h.licenseRow(t.accountId);
-  assert.equal(row.status, 'trialing');
-  assert.equal(row.trial_end!.getTime(), h.clock.now + 7 * DAY);
-  const l = await h.license(t.access_token);
-  assert.equal(l.claims!.status, 'trialing');
-  assert.equal(l.claims!.perpetual, undefined);
-  assert.ok(l.claims!.exp > l.claims!.trial_end, 'trial token outlives trial_end by a grace period');
-});
-
-test('one trial per card: a second account with the same card must pay', async () => {
-  const h = await harness();
-  await startTrial(h, 'first@example.com', 'fp-shared');
-  const t2 = await startTrial(h, 'second@example.com', 'fp-shared');
-  const row = await h.licenseRow(t2.accountId);
-  assert.equal(row.status, 'payment_required');
-  assert.equal(row.failure_reason, 'trial_already_used');
-  const l = await h.license(t2.access_token);
-  assert.equal(l.claims!.status, 'payment_required');
-  const co = await h.app.request(`${API}/v1/billing/checkout`, { method: 'POST', headers: { authorization: `Bearer ${t2.access_token}` } });
-  assert.equal(co.status, 200);
-  assert.equal(h.stripeLog.sessions.at(-1).mode, 'payment', 'offered a normal purchase instead');
-});
-
-test('day 7: the app renewing its license triggers the one-time charge and gets a PERPETUAL license', async () => {
-  const h = await harness();
-  const t = await startTrial(h, 'convert@example.com');
-  h.clock.now += 7 * DAY + 60_000;
-  await h.renew(t);
-  const l = await h.license(t.access_token);
-  const pi = h.stripeLog.paymentIntents.at(-1)!;
-  assert.equal(pi.params.off_session, true);
-  assert.equal(pi.params.confirm, true);
-  assert.equal(pi.params.amount, 4900);
-  assert.match(pi.opts.idempotencyKey, /^trial-conversion-/);
-  assert.equal(l.claims!.status, 'active');
-  assert.equal(l.claims!.perpetual, true);
-  assert.equal(l.claims!.exp, undefined, 'a paid license never expires — no further checks needed');
-  assert.equal(l.claims!.did, 'machine-aaaaaaaa', 'stamped to this machine');
-});
-
-test('the daily cron converts due trials and needs the cron secret', async () => {
-  const h = await harness();
-  const t = await startTrial(h, 'cron@example.com');
-  const cron = (auth?: string) => h.app.request(`${API}/api/cron/charge-trials`, { headers: auth ? { authorization: auth } : {} });
-  assert.equal((await cron()).status, 401);
-  assert.deepEqual(await (await cron(`Bearer ${h.cfg.cronSecret}`)).json(), { attempted: 0, paid: 0, failed: 0 }, 'nothing due yet');
-  h.clock.now += 7 * DAY;
-  assert.deepEqual(await (await cron(`Bearer ${h.cfg.cronSecret}`)).json(), { attempted: 1, paid: 1, failed: 0 });
-  assert.equal((await h.licenseRow(t.accountId)).status, 'active');
-  assert.deepEqual(await (await cron(`Bearer ${h.cfg.cronSecret}`)).json(), { attempted: 0, paid: 0, failed: 0 }, 'never charged twice');
-});
-
-test('a day-7 charge that needs 3-D Secure moves to payment_required and blocks', async () => {
-  const h = await harness();
-  const t = await startTrial(h, 'sca@example.com');
-  h.stripeState.nextCharge = 'authentication_required';
-  h.clock.now += 7 * DAY;
-  await h.renew(t);
-  const l = await h.license(t.access_token);
-  assert.equal(l.claims!.status, 'payment_required');
-  const row = await h.licenseRow(t.accountId);
-  assert.equal(row.failure_reason, 'authentication_required');
-});
-
-test('a Stripe outage during conversion leaves the trial alone for the next attempt', async () => {
-  const h = await harness();
-  const t = await startTrial(h, 'outage@example.com');
-  h.stripeState.nextCharge = 'network';
-  h.clock.now += 7 * DAY;
-  await h.renew(t);
-  await h.license(t.access_token);
-  assert.equal((await h.licenseRow(t.accountId)).status, 'trialing');
-  h.stripeState.nextCharge = 'succeed';
-  assert.equal((await h.license(t.access_token)).claims!.status, 'active');
-});
-
-test('canceling the trial means no charge, ever', async () => {
-  const h = await harness();
-  const t = await startTrial(h, 'cancel@example.com');
-  const web = await h.webSignIn('cancel@example.com');
-  const noOrigin = await web.req(`${AUTH}/account/trial/cancel`, { method: 'POST' });
-  assert.equal(noOrigin.status, 403, 'CSRF: account forms require our Origin');
-  const ok = await web.req(`${AUTH}/account/trial/cancel`, { method: 'POST', headers: { origin: AUTH } });
-  assert.equal(ok.status, 303);
-  assert.equal((await h.licenseRow(t.accountId)).status, 'canceled');
-  h.clock.now += 8 * DAY;
-  await h.app.request(`${API}/api/cron/charge-trials`, { headers: { authorization: `Bearer ${h.cfg.cronSecret}` } });
-  assert.equal(h.stripeLog.paymentIntents.length, 0);
-  // They can still buy later, but not get a second trial.
-  await web.req(`${AUTH}/account/trial`, { method: 'POST', headers: { origin: AUTH } });
-  assert.equal(h.stripeLog.sessions.at(-1).mode, 'payment');
-});
-
-test('buy outright: paid checkout webhook → perpetual license', async () => {
-  const h = await harness();
-  const s = await h.desktopSignIn('buyer@example.com');
-  const web = await h.webSignIn('buyer@example.com');
-  const r = await web.req(`${AUTH}/account/buy`, { method: 'POST', headers: { origin: AUTH } });
-  assert.match(r.headers.get('location')!, /checkout\.stripe\.com/);
-  const sess = h.stripeLog.sessions.at(-1);
-  assert.equal(sess.mode, 'payment');
-  assert.deepEqual(sess.line_items, [{ price: 'price_lifetime', quantity: 1 }]);
-  const accountId = (await h.accountIdFor('buyer@example.com'))!;
-  await h.webhook({ id: h.nextEventId(), type: 'checkout.session.completed',
-    data: { object: { mode: 'payment', payment_status: 'paid', payment_intent: 'pi_buy', amount_total: 4900, currency: 'usd', metadata: { account_id: accountId, purpose: 'purchase' } } } });
+  const s = await h.desktopSignIn('free@example.com');
+  const id = (await h.accountIdFor('free@example.com'))!;
+  await h.store.updateLicense(id, { status: 'payment_required' });
   const l = await h.license(s.access_token);
-  assert.equal(l.claims!.status, 'active');
-  assert.equal(l.claims!.perpetual, true);
+  assert.equal(l.status, 200);
+  assert.equal(l.claims!.status, 'free');
+  assert.equal(l.claims!.plan, 'free');
+  assert.equal(l.claims!.perpetual, undefined);
+  assert.ok(l.claims!.exp);
 });
 
-test('webhooks: bad signature rejected, duplicates ignored, refund revokes for new activations', async () => {
+test('free account token renews after the old purchase status changes', async () => {
   const h = await harness();
-  const t = await startTrial(h, 'refund@example.com');
-  h.clock.now += 7 * DAY;
-  await h.renew(t);
-  assert.equal((await h.license(t.access_token)).claims!.status, 'active');
-  assert.equal((await h.webhook({ id: 'evt_x', type: 'charge.refunded', data: { object: {} } }, 'forged')).status, 400);
-  const row = await h.licenseRow(t.accountId);
-  const ev = { id: h.nextEventId(), type: 'charge.refunded', data: { object: { refunded: true, customer: row.stripe_customer_id } } };
-  assert.equal((await h.webhook(ev)).status, 200);
-  assert.equal((await (await h.webhook(ev)).json() as any).duplicate, true);
-  assert.equal((await h.licenseRow(t.accountId)).status, 'refunded');
-  assert.equal((await h.license(t.access_token)).claims!.status, 'refunded');
+  const s = await h.desktopSignIn('renew@example.com');
+  await h.license(s.access_token);
+  const id = (await h.accountIdFor('renew@example.com'))!;
+  await h.store.updateLicense(id, { status: 'refunded' });
+  await h.renew(s);
+  assert.equal((await h.license(s.access_token)).claims!.status, 'free');
 });
 
-// ── devices ──────────────────────────────────────────────────────────────────
-
-test('device cap: a new machine past MAX_DEVICES is refused until one is removed', async () => {
-  const h = await harness({ MAX_DEVICES: '2' });
-  const t = await startTrial(h, 'devices@example.com');
-  assert.equal((await h.license(t.access_token, 'machine-1111111')).status, 200);
-  assert.equal((await h.license(t.access_token, 'machine-2222222')).status, 200);
-  assert.equal((await h.license(t.access_token, 'machine-1111111')).status, 200, 're-stamping a known machine is fine');
-  const third = await h.license(t.access_token, 'machine-3333333');
-  assert.deepEqual([third.status, third.body.error], [403, 'device_limit']);
-  const del = await h.app.request(`${API}/v1/devices/machine-1111111`, { method: 'DELETE', headers: { authorization: `Bearer ${t.access_token}` } });
-  assert.equal(del.status, 204);
-  assert.equal((await h.license(t.access_token, 'machine-3333333')).status, 200);
-});
-
-test('an account without a license does not use up device seats', async () => {
-  const h = await harness({ MAX_DEVICES: '1' });
-  const s = await h.desktopSignIn('seatless@example.com');
-  assert.equal((await h.license(s.access_token, 'machine-1111111')).status, 200);
-  assert.equal((await h.license(s.access_token, 'machine-2222222')).status, 200);
-});
-
-// ── web ──────────────────────────────────────────────────────────────────────
-
-test('account forms keep a real same-origin Origin and reject cross-site posts', async () => {
+test('checkout, redemption and scheduled charges are retired', async () => {
   const h = await harness();
-  const web = await h.webSignIn('form-origin@example.com');
-  const page = await web.req(`${AUTH}/account`);
-  assert.equal(page.headers.get('referrer-policy'), 'same-origin');
-  assert.match(await page.text(), /<form method="post" action="\/account\/buy">/);
-
-  const nullOrigin = await web.req(`${AUTH}/account/buy`, { method: 'POST', headers: { origin: 'null' } });
-  assert.equal(nullOrigin.status, 403);
-  const crossOrigin = await web.req(`${AUTH}/account/buy`, { method: 'POST', headers: { origin: 'https://other.example' } });
-  assert.equal(crossOrigin.status, 403);
-  assert.equal(h.stripeLog.sessions.length, 0);
-
-  const sameOrigin = await web.req(`${AUTH}/account/buy`, { method: 'POST', headers: { origin: AUTH } });
-  assert.equal(sameOrigin.status, 303);
-  assert.match(sameOrigin.headers.get('location')!, /^https:\/\/checkout\.stripe\.com\//);
-});
-
-test('the account page shows the trial end date and the one-time price', async () => {
-  const h = await harness();
-  await startTrial(h, 'page@example.com');
-  const web = await h.webSignIn('page@example.com');
-  const res = await web.req(`${AUTH}/account`);
-  const body = await res.text();
-  assert.equal(res.status, 200);
-  assert.match(body, /Free trial/);
-  assert.match(body, /\$49\.00/);
-  assert.match(body, /Cancel trial/);
-  assert.match(res.headers.get('content-security-policy')!, /script-src|default-src 'none'/);
-  assert.doesNotMatch(body, /<script/i);
-});
-
-test('web funnel: /start sends a signed-out visitor to sign-up, then straight to Checkout', async () => {
-  const h = await harness();
-  const anon = await h.app.request(`${AUTH}/start?plan=trial`);
-  assert.equal(anon.status, 302);
-  assert.match(anon.headers.get('location')!, /^\/login\?signup=1&next=%2Fstart%3Fplan%3Dtrial$/);
-  const web = await h.webSignIn('funnel@example.com', { next: '/start?plan=trial' });
-  assert.equal(web.callback.headers.get('location'), '/start?plan=trial');
-  const go = await web.req(`${AUTH}/start?plan=trial`);
-  assert.equal(go.status, 303);
-  assert.match(go.headers.get('location')!, /checkout\.stripe\.com/);
-});
-
-test('open redirects are impossible via ?next=', async () => {
-  const h = await harness();
-  for (const next of ['//evil.example', 'https://evil.example', '/\\evil.example', '/somewhere-else']) {
-    const web = await h.webSignIn(`n${Math.random()}@example.com`, { next });
-    assert.equal(web.callback.headers.get('location'), '/account', next);
+  const s = await h.desktopSignIn('retired@example.com');
+  const headers = { authorization: `Bearer ${s.access_token}` };
+  for (const path of ['/v1/billing/checkout', '/v1/billing/portal', '/v1/redeem']) {
+    const r = await h.app.request(`${API}${path}`, { method: 'POST', headers });
+    assert.equal(r.status, 410, path);
   }
+  assert.equal((await h.app.request(`${API}/api/cron/charge-trials`)).status, 410);
 });
 
-test('hosts are split: api host serves no pages, auth host serves no API', async () => {
+test('account page shows free access and no payment action', async () => {
   const h = await harness();
-  assert.equal((await h.app.request(`${API}/account`)).status, 404);
-  assert.equal((await h.app.request(`${AUTH}/v1/licenses`, { method: 'POST' })).status, 404);
-  assert.equal((await h.app.request(`${API}/health`)).status, 200);
+  const b = await h.webSignIn('webfree@example.com');
+  const page = await (await b.req(`${AUTH}/account`)).text();
+  assert.match(page, /Free account/);
+  assert.doesNotMatch(page, /Checkout|Buy lifetime|Start.*trial|Redeem code/);
+  assert.equal((await b.req(`${AUTH}/start?plan=buy`)).headers.get('location'), '/account');
+  assert.equal((await b.req(`${AUTH}/admin`)).status, 404);
 });

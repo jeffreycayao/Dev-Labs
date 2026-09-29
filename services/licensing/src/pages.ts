@@ -2,8 +2,7 @@
  * Server-rendered pages for auth.labs.atmt.dev. No client JS at all (the CSP
  * says `script-src 'none'`); every value is HTML-escaped.
  */
-import type { AccountRow, DeviceRow, LicenseRow, UnlockCodeRow } from './store.js';
-import { unlockCodeState } from './codes.js';
+import type { AccountRow, DeviceRow } from './store.js';
 
 export function esc(s: unknown): string {
   return String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
@@ -11,7 +10,7 @@ export function esc(s: unknown): string {
 
 export const PAGE_HEADERS: Record<string, string> = {
   'content-type': 'text/html; charset=utf-8',
-  'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; form-action 'self' https://checkout.stripe.com https://billing.stripe.com; frame-ancestors 'none'; base-uri 'none'",
+  'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self'; manifest-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'same-origin',
   'cache-control': 'no-store'
@@ -86,18 +85,18 @@ function page(title: string, body: string, extraHead = '', wide = false): string
 
 /** Legal pages live on the marketing site (labs.atmt.dev). */
 function legal(site: string): string {
-  return `<p><small>By continuing you agree to the <a href="${esc(site)}/terms" style="color:inherit">ATMT Labs License Agreement</a> and <a href="${esc(site)}/privacy" style="color:inherit">Privacy Policy</a>.</small></p>`;
+  return `<p><small>By continuing you agree to the <a href="${esc(site)}/terms" style="color:inherit">ATMT Labs Terms of Service</a> and <a href="${esc(site)}/privacy" style="color:inherit">Privacy Policy</a>.</small></p>`;
 }
 
 export function loginPage(o: { providers: { id: string; label: string }[]; next: string; signup: boolean; error?: string; site?: string }): string {
   const buttons = o.providers
     .map((p, i) => `<a class="btn${i === 0 ? ' primary' : ''}" href="/login/${esc(p.id)}?next=${encodeURIComponent(o.next)}">Continue with ${esc(p.label)}</a>`)
     .join('');
-  return page(o.signup ? 'Start your free trial' : 'Sign in', `
-<h1>${o.signup ? 'Start your 7-day free trial' : 'Sign in'}</h1>
+  return page(o.signup ? 'Create your free account' : 'Sign in', `
+<h1>${o.signup ? 'Create your free account' : 'Sign in'}</h1>
 <p>${o.signup
-      ? 'Sign in to create your account. Your license is tied to your email address.'
-      : 'Use the same email you bought ATMT Labs with.'}</p>
+      ? 'Sign in to create your free account.'
+      : 'Sign in to your free ATMT Labs account.'}</p>
 ${o.error ? `<div class="err">${esc(o.error)}</div>` : ''}
 ${buttons}
 ${legal(o.site ?? 'https://labs.atmt.dev')}`);
@@ -123,150 +122,19 @@ function fmtDate(d: Date | null): string {
 
 export function accountPage(o: {
   account: AccountRow;
-  license: LicenseRow;
   devices: DeviceRow[];
-  maxDevices: number;
-  price: string;
-  trialDays: number;
-  canTrial: boolean;
   notice?: string;
-  /** The notice is a success message. */
-  ok?: boolean;
-  /** Pre-filled unlock code (from a /redeem?code= link). */
-  code?: string;
 }): string {
-  const l = o.license;
-  let status = '';
-  let actions = '';
-  switch (l.status) {
-    case 'active':
-      status = l.source === 'unlock_code'
-        ? `<span class="tag">Lifetime license</span><p>Unlocked with a code on ${esc(fmtDate(l.paid_at))}. No renewals, no subscription.</p>`
-        : `<span class="tag">Lifetime license</span><p>Paid ${esc(fmtDate(l.paid_at))}. No renewals, no subscription.</p>`;
-      actions = l.source === 'unlock_code' ? '' : `<form method="post" action="/account/billing"><button class="btn">Receipts &amp; payment details</button></form>`;
-      break;
-    case 'trialing':
-      status = `<span class="tag">Free trial</span><p>Ends ${esc(fmtDate(l.trial_end))}. On that day your card is charged <strong>${esc(o.price)}</strong> once and the license becomes yours for good.</p>`;
-      actions = `<form method="post" action="/account/buy"><button class="btn primary">Buy now and end the trial</button></form>
-<form method="post" action="/account/billing"><button class="btn">Update card</button></form>
-<form method="post" action="/account/trial/cancel"><button class="btn danger">Cancel trial — don't charge me</button></form>`;
-      break;
-    case 'payment_required':
-      status = `<span class="tag">Payment needed</span><p>${l.failure_reason === 'trial_already_used'
-        ? 'This card has already been used for a free trial.'
-        : "We couldn't charge your card at the end of the trial."} Complete the purchase to keep using ATMT Labs.</p>`;
-      actions = `<form method="post" action="/account/buy"><button class="btn primary">Pay ${esc(o.price)}</button></form>`;
-      break;
-    default:
-      status = `<p>${l.status === 'refunded' ? 'This license was refunded.' : l.status === 'canceled' ? 'Your trial was canceled.' : 'No license on this account yet.'}</p>`;
-      actions = (o.canTrial ? `<form method="post" action="/account/trial"><button class="btn primary">Start ${o.trialDays}-day free trial</button></form>` : '')
-        + `<form method="post" action="/account/buy"><button class="btn${o.canTrial ? '' : ' primary'}">Buy lifetime license — ${esc(o.price)}</button></form>`;
-  }
   const devices = o.devices.length
     ? o.devices.map((d) => `<div class="row"><div>${esc(d.name || 'Computer')}<br><small>${esc(d.platform || '')} · last seen ${esc(fmtDate(d.last_seen))}</small></div>
 <form method="post" action="/account/devices/${encodeURIComponent(d.device_id)}/remove"><button class="btn">Remove</button></form></div>`).join('')
     : '<p><small>No computers yet. Sign in from the ATMT Labs app.</small></p>';
-  // Anyone not yet licensed can redeem a voucher instead of paying. Open by
-  // default when the code came in on a /redeem link.
-  const redeem = l.status === 'active' ? '' : `
-<details${o.code ? ' open' : ''}><summary>Have an unlock code?</summary>
-<form method="post" action="/account/redeem">
-<input name="code" value="${esc(o.code ?? '')}" placeholder="ATMT-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false" maxlength="64" required>
-<button class="btn primary">Redeem code</button>
-</form>
-<p><small>An unlock code gives this account a free lifetime license. Each code works once.${l.status === 'trialing' ? ' Your trial ends and your card is not charged.' : ''}</small></p>
-</details>`;
   return page('Your account', `
 <h1>${esc(o.account.email)}</h1>
-${o.notice ? `<div class="${o.ok ? 'ok' : 'err'}">${esc(o.notice)}</div>` : ''}
-${status}
-${actions}
-${redeem}
-<h2>Computers (${o.devices.length}/${o.maxDevices})</h2>
+${o.notice ? `<div class="ok">${esc(o.notice)}</div>` : ''}
+<span class="tag">Free account</span>
+<p>ATMT Labs is free to use after sign-in. Your AI providers may bill separately.</p>
+<h2>Computers</h2>
 ${devices}
 <form method="post" action="/logout"><button class="btn">Sign out</button></form>`);
-}
-
-/** Installable on the owner's phone (Add to Home Screen). The manifest sits
- *  behind the same owner gate as the page, so it is fetched with the session
- *  cookie (use-credentials) and 404s for everyone else. No service worker:
- *  nothing from the admin page is cached on the device, and pages stay
- *  script-free. */
-const ADMIN_HEAD = `<meta name="robots" content="noindex,nofollow">
-<link rel="manifest" href="/admin/manifest.webmanifest" crossorigin="use-credentials">
-<meta name="application-name" content="ATMT Admin">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ATMT Admin">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">`;
-
-/** The web app manifest for /admin. */
-export const ADMIN_MANIFEST = {
-  id: '/admin',
-  name: 'ATMT Labs Admin',
-  short_name: 'ATMT Admin',
-  description: 'Create, track and revoke ATMT Labs unlock codes.',
-  start_url: '/admin',
-  scope: '/admin',
-  display: 'standalone',
-  theme_color: '#faf8f2',
-  background_color: '#faf8f2',
-  icons: [
-    { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-    { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }
-  ]
-};
-
-/**
- * Owner-only: mint, list and revoke unlock codes. Freshly minted codes are
- * shown in this response only (the database keeps a hash), so the page is
- * rendered straight from the POST, never from a redirect or a URL.
- */
-export function adminPage(o: {
-  email: string;
-  authOrigin: string;
-  codes: UnlockCodeRow[];
-  now: Date;
-  created?: { codes: string[]; label: string | null; expires: string | null };
-  notice?: string;
-  ok?: boolean;
-}): string {
-  const states = o.codes.map((r) => ({ r, s: unlockCodeState(r, o.now) }));
-  const count = (k: string) => states.filter((x) => x.s.state === k).length;
-  const created = o.created ? `
-<div class="ok"><strong>${o.created.codes.length} code(s) created${o.created.label ? ` for “${esc(o.created.label)}”` : ''}${o.created.expires ? `, valid until ${esc(o.created.expires)}` : ''}.</strong>
-Copy them now. They are not shown again; only a hash is stored.</div>
-<label>Codes and ready-to-send links
-<textarea readonly spellcheck="false">${esc(o.created.codes.map((c) => `${c}    ${o.authOrigin}/redeem?code=${c}`).join('\n'))}</textarea></label>` : '';
-  const rows = states.map(({ r, s }) => `<tr>
-<td>${esc(r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : '')}</td>
-<td>${esc(r.label ?? '')}</td>
-<td><code>${esc(r.code_hash.slice(0, 10))}…</code></td>
-<td>${esc(s.text)}</td>
-<td>${s.state === 'unused' ? `<form method="post" action="/admin/codes/revoke"><input type="hidden" name="hash" value="${esc(r.code_hash)}"><button class="btn danger">Revoke</button></form>` : ''}</td>
-</tr>`).join('');
-  return page('Admin', `
-<h1>Unlock codes</h1>
-<p>Signed in as ${esc(o.email)}. Each code gives one account a free lifetime license.</p>
-${o.notice ? `<div class="${o.ok ? 'ok' : 'err'}">${esc(o.notice)}</div>` : ''}
-${created}
-<h2>Create codes</h2>
-<form method="post" action="/admin/codes">
-<div class="grid">
-<label>How many<input name="count" type="number" min="1" max="500" value="1" required></label>
-<label>Who it's for (optional)<input name="label" maxlength="120" placeholder="Beta tester: Ana"></label>
-<label>Expires (optional)<input name="expires" type="date"></label>
-</div>
-<button class="btn primary">Create codes</button>
-</form>
-<details><summary>Revoke a code you still have</summary>
-<form method="post" action="/admin/codes/revoke">
-<input name="code" placeholder="ATMT-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false" maxlength="64" required>
-<button class="btn danger">Revoke code</button>
-</form>
-</details>
-<h2>All codes</h2>
-<div class="stats"><span><b>${count('unused')}</b>unused</span><span><b>${count('used')}</b>used</span><span><b>${count('revoked')}</b>revoked</span><span><b>${count('expired')}</b>expired</span></div>
-${rows ? `<div class="scroll"><table><thead><tr><th>Created</th><th>For</th><th>Code</th><th>State</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p><small>No codes yet.</small></p>'}
-<form method="post" action="/logout"><button class="btn">Sign out</button></form>`, ADMIN_HEAD, true);
 }

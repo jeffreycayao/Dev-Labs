@@ -256,7 +256,8 @@
     },
     "agentsModels": {
       "defaultModel": "默认智能体模型",
-      "defaultModelDesc": "每个新生成的 Claude 智能体（含 {{godName}}）默认使用此模型，除非按智能体单独选择。在模型选择器中标记为「· 默认」。",
+      "defaultModelDesc": "新建的 Claude 工作智能体默认使用此模型，除非单独选择其他模型。{{godName}} 使用在指挥中心选择的管理者模型。",
+      "codexDefaultDesc": "新建的 Codex 工作智能体默认使用此模型，除非单独选择其他模型。默认值为 GPT-6 Sol。",
       "savedNote": "已保存——适用于新生成的智能体",
       "saveFailed": "保存失败",
       "advanced": "高级",
@@ -1547,6 +1548,11 @@
     "saved": "已保存到 {{path}}"
   },
   "deliveries": {
+    "storageNote": "副本保存在当前楼层的 hive/deliveries 文件夹中。重置楼层会删除它们，除非先备份楼层。",
+    "saveCopy": "保存副本…",
+    "savedTo": "已保存到 {{path}}",
+    "saveFailed": "无法保存副本：{{error}}",
+    "unknownError": "未知错误",
     "emptyTitle": "还没有交付。📦",
     "emptySub": "当智能体为你完成一个文件（HTML、Markdown、PDF、DOCX、图片……）时，会出现在这里，你可以预览、批准，或附上修改意见退回。向 Ramon 要一份交付物，并说明你想要的格式。",
     "count": "交付：{{count}}",

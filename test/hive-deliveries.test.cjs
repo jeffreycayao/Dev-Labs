@@ -122,6 +122,10 @@ test('only files named in the manifest can be read', async (t) => {
   assert.equal(hive.deliveryFilePath(id, '../../registry.json'), null);
   assert.equal(hive.deliveryFilePath('..', 'registry.json'), null);
   assert.ok(hive.deliveryFilePath(id, 'r.md'));
+  const snapshot = hive.deliveryFilePath(id, 'r.md');
+  fs.unlinkSync(snapshot);
+  fs.symlinkSync(path.join(project, 'r.md'), snapshot);
+  assert.equal(hive.deliveryFilePath(id, 'r.md'), null, 'replaced snapshot symlinks cannot be exported');
   assert.match(fs.readFileSync(path.join(home, 'hive', '.gitignore'), 'utf8'), /^deliveries\/$/m);
 });
 

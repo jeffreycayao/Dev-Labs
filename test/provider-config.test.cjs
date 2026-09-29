@@ -7,7 +7,8 @@ const loadTs = require('./load-ts.cjs');
 const {
   inferAgentProvider,
   isAgentProvider,
-  providerPreset
+  providerPreset,
+  defaultWorkerModel
 } = loadTs('src/shared/agentProvider.ts');
 const {
   buildSpawnCommand,
@@ -19,6 +20,16 @@ const {
 } = loadTs('src/renderer/src/store/config.ts');
 
 const autoConfig = { defaultCommand: 'claude', autoMode: true };
+
+test('new worker defaults stay on their own provider and respect a saved choice', () => {
+  const config = { defaultModel: 'claude-opus-5-5' };
+  assert.equal(defaultWorkerModel('claude', config), 'claude-opus-5-5');
+  assert.equal(defaultWorkerModel('codex', config), 'gpt-6-sol');
+  assert.equal(defaultWorkerModel('gemini', config), undefined);
+  assert.equal(defaultWorkerModel('codex', {
+    ...config, providerDefaultModels: { codex: 'gpt-5.6-luna' }
+  }), 'gpt-5.6-luna');
+});
 
 test('Kimi is a first-class inferred provider with autonomous defaults', () => {
   assert.equal(isAgentProvider('kimi'), true);
@@ -88,7 +99,7 @@ test('model picker options stay provider-specific', () => {
   );
   assert.deepEqual(
     modelsForProvider('codex').map((model) => model.id),
-    [undefined, 'gpt-6-astra', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna']
+    [undefined, 'gpt-6-astra', 'gpt-6-sol', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna']
   );
   assert.deepEqual(
     modelsForProvider('grok').map((model) => model.id),

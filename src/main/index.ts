@@ -82,6 +82,7 @@ import {
   argsWithAutoModeFlag,
   inferAgentProvider,
   isClaudeProvider,
+  defaultWorkerModel,
   nonInteractiveEnvForProvider,
   providerPreset,
   installInfoForProvider,
@@ -3057,13 +3058,13 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
     // approval" with no surface for anyone to ever grant that approval.
     const args = argsWithAutoModeFlag(opts.args ?? [], cfg.autoMode, provider);
     // Model precedence: an explicit per-agent --model (from the renderer) wins;
-    // else the user's global defaultModel; else the role-based default tier. The
+    // else this provider's configured worker default. The
     // GOD is special-cased: it has its own engine config (godProvider/godModel), so
     // modelForRole resolves it and that wins over the worker-oriented defaultModel.
     if (!args.includes('--model')) {
       const m = opts.hive.isGod
         ? modelForRole(opts.hive, cfg)
-        : cfg.defaultModel ?? modelForRole(opts.hive, cfg);
+        : defaultWorkerModel(provider, cfg) ?? (isClaudeProvider(provider) ? modelForRole(opts.hive, cfg) : undefined);
       if (m) args.push('--model', m);
     }
     // Name the Remote Control session after the agent (Ramon, Jim, Dev1…) so it
@@ -3782,6 +3783,26 @@ ipcMain.handle('hive:deliveryOpen', async (_evt, id: unknown, name: unknown) => 
   if (!canOpenWithSystemApp(name)) { shell.showItemInFolder(p); return { ok: true, revealed: true }; }
   const err = await shell.openPath(p);
   return err ? { ok: false, error: err } : { ok: true };
+});
+ipcMain.handle('hive:deliverySave', async (_evt, id: unknown, name: unknown) => {
+  if (!isDeliveryId(id) || typeof name !== 'string') return { ok: false, error: 'bad request' };
+  const source = hive.deliveryFilePath(id, name);
+  if (!source) return { ok: false, error: 'File not found in this delivery.' };
+  const result = await dialog.showSaveDialog({
+    title: 'Save a copy of delivery',
+    defaultPath: name,
+    buttonLabel: 'Save copy'
+  });
+  if (result.canceled || !result.filePath) return { ok: false, canceled: true };
+  try {
+    // Recheck after the dialog: the floor may have changed while it was open.
+    const current = hive.deliveryFilePath(id, name);
+    if (!current || current !== source) return { ok: false, error: 'The delivery is no longer available.' };
+    copyFileSync(current, result.filePath);
+    return { ok: true, path: result.filePath };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
 });
 ipcMain.handle('hive:deliveryReveal', (_evt, id: unknown, name: unknown) => {
   if (!isDeliveryId(id)) return { ok: false, error: 'bad request' };

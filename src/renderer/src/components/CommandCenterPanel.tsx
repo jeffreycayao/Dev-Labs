@@ -212,9 +212,10 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
             Short labels — the tooltips carry the full explanation. */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
           <PixelButton
-            variant={floorDeliveryPaused ? 'primary' : 'secondary'}
+            variant={floorDeliveryPaused ? 'secondary' : 'primary'}
             size="sm"
             onClick={() => { void toggleFloorDelivery(); }}
+            style={!floorDeliveryPaused ? { background: 'var(--cth-mint)', color: 'var(--cth-on-accent)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-900)' } : undefined}
           >
             <span
               className="cth-tip cth-tip-wrap"

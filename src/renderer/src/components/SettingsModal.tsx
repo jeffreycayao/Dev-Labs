@@ -1,6 +1,6 @@
 import { useState, useEffect, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { agentModels, type HarnessConfig } from '@/store/config';
+import { agentModels, modelsForProvider, type HarnessConfig } from '@/store/config';
 import { flushPendingRosterForBackup, useStore } from '@/store/store';
 import {
   CLONE_NODE_BLURB,
@@ -298,10 +298,15 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
     setOrchSpawnOn(next);
     stage({ orchestratorMaySpawn: next } as Partial<HarnessConfig>);
   };
-  const [defaultModelSel, setDefaultModelSel] = useState<string>(cfgX.defaultModel ?? 'claude-fable-5');
+  const [defaultModelSel, setDefaultModelSel] = useState<string>(cfgX.defaultModel ?? 'claude-opus-5-5');
   const saveDefaultModel = (id: string): void => {
     setDefaultModelSel(id);
     stage({ defaultModel: id } as Partial<HarnessConfig>);
+  };
+  const [codexDefaultModel, setCodexDefaultModel] = useState<string>(cfgX.providerDefaultModels?.codex ?? 'gpt-6-sol');
+  const saveCodexDefaultModel = (id: string): void => {
+    setCodexDefaultModel(id);
+    stage({ providerDefaultModels: { ...cfgX.providerDefaultModels, codex: id } });
   };
   const [maxTurnsVal, setMaxTurnsVal] = useState<string>(cfgX.maxTurns != null ? String(cfgX.maxTurns) : '');
   const maxTurnsPatch = (): Partial<HarnessConfig> => {
@@ -1266,6 +1271,25 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                                   fontFamily: 'var(--cth-font-ui)', fontSize: 12, color: 'var(--cth-ink-900)',
                                   background: defaultModelSel === m.id ? 'var(--cth-sky-light)' : 'var(--cth-cream-100)',
                                   boxShadow: defaultModelSel === m.id ? 'inset 0 0 0 1.5px var(--cth-ink-500)' : 'inset 0 0 0 1px var(--cth-ink-100)'
+                                }}
+                              >{m.label}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 14 }}>
+                          <span style={{ fontSize: 12, lineHeight: '16px', color: 'var(--cth-ink-500)' }}>
+                            {t('settings.agentsModels.codexDefaultDesc')}
+                          </span>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {modelsForProvider('codex').filter((m) => !!m.id).map((m) => (
+                              <button
+                                key={m.id}
+                                onClick={() => { if (m.id) saveCodexDefaultModel(m.id); }}
+                                style={{
+                                  padding: '3px 8px 1px', border: 'none', cursor: 'pointer',
+                                  fontFamily: 'var(--cth-font-ui)', fontSize: 12, color: 'var(--cth-ink-900)',
+                                  background: codexDefaultModel === m.id ? 'var(--cth-sky-light)' : 'var(--cth-cream-100)',
+                                  boxShadow: codexDefaultModel === m.id ? 'inset 0 0 0 1.5px var(--cth-ink-500)' : 'inset 0 0 0 1px var(--cth-ink-100)'
                                 }}
                               >{m.label}</button>
                             ))}

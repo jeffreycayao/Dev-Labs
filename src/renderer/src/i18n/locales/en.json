@@ -256,7 +256,8 @@
     },
     "agentsModels": {
       "defaultModel": "Default agent model",
-      "defaultModelDesc": "Every newly spawned Claude agent ({{godName}} included) starts on this model unless picked per-agent. Marked \"· default\" in the model pickers.",
+      "defaultModelDesc": "New Claude workers start on this model unless you choose another. {{godName}} uses the manager model selected in Command Center.",
+      "codexDefaultDesc": "New Codex workers start on this model unless you choose another. GPT-6 Sol is the default.",
       "savedNote": "saved — applies to newly spawned agents",
       "saveFailed": "save failed",
       "advanced": "Advanced",
@@ -1547,6 +1548,11 @@
     "saved": "Saved to {{path}}"
   },
   "deliveries": {
+    "storageNote": "Copies are kept in this floor's hive/deliveries folder. Floor Reset removes them unless you back up the floor.",
+    "saveCopy": "Save a copy…",
+    "savedTo": "Saved to {{path}}",
+    "saveFailed": "Couldn't save the copy: {{error}}",
+    "unknownError": "Unknown error",
     "emptyTitle": "No deliveries yet. 📦",
     "emptySub": "When an agent finishes a file for you (HTML, Markdown, PDF, DOCX, an image…), it lands here to preview, approve, or send back with changes. Ask Ramon for a deliverable and say which format you want.",
     "count": "Deliveries: {{count}}",

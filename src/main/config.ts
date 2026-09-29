@@ -204,12 +204,14 @@ export interface HarnessConfig {
   defaultCommand: string;
   /** Default model for newly spawned agents (e.g. 'claude-sonnet-4-6[1m]'); unset = CLI default. */
   defaultModel?: string;
+  /** Internal one-time migration latch for the shipped model defaults. */
+  modelDefaultsV2?: boolean;
   /** Which provider powers the GOD orchestrator ("Ramon"). The persona is
    *  constant; only its engine is selectable. Default 'claude'. Eligible providers
    *  are those that can receive inbox (claude/codex/antigravity/qwen). */
   godProvider?: AgentProvider;
   /** The model GOD runs on. Unset falls back to the provider preset's
-   *  `recommendedOrchestratorModel`, then MODEL_GOD. Default 'claude-opus-4-8'. */
+   *  `recommendedOrchestratorModel`, then MODEL_GOD. Default 'claude-opus-5-5'. */
   godModel?: string;
   /** Per-server consent state for the default MCP bundle, keyed by catalog id.
    *  Seeded from MCP_CATALOG (safe-readonly ON, write/secret OFF); the user flips
@@ -428,11 +430,11 @@ const DEFAULTS: HarnessConfig = {
   orchestratorMaySpawn: false,
   defaultCommand: 'claude',
   godProvider: 'claude',
-  godModel: 'claude-opus-4-8',
-  // Global default model for every agent that hasn't picked one explicitly — wins
-  // over the role-based tiers (modelForRole) in the spawn handler, so all agents
-  // (incl. god) default to Fable 5. A per-agent model choice still overrides it.
-  defaultModel: 'claude-fable-5',
+  godModel: 'claude-opus-5-5',
+  // Default for new Claude workers. Ramon uses godModel; other providers use
+  // their own defaults. An explicit per-agent model still wins.
+  defaultModel: 'claude-opus-5-5',
+  modelDefaultsV2: true,
   // Seeded from the MCP catalog so the consent defaults never drift from it
   // (safe-readonly ON, write/secret OFF).
   mcpDefaults: defaultMcpDefaults(),
@@ -597,6 +599,17 @@ function migrateUnsupportedCodexModel(cfg: HarnessConfig): HarnessConfig {
   return next;
 }
 
+/** Bring existing installs off the former expensive shipped defaults once.
+ *  Later manual model choices, including selecting an older model again, stick. */
+function migrateModelDefaultsV2(cfg: HarnessConfig, stored: Partial<HarnessConfig>): HarnessConfig {
+  if (stored.modelDefaultsV2 === true) return cfg;
+  const next = { ...cfg, modelDefaultsV2: true };
+  if (stored.defaultModel === 'claude-fable-5') next.defaultModel = 'claude-opus-5-5';
+  if ((stored.godProvider ?? 'claude') === 'claude' && stored.godModel === 'claude-opus-4-8') next.godModel = 'claude-opus-5-5';
+  try { persistConfig(next); } catch { /* Use the new defaults in memory this run. */ }
+  return next;
+}
+
 export function readConfig(): HarnessConfig {
   const p = configPath();
   // No file yet = a first run with nothing to migrate; the defaults ARE the
@@ -606,7 +619,9 @@ export function readConfig(): HarnessConfig {
   try {
     const raw = readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
-    return normalizeStoredHomes(migrateUnsupportedCodexModel(migrateTriggersV1(withTriggerDefaults({ ...DEFAULTS, ...parsed }))));
+    return normalizeStoredHomes(migrateModelDefaultsV2(
+      migrateUnsupportedCodexModel(migrateTriggersV1(withTriggerDefaults({ ...DEFAULTS, ...parsed }))), parsed
+    ));
   } catch {
     return withTriggerDefaults({ ...DEFAULTS });
   }
@@ -755,7 +770,7 @@ export function resetConfig(): HarnessConfig {
 /** Model ids by tier (Lane A #6.4). Kept in sync with the claude list in
  *  src/shared/modelCatalog.json, which `agentModels()` in
  *  src/renderer/src/store/config.ts reads. */
-const MODEL_GOD = 'claude-opus-4-8';                  // orchestration — highest capability
+const MODEL_GOD = 'claude-opus-5-5';                  // orchestration default
 const MODEL_WORKER = 'claude-sonnet-4-6';             // general execution
 const MODEL_HELPER = 'claude-haiku-4-5-20251001';     // narrow, cheap helpers
 

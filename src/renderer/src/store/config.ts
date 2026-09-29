@@ -5,6 +5,7 @@ import {
   providerPreset,
   inferAgentProvider,
   isClaudeProvider,
+  defaultWorkerModel,
   type AgentProvider,
   type AgentProviderPreset
 } from '@shared/agentProvider';
@@ -22,6 +23,7 @@ export {
   providerPreset,
   inferAgentProvider,
   isClaudeProvider,
+  defaultWorkerModel,
   type AgentProvider
 };
 
@@ -73,7 +75,7 @@ export interface HarnessConfig {
   /** Default model for newly spawned agents (e.g. 'claude-sonnet-4-6[1m]'); unset = CLI default. */
   defaultModel?: string;
   /** Which provider+model powers the GOD orchestrator ("Ramon"). Default
-   *  'claude' / 'claude-opus-4-8'. Mirrors src/main/config.ts. */
+   *  'claude' / 'claude-opus-5-5'. Mirrors src/main/config.ts. */
   godProvider?: AgentProvider;
   godModel?: string;
   /** Per-server consent for the default MCP bundle, keyed by catalog id (mirrors

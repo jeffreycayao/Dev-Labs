@@ -14,7 +14,7 @@ import {
   modelsForProvider,
   inferAgentProvider,
   providerPreset,
-  isClaudeProvider
+  defaultWorkerModel
 } from '@/store/config';
 
 const ACCENTS: AccentColorName[] = ['coral', 'mint', 'sky', 'lemon', 'lilac', 'peach'];
@@ -64,7 +64,7 @@ export function EditAgentModal({ agent, onClose }: EditAgentModalProps) {
       setModel(undefined);
       return;
     }
-    const nextModel = isClaudeProvider(id) ? config.defaultModel : config.providerDefaultModels?.[id];
+    const nextModel = defaultWorkerModel(id, config);
     setModel(nextModel);
   };
 

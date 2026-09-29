@@ -52,6 +52,7 @@ export function DeliveriesTab() {
   const [feedback, setFeedback] = useState('');
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [saveNote, setSaveNote] = useState('');
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const refresh = useCallback(async () => {
@@ -96,6 +97,19 @@ export function DeliveriesTab() {
     id === 'human' ? t('deliveries.you') : (agents.find((a) => a.id === id)?.name ?? restorable.find((a) => a.id === id)?.name ?? id);
 
   const replaceItem = (d?: Delivery) => { if (d) setItems((list) => list.map((x) => (x.id === d.id ? d : x))); };
+
+  const saveCopy = async () => {
+    if (!selected || !file || busy) return;
+    setBusy(true);
+    setSaveNote('');
+    try {
+      const result = await window.cth.hiveDeliverySave(selected.id, file.name);
+      if (result.ok && result.path) setSaveNote(t('deliveries.savedTo', { path: result.path }));
+      else if (!result.canceled) setSaveNote(t('deliveries.saveFailed', { error: result.error ?? t('deliveries.unknownError') }));
+    } catch (e) {
+      setSaveNote(t('deliveries.saveFailed', { error: e instanceof Error ? e.message : String(e) }));
+    } finally { setBusy(false); }
+  };
 
   const approve = async () => {
     if (!selected || busy) return;
@@ -167,7 +181,7 @@ export function DeliveriesTab() {
           return (
             <button
               key={d.id}
-              onClick={() => { setSelectedId(d.id); setFileName(null); setAsking(false); }}
+              onClick={() => { setSelectedId(d.id); setFileName(null); setAsking(false); setSaveNote(''); }}
               style={{
                 display: 'block', width: '100%', textAlign: 'start', border: 'none', cursor: 'pointer',
                 padding: '8px 10px', background: active ? 'var(--cth-paper-100)' : 'transparent',
@@ -215,7 +229,7 @@ export function DeliveriesTab() {
               {selected.files.map((f) => (
                 <button
                   key={f.name}
-                  onClick={() => setFileName(f.name)}
+                  onClick={() => { setFileName(f.name); setSaveNote(''); }}
                   title={`${f.name} · ${formatSize(f.size)}`}
                   style={{
                     border: 'none', cursor: 'pointer', padding: '3px 8px', fontSize: 12,
@@ -253,6 +267,8 @@ export function DeliveriesTab() {
 
           {/* actions */}
           <div style={{ padding: '0 8px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ fontSize: 11, color: 'var(--cth-ink-500)' }}>{t('deliveries.storageNote')}</div>
+            {saveNote && <div role="status" style={{ fontSize: 11, color: 'var(--cth-ink-700)', overflowWrap: 'anywhere' }}>{saveNote}</div>}
             {asking && (
               <textarea
                 dir={rtl ? 'auto' : undefined}
@@ -266,6 +282,11 @@ export function DeliveriesTab() {
               />
             )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {file && (
+                <PixelButton size="sm" variant="primary" onClick={() => { void saveCopy(); }} disabled={busy}>
+                  {t('deliveries.saveCopy')}
+                </PixelButton>
+              )}
               {file && (
                 <PixelButton size="sm" variant="secondary" onClick={() => void window.cth.hiveDeliveryOpen(selected.id, file.name)}
                   title={canOpenWithSystemApp(file.name) ? t('deliveries.openTitle') : t('deliveries.revealOnlyTitle')}>

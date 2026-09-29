@@ -29,6 +29,7 @@ const SHIPPED = {
     ["claude-fable-5-1", "Fable 5.1"],
     ["claude-fable-5", "Fable 5"],
     ["claude-opus-5", "Opus 5 · 1M"],
+    ["claude-opus-5-5", "Opus 5.5 · 1M"],
     ["claude-opus-4-8", "Opus 4.8"],
     ["claude-opus-4-8[1m]", "Opus 4.8 · 1M"],
     ["claude-sonnet-5", "Sonnet 5"],
@@ -160,7 +161,7 @@ test('every recommended orchestrator model is offered by its shipped provider ca
 
 test('Codex recommends the verified ChatGPT sign-in model', () => {
   const codex = AGENT_PROVIDER_PRESETS.find((preset) => preset.id === 'codex');
-  assert.equal(codex?.recommendedOrchestratorModel, 'gpt-6-astra');
+  assert.equal(codex?.recommendedOrchestratorModel, 'gpt-6-sol');
 });
 
 test('the catalog is the schema config.ts expects', () => {

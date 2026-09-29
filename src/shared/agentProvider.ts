@@ -181,7 +181,7 @@ export const AGENT_PROVIDER_PRESETS: AgentProviderPreset[] = [
     canReceiveInbox: true,
     // Longest-context Claude variant — matches the "give Ramon a bigger model"
     // advisory and the Recommended tag on the orchestrator picker.
-    recommendedOrchestratorModel: 'claude-opus-4-8[1m]',
+    recommendedOrchestratorModel: 'claude-opus-5-5',
     resumeFlag: '--resume',
     // Official Claude Code install (npm global). Used by the missing-CLI auto-install.
     installCommand: 'npm install -g @anthropic-ai/claude-code',
@@ -235,7 +235,7 @@ export const AGENT_PROVIDER_PRESETS: AgentProviderPreset[] = [
     positionalInitialPrompt: true,
     // Verified with the Codex CLI under ChatGPT sign-in; also present in the
     // shipped model catalog used by the orchestrator model picker.
-    recommendedOrchestratorModel: 'gpt-6-astra',
+    recommendedOrchestratorModel: 'gpt-6-sol',
     // Codex resumes via a SUBCOMMAND, not a flag: `codex resume [OPTIONS]
     // [SESSION_ID]`. A `--resume <id>` flag does not exist, which is why restarts
     // used to silently start a brand-new session instead of continuing.
@@ -606,6 +606,17 @@ export function providerPreset(provider: AgentProvider): AgentProviderPreset {
 
 export function isClaudeProvider(provider: AgentProvider | undefined): boolean {
   return provider === 'claude';
+}
+
+/** The model preselected for a new worker on this engine. Never pass a Claude
+ *  model to a different CLI when that CLI has no saved choice. */
+export function defaultWorkerModel(
+  provider: AgentProvider,
+  config: { defaultModel?: string; providerDefaultModels?: Partial<Record<AgentProvider, string>> }
+): string | undefined {
+  if (provider === 'claude') return config.defaultModel;
+  return config.providerDefaultModels?.[provider]
+    ?? (provider === 'codex' ? providerPreset('codex').recommendedOrchestratorModel : undefined);
 }
 
 /** Whether this provider takes the hive's Claude-only identity injection. */

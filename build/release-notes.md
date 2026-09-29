@@ -1,3 +1,4 @@
-- Review files your agents deliver in the new Command Center Deliveries tab.
-- Preview documents and request changes from the same conversation.
-- Ramon's inbox now catches the first scheduled message on a fresh floor, even at startup.
+- Save a copy of any delivered file to a folder you choose. Floor backups include the original delivered snapshots.
+- Command Center highlights Auto when delivery is active, including in dark mode.
+- New Claude agents use Opus 5.5; new Codex agents use GPT-6 Sol. You can change either default in Settings.
+- OpenCode auto mode now handles external folder and repeated tool prompts.

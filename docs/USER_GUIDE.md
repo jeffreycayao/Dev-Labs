@@ -48,6 +48,8 @@ Then choose one:
 
 Click **add agent**. Give the agent a name, a look, a project folder, an engine and model, and a standing goal. Then press **spawn**.
 
+New Claude agents start with **Opus 5.5** and new Codex agents with **GPT-6 Sol**. You can choose another model for one agent, or change the defaults in **Settings → Agents & Models / AI Engines**. Existing agents keep their selected models.
+
 A hired agent stays on the floor if its terminal stops or cannot restart. Its card shows **stopped** and keeps its identity, memory, restore information and isolated worktree; use **restore team** or **Restart & Continue** to resume it. Changing the office theme keeps your agents. During normal floor use, an agent leaves only after you explicitly **Fire** it or Ramon fires it; the agent's history remains available. **Reset floor** is a separate, confirmed action that clears the whole floor.
 
 | Shortcut | How |
@@ -111,11 +113,13 @@ The agent who does the work **delivers** the file. You'll find it in the Command
 |---|---|
 | Preview it | HTML pages, Markdown, text and images show right in the tab. HTML previews with scripts turned off. |
 | Open it | **Open** shows it in its normal app (browser, Word, PDF viewer…). |
+| Keep your own copy | **Save a copy…** lets you choose a folder and name for the exact delivered version. |
 | Find the file | **Show in folder** |
 | Accept it | **Approve**. The agent is told it's done. |
 | Send it back | **Request changes**, type what should change, **Send to agent**. The agent fixes it and delivers a new version. |
 
 - Each delivery is a **copy** taken when the agent sent it, so later edits by the agent don't change what you approved.
+- The app keeps the copy in `<floor home>/hive/deliveries/<delivery id>/` on your computer. It is not a temporary folder. **Reset floor** removes it unless you make a backup ZIP first; save a separate copy if you need the file outside the floor.
 - Agents can only deliver files from their own project folder or workspace. Anything else is refused and listed as "Not delivered".
 - For your safety, programs and scripts (for example `.exe`, `.dmg`, `.sh`) are never opened directly, only shown in their folder.
 - Supported for preview: HTML, Markdown, text/CSV/JSON, PNG/JPG/GIF/WebP/SVG. PDF, Word, Excel and PowerPoint files open in their own apps.

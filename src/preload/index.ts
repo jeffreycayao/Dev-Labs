@@ -895,6 +895,9 @@ const api = {
   /** Opens documents/images in their default app; anything else is revealed. */
   hiveDeliveryOpen: (id: string, name: string): Promise<{ ok: boolean; error?: string; revealed?: boolean }> =>
     ipcRenderer.invoke('hive:deliveryOpen', id, name),
+  /** Copy the exact delivered snapshot to a location the human chooses. */
+  hiveDeliverySave: (id: string, name: string): Promise<{ ok: boolean; canceled?: boolean; path?: string; error?: string }> =>
+    ipcRenderer.invoke('hive:deliverySave', id, name),
   hiveDeliveryReveal: (id: string, name?: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('hive:deliveryReveal', id, name),
   onHiveDelivery: (cb: (e: { id: string; from: string; subject: string; files: number }) => void): (() => void) => {

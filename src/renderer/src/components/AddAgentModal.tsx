@@ -28,7 +28,8 @@ import {
   modelsForProvider,
   inferAgentProvider,
   providerPreset,
-  isClaudeProvider
+  isClaudeProvider,
+  defaultWorkerModel
 } from '@/store/config';
 import { useRtl } from '@/i18n/useDirection';
 import type { FloorImportPayload } from './FloorModals';
@@ -97,7 +98,7 @@ Return EXACTLY this shape (omit optional fields you don't need; keep the spec st
   "description": "one-line role — what this agent is for",
   "goal": "standing directive injected on every prompt — specific and outcome-oriented",
   "provider": "claude",
-  "model": "claude-opus-4-8[1m]",
+  "model": "claude-opus-5-5",
   "capabilities": ["code-review", "docs"],
   "isolate": false,
   "tokenCap": 2000000,
@@ -105,7 +106,7 @@ Return EXACTLY this shape (omit optional fields you don't need; keep the spec st
 }
 
 Rules:
-- "provider" MUST be one of: cursor | claude | codex | antigravity. "model" must be a real model id for that provider (e.g. gpt-5.6-luna-high, claude-opus-4-8[1m], gpt-5-codex, "Gemini 3.1 Pro (High)").
+- "provider" MUST be one of: cursor | claude | codex | antigravity. "model" must be a real model id for that provider (e.g. gpt-5.6-luna-high, claude-opus-5-5, gpt-6-sol, "Gemini 3.1 Pro (High)").
 - Do NOT include shell commands or any flags beyond these fields.
 - Make "description" + "goal" concrete enough that the agent knows exactly what to do on its first turn.
 
@@ -192,7 +193,7 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
   // Default provider follows whatever the global default command is (claude
   // unless the user reconfigured it); the model only carries over for Claude.
   const initialProvider = inferAgentProvider(config.defaultCommand);
-  const initialModel = isClaudeProvider(initialProvider) ? config.defaultModel : undefined;
+  const initialModel = defaultWorkerModel(initialProvider, config);
 
   const [name, setName] = useState(pendingHire?.name ?? CAST_BY_NAME[DEFAULT_CHARACTER].displayName);
   // Role templates: default tab follows the onboarding audience; both tracks stay available.
@@ -230,7 +231,7 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
     // Seed the model: Claude from the global defaultModel; other engines from the
     // per-engine default set in Settings → AI Engines (providerDefaultModels), else
     // the CLI default. This is what makes that Settings field live (Dwight NIT-1).
-    const nextModel = isClaudeProvider(id) ? config.defaultModel : config.providerDefaultModels?.[id];
+    const nextModel = defaultWorkerModel(id, config);
     setModel(nextModel);
     const nextPreset = providerPreset(id);
     if (!isClaudeProvider(id) && !nextPreset.resumeFlag && !nextPreset.resumeSubcommand) {

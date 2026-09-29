@@ -33,9 +33,22 @@ test('a failed legacy Codex switch recovers its stored model on next launch', ()
   save({ godProvider: 'codex', godModel: 'gpt-5-codex' });
 
   const loaded = readConfig();
-  assert.equal(loaded.godModel, 'gpt-6-astra');
+  assert.equal(loaded.godModel, 'gpt-6-sol');
   assert.equal(loaded.harnessHome, 'C:\\Users\\test\\agents');
-  assert.equal(JSON.parse(fs.readFileSync(configFile, 'utf8')).godModel, 'gpt-6-astra');
+  assert.equal(JSON.parse(fs.readFileSync(configFile, 'utf8')).godModel, 'gpt-6-sol');
+});
+
+test('old shipped Claude defaults migrate once; later manual selections stay', () => {
+  save({ godProvider: 'claude', godModel: 'claude-opus-4-8', defaultModel: 'claude-fable-5' });
+  const migrated = readConfig();
+  assert.equal(migrated.godModel, 'claude-opus-5-5');
+  assert.equal(migrated.defaultModel, 'claude-opus-5-5');
+  assert.equal(migrated.modelDefaultsV2, true);
+  const stored = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+  assert.equal(stored.defaultModel, 'claude-opus-5-5');
+  stored.defaultModel = 'claude-fable-5';
+  fs.writeFileSync(configFile, JSON.stringify(stored));
+  assert.equal(readConfig().defaultModel, 'claude-fable-5');
 });
 
 test('other provider and Codex model selections stay intact', () => {

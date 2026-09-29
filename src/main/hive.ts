@@ -1878,7 +1878,12 @@ export class HiveManager {
     const d = this.readJson<Delivery | null>(join(base, id, 'delivery.json'), null);
     if (!d || !d.files.some((f) => f.name === name)) return null;
     const p = join(base, id, name);
-    return existsSync(p) ? p : null;
+    try {
+      const st = lstatSync(p);
+      if (!st.isFile() || st.isSymbolicLink()) return null;
+      const dir = realpathSync(join(base, id));
+      return realpathSync(p) === join(dir, name) ? p : null;
+    } catch { return null; }
   }
 
   /** Preview payload for the tray: text for html/markdown/text, a data URL for

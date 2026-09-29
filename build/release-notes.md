@@ -1,4 +1,2 @@
-- Save a copy of any delivered file to a folder you choose. Floor backups include the original delivered snapshots.
-- Command Center highlights Auto when delivery is active, including in dark mode.
-- New Claude agents use Opus 5.5; new Codex agents use GPT-6 Sol. You can change either default in Settings.
-- OpenCode auto mode now handles external folder and repeated tool prompts.
+- Agents Ramon hires now stay on your floor when a task ends or they sit idle. Only agents he explicitly creates for one-off work are released automatically.
+- To recover an agent already removed this way, open Command Center → Archived, choose Return to floor, then Restore Team. Its saved identity and memory remain intact.

@@ -12,6 +12,17 @@ export function stoppedAgent<T extends RosterAgent>(agent: T): T {
   return { ...agent, status: 'ghost', action: 'terminal stopped — restore to continue' };
 }
 
+/** Bring a previously archived hire back with its original id and spawn recipe.
+ * Older archived cards dropped ptyId; manager-spawned workers use their agent id
+ * as the PTY id, while ordinary UI hires use `pty-<id>`. */
+export function restoreArchivedAgent<T extends RosterAgent & { archived?: boolean }>(agent: T): T {
+  return stoppedAgent({
+    ...agent,
+    archived: false,
+    ptyId: agent.ptyId ?? (agent.id.startsWith('worker-') ? agent.id : `pty-${agent.id}`)
+  });
+}
+
 /** Reconcile only agents present when the PTY query began. A hire made while
  * that query is in flight must not be judged against its older result. */
 export function reconcileHiredRoster<T extends RosterAgent>(

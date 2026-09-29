@@ -3,9 +3,18 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const loadTs = require('./load-ts.cjs');
-const { reconcileHiredRoster, stoppedAgent } = loadTs('src/shared/agentRoster.ts');
-
+const { reconcileHiredRoster, restoreArchivedAgent, stoppedAgent } = loadTs('src/shared/agentRoster.ts');
 const hire = (id) => ({ id, name: id, ptyId: `pty-${id}`, status: 'idle', action: 'working' });
+
+test('an archived manager hire returns stopped with its original worker PTY id', () => {
+  const saved = { ...hire('worker-ada'), archived: true, ptyId: undefined, command: 'claude' };
+  const restored = restoreArchivedAgent(saved);
+  assert.equal(restored.id, saved.id);
+  assert.equal(restored.ptyId, saved.id);
+  assert.equal(restored.status, 'ghost');
+  assert.equal(restored.archived, false);
+  assert.equal(restored.command, 'claude');
+});
 
 test('a stopped terminal leaves its hire on the floor and keeps its restore recipe', () => {
   const amy = hire('amy');

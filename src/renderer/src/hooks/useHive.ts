@@ -1080,6 +1080,14 @@ export function useHive(config: HarnessConfig | null): void {
     if (!config?.onboardingComplete) return;
     const offSpawn = window.cth.onHiveAgentSpawned?.((rec) => {
       if (!rec?.id) return;
+      // Unarchiving sends only an id, not a new spawn descriptor. Restore the
+      // saved card and recipe instead of constructing an empty agent from it.
+      if (!rec.command) {
+        if (useStore.getState().archivedAgents.some((a) => a.id === rec.id)) {
+          useStore.getState().unarchiveAgent(rec.id);
+        }
+        return;
+      }
       // A stopped hire already has a card; a successful respawn refreshes that
       // card in place. Only a live card makes this broadcast redundant.
       const roster = useStore.getState();

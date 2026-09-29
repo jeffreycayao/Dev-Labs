@@ -52,6 +52,10 @@ New Claude agents start with **Opus 5.5** and new Codex agents with **GPT-6 Sol*
 
 A hired agent stays on the floor if its terminal stops or cannot restart. Its card shows **stopped** and keeps its identity, memory, restore information and isolated worktree; use **restore team** or **Restart & Continue** to resume it. Changing the office theme keeps your agents. During normal floor use, an agent leaves only after you explicitly **Fire** it or Ramon fires it; the agent's history remains available. **Reset floor** is a separate, confirmed action that clears the whole floor.
 
+Agents Ramon hires also stay on the floor when they finish a task or sit idle. Ramon can explicitly request a one-off worker for a short task; that worker leaves automatically after it reports completion or reaches its idle limit. If you want a standing teammate, ask Ramon to hire a persistent agent.
+
+To recover an agent who was previously archived, open **Command Center → Archived → show closed agents**, choose **return to floor**, then use **Restore Team**. This keeps the same agent identity and saved memory.
+
 | Shortcut | How |
 |---|---|
 | **Role templates** | Pick a ready-made role (Technical or Non-technical) to fill in everything. |

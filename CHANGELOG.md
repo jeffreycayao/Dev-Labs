@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+- **Ramon's new agents stay hired.** Agents Ramon spawns through a request now remain on the floor after finishing a task or sitting idle. The 20-minute idle reaper applies only when Ramon explicitly requests a one-off worker (`ephemeral: true`). A stopped durable agent keeps its card and can be restored; only an explicit Fire removes it. Archived agents can be returned to the floor with their saved identity and memory from Command Center.
+
 ## v0.6.0 — 2026-09-29
 
 - **Command Center and new agent defaults.** Active Auto delivery is highlighted in green in both themes. Deliveries can be saved to a chosen folder; their floor storage and reset behavior are shown in the tray. New Claude agents default to Opus 5.5 and new Codex agents to GPT-6 Sol; old shipped Claude defaults migrate once, while later manual model choices remain intact.

@@ -68,6 +68,7 @@ import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, IN
 import { RosterStore } from './roster';
 import { createFloorBackup, restoreStagedFloor, stageFloorData } from './floorBackup';
 import { buildWorkerLaunch } from './workerLaunch';
+import { isEphemeralSpawnRequest } from '../shared/workerLifecycle';
 import { ControlRegistry } from './control';
 import { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';
 import { inboxNudgeText } from '../shared/hiveNudge';
@@ -4937,6 +4938,7 @@ registerRealtimeActionIpc({
       }
     }
     if (!hive.setArchived(id, archived)) return { ok: false, error: 'Could not save the agent change.' };
+    if (!archived && !ptyForAgent(id)) hive.setStopped(id);
     try { liveWebContents()?.send(archived ? 'hive:agentArchived' : 'hive:agentSpawned', { id }); } catch { /* window gone */ }
     return { ok: true };
   },
@@ -4987,16 +4989,14 @@ ipcMain.handle('realtime:waitFor', (_e, taskId: unknown, timeoutMs: unknown) =>
     : Promise.resolve({ timedOut: true as const, taskId: '' }));
 completionWatcher.start();
 
-// ─── god-triggered ephemeral Slack workers ──────────────────────────────────
+// ─── god-triggered hires and explicit one-off workers ───────────────────────
 // god drops a spawn-request JSON into HIVE_ROOT/spawn-requests/; MAIN polls that
 // queue (same cadence + atomic-rename archival as the hive router — reliability
-// over latency, no fs.watch/dedup needed), spins up a FRESH ISOLATED worker via
-// the shared spawnAgentCore, dispatches the objective through the standard inbox
-// path, then watches each worker for a terminal `act:"done"` (success → release)
-// or excessive idleness (reap). All teardown flows through teardownPty's
-// safety-gate, so a worker's worktree is never auto-removed while it holds
-// unintegrated work. Every terminal failure informs god WITH the Slack coords so
-// god closes the Slack loop; the success path is the worker replying in-thread.
+// over latency, no fs.watch/dedup needed), spins up a FRESH ISOLATED agent via
+// the shared spawnAgentCore and dispatches the objective through the standard
+// inbox path. Hires stay on the floor. Only a request with `ephemeral: true`
+// enters the done/idle/token reaper and worktree GC. Terminal failures inform
+// god WITH the Slack coords so god closes the Slack loop.
 
 /** A spawn-request god drops into HIVE_ROOT/spawn-requests/<id>.json. god authors
  *  these directly; `objective` and `cwd` are the only required fields. */
@@ -5011,6 +5011,7 @@ interface SpawnRequest {
   slack?: { channel: string; thread_ts: string };     // reply target + where failures surface
   isolate?: boolean;                                   // default true (fresh worktree)
   tokenCap?: number;                                   // optional per-worker token cap (advisory P1)
+  ephemeral?: boolean;                                 // explicit one-off worker; ordinary hires stay on the floor
   // Appearance on the office floor. Both optional and both validated renderer-side
   // against the real cast and accent lists, so a bad value degrades to the default
   // rather than breaking the card.
@@ -5088,7 +5089,7 @@ function workerSignaledDone(workerId: string, spawnedAt: number): boolean {
   return false;
 }
 
-/** Spin up one ephemeral worker from a spawn-request. Terminal failures (bad
+/** Spin up one agent from a spawn-request. Terminal failures (bad
  *  request, missing CLI, spawn error) archive to .failed and inform god WITH the
  *  Slack coords so god can post a 'couldn't start' reply. On success the worker is
  *  registered (for done-scan / reaping / safe teardown) and dispatched its
@@ -5186,14 +5187,13 @@ async function processSpawnRequest(filePath: string): Promise<void> {
   }
   if (!res.ok) { integrationBroker.revoke(workerId); fail(`spawn failed — ${res.error ?? 'unknown error'}`); return; }
 
-  // A god-hired worker is a MAIN-initiated spawn, so the renderer would never
+  // A god-hired agent is a MAIN-initiated spawn, so the renderer would never
   // card it on its own (same reason as the voice-spawn broadcast): without this
   // the worker is invisible on the floor, never enters the roster, and after a
   // restart nothing offers to restore it. The card rides the normal agent
-  // lifecycle from here — teardownPty broadcasts the matching archive. A card
-  // RESTORED after an app quit revives through the renderer's normal spawn path
-  // and never re-enters liveWorkers: ephemerality is a property of the hiring,
-  // not of the card, so a restored worker is a regular agent (no reaping).
+  // lifecycle from here. Explicit one-off workers are archived on completion;
+  // ordinary hires remain visible even if their terminal later exits. A card
+  // restored after an app quit revives through the renderer's normal spawn path.
   try {
     liveWebContents()?.send('hive:agentSpawned', {
       id: workerId,
@@ -5208,11 +5208,15 @@ async function processSpawnRequest(filePath: string): Promise<void> {
     });
   } catch { /* window torn down */ }
 
-  // Register for done-scan / idle-reap / token-cap / safe teardown (pty id == workerId).
-  // tokenCap is optional plumbing (default unlimited) — only a positive finite cap is kept.
-  const tokenCap = typeof raw.tokenCap === 'number' && Number.isFinite(raw.tokenCap) && raw.tokenCap > 0
-    ? raw.tokenCap : undefined;
-  liveWorkers.set(workerId, { workerId, reqId, name: meta.name, slack, baseBranch, spawnedAt: Date.now(), tokenCap });
+  // A manager-created agent is a durable hire by default. Only an explicitly
+  // one-off request enters the done/idle/token reaper; otherwise a quiet agent
+  // would disappear after 20 minutes without anyone firing it.
+  const ephemeral = isEphemeralSpawnRequest(raw);
+  if (ephemeral) {
+    const tokenCap = typeof raw.tokenCap === 'number' && Number.isFinite(raw.tokenCap) && raw.tokenCap > 0
+      ? raw.tokenCap : undefined;
+    liveWorkers.set(workerId, { workerId, reqId, name: meta.name, slack, baseBranch, spawnedAt: Date.now(), tokenCap });
+  }
 
   // Dispatch the objective via the standard inbox path (zero new transport),
   // reusing the autonomous-request preamble so the worker gets the exact Slack
@@ -5222,7 +5226,10 @@ async function processSpawnRequest(filePath: string): Promise<void> {
     const prefix = slack
       ? buildAutonomousRequestProtocol(slack.channel, slack.thread_ts, slackReplyScriptPath())
       : '[AUTONOMOUS WORKER TASK — no interactive human is watching. Work autonomously; do not ask interactive questions.] The task starts now: ';
-    const suffix = `\n\n[CAPABILITIES] Before you start, consult your capability catalog — run the \`/capabilities\` skill (or read \`$AGENT_DIR/.claude/skills/capabilities/SKILL.md\`). It lists your temporal date-range skills (\`/today\`, \`/last30Days\`, \`/lastQuarter\`, …) and the integrations available to you (reached via the loopback broker) and how to call each. For any time-scoped work, resolve the dates with those skills instead of computing them by hand.\n\n[WORKER COMPLETION] When finished, signal done by sending ONE outbox message to god with "act":"done" and a short result summary — that releases this ephemeral worker (terminal closed; your branch is handed to god). Do NOT push to any remote; god is the sole integrator.`;
+    const completion = ephemeral
+      ? 'That releases this one-off worker (terminal closed; your branch is handed to god).'
+      : 'You remain hired and available on the floor after this task. Stay ready for more work; only the human or Ramon may explicitly fire you.';
+    const suffix = `\n\n[CAPABILITIES] Before you start, consult your capability catalog — run the \`/capabilities\` skill (or read \`$AGENT_DIR/.claude/skills/capabilities/SKILL.md\`). It lists your temporal date-range skills (\`/today\`, \`/last30Days\`, \`/lastQuarter\`, …) and the integrations available to you (reached via the loopback broker) and how to call each. For any time-scoped work, resolve the dates with those skills instead of computing them by hand.\n\n[WORKER COMPLETION] When finished, send ONE outbox message to god with "act":"done" and a short result summary. ${completion} Do NOT push to any remote; god is the sole integrator.`;
     hive.send({ to: workerId, conversation: `worker-${reqId}`, act: 'request', subject: meta.name, body: `${prefix}${objective}${suffix}` }, 'god');
   } catch (e) {
     console.error('[worker] dispatch send failed:', e);

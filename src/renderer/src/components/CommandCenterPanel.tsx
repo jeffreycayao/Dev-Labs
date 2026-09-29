@@ -1174,8 +1174,24 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
 function ArchivedSection() {
   const { t } = useTranslation();
   const archivedAgents = useStore((s) => s.archivedAgents);
+  const unarchiveAgent = useStore((s) => s.unarchiveAgent);
   const removeArchivedAgent = useStore((s) => s.removeArchivedAgent);
   const [open, setOpen] = useState(false);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const returnToFloor = async (id: string) => {
+    setRestoringId(id);
+    setRestoreError(null);
+    try {
+      const result = await window.cth.hiveSetArchived(id, false);
+      if (!result.ok) throw new Error(result.error || t('commandCenter.restoreArchivedFailed'));
+      unarchiveAgent(id);
+    } catch (error) {
+      setRestoreError(error instanceof Error ? error.message : t('commandCenter.restoreArchivedFailed'));
+    } finally {
+      setRestoringId(null);
+    }
+  };
   if (archivedAgents.length === 0) return null;
   return (
     <Section title={t('commandCenter.archived', { count: archivedAgents.length })}>
@@ -1189,6 +1205,7 @@ function ArchivedSection() {
           marginBottom: open ? 6 : 0
         }}
       >{open ? '▾' : '▸'} {open ? t('commandCenter.hideClosed') : t('commandCenter.showClosed')}</button>
+      {restoreError && <div role="alert" style={{ fontSize: 11, color: 'var(--cth-danger, #6E1423)', marginBottom: 6 }}>{restoreError}</div>}
       {open && archivedAgents.map((a) => (
         <div key={a.id} style={{
           display: 'flex', alignItems: 'center', gap: 8,
@@ -1206,6 +1223,12 @@ function ArchivedSection() {
             <div style={{ fontFamily: 'var(--cth-font-ui)', fontSize: 12, color: 'var(--cth-ink-700)' }}>{a.name}</div>
             <div style={{ fontSize: 11, color: 'var(--cth-ink-500)', wordBreak: 'break-all' }}>{a.cwd}</div>
           </div>
+          <button
+            onClick={() => { void returnToFloor(a.id); }}
+            disabled={restoringId !== null}
+            title={t('commandCenter.returnToFloorHint')}
+            style={{ border: 'none', background: 'var(--cth-cream-200)', color: 'var(--cth-ink-900)', cursor: restoringId ? 'wait' : 'pointer', padding: '3px 6px', fontSize: 11, flexShrink: 0 }}
+          >{t('commandCenter.returnToFloor')}</button>
           <button
             onClick={() => removeArchivedAgent(a.id)}
             style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--cth-ink-500)', flexShrink: 0 }}

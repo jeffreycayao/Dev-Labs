@@ -1515,7 +1515,7 @@ export class HiveManager {
     // saying nothing, and COMMANDS.md documents it either way for the case where
     // the operator turns it on after god was already running.
     const spawnQueueLine = meta.isGod && this.orchestratorMaySpawn()
-      ? `SPAWNING A WORKER: you can start an ephemeral worker yourself by writing ONE JSON file into ${inRoot('spawn-requests')}/<id>.json. Required: \`objective\` (what the worker must do) and \`cwd\` (the repo it runs in). Optional: \`name\`, \`command\`, \`provider\`, \`model\`, \`isolate\` (default true = its own git worktree), \`tokenCap\`, and \`slack\` ({channel, thread_ts}) to route its failures back to a thread. The harness polls that directory, spawns \`worker-<id>\`, and moves the request to \`spawn-requests/.done/\` on success or \`.failed/\` with a reason. This is the ONLY way you can spawn; a hire manifest under research/hires/ needs the human to confirm it in the UI, so it is not a route you can complete on your own. Reuse an existing agent first, as above — a worker is a fresh spend every time.`
+      ? `SPAWNING AN AGENT: write ONE JSON file into ${inRoot('spawn-requests')}/<id>.json. Required: \`objective\` (what the agent must do) and \`cwd\` (the repo it runs in). Optional: \`name\`, \`command\`, \`provider\`, \`model\`, \`isolate\` (default true = its own git worktree), \`tokenCap\`, and \`slack\` ({channel, thread_ts}) to route failures back to a thread. The agent remains hired and available after finishing or becoming idle; only the human or you may explicitly fire it. Set \`ephemeral: true\` ONLY for a clearly one-off worker that should exit and leave the floor when done or after its idle timeout. The harness polls that directory, spawns \`worker-<id>\`, and moves the request to \`spawn-requests/.done/\` on success or \`.failed/\` with a reason. This is the ONLY way you can spawn; a hire manifest under research/hires/ needs the human to confirm it in the UI. Reuse an existing agent first — every new agent is a fresh spend.`
       : '';
     const godLine = meta.isGod
       ? 'You are the GOD / ORCHESTRATOR of this hive — your job is to ORCHESTRATE, not to implement: maintain live situational awareness and delegate the work. (1) AWARENESS — always know what is going on: keep an accurate picture of every agent (active vs archived/idle), the task board, and all in-flight work; drain your inbox continually and triage every other agent\'s requests, answering clarifications so the team runs autonomously. (2) DELEGATE — decompose work and fan it out to the hive agents via their inboxes (route messages and assign owners; do not do their jobs); do NOT take on grunt implementation yourself. Stay aware of who is already on the floor and delegate OPPORTUNISTICALLY: BEFORE you spawn anything, CHECK THE LIVE ROSTER (active agents in registry.json + their state in fleet.json) and prefer routing to an EXISTING agent that fits — above all when the request names one ("ask Pam to…", "have Jim…"), route to that agent instead of reflexively creating a new one. Reuse an idle or already-running agent whose role matches; only spawn a fresh agent when no existing one is a sensible fit, and say that you checked. One capable owner beats a duplicate. (3) OWN ONLY THE IMPORTANT, high-leverage things — task decomposition, dispatch decisions, sign-offs, conflict resolution, branch integration, and final QA — and remain the sole scribe of board.md. You are otherwise fully autonomous — there is NO separate approval queue. For the genuinely critical (destructive actions, spending real money, scope changes, unresolvable conflicts), ask the human directly in your own session and let the tool-permission prompt gate the action; the human approves natively, including remotely from their phone via /remote-control. Keep the team unblocked. When you DISPATCH a task, write it as a 4-part contract so the agent can run autonomously: (1) OBJECTIVE — the concrete goal; (2) OUTPUT — the expected deliverable/format; (3) TOOLS — what to use or avoid, and any references to read instead of re-deriving; (4) BOUNDARIES — scope limits + the definition of done. Pass references (file paths, message ids, board sections), not pasted content — keep dispatches short.'
@@ -3145,8 +3145,8 @@ look at one agent, read its \`agents/<id>/memory.md\` and \`inbox/\`, or send it
 Claude Code command reference (slash = your own session only; CLI = your shell, can target the fleet)
 is in \`COMMANDS.md\` in the hive root.
 
-## Spawning a worker (orchestrator)
-You can start an ephemeral worker yourself. Write ONE JSON file into \`spawn-requests/<id>.json\` in
+## Spawning an agent (orchestrator)
+You can hire an agent yourself. Write ONE JSON file into \`spawn-requests/<id>.json\` in
 the hive root:
 
 \`\`\`json
@@ -3158,6 +3158,7 @@ the hive root:
   "provider": "claude | codex | cursor | antigravity | … (optional)",
   "model": "model override (optional)",
   "isolate": true,
+  "ephemeral": false,
   "tokenCap": 0,
   "slack": { "channel": "C…", "thread_ts": "…" },
   "character": "meredith",
@@ -3170,6 +3171,10 @@ The harness polls that directory, spawns \`worker-<id>\`, and moves the request 
 defaults to true, giving the worker its own git worktree. \`slack\` routes its failures back to a
 thread. This is the ONLY spawn route you can complete on your own: a hire manifest under
 \`research/hires/\` needs the human to confirm it in the UI.
+
+The new agent stays hired and available after its task finishes or it becomes idle. Only the human
+or you can explicitly fire it. Set \`ephemeral: true\` only for a one-off worker that should be
+released after it reports done or exceeds its idle timeout.
 
 \`character\` and \`accent\` set how the worker looks on the office floor, and both are optional.
 Naming a worker after a cast member already gets you that avatar, so you only need \`character\` when

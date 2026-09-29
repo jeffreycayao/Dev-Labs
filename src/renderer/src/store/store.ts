@@ -16,7 +16,7 @@ import { DEFAULT_ORG_TRIGGER, type OrgTriggerConfig, type WebhookTrigger } from 
 import { isCompactionCommand } from '@shared/providerAutomation';
 import { preferredAgentRole } from '@shared/agentRole';
 import { isInboxNudge } from '@shared/hiveNudge';
-import { reconcileHiredRoster, stoppedAgent } from '@shared/agentRoster';
+import { reconcileHiredRoster, restoreArchivedAgent, stoppedAgent } from '@shared/agentRoster';
 import { refocusAfterRemoval, focusOnLoad, restoreFocus } from './focusMode';
 import { chooseRosterSource, shouldDiscardFloorCache } from './rosterSource';
 
@@ -228,6 +228,8 @@ interface State {
   removeAgent: (id: string) => void;
   /** Explicit fire: move an agent off the floor and into retained history. */
   archiveAgent: (id: string) => void;
+  /** Return a fired or incorrectly archived hire to the floor as stopped. */
+  unarchiveAgent: (id: string) => void;
   /** Permanently forget an archived agent (drops the renderer entry only; the
    *  hive registry keeps its record). */
   removeArchivedAgent: (id: string) => void;
@@ -871,11 +873,10 @@ export const useStore = create<State>((set, get) => ({
       const target = s.agents.find((a) => a.id === id);
       if (!target) return s;
       const agents = s.agents.filter((a) => a.id !== id);
-      // Retain a flagged copy; the PTY is gone, so clear all live run-state.
+      // Retain the PTY id as part of the restore recipe, but clear live run-state.
       const archivedEntry: Agent = {
         ...target,
         archived: true,
-        ptyId: undefined,
         status: 'idle',
         action: 'archived',
         carrying: undefined,
@@ -892,6 +893,19 @@ export const useStore = create<State>((set, get) => ({
       if (restorableAgents.length !== s.restorableAgents.length) persistRestorable(restorableAgents);
       if (_queueGone) persistQueues(messageQueues);
       return { agents, archivedAgents, restorableAgents, feeds, selectedId, messageQueues, fullscreenAgentId };
+    }),
+  unarchiveAgent: (id) =>
+    set((s) => {
+      const target = s.archivedAgents.find((a) => a.id === id);
+      if (!target || s.agents.some((a) => a.id === id)) return s;
+      const restored = restoreArchivedAgent(target);
+      const agents = [...s.agents, restored];
+      const archivedAgents = s.archivedAgents.filter((a) => a.id !== id);
+      const restorableAgents = [...s.restorableAgents.filter((a) => a.id !== id), restored];
+      persistAgents(agents, s.selectedId);
+      persistArchived(archivedAgents);
+      persistRestorable(restorableAgents);
+      return { agents, archivedAgents, restorableAgents };
     }),
   removeArchivedAgent: (id) =>
     set((s) => {

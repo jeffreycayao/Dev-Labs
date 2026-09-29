@@ -4,6 +4,8 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## Unreleased
 
+## v0.6.0 — 2026-09-29
+
 - **Command Center and new agent defaults.** Active Auto delivery is highlighted in green in both themes. Deliveries can be saved to a chosen folder; their floor storage and reset behavior are shown in the tray. New Claude agents default to Opus 5.5 and new Codex agents to GPT-6 Sol; old shipped Claude defaults migrate once, while later manual model choices remain intact.
 - **Fix: OpenCode agents stopped on "Permission required" in auto mode.** Auto mode allowed OpenCode's edits, shell commands and web fetches, but not `external_directory` (files outside the project folder) or `doom_loop` (a repeated tool call), which OpenCode asks about by default. Both are now allowed when the floor is in auto mode; "ask first" mode is unchanged. The config builder moved to `src/shared/opencodeConfig.ts` with tests.
 - **Agents stay hired:** a CLI exit or a startup restore failure leaves the agent visible as stopped, with its identity, restore recipe and isolated worktree intact. Ramon sees stopped hires as unavailable instead of fired. New hires are protected from an older startup PTY snapshot. Switching office themes no longer fires the team; only an explicit human or Ramon fire removes a hired agent from the floor.

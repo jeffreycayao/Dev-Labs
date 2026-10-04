@@ -44,7 +44,7 @@ export function startLoopbackListener(
         return;
       }
       if (handled) {
-        send(res, 'Already signed in', 'You can close this tab and return to ATMT Labs.');
+        send(res, 'Already signed in', 'You can close this tab and return to Jepoy Floor AI.');
         return;
       }
       handled = true;
@@ -57,14 +57,14 @@ export function startLoopbackListener(
       if (status?.state === 'signing_in') {
         // Dropped (stale tab / wrong state): the real sign-in is still coming.
         handled = false;
-        send(res, 'Sign-in did not finish', 'Go back to ATMT Labs and press Sign in again.');
+        send(res, 'Sign-in did not finish', 'Go back to Jepoy Floor AI and press Sign in again.');
         return;
       }
       const ok = !!status && (status.state === 'licensed' || status.state === 'inactive');
       res.on('finish', () => server.closeAllConnections?.());
       send(res,
         ok ? "You're signed in" : 'Sign-in did not finish',
-        ok ? 'Return to ATMT Labs — you can close this tab.' : 'Go back to ATMT Labs and press Sign in again.');
+        ok ? 'Return to Jepoy Floor AI — you can close this tab.' : 'Go back to Jepoy Floor AI and press Sign in again.');
       close();
       opts.onDone?.();
     }
@@ -92,12 +92,12 @@ function send(res: ServerResponse, title: string, text: string): void {
     connection: 'close'
   });
   res.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)} · ATMT Labs</title><style>
+<title>${esc(title)} · Jepoy Floor AI</title><style>
 :root{--bg:#0c0b09;--panel:#16140f;--ink:#f1eadb;--muted:#a79f8c;--line:#3b362b;--accent:#c8f31d}
 @media (prefers-color-scheme: light){:root{--bg:#f6f1e6;--panel:#fffdf7;--ink:#1a1813;--muted:#6b6454;--line:#ddd3c0;--accent:#4d6b00}}
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:16px;box-sizing:border-box}
 main{max-width:420px;width:100%;background:var(--panel);border:1px solid var(--line);padding:28px}
 .brand{color:var(--accent);font-weight:700;letter-spacing:.08em;font-size:12px}
 h1{font-size:20px;margin:10px 0 6px}p{color:var(--muted);margin:0}
-</style></head><body><main><div class="brand">ATMT LABS</div><h1>${esc(title)}</h1><p>${esc(text)}</p></main></body></html>`);
+</style></head><body><main><div class="brand">JEPOY FLOOR AI</div><h1>${esc(title)}</h1><p>${esc(text)}</p></main></body></html>`);
 }

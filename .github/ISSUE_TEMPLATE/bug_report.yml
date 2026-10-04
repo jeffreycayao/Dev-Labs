@@ -66,8 +66,8 @@ body:
   - type: input
     id: app-version
     attributes:
-      label: ATMT Labs version
-      description: Settings → the version is on the hero card. Or `ATMT Labs → About`.
+      label: Jepoy Floor AI version
+      description: Settings → the version is on the hero card. Or `Jepoy Floor AI → About`.
       placeholder: e.g. 0.4.5
     validations:
       required: true

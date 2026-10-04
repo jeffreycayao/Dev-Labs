@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
-import brandLogo from '@brand/Square logos/logo.png?url';
+import brandLogo from '@brand/Solid charcoal J monogram favicon.png?url';
 import './design/global.css';
 import './i18n';
 
@@ -15,7 +15,7 @@ const splashMark = document.querySelector('#cth-splash .mk');
 if (splashMark) {
   const img = document.createElement('img');
   img.src = brandLogo;
-  img.alt = 'ATMT Labs';
+  img.alt = 'Jepoy Floor AI';
   img.style.cssText = 'height:56px;width:auto;display:block';
   splashMark.replaceWith(img);
 }

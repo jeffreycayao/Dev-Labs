@@ -11,7 +11,7 @@ Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the deep 
 
 ## What this is
 
-ATMT Labs is a **proprietary** Electron desktop app. It runs a team of terminal AI agents (Claude Code, Codex, Antigravity, Cursor and others) in a pixel-art office, with an orchestrator named Ramon.
+Jepoy Floor AI is a **proprietary** Electron desktop app. It runs a team of terminal AI agents (Claude Code, Codex, Antigravity, Cursor and others) in a pixel-art office, with an orchestrator named Ramon.
 
 The account service in `services/licensing` requires Google/Yahoo sign-in. All signed-in accounts receive free access; purchase and unlock-code flows are retired.
 

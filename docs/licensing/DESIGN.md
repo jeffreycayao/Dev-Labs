@@ -1,6 +1,6 @@
 # Free account access design
 
-The `services/licensing` folder retains its historical name for deployment compatibility. ATMT Labs is now free after Google or Yahoo sign-in. The desktop app still has a main-process gate so a hidden renderer cannot start agents. The gate is enabled in packaged builds and accepts a current, signed `status: free` account token plus a stored refresh session, or an existing machine-bound perpetual activation issued after a prior sign-in.
+The `services/licensing` folder retains its historical name for deployment compatibility. Jepoy Floor AI is now free after Google or Yahoo sign-in. The desktop app still has a main-process gate so a hidden renderer cannot start agents. The gate is enabled in packaged builds and accepts a current, signed `status: free` account token plus a stored refresh session, or an existing machine-bound perpetual activation issued after a prior sign-in.
 
 ## Flow
 

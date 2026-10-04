@@ -1,4 +1,4 @@
-# labs.atmt.dev — the ATMT Labs Floor website
+# labs.atmt.dev — the Jepoy Floor AI Floor website
 
 Static HTML and CSS with no build step on Vercel. One server function, `api/download.js`, handles download links. A small motion script (`assets/js/site.js`) adds smooth scrolling, scroll reveals and the 3D hero; the pages work fully without it.
 welcome, and pricing pages use the live visual language of

@@ -1,6 +1,6 @@
 # Memory Graph Visualization — Spec (Phase 1)
 
-**Feature #8** of the ATMT Labs harness roadmap · author: Jim · branch `feature/memory-graph`
+**Feature #8** of the Jepoy Floor AI harness roadmap · author: Jim · branch `feature/memory-graph`
 **Status:** awaiting god sign-off. No component code is written yet — this document is the contract for Phase 2.
 
 ---

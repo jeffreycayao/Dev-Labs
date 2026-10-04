@@ -1,4 +1,3 @@
-- ATMT Labs is now free to use with a Google or Yahoo account.
-- Sign in to unlock every app feature; no card, trial or code is needed.
-- The account page now shows your signed-in computers without purchase controls.
-- Existing paid accounts can keep using the app after signing in.
+- Meet Jepoy Floor AI: new name, new J monogram icon, same office of agents.
+- Fresh look across the app, installer, help and website.
+- Coming from ATMT Labs? Install once more — your agents and data carry over.

@@ -1,4 +1,4 @@
-# ATMT Labs free-account handoff
+# Jepoy Floor AI free-account handoff
 
 The product now uses free access with required Google/Yahoo sign-in for new accounts. The desktop app expects a short-lived signed `status: free` token from the account service. Existing machine-bound paid or unlock-code activations keep their original offline grant until sign-out. Trial conversion, Stripe checkout, unlock-code administration and redemption, and scheduled trial charges have been removed from active routes.
 

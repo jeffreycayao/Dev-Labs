@@ -1,13 +1,31 @@
 // Brand identity — single source of truth for the app name, slugs and the
 // Public GitHub distribution repo for updates; remote catalogs are separate.
 
-export const APP_NAME = 'ATMT Labs';
-/** Lowercase slug for pipes, user-agents, scan dirs and spec tags. */
-export const APP_SLUG = 'atmt-labs';
+export const APP_NAME = 'Jepoy Floor AI';
+/** Lowercase slug for user-agents and dev overrides. */
+export const APP_SLUG = 'jepoy-floor-ai';
 /** Prefix of packaged installer file names (must match electron-builder.yml). */
-export const ARTIFACT_PREFIX = 'ATMT-Labs';
-/** Deep-link scheme for shareable hires (must match electron-builder.yml). */
+export const ARTIFACT_PREFIX = 'Jepoy-Floor-AI';
+/** Deep-link scheme for shareable hires (must match electron-builder.yml).
+ * Kept as `atmtlabs` on purpose: it is the redirect URI scheme registered on
+ * the account auth server, and links already shared by older builds use it.
+ * Renaming means re-registering the OAuth redirect URI and breaking old deep
+ * links — do both sides together in one release if it ever changes. */
 export const PROTOCOL = 'atmtlabs';
+
+// ---------------------------------------------------------------------------
+// Identifiers that still carry the pre-rebrand (ATMT Labs) name on purpose.
+// Each one is coupled to state outside this repository; change them only
+// together with the external side:
+//   - GITHUB_REPO            the releases repo on GitHub
+//   - LICENSING origins      deployed Vercel domains (labs/auth/api.atmt.dev)
+//   - LICENSING clientId     OAuth client registered on the auth server
+//   - manifest spec tags     `atmt-labs/hire@1` / `atmt-labs/floor@1` in
+//                            src/shared/hire.ts and floor.ts (shared files)
+//   - `.atmt-skill.json`     metadata name in src/main/skillsCatalog.ts
+//   - `atmt-hive` / `atmt-`  hook and MCP ids already deployed on agent
+//                            machines (src/main/hive.ts, mcpCatalog.ts)
+// ---------------------------------------------------------------------------
 
 /**
  * Public, releases-only repository. Never point an installed client at the

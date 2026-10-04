@@ -6,9 +6,9 @@
  *     (sign in again next launch) — never written in plaintext, same rule as
  *     the integrations secret store.
  *   - enforcement: LICENSING.enabled in a packaged build. Dev builds skip the
- *     gate unless ATMT_LICENSE_ENFORCE=1, and only dev builds honour the
- *     ATMT_AUTH_ORIGIN / ATMT_API_ORIGIN / ATMT_LICENSE_ISSUER /
- *     ATMT_LICENSE_PUBLIC_KEY / ATMT_LICENSE_KID overrides (for a local or
+ *     gate unless JEPOY_LICENSE_ENFORCE=1, and only dev builds honour the
+ *     JEPOY_AUTH_ORIGIN / JEPOY_API_ORIGIN / JEPOY_LICENSE_ISSUER /
+ *     JEPOY_LICENSE_PUBLIC_KEY / JEPOY_LICENSE_KID overrides (for a local or
  *     staging licensing server).
  *   - IPC: license:current / signIn / cancelSignIn / refresh / signOut /
  *     account:open, plus the `license:status` push. No token ever crosses IPC.
@@ -125,7 +125,7 @@ function devOverride(name: string): string | undefined {
 
 function isEnforced(): boolean {
   if (app.isPackaged) return LICENSING.enabled;
-  return process.env.ATMT_LICENSE_ENFORCE === '1';
+  return process.env.JEPOY_LICENSE_ENFORCE === '1';
 }
 
 function broadcast(status: LicenseStatus): void {
@@ -154,23 +154,23 @@ function openExternal(url: string): Promise<void> {
  *  in app.whenReady() BEFORE the first window so the gate paints correctly. */
 export function initLicensing(): LicenseManager {
   if (manager) return manager;
-  const devKey = devOverride('ATMT_LICENSE_PUBLIC_KEY');
+  const devKey = devOverride('JEPOY_LICENSE_PUBLIC_KEY');
   manager = new LicenseManager({
     enforced: isEnforced(),
     endpoints: {
       siteOrigin: LICENSING.siteOrigin,
-      authOrigin: devOverride('ATMT_AUTH_ORIGIN') ?? LICENSING.authOrigin,
-      apiOrigin: devOverride('ATMT_API_ORIGIN') ?? LICENSING.apiOrigin,
+      authOrigin: devOverride('JEPOY_AUTH_ORIGIN') ?? LICENSING.authOrigin,
+      apiOrigin: devOverride('JEPOY_API_ORIGIN') ?? LICENSING.apiOrigin,
       clientId: LICENSING.clientId,
       redirectUri: LICENSING.redirectUri
     },
     verify: {
-      issuer: devOverride('ATMT_LICENSE_ISSUER') ?? LICENSING.issuer,
+      issuer: devOverride('JEPOY_LICENSE_ISSUER') ?? LICENSING.issuer,
       audience: LICENSING.audience,
       // The staging key is registered under the kid the staging server signs
       // with (LICENSE_SIGNING_KID there); `dev` if unset.
       publicKeys: devKey
-        ? { ...LICENSING.publicKeys, [devOverride('ATMT_LICENSE_KID') ?? 'dev']: devKey.replace(/\\n/g, '\n') }
+        ? { ...LICENSING.publicKeys, [devOverride('JEPOY_LICENSE_KID') ?? 'dev']: devKey.replace(/\\n/g, '\n') }
         : LICENSING.publicKeys
     },
     store: fileStore,

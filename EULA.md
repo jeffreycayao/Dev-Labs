@@ -1,10 +1,10 @@
-# ATMT Labs — Terms of Service and License Agreement
+# Jepoy Floor AI — Terms of Service and License Agreement
 
 > Published terms: https://labs.atmt.dev/terms (`site/terms.html`). Keep this bundled copy aligned with that page.
 
 **Version:** 1.1 · **Effective / last updated:** September 30, 2026
 
-These Terms are between **Automatika Consulting** (trading as ATMT Labs) and the person or organisation using ATMT Labs Floor. They cover the desktop app, updates, bundled content, documentation, website and account service. By creating an account, installing or using the Software, you agree to these Terms and the [Privacy Policy](PRIVACY.md). If you accept for an organisation, you confirm that you may bind it.
+These Terms are between **Automatika Consulting** (trading as Jepoy Floor AI) and the person or organisation using Jepoy Floor AI Floor. They cover the desktop app, updates, bundled content, documentation, website and account service. By creating an account, installing or using the Software, you agree to these Terms and the [Privacy Policy](PRIVACY.md). If you accept for an organisation, you confirm that you may bind it.
 
 ## 1. Your account
 
@@ -12,7 +12,7 @@ Sign in with Google or Yahoo using your verified email address. You must be at l
 
 ## 2. Software use
 
-While you follow these Terms, we grant you a personal, non-exclusive, non-transferable, non-sublicensable license to install and use the Software. **ATMT Labs is free to use after sign-in.** No payment card, trial, purchase or unlock code is required. Each account is for one person; each co-worker needs their own account. You may sign in on multiple computers and use the Software for business and client work. This grant does not allow redistribution.
+While you follow these Terms, we grant you a personal, non-exclusive, non-transferable, non-sublicensable license to install and use the Software. **Jepoy Floor AI is free to use after sign-in.** No payment card, trial, purchase or unlock code is required. Each account is for one person; each co-worker needs their own account. You may sign in on multiple computers and use the Software for business and client work. This grant does not allow redistribution.
 
 ## 3. Account checks
 
@@ -32,7 +32,7 @@ Agents run with your user permissions. Depending on settings, they can read, cha
 
 ## 7. Free access
 
-ATMT Labs does not charge for app access. Third-party AI tools and connected services may charge under their own terms. If you previously paid ATMT Labs, contact [hello@automatika.ph](mailto:hello@automatika.ph) about that transaction.
+Jepoy Floor AI does not charge for app access. Third-party AI tools and connected services may charge under their own terms. If you previously paid Jepoy Floor AI, contact [hello@automatika.ph](mailto:hello@automatika.ph) about that transaction.
 
 Earlier lifetime purchases keep the rights granted under their original terms for the versions they covered. This free release does not cancel those grants or create a new charge.
 
@@ -46,7 +46,7 @@ The Software is licensed, not sold. We and our licensors retain all intellectual
 
 ## 10. Warranty and liability
 
-To the maximum extent law allows, the Service is provided **as is** and **as available**, without warranties of merchantability, fitness, non-infringement or uninterrupted operation. We do not warrant AI output or third-party services. We are not liable for indirect, incidental, special, consequential or punitive losses, or lost profits, revenue, data or business. To the maximum extent law allows, total liability under these Terms is limited to the amount you paid us for ATMT Labs in the 12 months before the claim. Nothing limits liability that cannot legally be limited. To the extent law allows, you will cover reasonable costs of third-party claims caused by your breach or use of the Software and its agents.
+To the maximum extent law allows, the Service is provided **as is** and **as available**, without warranties of merchantability, fitness, non-infringement or uninterrupted operation. We do not warrant AI output or third-party services. We are not liable for indirect, incidental, special, consequential or punitive losses, or lost profits, revenue, data or business. To the maximum extent law allows, total liability under these Terms is limited to the amount you paid us for Jepoy Floor AI in the 12 months before the claim. Nothing limits liability that cannot legally be limited. To the extent law allows, you will cover reasonable costs of third-party claims caused by your breach or use of the Software and its agents.
 
 ## 11. General
 

@@ -1,8 +1,8 @@
 {
-  "name": "atmt-labs-licensing",
+  "name": "jepoy-floor-ai-licensing",
   "version": "0.1.0",
   "private": true,
-  "description": "ATMT Labs accounts, licensing and billing \u2014 auth.labs.atmt.dev + api.labs.atmt.dev on Vercel.",
+  "description": "Jepoy Floor AI accounts, licensing and billing \u2014 auth.labs.atmt.dev + api.labs.atmt.dev on Vercel.",
   "type": "module",
   "license": "UNLICENSED",
   "engines": {

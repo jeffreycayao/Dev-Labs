@@ -65,7 +65,7 @@ export function isPerpetual(c: Pick<LicenseClaims, 'perpetual' | 'status'>): boo
 }
 
 export type LicenseState =
-  /** Gate is off (licensing disabled, or a dev build without ATMT_LICENSE_ENFORCE). */
+  /** Gate is off (licensing disabled, or a dev build without JEPOY_LICENSE_ENFORCE). */
   | 'disabled'
   /** Not signed in (or the session was revoked / expired server side). */
   | 'signed_out'

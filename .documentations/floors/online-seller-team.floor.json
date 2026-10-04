@@ -2,7 +2,7 @@
   "spec": "atmt-labs/floor@1",
   "name": "Online Seller Team",
   "description": "A small team for an online shop on Pancake POS and Webcake: sales and stock, landing pages, and product content. Add your Pancake POS key and Webcake token in Settings → Connections first.",
-  "author": "ATMT Labs",
+  "author": "Jepoy Floor AI",
   "homepage": "https://labs.atmt.dev",
   "connectors": ["pancake-pos", "webcake-landing"],
   "hires": [

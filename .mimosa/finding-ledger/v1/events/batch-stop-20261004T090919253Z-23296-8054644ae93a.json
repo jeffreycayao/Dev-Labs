@@ -1,0 +1,188 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20261004T090919253Z-23296-8054644ae93a",
+  "runId": "20261004T090919253Z-23296-8054644ae93a",
+  "runStatus": "inconclusive",
+  "coverage": {
+    "status": "partial",
+    "reasons": [
+      {
+        "code": "changed_file_unreadable",
+        "stage": "candidate-select",
+        "target": "src/main/atmtSkills.ts",
+        "detail": "observed changed file no longer exists or cannot be read",
+        "affectsCompletion": true
+      },
+      {
+        "code": "candidate_limit_exceeded",
+        "stage": "candidate-select",
+        "target": "src/renderer/src/scene/office/OfficeFloor.tsx",
+        "detail": "32 changed reviewable file(s) were not scanned because the limit is 20",
+        "affectsCompletion": true
+      },
+      {
+        "code": "stop_budget_exhausted",
+        "stage": "agent-check",
+        "target": ".",
+        "detail": "focused agent configuration check was not run before the gate budget",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "candidate-select",
+        "target": "src/main/atmtSkills.ts",
+        "detail": "changed_file_unreadable: observed changed file no longer exists or cannot be read",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "candidate-select",
+        "target": "src/renderer/src/scene/office/OfficeFloor.tsx",
+        "detail": "candidate_limit_exceeded: 32 changed reviewable file(s) were not scanned because the limit is 20",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "supply-chain-check",
+        "target": ".",
+        "detail": "spawnSync C:\\Program Files\\nodejs\\node.exe ETIMEDOUT",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "agent-check",
+        "target": ".",
+        "detail": "stop_budget_exhausted: focused agent configuration check was not run before the gate budget",
+        "affectsCompletion": true
+      }
+    ]
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": "c1a233c6e054ca68079adeb98e41e3faa56498df",
+  "diffHash": "93183a33b3ad7208fe0d42e2685c4cf7c5116c311e0d94720bd1054e9aa74efa",
+  "rulesVersion": "unavailable",
+  "sessionHash": "544cc245e58e439df9b14f28b67ae8d7cb0e77d26528dda0906ec08385423f22",
+  "reportRef": ".mimosa/reports/task-review-sess_55d1f6ed-61b2-491e-9bb9-6d86b47df933-20261004T090919253Z-23296-8054644ae93a.json",
+  "events": [
+    {
+      "eventId": "hook-e03dd9f926dee1a9a6652727f079066e",
+      "findingId": "mimosa-b59d3faed67e8428af9fb60c",
+      "type": "finding_blocked",
+      "at": "2026-10-04T08:43:41.362Z",
+      "identity": {
+        "projectRelativeFile": "src/main/skillsCatalog.ts",
+        "ruleId": "security",
+        "codeEvidenceHash": "489b340b5277e011f80b630277ccd41a44eca94408d024155879115b24eabef4",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 209,
+      "endLine": 209,
+      "reasonCode": "deny",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "489b340b5277e011f80b630277ccd41a44eca94408d024155879115b24eabef4"
+      },
+      "sequence": 0
+    }
+  ],
+  "observedFindingIds": [
+    "mimosa-45dbf799b8b3c9294b32b2c9",
+    "mimosa-d23cbfba368faec20e4926c0",
+    "mimosa-c79165e16c06e29267149339"
+  ],
+  "verifiedFiles": [
+    {
+      "file": "src/shared/brand.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/main/index.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/main/legacyUserData.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "services/licensing/src/app.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tools/mapgen/build_map.py",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/agentProvider.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/agentTemplates.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/codexCommands.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/grokCommands.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/license.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/mcpCatalog.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/releaseDrop.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/triggers.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/shared/updateState.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/renderer/src/App.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/renderer/src/main.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/renderer/src/scene/office/cafeteriaLines.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-10-04T09:09:19.708Z"
+}

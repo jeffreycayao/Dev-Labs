@@ -78,14 +78,14 @@ const LOGO = `<picture><source srcset="/brand/logo-on-dark.webp" media="(prefers
 
 function page(title: string, body: string, extraHead = '', wide = false): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)} · ATMT Labs</title>${HEAD}${extraHead}<style>${CSS}</style></head>
-<body><main${wide ? ' class="wide"' : ''}><div class="brand">${LOGO}<span class="product">ATMT Labs</span></div>${body}</main>
-<footer>ATMT Labs by automatika™</footer></body></html>`;
+<title>${esc(title)} · Jepoy Floor AI</title>${HEAD}${extraHead}<style>${CSS}</style></head>
+<body><main${wide ? ' class="wide"' : ''}><div class="brand">${LOGO}<span class="product">Jepoy Floor AI</span></div>${body}</main>
+<footer>Jepoy Floor AI by automatika™</footer></body></html>`;
 }
 
 /** Legal pages live on the marketing site (labs.atmt.dev). */
 function legal(site: string): string {
-  return `<p><small>By continuing you agree to the <a href="${esc(site)}/terms" style="color:inherit">ATMT Labs Terms of Service</a> and <a href="${esc(site)}/privacy" style="color:inherit">Privacy Policy</a>.</small></p>`;
+  return `<p><small>By continuing you agree to the <a href="${esc(site)}/terms" style="color:inherit">Jepoy Floor AI Terms of Service</a> and <a href="${esc(site)}/privacy" style="color:inherit">Privacy Policy</a>.</small></p>`;
 }
 
 export function loginPage(o: { providers: { id: string; label: string }[]; next: string; signup: boolean; error?: string; site?: string }): string {
@@ -96,7 +96,7 @@ export function loginPage(o: { providers: { id: string; label: string }[]; next:
 <h1>${o.signup ? 'Create your free account' : 'Sign in'}</h1>
 <p>${o.signup
       ? 'Sign in to create your free account.'
-      : 'Sign in to your free ATMT Labs account.'}</p>
+      : 'Sign in to your free Jepoy Floor AI account.'}</p>
 ${o.error ? `<div class="err">${esc(o.error)}</div>` : ''}
 ${buttons}
 ${legal(o.site ?? 'https://labs.atmt.dev')}`);
@@ -105,10 +105,10 @@ ${legal(o.site ?? 'https://labs.atmt.dev')}`);
 /** The desktop hand-off. Browsers may ask before opening the app, so there
  *  is always a visible button besides the automatic redirect. */
 export function returnToAppPage(url: string): string {
-  return page('Return to ATMT Labs', `
+  return page('Return to Jepoy Floor AI', `
 <h1>You're signed in</h1>
-<p>Returning you to ATMT Labs… If nothing happens, press the button. You can close this tab afterwards.</p>
-<a class="btn primary" href="${esc(url)}">Open ATMT Labs</a>`,
+<p>Returning you to Jepoy Floor AI… If nothing happens, press the button. You can close this tab afterwards.</p>
+<a class="btn primary" href="${esc(url)}">Open Jepoy Floor AI</a>`,
   `<meta http-equiv="refresh" content="0;url=${esc(url)}">`);
 }
 
@@ -128,12 +128,12 @@ export function accountPage(o: {
   const devices = o.devices.length
     ? o.devices.map((d) => `<div class="row"><div>${esc(d.name || 'Computer')}<br><small>${esc(d.platform || '')} · last seen ${esc(fmtDate(d.last_seen))}</small></div>
 <form method="post" action="/account/devices/${encodeURIComponent(d.device_id)}/remove"><button class="btn">Remove</button></form></div>`).join('')
-    : '<p><small>No computers yet. Sign in from the ATMT Labs app.</small></p>';
+    : '<p><small>No computers yet. Sign in from the Jepoy Floor AI app.</small></p>';
   return page('Your account', `
 <h1>${esc(o.account.email)}</h1>
 ${o.notice ? `<div class="ok">${esc(o.notice)}</div>` : ''}
 <span class="tag">Free account</span>
-<p>ATMT Labs is free to use after sign-in. Your AI providers may bill separately.</p>
+<p>Jepoy Floor AI is free to use after sign-in. Your AI providers may bill separately.</p>
 <h2>Computers</h2>
 ${devices}
 <form method="post" action="/logout"><button class="btn">Sign out</button></form>`);

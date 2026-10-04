@@ -29,7 +29,7 @@ test('version levels follow Major.Minor.Patch', () => {
 });
 
 test('push check requires a committed version bump and matching lockfile', (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'atmt-version-rule-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'jepoy-version-rule-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.mkdirSync(path.join(root, 'tools'));
   fs.copyFileSync(path.join(__dirname, '..', 'tools', 'app-version.cjs'), path.join(root, 'tools', 'app-version.cjs'));

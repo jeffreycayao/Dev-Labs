@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "mimosa-finding-history/v1",
+  "runId": "20261004T090919253Z-23296-8054644ae93a",
+  "runStatus": "inconclusive",
+  "errors": [
+    "candidate-select:src/main/atmtSkills.ts: changed_file_unreadable: observed changed file no longer exists or cannot be read",
+    "candidate-select:src/renderer/src/scene/office/OfficeFloor.tsx: candidate_limit_exceeded: 32 changed reviewable file(s) were not scanned because the limit is 20",
+    "supply-chain-check:.: spawnSync C:\\Program Files\\nodejs\\node.exe ETIMEDOUT",
+    "agent-check:.: stop_budget_exhausted: focused agent configuration check was not run before the gate budget"
+  ],
+  "target": ".",
+  "revision": "c1a233c6e054ca68079adeb98e41e3faa56498df",
+  "diffHash": "93183a33b3ad7208fe0d42e2685c4cf7c5116c311e0d94720bd1054e9aa74efa",
+  "rulesVersion": "unavailable",
+  "recordedAt": "2026-10-04T09:09:19.253Z",
+  "timing": {
+    "startedAt": "2026-10-04T09:09:16.782Z",
+    "completedAt": "2026-10-04T09:09:19.253Z",
+    "durationMs": 2471
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0,
+    "modelCalls": 0,
+    "measurement": "known-zero"
+  },
+  "findings": {
+    "total": 1,
+    "bySeverity": {
+      "high": 1
+    },
+    "byStatus": {
+      "blocked": 1
+    }
+  },
+  "coverage": {
+    "status": "partial",
+    "reasonCounts": {
+      "changed_file_unreadable": 1,
+      "candidate_limit_exceeded": 1,
+      "stop_budget_exhausted": 1,
+      "project_check_failed": 4
+    }
+  },
+  "evidenceBoundary": "static_only",
+  "immutableReport": ".mimosa/reports/task-review-sess_55d1f6ed-61b2-491e-9bb9-6d86b47df933-20261004T090919253Z-23296-8054644ae93a.json"
+}

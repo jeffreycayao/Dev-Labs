@@ -56,9 +56,9 @@ and stapled.
 ## Verify a build is properly signed
 
 ```sh
-codesign --verify --deep --strict --verbose=2 "dist/mac-universal/ATMT Labs.app"
-spctl --assess --type execute --verbose "dist/mac-universal/ATMT Labs.app"   # → "accepted, source=Notarized Developer ID"
-xcrun stapler validate "dist/mac-universal/ATMT Labs.app"
+codesign --verify --deep --strict --verbose=2 "dist/mac-universal/Jepoy Floor AI.app"
+spctl --assess --type execute --verbose "dist/mac-universal/Jepoy Floor AI.app"   # → "accepted, source=Notarized Developer ID"
+xcrun stapler validate "dist/mac-universal/Jepoy Floor AI.app"
 ```
 
 See `electron-builder.yml` (the `mac:` block) and `build/notarize.cjs` for how

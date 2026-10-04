@@ -38,7 +38,7 @@ const UPSTREAM_TIMEOUT_MS = 30_000;
 /** MCP over Streamable HTTP keeps responses open (SSE) for as long as a tool call
  *  runs, so broker-proxied MCP servers get a much longer ceiling. */
 const MCP_UPSTREAM_TIMEOUT_MS = 10 * 60_000;
-const DEFAULT_USER_AGENT = 'atmt-labs-broker/1';
+const DEFAULT_USER_AGENT = 'jepoy-floor-ai-broker/1';
 
 /** Hop-by-hop headers never forwarded in either direction. */
 const HOP_BY_HOP = new Set([

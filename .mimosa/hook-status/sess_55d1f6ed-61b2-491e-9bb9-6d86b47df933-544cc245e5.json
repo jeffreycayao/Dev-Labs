@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "mimosa-hook-status/v1",
+  "recordedAt": "2026-10-04T09:23:42.275Z",
+  "sessionId": "sess_55d1f6ed-61b2-491e-9bb9-6d86b47df933",
+  "event": "PostToolUse",
+  "toolName": "Write",
+  "file": "build/release-notes.md",
+  "outcome": "clear",
+  "coverage": "complete",
+  "findingCount": 0,
+  "durationMs": 6,
+  "hostState": "hook_complete",
+  "reportHint": ".mimosa/reports/"
+}

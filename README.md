@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="./brand/Square%20logos/icon128.png" alt="ATMT Labs" width="96">
+<img src="./brand/Solid%20charcoal%20J%20monogram%20favicon.png" alt="Jepoy Floor AI" width="96">
 
-# ATMT Labs
+# Jepoy Floor AI
 
 **An office of AI coding agents, running on your machine.**
 
@@ -12,7 +12,7 @@ Local-first · multi-agent · Philippine edition · by [Automatika](https://auto
 
 ---
 
-ATMT Labs is a desktop app that wraps the terminal-agent CLIs you already run and turns them into a
+Jepoy Floor AI is a desktop app that wraps the terminal-agent CLIs you already run and turns them into a
 team: each agent gets its own terminal, working directory, memory and inbox, and an orchestrator
 (**Ramon**, at the head desk) plans work, delegates it and keeps the floor moving while you're away.
 
@@ -65,14 +65,14 @@ inside `node_modules/better-sqlite3`, then run `node tools/patch-node-pty-conpty
 | `npm run release:patch` / `:minor` / `:major` | Bump version, changelog, tag, build — see [RELEASE.md](RELEASE.md) |
 | `npm run version:patch` / `:minor` / `:major` | Increase the app version before every source push — see [RELEASE.md](RELEASE.md) |
 
-## ATMT Skills Library
+## Jepoy Floor AI Skills Library
 
 The Skills tab browses skills published from the separate public
-[ATMT Labs Floor Agent Skills repository](https://github.com/jeffreycayao/atmt_labs_floor_agentskills).
+[Jepoy Floor AI Floor Agent Skills repository](https://github.com/jeffreycayao/atmt_labs_floor_agentskills).
 The app checks each downloaded file against the catalog's pinned commit and SHA-256 hash before
 installing it. Installed skills update only when the user selects **Update**. The first release
 installs into Claude Code's user skills directory; other agent install targets are not yet supported.
-The published skills have their own ATMT-only use license. ATMT's bundled internal skills remain
+The published skills have their own Jepoy Floor AI-only use license. Jepoy Floor AI's bundled internal skills remain
 part of the desktop app.
 
 ## Docs
@@ -95,6 +95,6 @@ Brand assets live in [`brand/`](brand/). App name, slugs and the release repo ar
 
 ## License
 
-Proprietary — © 2026 Automatika Consulting (ATMT Labs). All rights reserved. See [LICENSE](LICENSE).
+Proprietary — © 2026 Automatika Consulting (Jepoy Floor AI). All rights reserved. See [LICENSE](LICENSE).
 End users are licensed under the [End User License Agreement](EULA.md); personal data is covered by the [Privacy Policy](PRIVACY.md).
 Third-party components (including the MIT-licensed foundation this app is built on) keep their own licenses — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSE-ASSETS](LICENSE-ASSETS).

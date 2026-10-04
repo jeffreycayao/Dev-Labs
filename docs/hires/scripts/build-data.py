@@ -15,7 +15,7 @@ may use any model string; suggestions never validate).
 import json, os, re, sys, urllib.request
 
 PROVIDERS = ['claude', 'antigravity', 'codex', 'cursor']
-UPSTREAM_CONFIG = ('https://raw.githubusercontent.com/automatika/atmt-labs/'
+UPSTREAM_CONFIG = ('https://raw.githubusercontent.com/automatika/jepoy-floor-ai/'
                    'main/src/renderer/src/store/config.ts')
 
 # ── optional: sync models.json from upstream's hardcoded lists ──────────────

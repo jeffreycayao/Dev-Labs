@@ -1,4 +1,4 @@
-<!-- Thanks for contributing to ATMT Labs.
+<!-- Thanks for contributing to Jepoy Floor AI.
 
      Read this line before you go further: a PR without a BEFORE and an AFTER
      is not reviewable and will not be merged. The `PR evidence` check runs the

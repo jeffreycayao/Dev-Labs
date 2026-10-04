@@ -1,4 +1,4 @@
-# Releasing ATMT Labs
+# Releasing Jepoy Floor AI
 
 Versions follow [semver](https://semver.org) and start at `0.0.1`.
 

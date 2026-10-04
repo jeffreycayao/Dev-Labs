@@ -107,11 +107,11 @@ assets/<article-slug>-illustrations/
 
 ---
 
-## 本地覆盖规则（ATMT Labs blog — local overrides）
+## 本地覆盖规则（Jepoy Floor AI blog — local overrides）
 
 These project-level overrides apply on top of everything above whenever this skill runs in this repo:
 
-1. **小黑是黄色的。** Xiaohei's body is ALWAYS filled with the ATMT Labs accent yellow **#FFCA54** with a thin black hand-drawn outline (no suit, no tie). Eyes become two small BLACK dots (white dots don't read on yellow). Keep the bean shape, thin legs, blank expression — every image, no exceptions.
+1. **小黑是黄色的。** Xiaohei's body is ALWAYS filled with the Jepoy Floor AI accent yellow **#FFCA54** with a thin black hand-drawn outline (no suit, no tie). Eyes become two small BLACK dots (white dots don't read on yellow). Keep the bean shape, thin legs, blank expression — every image, no exceptions.
 2. Annotations are hand-written in **English**, not Chinese (the blog is English).
 3. Annotation colors: **orange, blue, and yellow only — never red** (site-wide no-red rule).
 4. Output images for blog posts go to `blog/src/assets/media/<post-slug>/` and each generated file must be recorded in `blog/src/_data/media.json` (set the entry's `status` to `"ready"`).

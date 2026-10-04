@@ -1,12 +1,14 @@
 # Changelog
 
-All notable changes to ATMT Labs. App versions rise before each source push; published releases use `npm run release:<patch|minor|major>` (see RELEASE.md).
+All notable changes to Jepoy Floor AI. App versions rise before each source push; published releases use `npm run release:<patch|minor|major>` (see RELEASE.md).
 
 ## Unreleased
 
+- **Rebrand: the app is now Jepoy Floor AI.** Renamed from ATMT Labs across the app, installer, website, docs and agent-facing copy. Display name, slug (`jepoy-floor-ai`), installer artifact names and the macOS/Windows app identity (`ph.automatika.jepoyfloorai`) all change; existing userData is carried over automatically on first run. Wired to live infrastructure and kept for a coordinated cutover: the `atmtlabs://` deep-link scheme and OAuth client id, the `labs.atmt.dev` account domains, the GitHub releases repo, the manifest spec tags (`atmt-labs/hire@1`, `atmt-labs/floor@1`) and the on-disk `.atmt-skill.json` skill metadata. The skills catalog now accepts catalogs signed with either publisher name. Account sign-in cookies moved to `jepoy_*` names; signed-in users just sign in again after the service deploys.
+
 ## v1.0.0 — 2026-09-30
 
-- **ATMT Labs is free with account sign-in.** Google/Yahoo sign-in remains required for new accounts; every signed-in account gets every app feature. New accounts renew a short-lived token. Existing machine-bound paid activations keep their original offline grant.
+- **Jepoy Floor AI is free with account sign-in.** Google/Yahoo sign-in remains required for new accounts; every signed-in account gets every app feature. New accounts renew a short-lived token. Existing machine-bound paid activations keep their original offline grant.
 - **Purchases retired.** Removed checkout, trial charging, unlock-code redemption, account purchase controls and the billing cron. Website, account pages, customer guide, terms and privacy copy now describe free access. Historical payment records remain for support and legal retention.
 
 ## v0.7.0 — 2026-09-29
@@ -44,9 +46,9 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 - **Website: user guide, terms and privacy.** `labs.atmt.dev/guide` is the user guide online. `labs.atmt.dev/terms` and `labs.atmt.dev/privacy` publish the Terms of Service / license and Privacy Policy that the sign-in page already links to. The privacy policy covers Google and Yahoo sign-in (scopes, use, Google API Services User Data Policy / Limited Use), cookies, processors, retention and data-subject rights (PH DPA, GDPR, US states). Both pages still carry `[CONFIRM]` items and a draft banner to remove after review.
 - **User guide: your building.** New section on running many floors at once: opening a floor, the 200-floor limit, one Ramon for the whole building, agents messaging across floors, and what closing a floor does.
 - **Public app updates:** release CI now mirrors private release notes and installer assets to a public distribution repository; packaged clients check that public feed without a GitHub credential.
-- **Website (labs.atmt.dev):** new `site/` folder, deployed as its own Vercel project. It holds the landing page for **ATMT Labs Floor** (building concept, feature tour "floor by floor", pricing, FAQ, video placeholder), plus `/welcome` (after checkout) and `/pricing`. It uses the Automatika brand and loads no scripts.
+- **Website (labs.atmt.dev):** new `site/` folder, deployed as its own Vercel project. It holds the landing page for **Jepoy Floor AI Floor** (building concept, feature tour "floor by floor", pricing, FAQ, video placeholder), plus `/welcome` (after checkout) and `/pricing`. It uses the Automatika brand and loads no scripts.
 - **Building cap:** up to **200 floors** (office windows) can be open at once. A new floor beyond that shows "Your building is full" instead of opening. There was no limit before.
-- **Install the admin page on your phone:** `auth.labs.atmt.dev/admin` is now an installable web app ("ATMT Admin": Add to Home Screen on iPhone, Install app on Android). Only the admin page is installable. Its manifest sits behind the owner check and returns 404 to everyone else. There is no service worker, so nothing from the admin page is cached on the device. The site-wide `/site.webmanifest` was removed.
+- **Install the admin page on your phone:** `auth.labs.atmt.dev/admin` is now an installable web app ("Jepoy Floor AI Admin": Add to Home Screen on iPhone, Install app on Android). Only the admin page is installable. Its manifest sits behind the owner check and returns 404 to everyone else. There is no service worker, so nothing from the admin page is cached on the device. The site-wide `/site.webmanifest` was removed.
 - **Branded web pages:** sign-in, account, admin and message pages on auth.labs.atmt.dev now follow the Automatika Design System v2 (`brand/`): automatika™ logo (light and dark versions), Poppins headings, Inter body text, lime `#C7FD11` primary button, rounded cards, light and dark mode. The brand favicon set, apple-touch icon and web manifest are served by the service itself. Fonts are self-hosted (SIL OFL, `services/licensing/assets/fonts/LICENSE.txt`).
 - **Admin page for unlock codes:** `auth.labs.atmt.dev/admin` lets the owner create (with a label and optional expiry), list and revoke unlock codes in the browser. Only emails in `ADMIN_EMAILS` (default `jeffreycayao@gmail.com`), only via Google sign-in from the last 12 hours; everyone else gets a 404. Run `npm run db:migrate` once (adds `web_sessions.provider`).
 - **Account menu in the app:** Manage Account & Subscription, Cancel Free Trial, Redeem Unlock Code, and Start Free Trial / Buy open the web account page or Checkout. The app menu is now always installed; "New Floor" still appears only with multi-window floors on.
@@ -58,7 +60,7 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 - **Fixed:** default MCP tool servers never loaded for Claude Code agents (they were written to `--settings`, which Claude Code ignores; now `--mcp-config`). Keyed servers no longer launch with an empty key.
 - License screen and agent-spawn messages now describe the lifetime license instead of a "subscription"; License Agreement and Privacy links added to sign-in.
 - Docs: user guide, AGENTS.md, draft EULA and Privacy Policy, go-live checklist.
-- Replace the community skills catalog with the ATMT Skills Library, sourced from a separate public repository.
+- Replace the community skills catalog with the Jepoy Floor AI Skills Library, sourced from a separate public repository.
 - Add pinned, hash-verified Claude Code skill installs and explicit updates with local-edit protection.
 - Fixed Ramon switching from Claude to Codex: use a supported ChatGPT sign-in model, repair the old model if a failed switch saved it, surface Codex's folder-trust prompt, detect immediate startup exits, and restart the previous engine when a switch fails (with an explicit warning if its conversation cannot resume).
 
@@ -81,10 +83,10 @@ All notable changes to ATMT Labs. App versions rise before each source push; pub
 
 ## v0.0.2 — 2026-09-28
 
-- Packaged app updates and What's New now use the public ATMT Labs releases repository without a GitHub credential.
+- Packaged app updates and What's New now use the public Jepoy Floor AI releases repository without a GitHub credential.
 - Published private releases automatically mirror their notes, updater metadata and installers to that public repository.
 
 ## v0.0.1 — 2026-09-27
 
-- Initial ATMT Labs release: built on an MIT-licensed open-source codebase.
+- Initial Jepoy Floor AI release: built on an MIT-licensed open-source codebase.
 - New warm-dark lime color scheme, Filipino agent roster, version reset.

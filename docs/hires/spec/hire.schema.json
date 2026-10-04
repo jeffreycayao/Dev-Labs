@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://atmtlabs-hires.dev/spec/hire.schema.json",
-  "title": "ATMT Labs hire manifest (v1)",
-  "description": "A portable, shareable agent role template for the ATMT Labs multi-agent harness. A manifest never auto-spawns an agent: importing it only pre-fills the Add-Agent modal for human review.",
+  "title": "Jepoy Floor AI hire manifest (v1)",
+  "description": "A portable, shareable agent role template for the Jepoy Floor AI multi-agent harness. A manifest never auto-spawns an agent: importing it only pre-fills the Add-Agent modal for human review.",
   "type": "object",
   "required": ["spec", "name"],
   "additionalProperties": false,

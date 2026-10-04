@@ -1,15 +1,15 @@
 # Third-Party Notices
 
-ATMT Labs is proprietary software of Automatika Consulting (ATMT Labs / Automatika PH Labs).
+Jepoy Floor AI is proprietary software of Automatika Consulting (Jepoy Floor AI / Automatika PH Labs).
 It incorporates third-party components that are licensed under their own terms, reproduced
 below as those licenses require. These notices do not change the license under which
-ATMT Labs itself is provided (see LICENSE).
+Jepoy Floor AI itself is provided (see LICENSE).
 
 ---
 
 ## Original application foundation — MIT License
 
-Portions of ATMT Labs are derived from an open-source multi-agent desktop harness,
+Portions of Jepoy Floor AI are derived from an open-source multi-agent desktop harness,
 used under the following license:
 
 ```
@@ -48,6 +48,6 @@ with credit. See LICENSE-ASSETS.
 
 ## Other open-source components
 
-ATMT Labs is built with Electron, React, PixiJS, xterm.js, node-pty, better-sqlite3 and
+Jepoy Floor AI is built with Electron, React, PixiJS, xterm.js, node-pty, better-sqlite3 and
 other open-source packages. Each is distributed under its own license (MIT, Apache-2.0,
 BSD or similar), included with the package in the application bundle.

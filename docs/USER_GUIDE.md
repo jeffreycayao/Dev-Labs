@@ -1,6 +1,6 @@
-# ATMT Labs — User Guide
+# Jepoy Floor AI — User Guide
 
-ATMT Labs turns the AI coding tools you already use into a **team of agents in a virtual office**:
+Jepoy Floor AI turns the AI coding tools you already use into a **team of agents in a virtual office**:
 - Each agent has its own desk, terminal, project folder, memory and inbox.
 - **Ramon**, your orchestrator at the head desk, plans work, hands it out and keeps the floor moving.
 
@@ -20,11 +20,11 @@ You need **at least one AI coding tool** installed and signed in on your compute
 | Cursor | `cursor-agent` |
 | Others: Grok, Kimi, Qwen, Copilot, OpenCode, Crush, pi, or any command | see Settings → Agents & Models |
 
-ATMT Labs doesn't include AI usage. **Each tool bills you through your own account with that company.**
+Jepoy Floor AI doesn't include AI usage. **Each tool bills you through your own account with that company.**
 
 ## 2. Sign in to your free account
 
-When ATMT Labs opens, it asks you to sign in. Signing in happens in your browser, with **Google or Yahoo**; afterwards the browser sends you back to the app.
+When Jepoy Floor AI opens, it asks you to sign in. Signing in happens in your browser, with **Google or Yahoo**; afterwards the browser sends you back to the app.
 
 All app features are available for free after sign-in. No payment card, trial, purchase or unlock code is needed.
 
@@ -32,7 +32,7 @@ Use the same account on your other computers. The app checks your account period
 
 ## 3. First run
 
-1. **Pick a harness config.** This is the folder where ATMT Labs keeps one workspace: settings, agents, memory and history. Choose **create new config…** the first time.
+1. **Pick a harness config.** This is the folder where Jepoy Floor AI keeps one workspace: settings, agents, memory and history. Choose **create new config…** the first time.
 2. **Set up, in 4 steps:** a home for the app, Ramon's engine, your projects, and permissions.
 3. **You land on the office floor.** Ramon boots at the head desk.
 
@@ -71,7 +71,7 @@ A **floor** is a whole team saved in one file (`.floor.json`).
 
 **Reset your floor:** **Settings → General → reset floor**. Confirm with **back up ZIP & reset** or **reset without backup**. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your account, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.
 
-The ZIP contains `floor/` (roster, hive and shared memory), matching Claude session transcripts under `claude-projects/`, a manifest and `RESTORE.txt`. It can contain private prompts and messages, so keep it in a private place. To restore, quit ATMT Labs, extract `floor/` into the original home folder named in the manifest and `claude-projects/` into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and account credentials are not bundled.
+The ZIP contains `floor/` (roster, hive and shared memory), matching Claude session transcripts under `claude-projects/`, a manifest and `RESTORE.txt`. It can contain private prompts and messages, so keep it in a private place. To restore, quit Jepoy Floor AI, extract `floor/` into the original home folder named in the manifest and `claude-projects/` into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and account credentials are not bundled.
 
 **Try it:** the *Online Seller Team* is a shop manager, a landing-page designer and a product copywriter. It's built for Pancake POS and Webcake.
 
@@ -158,7 +158,7 @@ This guide is also online at **https://labs.atmt.dev/guide**.
 
 ## 11. Updates and What's New
 
-Packaged builds check the public ATMT Labs release feed while auto-update is
+Packaged builds check the public Jepoy Floor AI release feed while auto-update is
 enabled in **Settings → General**. When a newer version is ready, the update
 badge tells you; you choose when to restart and install it. **What's New**
 shows the release highlights, and **full changelog** opens the public Releases
@@ -175,7 +175,7 @@ page. The app does not need a GitHub sign-in or token for updates.
 | A connector doesn't work | Check it's **On** with a key saved, start a **new** agent, and use a Claude Code agent. |
 | "Your building is full" | You have 200 floors open. Close a floor you no longer need, then open a new one. |
 
-For the Windows fallback, add the following to `%USERPROFILE%\.codex\config.toml`, then restart the Codex agent. ATMT Labs copies that setting into each agent's Codex configuration when it starts. The fallback keeps a sandbox but has weaker isolation than administrator-approved setup. Company policy may disallow it.
+For the Windows fallback, add the following to `%USERPROFILE%\.codex\config.toml`, then restart the Codex agent. Jepoy Floor AI copies that setting into each agent's Codex configuration when it starts. The fallback keeps a sandbox but has weaker isolation than administrator-approved setup. Company policy may disallow it.
 
 ```toml
 [windows]

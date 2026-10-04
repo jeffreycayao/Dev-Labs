@@ -1,16 +1,16 @@
-# ATMT Labs — Privacy Policy
+# Jepoy Floor AI — Privacy Policy
 
 > Published policy: https://labs.atmt.dev/privacy (`site/privacy.html`). Keep this bundled copy aligned with that page.
 
 **Effective / last updated:** September 30, 2026
 
-Automatika Consulting explains here how we handle personal data for the ATMT Labs Floor desktop app, website and account service.
+Automatika Consulting explains here how we handle personal data for the Jepoy Floor AI Floor desktop app, website and account service.
 
 ## The short version
 
 - Your projects, files, prompts, agent conversations and output, memory, and connector keys stay on your computer. AI providers you choose may receive your work under their own policies.
 - We keep your email, name, sign-in sessions and signed-in computer details to run your free account.
-- ATMT Labs no longer collects payment details for new app access. Historical purchase records may be retained for legal and accounting duties.
+- Jepoy Floor AI no longer collects payment details for new app access. Historical purchase records may be retained for legal and accounting duties.
 - We do not sell or share personal data for advertising or use it to train AI models. Anonymous usage statistics are optional.
 
 ## Data we collect
@@ -33,7 +33,7 @@ We request only `openid`, `email` and `profile`. We receive your provider accoun
 
 ## Historical payments
 
-ATMT Labs no longer takes payment for app access. Earlier payments were handled by Stripe; we never received your full card number. We may retain historical transaction records for support and legal accounting duties. See [Stripe's privacy policy](https://stripe.com/privacy).
+Jepoy Floor AI no longer takes payment for app access. Earlier payments were handled by Stripe; we never received your full card number. We may retain historical transaction records for support and legal accounting duties. See [Stripe's privacy policy](https://stripe.com/privacy).
 
 ## Data on your computer and in third-party AI tools
 
@@ -43,7 +43,7 @@ The app runs locally. Your files, conversations, agent memory, floor and hire fi
 
 If enabled, the app sends anonymous usage events to PostHog Cloud in the United States. Events carry a random install ID and no account ID, name, email, file names, prompts or output. Disable this in **Settings → General → Anonymous usage stats** or with `DO_NOT_TRACK`. Unofficial builds send no events.
 
-The marketing website sets no cookies or analytics. The account site uses only required sign-in cookies: `atmt_session` for up to 30 days and `atmt_authz` / `atmt_idp` for up to 10 minutes. There are no advertising cookies.
+The marketing website sets no cookies or analytics. The account site uses only required sign-in cookies: `jepoy_session` for up to 30 days and `jepoy_authz` / `jepoy_idp` for up to 10 minutes. There are no advertising cookies.
 
 ## Processors and retention
 

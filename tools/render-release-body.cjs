@@ -33,7 +33,7 @@ function renderReleaseBody(tag, version, highlights, changelog) {
   if (!section && !taggedVersion.includes('-')) {
     throw new Error(`CHANGELOG.md has no section for ${tag}`);
   }
-  return `# ATMT Labs ${tag}\n\n## Highlights\n\n${notes}\n${section ? `\n${section}\n` : ''}`;
+  return `# Jepoy Floor AI ${tag}\n\n## Highlights\n\n${notes}\n${section ? `\n${section}\n` : ''}`;
 }
 
 if (require.main === module) {

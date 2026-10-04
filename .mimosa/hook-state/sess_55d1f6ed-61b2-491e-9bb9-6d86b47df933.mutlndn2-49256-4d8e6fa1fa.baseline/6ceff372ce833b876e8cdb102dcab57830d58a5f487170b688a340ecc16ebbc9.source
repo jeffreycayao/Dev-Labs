@@ -1,0 +1,31 @@
+{
+  "name": "jepoy-floor-ai-licensing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jepoy Floor AI accounts, licensing and billing \u2014 auth.labs.atmt.dev + api.labs.atmt.dev on Vercel.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "keygen": "node scripts/keygen.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "env:push": "node scripts/push-env.mjs",
+    "dev": "vercel dev",
+    "brand:assets": "node scripts/brand-assets.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "hono": "^4.13.9",
+    "jose": "^6.2.12"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

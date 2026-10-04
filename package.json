@@ -1,8 +1,8 @@
 {
-  "name": "atmt-labs",
+  "name": "jepoy-floor-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "ATMT Labs — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
+  "description": "Jepoy Floor AI — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
   "main": "out/main/index.js",
   "author": "Automatika Consulting <hello@automatika.ph>",
   "homepage": "https://automatika.ph/",

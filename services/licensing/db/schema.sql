@@ -1,4 +1,4 @@
--- ATMT Labs licensing schema (Postgres / Neon). Idempotent: safe to re-run.
+-- Jepoy Floor AI licensing schema (Postgres / Neon). Idempotent: safe to re-run.
 -- Apply with `npm run db:migrate` (reads DATABASE_URL from .env.local).
 
 -- One account per verified email. Google and Yahoo sign-ins with the same

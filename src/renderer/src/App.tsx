@@ -34,7 +34,7 @@ import { FullscreenTerminal } from '@/components/FullscreenTerminal';
 import { TaskDetailOverlay } from '@/components/TaskDetailOverlay';
 import { IdePanel } from '@/ide/IdePanel';
 import { useHoldOptionToTalk } from '@/freeflow/holdOption';
-import brandLogo from '@brand/Square logos/logo.png?url';
+import brandLogo from '@brand/Solid charcoal J monogram favicon.png?url';
 
 // Injected at build time from package.json (see electron.vite.config.ts).
 declare const __APP_VERSION__: string;
@@ -333,7 +333,7 @@ export function App() {
       >
         <img
           src={brandLogo}
-          alt="ATMT Labs"
+          alt="Jepoy Floor AI"
           style={{ height: 20, width: 'auto', display: 'block' }}
         />
         {/* v0.3.7: the version is no longer inert text — it doubles as the

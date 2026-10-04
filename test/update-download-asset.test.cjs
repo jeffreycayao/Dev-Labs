@@ -7,13 +7,13 @@ const loadTs = require('./load-ts.cjs');
 const { pickDownloadAsset } = loadTs('src/main/updater.ts');
 
 const assets = [
-  { name: 'ATMT-Labs-0.5.0-mac-arm64.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-mac-arm64.dmg' },
-  { name: 'ATMT-Labs-0.5.0-mac-arm64.zip', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-mac-arm64.zip' },
-  { name: 'ATMT-Labs-0.5.0-mac-x64.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-mac-x64.dmg' },
-  { name: 'ATMT-Labs-0.5.0-mac-universal.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-mac-universal.dmg' },
-  { name: 'ATMT-Labs-0.5.0-win-x64-setup.exe', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-win-x64-setup.exe' },
-  { name: 'ATMT-Labs-0.5.0-win-x64-portable.exe', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-win-x64-portable.exe' },
-  { name: 'ATMT-Labs-0.5.0-linux-x86_64.AppImage', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/ATMT-Labs-0.5.0-linux-x86_64.AppImage' },
+  { name: 'Jepoy-Floor-AI-0.5.0-mac-arm64.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/Jepoy-Floor-AI-0.5.0-mac-arm64.dmg' },
+  { name: 'Jepoy-Floor-AI-0.5.0-mac-arm64.zip', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/Jepoy-Floor-AI-0.5.0-mac-arm64.zip' },
+  { name: 'Jepoy-Floor-AI-0.5.0-mac-x64.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/Jepoy-Floor-AI-0.5.0-mac-x64.dmg' },
+  { name: 'Jepoy-Floor-AI-0.5.0-mac-universal.dmg', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/Jepoy-Floor-AI-0.5.0-mac-universal.dmg' },
+  { name: 'Jepoy-Floor-AI-0.5.0-win-x64-setup.exe', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/Jepoy-Floor-AI-0.5.0-win-x64-setup.exe' },
+  { name: 'Jepoy-Floor-AI-0.5.0-win-x64-portable.exe', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/Jepoy-Floor-AI-0.5.0-win-x64-portable.exe' },
+  { name: 'Jepoy-Floor-AI-0.5.0-linux-x86_64.AppImage', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/Jepoy-Floor-AI-0.5.0-linux-x86_64.AppImage' },
   { name: 'latest-mac.yml', browser_download_url: 'https://github.com/x/y/releases/download/v0.5.0/latest-mac.yml' }
 ];
 

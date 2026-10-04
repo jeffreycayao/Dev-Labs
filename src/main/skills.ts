@@ -6,7 +6,7 @@
  * The community README parser and URL-based installer below are legacy helpers
  * retained for their existing regression tests. They are no longer wired to IPC
  * or the renderer. The active first-party catalog and installer live in
- * atmtSkills.ts, where installation accepts only a validated catalog ID.
+ * skillsCatalog.ts, where installation accepts only a validated catalog ID.
  */
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join, basename, dirname, resolve, sep } from 'node:path';

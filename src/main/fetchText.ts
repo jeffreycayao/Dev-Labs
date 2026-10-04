@@ -16,7 +16,7 @@ export function getText(url: string, opts: { timeoutMs?: number } = {}): Promise
   // Empty URL = remote catalog disabled (no CATALOG_REPO in shared/brand.ts); callers fall back.
   if (!url) return Promise.reject(new Error('remote source disabled'));
   return new Promise((resolve, reject) => {
-    const req = httpsRequest(url, { method: 'GET', headers: { 'user-agent': 'atmt-labs' } }, (res) => {
+    const req = httpsRequest(url, { method: 'GET', headers: { 'user-agent': 'jepoy-floor-ai' } }, (res) => {
       // Follow a redirect once per hop; raw.githubusercontent does this for
       // branch aliases and the request just fails without it.
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {

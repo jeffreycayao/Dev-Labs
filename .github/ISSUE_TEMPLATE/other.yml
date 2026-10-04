@@ -9,9 +9,9 @@ body:
         feature request, please back out and pick that template instead: they ask for
         the details that make the report actionable.
 
-        For questions and ideas, the [Discussions](https://github.com/automatika/atmt-labs/discussions)
+        For questions and ideas, the [Discussions](https://github.com/automatika/jepoy-floor-ai/discussions)
         tab is usually faster. For anything security related, please use the private
-        [security advisory](https://github.com/automatika/atmt-labs/security/advisories/new)
+        [security advisory](https://github.com/automatika/jepoy-floor-ai/security/advisories/new)
         form rather than a public issue.
   - type: textarea
     id: details
@@ -23,7 +23,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: ATMT Labs version (if relevant)
+      label: Jepoy Floor AI version (if relevant)
       placeholder: "0.4.6"
     validations:
       required: false

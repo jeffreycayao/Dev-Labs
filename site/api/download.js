@@ -10,11 +10,11 @@ const REPO = 'jeffreycayao/ATMT_LABS_FLOOR-releases';
 const RELEASES_PAGE = `https://github.com/${REPO}/releases/latest`;
 
 const PLATFORMS = {
-  mac: /^ATMT-Labs-.+-mac-universal\.dmg$/,
-  'mac-zip': /^ATMT-Labs-.+-mac-universal\.zip$/,
-  windows: /^ATMT-Labs-.+-win-x64-setup\.exe$/,
-  'windows-portable': /^ATMT-Labs-.+-win-x64-portable\.exe$/,
-  linux: /^ATMT-Labs-.+-linux-x86_64\.AppImage$/
+  mac: /^Jepoy-Floor-AI-.+-mac-universal\.dmg$/,
+  'mac-zip': /^Jepoy-Floor-AI-.+-mac-universal\.zip$/,
+  windows: /^Jepoy-Floor-AI-.+-win-x64-setup\.exe$/,
+  'windows-portable': /^Jepoy-Floor-AI-.+-win-x64-portable\.exe$/,
+  linux: /^Jepoy-Floor-AI-.+-linux-x86_64\.AppImage$/
 };
 
 /** The download URL for `os` in a GitHub release object, or null. */

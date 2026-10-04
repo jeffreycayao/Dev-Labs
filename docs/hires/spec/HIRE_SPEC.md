@@ -1,7 +1,7 @@
 # Hire manifest spec — `atmt-labs/hire@1`
 
 A **hire manifest** is a small JSON document describing a role-configured agent for the
-[ATMT Labs](https://github.com/automatika/atmt-labs) multi-agent harness:
+[Jepoy Floor AI](https://github.com/automatika/jepoy-floor-ai) multi-agent harness:
 its name, sprite, provider, model, command flags, goal, capability tags, and token budget.
 Because it's just JSON, a role can be shared as a file, hosted in a community gallery,
 and imported into anyone's office with one click.

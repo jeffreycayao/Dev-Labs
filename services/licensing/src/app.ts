@@ -27,9 +27,9 @@ export interface AppDeps {
   now?: () => number;
 }
 
-const SESSION_COOKIE = 'atmt_session';
-const AUTHZ_COOKIE = 'atmt_authz';
-const IDP_COOKIE = 'atmt_idp';
+const SESSION_COOKIE = 'jepoy_session';
+const AUTHZ_COOKIE = 'jepoy_authz';
+const IDP_COOKIE = 'jepoy_idp';
 const FLOW_TTL_MS = 10 * 60 * 1000;
 const API_PATHS = /^\/(v1\/|api\/cron\/|health$)/;
 
@@ -157,7 +157,7 @@ export function createApp(deps: AppDeps): Hono {
     const q = c.req.query();
     if (q.client_id !== cfg.desktop.clientId || !allowedRedirect(q.redirect_uri)) {
       // Never redirect to an unregistered URI.
-      return html(c, messagePage('Invalid sign-in request', 'Open ATMT Labs and press Sign in again.'), 400);
+      return html(c, messagePage('Invalid sign-in request', 'Open Jepoy Floor AI and press Sign in again.'), 400);
     }
     const redirectUri = q.redirect_uri;
     const back = (error: string) => c.redirect(`${redirectUri}?error=${error}&state=${encodeURIComponent(q.state ?? '')}`, 302);
@@ -173,7 +173,7 @@ export function createApp(deps: AppDeps): Hono {
 
   app.get('/oauth/continue', async (c) => {
     const flow = await readFlow<AuthzFlow>(c, AUTHZ_COOKIE);
-    if (!flow) return html(c, messagePage('Sign-in expired', 'Go back to ATMT Labs and press Sign in again.'), 400);
+    if (!flow) return html(c, messagePage('Sign-in expired', 'Go back to Jepoy Floor AI and press Sign in again.'), 400);
     const acct = await sessionAccount(c);
     if (!acct) return c.redirect('/login?next=/oauth/continue', 302);
     return issueCodeAndReturn(c, acct.id, flow);

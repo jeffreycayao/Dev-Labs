@@ -1,6 +1,6 @@
-# ATMT Labs free-account release checklist
+# Jepoy Floor AI free-account release checklist
 
-ATMT Labs is free after Google or Yahoo sign-in. The service remains at `services/licensing` for deployment compatibility, but checkout and trial charging are retired. See [service setup](../services/licensing/README.md), [design](../docs/licensing/DESIGN.md), and [API](../docs/licensing/API.md).
+Jepoy Floor AI is free after Google or Yahoo sign-in. The service remains at `services/licensing` for deployment compatibility, but checkout and trial charging are retired. See [service setup](../services/licensing/README.md), [design](../docs/licensing/DESIGN.md), and [API](../docs/licensing/API.md).
 
 1. Deploy the account service with its existing Neon database, OAuth provider credentials, session/access secrets and Ed25519 signing key. Stripe variables are no longer needed. Preserve historical database rows and the existing signing key until old clients have migrated.
 2. Remove the old Vercel daily trial-charge cron. The current `vercel.json` has no cron. Separately inspect Stripe for pending external payment intents and cancel them as appropriate. Disabling the app's charge path does not cancel already-created external payments.

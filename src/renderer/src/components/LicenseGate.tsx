@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { LicenseStatus } from '@shared/license';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
-import brandLogo from '@brand/Square logos/logo.png?url';
+import brandLogo from '@brand/Solid charcoal J monogram favicon.png?url';
 import { LICENSING } from '@shared/brand';
 
 export interface LicenseGateProps { status: LicenseStatus }
@@ -40,7 +40,7 @@ export function LicenseGate({ status }: LicenseGateProps) {
       <div style={{ width: 520, maxWidth: '94vw' }}>
         <PixelPanel variant="dialog" title={title} noPadding>
           <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <img src={brandLogo} alt="ATMT Labs" style={{ height: 40, width: 'auto', alignSelf: 'flex-start' }} />
+            <img src={brandLogo} alt="Jepoy Floor AI" style={{ height: 40, width: 'auto', alignSelf: 'flex-start' }} />
             {status.email && state !== 'signed_out' && (
               <div style={{ fontFamily: 'var(--cth-font-mono)', fontSize: 11, color: 'var(--cth-ink-500)' }}>
                 {t('license.signedInAs', { email: status.email })}

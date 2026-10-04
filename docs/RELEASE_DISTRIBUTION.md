@@ -15,7 +15,7 @@ this repository. With GitHub CLI:
 
 ```bash
 gh repo create jeffreycayao/ATMT_LABS_FLOOR-releases --public --add-readme \
-  --description "Public ATMT Labs installers and release notes"
+  --description "Public Jepoy Floor AI installers and release notes"
 ```
 
 Leave Releases enabled. The public repository's generated source archives will

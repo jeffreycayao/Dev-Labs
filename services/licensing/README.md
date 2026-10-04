@@ -1,4 +1,4 @@
-# ATMT Labs account service
+# Jepoy Floor AI account service
 
 This Vercel service runs Google/Yahoo sign-in, web account sessions, desktop OAuth with PKCE and refresh-token rotation, signed short-lived app access tokens, and signed-in computer management. **Every signed-in account receives free access.** There is no active checkout, trial charge, purchase, or unlock-code flow.
 

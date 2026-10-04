@@ -1,4 +1,4 @@
-# ATMT Labs free-account API
+# Jepoy Floor AI free-account API
 
 The service keeps the `/v1/licenses` name for desktop compatibility. Its token now proves free account sign-in, not a purchase. Every authenticated account receives `plan: free`, `status: free`, an expiry 24 hours after issue, and a computer-bound `did` claim. The token is an EdDSA JWS with `iss`, `aud`, `sub`, `iat`, `exp`, `email`, `name`, `jti`, `plan`, `status`, and `features` claims.
 

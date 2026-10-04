@@ -4,6 +4,8 @@ All notable changes to Jepoy Floor AI. App versions rise before each source push
 
 ## Unreleased
 
+## v2.0.0 — 2026-10-04
+
 - **Rebrand: the app is now Jepoy Floor AI.** Renamed from ATMT Labs across the app, installer, website, docs and agent-facing copy. Display name, slug (`jepoy-floor-ai`), installer artifact names and the macOS/Windows app identity (`ph.automatika.jepoyfloorai`) all change; existing userData is carried over automatically on first run. Wired to live infrastructure and kept for a coordinated cutover: the `atmtlabs://` deep-link scheme and OAuth client id, the `labs.atmt.dev` account domains, the GitHub releases repo, the manifest spec tags (`atmt-labs/hire@1`, `atmt-labs/floor@1`) and the on-disk `.atmt-skill.json` skill metadata. The skills catalog now accepts catalogs signed with either publisher name. Account sign-in cookies moved to `jepoy_*` names; signed-in users just sign in again after the service deploys.
 
 ## v1.0.0 — 2026-09-30

@@ -1,6 +1,6 @@
 {
   "name": "jepoy-floor-ai",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Jepoy Floor AI — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
   "main": "out/main/index.js",

@@ -4,16 +4,14 @@ All notable changes to Jepoy Floor AI. App versions rise before each source push
 
 ## Unreleased
 
-## v3.0.0 — 2026-10-21
-
 - **README rewritten** in the layout of the original Munder Difflin README: supported agents, how it works, features, getting started, roadmap, license and acknowledgements, all describing this edition.
-
 - **Open source under the MIT License.** Jepoy Floor AI is a fork of [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin) by Chaitanya Giri, and is now released under the same MIT License, with credit to Chaitanya and the Munder Difflin contributors in `LICENSE`, `THIRD_PARTY_NOTICES.md`, `CONTRIBUTORS.md`, Help → About and the website. The proprietary license and EULA are gone. Source: https://github.com/jeffreycayao/Dev-Labs.
 - **No account, no sign-in.** Removed the Google/Yahoo sign-in gate, the account menu and Settings section, the license token client and the `services/licensing` account service. Agents start as soon as the app is installed.
 - **Fix: a failed "Restart & Continue" no longer wipes the agent's terminal history** when the app falls back to the previous engine and resumes its session.
 - **Security: app windows can no longer be navigated away from the app.** Dropping a file or link on the window used to load it with the app's terminal bridge. The Slack and webhook trigger servers now listen on this computer only (the tunnel still reaches them).
 - **Downloads stop after 5 redirects and 10 MB**, and relative redirects now work.
 - Removed unused dependencies: `localtunnel`, `@types/localtunnel`, `commit-graph`.
+- **GitHub:** a Sponsor button (jepoy.dev/sponsor), private vulnerability reporting and OS labels for bug reports.
 - **Website moved to jepoy.dev.** `/welcome`, `/pricing` and `/terms` redirect; the privacy policy now describes the app without an account.
 
 ## v2.0.0 — 2026-10-04

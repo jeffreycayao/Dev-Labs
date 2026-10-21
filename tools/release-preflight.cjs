@@ -104,7 +104,7 @@ async function main() {
       problems.push(`Tag ${releaseTag} points at ${sha.slice(0, 7)}, which is not on main. Merge first, then tag main.`);
     }
     if (!problems.length) {
-      const err = await waitForCi(sha, { required: ['Typecheck', 'Licensing service'] });
+      const err = await waitForCi(sha, { required: ['Typecheck', 'Build'] });
       if (err) problems.push(err);
     }
   }

@@ -17,7 +17,7 @@ Each command runs `tools/bump-version.cjs`, which:
 
 then runs the local release preflight. Push the commit to `main`, wait for CI,
 and push its tag; the tag workflow builds installers for every platform and
-mirrors the completed release. Run `npm run dist` separately only when you
+publishes the release on this repository. Run `npm run dist` separately only when you
 want a local installer.
 
 The release command refuses to change files when the checkout has uncommitted
@@ -52,17 +52,16 @@ Other cost rules:
 - Manual dry builds (**Actions → Release → Run workflow**) build Linux only by
   default; pick `linux+windows` or `all` when you really need them.
 
-Publish: `git push --follow-tags`. The tag workflow creates the private
-release, then mirrors its notes and assets to the public distribution
-repository. See [Public release distribution](docs/RELEASE_DISTRIBUTION.md)
-for the one-time repository and `PUBLIC_REPO_PAT` setup.
+Publish: `git push --follow-tags`. The tag workflow creates a draft release
+named "Jepoy Floor AI vX.Y.Z" on this repository, uploads every installer, and
+publishes it. No extra token or second repository is needed.
 
 Before each release, edit `build/release-notes.md` (3–5 bullets, ≤280 chars) — it is the in-app "What's new" toast.
 
 ## Auto-update destination
 
-Packaged clients use `jeffreycayao/ATMT_LABS_FLOOR-releases` through
-`electron-builder.yml` and `src/shared/brand.ts`. The public repository
-contains release assets, not application source. Remote model and hero
+Packaged clients from v3.0.4 on update from this repository's releases
+(`jeffreycayao/Dev-Labs`), set in `electron-builder.yml` and
+`src/shared/brand.ts`. Remote model and hero
 catalogs remain on bundled defaults until a separate public catalog source
 is configured.

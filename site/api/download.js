@@ -6,7 +6,7 @@
 // Asset names come from electron-builder.yml (artifactName). If those change,
 // update PLATFORMS below; test/site-download.test.cjs checks both stay in sync.
 
-const REPO = 'jeffreycayao/ATMT_LABS_FLOOR-releases';
+const REPO = 'jeffreycayao/Dev-Labs';
 const RELEASES_PAGE = `https://github.com/${REPO}/releases/latest`;
 
 const PLATFORMS = {

@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// The private release body is also the public release body. Build it from the
-// short notes that ship in latest*.yml and the matching CHANGELOG.md section.
+// The release body, built from the short notes that ship in latest*.yml and the matching CHANGELOG.md section.
 const fs = require('node:fs');
 const path = require('node:path');
 

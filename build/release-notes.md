@@ -1,4 +1,2 @@
-- Jepoy Floor AI is now free and open source (MIT). No account, no sign-in.
-- Built on Munder Difflin by Chaitanya Giri, now credited in Help → About.
-- A failed Restart & Continue keeps the agent's terminal history.
-- Safer windows and trigger servers. New website: jepoy.dev.
+- Updates and downloads now come straight from the open-source repo, github.com/jeffreycayao/Dev-Labs.
+- Jepoy Floor AI is free and open source (MIT). No account, no sign-in.

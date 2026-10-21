@@ -27,7 +27,7 @@ labels. Fonts are self-hosted under `assets/fonts/` with their OFL notice.
 
 ## Download links (automatic)
 
-`/download/mac`, `/download/mac-zip`, `/download/windows`, `/download/windows-portable` and `/download/linux` are handled by a small Vercel function, `api/download.js`. It asks GitHub for the latest stable release of `jeffreycayao/ATMT_LABS_FLOOR-releases` and redirects to the matching installer. The CDN caches each redirect for 5 minutes, so a new release shows up within about 5 minutes of the public mirror finishing. You don't edit the site for a release.
+`/download/mac`, `/download/mac-zip`, `/download/windows`, `/download/windows-portable` and `/download/linux` are handled by a small Vercel function, `api/download.js`. It asks GitHub for the latest stable release of `jeffreycayao/Dev-Labs` and redirects to the matching installer. The CDN caches each redirect for 5 minutes, so a new release shows up within about 5 minutes of the release being published. You don't edit the site for a release.
 
 - If GitHub is unreachable, or the release has no file for that platform, the link opens the public releases page instead.
 - Prereleases and drafts are skipped (GitHub's "latest" is the newest stable release).

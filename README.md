@@ -32,7 +32,7 @@ Wraps [Claude Code](https://claude.com/claude-code), OpenAI Codex, Antigravity a
 **[⬇ Download for macOS, Windows or Linux](https://jepoy.dev/#download)**
 
 <sub>No account, no sign-in, no license key. Every installer is on the
-<a href="https://github.com/jeffreycayao/ATMT_LABS_FLOOR-releases/releases/latest">releases page</a>.</sub>
+<a href="https://github.com/jeffreycayao/Dev-Labs/releases/latest">releases page</a>.</sub>
 
 **New here?** Start with the [User Guide](./docs/USER_GUIDE.md).
 
@@ -255,7 +255,7 @@ CLI shows as an **Install** card in the agent's terminal instead of an error.
 
 **Most people want this one.** Jepoy Floor AI is free and open source, with no account or sign-in.
 Installers for macOS, Windows and Linux are on [jepoy.dev](https://jepoy.dev/#download) and the
-[releases page](https://github.com/jeffreycayao/ATMT_LABS_FLOOR-releases/releases/latest). Install it,
+[releases page](https://github.com/jeffreycayao/Dev-Labs/releases/latest). Install it,
 open it, and the wizard takes you the rest of the way.
 
 You still need at least one agent CLI on your computer, signed in with that company's account.

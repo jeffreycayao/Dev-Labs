@@ -13,7 +13,7 @@ copyright: Copyright © 2026 Chaitanya Giri and Automatika Consulting
 publish:
   provider: github
   owner: jeffreycayao
-  repo: ATMT_LABS_FLOOR-releases
+  repo: Dev-Labs
 
 # Bake the update toast's "What's new" list straight into latest*.yml.
 #

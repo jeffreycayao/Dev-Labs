@@ -23,16 +23,15 @@ export const PROTOCOL = 'atmtlabs';
 // ---------------------------------------------------------------------------
 
 /**
- * Public, releases-only repository that installed clients poll for updates.
- * Never put a GitHub credential in the app bundle.
+ * The public source repository; its releases are what installed clients poll
+ * for updates. Never put a GitHub credential in the app bundle.
  * Keep this in sync with electron-builder.yml's publish block.
  */
-export const GITHUB_REPO = 'jeffreycayao/ATMT_LABS_FLOOR-releases';
+export const GITHUB_REPO = 'jeffreycayao/Dev-Labs';
 export const GITHUB_REPO_URL = GITHUB_REPO ? `https://github.com/${GITHUB_REPO}` : '';
 
 /** Optional repository for public docs/hero.json and docs/model-catalog.json.
- * The distribution repository contains only releases, so bundled catalogs
- * remain active until a separate public catalog source is configured. */
+ * Empty, so the bundled catalogs stay active until one is configured. */
 export const CATALOG_REPO = '';
 
 export function rawRepoUrl(path: string): string {

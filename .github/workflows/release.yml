@@ -47,7 +47,7 @@ jobs:
         run: node tools/release-preflight.cjs "$GITHUB_REF_NAME" --ci
 
   prepare:
-    name: Prepare private draft release
+    name: Prepare draft release
     needs: preflight
     # Tags must pass preflight; manual dry builds skip it (preflight is skipped).
     if: ${{ !cancelled() && (needs.preflight.result == 'success' || (github.event_name == 'workflow_dispatch' && needs.preflight.result == 'skipped')) }}
@@ -84,10 +84,10 @@ jobs:
           node tools/render-release-body.cjs "$GITHUB_REF_NAME" "$RUNNER_TEMP/release-body.md"
           if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft > "$RUNNER_TEMP/existing-release.json" 2>/dev/null; then
             jq -e '.isDraft == true' "$RUNNER_TEMP/existing-release.json" > /dev/null
-            echo "Reusing an existing private draft release."
+            echo "Reusing an existing draft release."
           else
             gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
-              --verify-tag --draft --title "$GITHUB_REF_NAME" \
+              --verify-tag --draft --title "Jepoy Floor AI $GITHUB_REF_NAME" \
               --notes-file "$RUNNER_TEMP/release-body.md"
           fi
 
@@ -170,7 +170,7 @@ jobs:
           fi
           cat "SHA256SUMS-${{ matrix.os }}.txt"
 
-      - name: Upload assets to private draft release
+      - name: Upload assets to draft release
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         env:
@@ -213,18 +213,4 @@ jobs:
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then prerelease=true; fi
           gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$id" \
             -F draft=false -F "prerelease=$prerelease" --silent
-          echo "Published private release $GITHUB_REF_NAME with all updater channels."
-
-  mirror:
-    name: Mirror to public releases
-    needs: publish
-    if: startsWith(github.ref, 'refs/tags/')
-    # The publish job creates the private release with GITHUB_TOKEN. GitHub does
-    # not fire another workflow's release event for that action, so call the
-    # mirror directly as part of this run. Manually published releases also
-    # reach the mirror through its release.published trigger.
-    uses: ./.github/workflows/publish-public-release.yml
-    with:
-      tag: ${{ github.ref_name }}
-    secrets:
-      PUBLIC_REPO_PAT: ${{ secrets.PUBLIC_REPO_PAT }}
+          echo "Published release $GITHUB_REF_NAME with all updater channels."

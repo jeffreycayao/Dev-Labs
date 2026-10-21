@@ -4,6 +4,8 @@ All notable changes to Jepoy Floor AI. App versions rise before each source push
 
 ## Unreleased
 
+- **README rewritten** in the layout of the original Munder Difflin README: supported agents, how it works, features, getting started, roadmap, license and acknowledgements, all describing this edition.
+
 - **Open source under the MIT License.** Jepoy Floor AI is a fork of [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin) by Chaitanya Giri, and is now released under the same MIT License, with credit to Chaitanya and the Munder Difflin contributors in `LICENSE`, `THIRD_PARTY_NOTICES.md`, `CONTRIBUTORS.md`, Help → About and the website. The proprietary license and EULA are gone. Source: https://github.com/jeffreycayao/Dev-Labs.
 - **No account, no sign-in.** Removed the Google/Yahoo sign-in gate, the account menu and Settings section, the license token client and the `services/licensing` account service. Agents start as soon as the app is installed.
 - **Fix: a failed "Restart & Continue" no longer wipes the agent's terminal history** when the app falls back to the previous engine and resumes its session.

@@ -1,3 +1,4 @@
-- Meet Jepoy Floor AI: new name, new J monogram icon, same office of agents.
-- Fresh look across the app, installer, help and website.
-- Coming from ATMT Labs? Install once more — your agents and data carry over.
+- Jepoy Floor AI is now free and open source (MIT). No account, no sign-in.
+- Built on Munder Difflin by Chaitanya Giri, now credited in Help → About.
+- A failed Restart & Continue keeps the agent's terminal history.
+- Safer windows and trigger servers. New website: jepoy.dev.

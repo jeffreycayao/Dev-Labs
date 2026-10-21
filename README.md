@@ -22,7 +22,7 @@ Wraps [Claude Code](https://claude.com/claude-code), OpenAI Codex, Antigravity a
 
 <p>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
-  <a href="./CHANGELOG.md"><img alt="Version: 3.0.2" src="https://img.shields.io/badge/version-3.0.2-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
+  <a href="./CHANGELOG.md"><img alt="Version: 3.0.3" src="https://img.shields.io/badge/version-3.0.3-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
   <img alt="Platform: macOS | Windows | Linux" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-F4F1EA.svg?style=flat-square&labelColor=0B0A06">
   <img alt="No account needed" src="https://img.shields.io/badge/account-not%20needed-F4F1EA.svg?style=flat-square&labelColor=0B0A06">
   <a href="./CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>

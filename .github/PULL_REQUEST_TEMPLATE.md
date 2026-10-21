@@ -50,15 +50,10 @@
 
 ## Credit (optional)
 
-<!-- Both are optional and neither affects whether this merges.
-
-     Discord gets you the `employee of the month` role when this lands. Join
-     first so we can find you: https://discord.gg/SEDzP5ZPk5
+<!-- Optional, and it does not affect whether this merges.
 
      X is so we can credit you by name when we post about what shipped. Leave it
      blank if you would rather we did not. -->
-
-Discord:
 
 X:
 

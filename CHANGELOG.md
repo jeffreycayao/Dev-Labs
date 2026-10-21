@@ -4,6 +4,8 @@ All notable changes to Jepoy Floor AI. App versions rise before each source push
 
 ## Unreleased
 
+## v3.0.4 — 2026-10-21
+
 - **Releases now live on the source repository.** Installers and app updates come from https://github.com/jeffreycayao/Dev-Labs/releases; the separate releases-only repository is retired. Releases are named "Jepoy Floor AI vX.Y.Z".
 
 ## v3.0.3 — 2026-10-21

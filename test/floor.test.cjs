@@ -59,7 +59,7 @@ test('connectors: catalog ids only; keyed ones (and hires\' keyed MCP) need cons
 });
 
 test('deep link: atmtlabs://floor?src=https only', () => {
-  assert.equal(fl.parseFloorDeepLink('atmtlabs://floor?src=https://labs.atmt.dev/floors/seller.json'), 'https://labs.atmt.dev/floors/seller.json');
+  assert.equal(fl.parseFloorDeepLink('atmtlabs://floor?src=https://jepoy.dev/floors/seller.json'), 'https://jepoy.dev/floors/seller.json');
   assert.equal(fl.parseFloorDeepLink('atmtlabs://floor?src=http://evil.test/x.json'), null);
   assert.equal(fl.parseFloorDeepLink('atmtlabs://hire?src=https://x.test/a.json'), null);
   assert.equal(fl.parseFloorDeepLink('atmtlabs://auth/callback?code=x'), null);

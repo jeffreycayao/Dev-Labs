@@ -17,8 +17,6 @@ import { FloorImportModal, FloorExportModal, type FloorImportPayload } from '@/c
 import { MichaelBooting } from '@/components/MichaelBooting';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { HivePicker } from '@/components/HivePicker';
-import { LicenseGate } from '@/components/LicenseGate';
-import { useLicenseStatus } from '@/hooks/useLicenseStatus';
 import { QuitWarningModal, type ClosingTimeState } from '@/components/QuitWarningModal';
 import { CompletionToast } from '@/realtime/CompletionToast';
 import { UpdateToast } from '@/components/UpdateToast';
@@ -46,10 +44,6 @@ export function App() {
   useDirectionSync();
   // Let terminals that are ALREADY open follow a language switch too.
   useArabicTerminalSync();
-  // Licensing: null until main answers; when enforced and not licensed the
-  // sign-in gate replaces the whole app (main refuses agent spawns regardless).
-  const license = useLicenseStatus();
-  const licensed = !!license && (!license.enforced || license.state === 'licensed');
   const agent = useStore(selectedAgent);
   const agents = useStore(s => s.agents);
   const agentCount = agents.length;
@@ -220,9 +214,7 @@ export function App() {
   // off until the user opens a hive in the launch picker (passing null no-ops the
   // hook) so Ramon doesn't boot against the current home while the user may be
   // about to switch to a different one.
-  // No hive — and so no orchestrator spawn — until the license is good. When it
-  // flips to licensed the effect sees the config and boots god normally.
-  useHive(hiveOpened && licensed ? config : null);
+  useHive(hiveOpened ? config : null);
 
   // Pre-warm a persistent terminal for every live agent so its output is
   // buffered from spawn. Switching agents then re-attaches an already-rendered
@@ -284,12 +276,8 @@ export function App() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  if (!config || !license) {
+  if (!config) {
     return <div style={{ width: '100vw', height: '100vh', background: 'var(--cth-cream-100)' }} />;
-  }
-
-  if (!licensed) {
-    return <LicenseGate status={license} />;
   }
 
   if (!config.onboardingComplete) {

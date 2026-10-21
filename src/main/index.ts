@@ -60,7 +60,6 @@ import { CostLedgerTotals } from './costLifetime';
 import { analytics, isRendererMessageSurface } from './analytics';
 import type { SpawnFailReason } from './analytics';
 import { IntegrationBroker } from './integrationBroker';
-import { initLicensing, licenseAllowsAgents, handleLicenseLink, openAccountPage, registerLicenseIpc } from './license';
 import * as integrations from './integrations';
 import { MCP_CATALOG, mcpCatalogEntry, mcpSecretRef, mcpBrokerId, mcpUpstream, isHttpSpec, enabledHttpEntries } from '../shared/mcpCatalog';
 import type { IntegrationRecord } from '../shared/integrations';
@@ -1517,12 +1516,12 @@ async function showAboutDialog(parent: BrowserWindow | null): Promise<void> {
     title: 'About Jepoy Floor AI',
     message: `Jepoy Floor AI  v${app.getVersion()}`,
     detail: [
-      'Philippine edition — an AI agent workspace for Filipino teams and businesses, built on a proven open-source foundation and extended, localized and maintained by Jepoy Floor AI.',
+      'Philippine edition — an AI agent workspace for Filipino teams and businesses, built on Munder Difflin by Chaitanya Giri and extended, localized and maintained by Jepoy Floor AI.',
       '',
-      '© 2026 Jepoy Floor AI (Automatika PH Labs). All rights reserved.',
+      '© 2026 Chaitanya Giri and Automatika Consulting. Open source under the MIT License.',
       '',
-      'Maintainer: Jepoy Floor AI (Automatika PH Labs)',
-      'Contact: hello@automatika.ph · automatika.ph',
+      'Original project: github.com/chaitanyagiri/munder-difflin',
+      'Source & issues: github.com/jeffreycayao/Dev-Labs · jepoy.dev',
       '',
       `Electron ${process.versions.electron} · Chromium ${process.versions.chrome} · Node ${process.versions.node}`
     ].join('\n'),
@@ -2318,16 +2317,8 @@ function deliverHire(manifest: HireManifest): void {
   }
 }
 
-/** Every atmtlabs:// link lands here. The OAuth callback
- *  (atmtlabs://auth/callback) belongs to licensing; everything else is a hire. */
+/** Every atmtlabs:// link lands here: a floor link or a hire. */
 async function handleDeepLink(link: string): Promise<void> {
-  if (await handleLicenseLink(link)) {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-    return;
-  }
   if (parseFloorDeepLink(link)) { await handleFloorLink(link); return; }
   await handleHireLink(link);
 }
@@ -2401,9 +2392,6 @@ app.on('open-url', (evt, url) => {
   evt.preventDefault();
   void handleDeepLink(url);
 });
-
-// IPC: account sign-in, license status and billing (src/main/license.ts).
-registerLicenseIpc();
 
 // IPC: the renderer signals readiness and PULLS anything queued (deep links
 // that arrived before the window/subscription existed, incl. cold starts).
@@ -2585,6 +2573,13 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
     if (/^https?:\/\//i.test(url)) shell.openExternal(url);
     return { action: 'deny' };
   });
+  // Never leave the app page: a dropped file or link would otherwise load in
+  // this window with the window.cth bridge (which can start terminals).
+  const stayOnApp = (e: Electron.Event, url: string): void => {
+    if (url !== win.webContents.getURL()) e.preventDefault();
+  };
+  win.webContents.on('will-navigate', stayOnApp);
+  win.webContents.on('will-redirect', stayOnApp);
 
   // Close interception when live PTYs exist. The red-X destroys the window;
   // intercept it the same way before-quit does so PTY users aren't surprised.
@@ -2711,12 +2706,6 @@ function installAppMenu(multiWindow: boolean): void {
     { role: 'viewMenu' },
     { role: 'windowMenu' },
     {
-      label: 'Account',
-      submenu: [
-        { label: 'Manage Account…', click: () => openAccountPage() }
-      ]
-    },
-    {
       role: 'help',
       submenu: [
         { label: 'How to use Jepoy Floor AI', accelerator: 'F1', click: () => openHelpWindow() },
@@ -2823,12 +2812,6 @@ ipcMain.handle('pty:spawn', async (evt, opts: AgentSpawnOptions) => {
  *  no renderer `evt`). `owner` is the window that should receive this PTY's output
  *  (null → the primary window). Behavior-identical to the prior inline handler. */
 async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebContents | null): Promise<{ ok: boolean; error?: string; cwd?: string; worktreePath?: string; resumeNotFound?: boolean; resumed?: boolean; seedPrompt?: string; setup?: 'installing' | 'manual' }> {
-  // The sign-in gate lives HERE, not only in the renderer: every agent — the floor,
-  // god, ephemeral workers, Slack/webhook/schedule triggers — starts through
-  // this one function.
-  if (!licenseAllowsAgents()) {
-    return { ok: false, error: 'Sign in to your free Jepoy Floor AI account to start an agent.' };
-  }
   // ── cwd INGESTION — expand `~` exactly once, here ───────────────────────────
   // This is the single door every agent spawn comes through (`pty:spawn` IPC and
   // the god-triggered ephemeral-worker watcher), so it is where a user-typed
@@ -4223,7 +4206,7 @@ ipcMain.handle('app:resetAll', () => {
   app.exit(0);
 });
 
-// A floor reset keeps account/license state and general app preferences. The
+// A floor reset keeps general app preferences. The
 // backup picker runs before any writer or PTY is stopped; cancelling is a no-op.
 ipcMain.handle('floor:chooseResetBackup', async () => {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -4288,7 +4271,7 @@ ipcMain.handle('app:resetFloor', async (_evt, backupPath: unknown) => {
   let stage: string | null = null;
   try {
     stage = stageFloorData(home);
-    // Config contains user settings and license state, so leave it untouched.
+    // Config contains user settings, so leave it untouched.
     // Every window has its own localStorage partition. A new epoch tells each
     // renderer to discard old roster keys instead of resurrecting the old floor.
     writeFileSync(join(home, '.floor-reset-epoch'), randomBytes(16).toString('hex'), 'utf8');
@@ -5761,12 +5744,6 @@ app.whenReady().then(() => {
   // live session. Force it closed at startup (a real session re-opens it via
   // setMicGate(true)); macOS TCC stays a second gate regardless.
   if (readConfig().realtimeVoiceEnabled) writeConfig({ realtimeVoiceEnabled: false });
-
-  // Licensing: decide offline from the stored license BEFORE the first window,
-  // so the renderer's sign-in gate paints right away; renewal runs in the
-  // background. A no-op (state 'disabled') unless LICENSING.enabled in a
-  // packaged build. docs/licensing/DESIGN.md.
-  initLicensing();
 
   // Anonymous product analytics (PostHog) — the full contract lives in
   // TELEMETRY.md. No-op unless a build-time key was injected (official releases

@@ -2,6 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/welcome", "destination": "/#download", "permanent": true },
+    { "source": "/pricing", "destination": "/#free", "permanent": true },
+    { "source": "/terms", "destination": "https://github.com/jeffreycayao/Dev-Labs/blob/main/LICENSE", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/download/:os(mac|mac-zip|windows|windows-portable|linux)", "destination": "/api/download?os=:os" }
   ],

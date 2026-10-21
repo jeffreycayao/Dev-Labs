@@ -638,7 +638,8 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
       if (prior?.stopped && prior.wasRunning) {
         try {
           await window.cth.killPty(ptyId);
-          resetTerminal(ptyId);
+          // A resumed session redraws itself; keep the scrollback, as the success path does.
+          if (!prior.sessionId) resetTerminal(ptyId);
           const [oldExe, ...oldArgs] = tokenizeCommand(prior.command);
           if (prior.provider === 'codex') armTerminalStartupGuard(ptyId);
           const { result: restored, startup: restoredStartup } = await spawnAndObservePty(ptyId, window.cth, () => window.cth.spawnPty({

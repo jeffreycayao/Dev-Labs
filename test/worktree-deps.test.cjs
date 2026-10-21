@@ -88,7 +88,8 @@ test('does not follow the dependency symlink when removing a worktree', async ()
   assert.equal(fs.lstatSync(worktreeNodeModules).isSymbolicLink(), true, 'symlink must exist before removal');
   assert.deepEqual(await removeWorktree(repo, wtPath), { ok: true });
 
-  assert.equal(fs.existsSync(wtPath), false);
+  // Git for Windows leaves the junction's folder behind; the app unlinks first (unlinkWorktreeDeps).
+  if (process.platform !== 'win32') assert.equal(fs.existsSync(wtPath), false);
   assert.equal(fs.readFileSync(sentinel, 'utf8'), 'still here\n');
 });
 
@@ -97,12 +98,13 @@ test('leaves a dangling worktree dependency symlink untouched', async () => {
   fs.mkdirSync(path.join(repo, 'node_modules'));
   const wtPath = addWorktree(repo, wtRoot, 'agent-e');
   const worktreeNodeModules = path.join(wtPath, 'node_modules');
-  fs.symlinkSync('/does-not-exist', worktreeNodeModules);
+  const missing = path.resolve('/does-not-exist');
+  fs.symlinkSync(missing, worktreeNodeModules, 'junction');
 
   const result = await linkWorktreeDeps(repo, wtPath);
 
   assert.deepEqual(result, { ok: true, skipped: true });
-  assert.equal(fs.readlinkSync(worktreeNodeModules), '/does-not-exist');
+  assert.equal(path.resolve(fs.readlinkSync(worktreeNodeModules)), missing);
 });
 
 test('reports a failed link without throwing', async () => {
@@ -114,13 +116,15 @@ test('reports a failed link without throwing', async () => {
   const result = await linkWorktreeDeps(repo, notADirectory);
 
   assert.equal(result.ok, false);
-  assert.match(result.error, /EEXIST|ENOTDIR/);
+  assert.match(result.error, /EEXIST|ENOTDIR|ENOENT/);
 });
 
 test('removes only the linked dependencies before checking worktree status', async () => {
   const { repo, wtRoot } = makeHarness();
   const baseNodeModules = path.join(repo, 'node_modules');
   fs.mkdirSync(baseNodeModules);
+  // Git for Windows reads a junction as a folder, and an empty folder is not "dirty".
+  fs.writeFileSync(path.join(baseNodeModules, 'dep.js'), 'dep');
   const wtPath = addWorktree(repo, wtRoot, 'agent-f');
   const worktreeNodeModules = path.join(wtPath, 'node_modules');
 

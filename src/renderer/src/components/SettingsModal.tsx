@@ -14,7 +14,6 @@ import {
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
 import { UpdatesSection } from './UpdatesSection';
-import { AccountSection } from './AccountSection';
 import { SettingsHeroCard } from './SettingsHeroCard';
 import { SetupPanel } from './SetupPanel';
 import { Icon } from './Icon';
@@ -804,7 +803,7 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
         await flushPendingRosterForBackup();
       }
       // Main writes a reset epoch before relaunch. Every window uses it to drop
-      // its own old roster cache, while settings and license stay in place.
+      // its own old roster cache, while settings stay in place.
       const result = await window.cth.resetFloor(backupPath);
       if (!result.ok) setFloorResetError(result.error ?? 'Could not reset the floor.');
     } catch (e) {
@@ -1079,12 +1078,6 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                           of the settings below. Slots for a future subscription
                           and a sponsor live here; both render nothing until set. */}
                       <SettingsHeroCard />
-
-                      {/* Signed-in account + license. Renders nothing unless
-                          licensing is enforced (docs/licensing/DESIGN.md). */}
-                      <AccountSection />
-
-                      <div style={{ height: 1, background: 'var(--cth-ink-300)' }} />
 
                       {/* Updates — first among the settings proper, because "am I
                           on the latest?" is the question people open Settings to

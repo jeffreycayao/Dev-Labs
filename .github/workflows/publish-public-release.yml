@@ -31,7 +31,7 @@ concurrency:
 
 jobs:
   mirror:
-    if: github.repository == 'jeffreycayao/ATMT_LABS_FLOOR'
+    if: github.repository == 'jeffreycayao/Dev-Labs'
     runs-on: ubuntu-latest
     env:
       TAG: ${{ inputs.tag || github.event.release.tag_name }}

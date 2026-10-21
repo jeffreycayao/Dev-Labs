@@ -9,9 +9,9 @@ body:
         feature request, please back out and pick that template instead: they ask for
         the details that make the report actionable.
 
-        For questions and ideas, the [Discussions](https://github.com/automatika/jepoy-floor-ai/discussions)
+        For questions and ideas, the [Discussions](https://github.com/jeffreycayao/Dev-Labs/discussions)
         tab is usually faster. For anything security related, please use the private
-        [security advisory](https://github.com/automatika/jepoy-floor-ai/security/advisories/new)
+        [security advisory](https://github.com/jeffreycayao/Dev-Labs/security/advisories/new)
         form rather than a public issue.
   - type: textarea
     id: details

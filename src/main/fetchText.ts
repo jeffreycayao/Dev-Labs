@@ -11,7 +11,10 @@
  */
 import { request as httpsRequest } from 'node:https';
 
-export function getText(url: string, opts: { timeoutMs?: number } = {}): Promise<string> {
+const MAX_REDIRECTS = 5;
+const MAX_BYTES = 10 * 1024 * 1024;
+
+export function getText(url: string, opts: { timeoutMs?: number } = {}, hops = 0): Promise<string> {
   const timeoutMs = opts.timeoutMs ?? 12000;
   // Empty URL = remote catalog disabled (no CATALOG_REPO in shared/brand.ts); callers fall back.
   if (!url) return Promise.reject(new Error('remote source disabled'));
@@ -21,13 +24,19 @@ export function getText(url: string, opts: { timeoutMs?: number } = {}): Promise
       // branch aliases and the request just fails without it.
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
-        getText(res.headers.location, opts).then(resolve, reject);
+        if (hops >= MAX_REDIRECTS) { reject(new Error('too many redirects')); return; }
+        let next: string;
+        try { next = new URL(res.headers.location, url).href; } catch { reject(new Error('invalid redirect')); return; }
+        getText(next, opts, hops + 1).then(resolve, reject);
         return;
       }
       if (res.statusCode !== 200) { res.resume(); reject(new Error(`HTTP ${res.statusCode}`)); return; }
       let body = '';
       res.setEncoding('utf8');
-      res.on('data', (c) => { body += c; });
+      res.on('data', (c: string) => {
+        body += c;
+        if (body.length > MAX_BYTES) req.destroy(new Error('response too large'));
+      });
       res.on('end', () => resolve(body));
     });
     req.on('error', reject);

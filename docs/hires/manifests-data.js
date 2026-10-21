@@ -25,7 +25,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 2000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -53,7 +53,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -75,7 +75,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -97,7 +97,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -126,7 +126,7 @@ window.HIRES_DATA = [
       "isolate": true,
       "tokenCap": 3000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -154,7 +154,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -176,7 +176,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -198,7 +198,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -226,7 +226,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 2500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -253,7 +253,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -274,7 +274,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -295,7 +295,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -319,7 +319,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 1500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "codex",
     "variants": {
@@ -342,7 +342,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -364,7 +364,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -386,7 +386,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -410,7 +410,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 1000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "antigravity",
     "variants": {
@@ -433,7 +433,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -455,7 +455,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -477,7 +477,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -506,7 +506,7 @@ window.HIRES_DATA = [
       "isolate": true,
       "tokenCap": 3000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -534,7 +534,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -556,7 +556,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -578,7 +578,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -603,7 +603,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 1500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -627,7 +627,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -649,7 +649,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -671,7 +671,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -696,7 +696,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 800000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -720,7 +720,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 800000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -742,7 +742,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 800000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -764,7 +764,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 800000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -789,7 +789,7 @@ window.HIRES_DATA = [
       "isolate": true,
       "tokenCap": 1500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -813,7 +813,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -835,7 +835,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -857,7 +857,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -886,7 +886,7 @@ window.HIRES_DATA = [
       "isolate": true,
       "tokenCap": 2500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -914,7 +914,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 2500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -936,7 +936,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 2500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -958,7 +958,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 2500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -983,7 +983,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 1000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -1007,7 +1007,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1029,7 +1029,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1051,7 +1051,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1075,7 +1075,7 @@ window.HIRES_DATA = [
       "isolate": true,
       "tokenCap": 3000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "codex",
     "variants": {
@@ -1098,7 +1098,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1120,7 +1120,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1142,7 +1142,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 3000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1167,7 +1167,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 1500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "antigravity",
     "variants": {
@@ -1190,7 +1190,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1213,7 +1213,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1235,7 +1235,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1259,7 +1259,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 1500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "codex",
     "variants": {
@@ -1282,7 +1282,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1304,7 +1304,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1326,7 +1326,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1356,7 +1356,7 @@ window.HIRES_DATA = [
       "isolate": true,
       "tokenCap": 4000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -1385,7 +1385,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 4000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1408,7 +1408,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 4000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1431,7 +1431,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 4000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1462,7 +1462,7 @@ window.HIRES_DATA = [
       "isolate": true,
       "tokenCap": 5000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -1492,7 +1492,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 5000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1516,7 +1516,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 5000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1540,7 +1540,7 @@ window.HIRES_DATA = [
           "isolate": true,
           "tokenCap": 5000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1570,7 +1570,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 2000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -1599,7 +1599,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1622,7 +1622,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1645,7 +1645,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1675,7 +1675,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 1500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -1704,7 +1704,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1727,7 +1727,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1750,7 +1750,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1780,7 +1780,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 1500000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -1809,7 +1809,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1832,7 +1832,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1855,7 +1855,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 1500000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }
@@ -1885,7 +1885,7 @@ window.HIRES_DATA = [
       "isolate": false,
       "tokenCap": 2000000,
       "author": "Agent Gallery",
-      "homepage": "https://github.com/automatika/jepoy-floor-ai"
+      "homepage": "https://github.com/jeffreycayao/Dev-Labs"
     },
     "baseProvider": "claude",
     "variants": {
@@ -1914,7 +1914,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "antigravity": {
@@ -1937,7 +1937,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       },
       "codex": {
@@ -1960,7 +1960,7 @@ window.HIRES_DATA = [
           "isolate": false,
           "tokenCap": 2000000,
           "author": "Agent Gallery",
-          "homepage": "https://github.com/automatika/jepoy-floor-ai"
+          "homepage": "https://github.com/jeffreycayao/Dev-Labs"
         }
       }
     }

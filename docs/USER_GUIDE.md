@@ -4,7 +4,7 @@ Jepoy Floor AI turns the AI coding tools you already use into a **team of agents
 - Each agent has its own desk, terminal, project folder, memory and inbox.
 - **Ramon**, your orchestrator at the head desk, plans work, hands it out and keeps the floor moving.
 
-Download: **https://labs.atmt.dev** · Help: **hello@automatika.ph**
+Download: **https://jepoy.dev** · Help: **https://github.com/jeffreycayao/Dev-Labs/issues**
 
 ---
 
@@ -22,13 +22,9 @@ You need **at least one AI coding tool** installed and signed in on your compute
 
 Jepoy Floor AI doesn't include AI usage. **Each tool bills you through your own account with that company.**
 
-## 2. Sign in to your free account
+## 2. Free and open source
 
-When Jepoy Floor AI opens, it asks you to sign in. Signing in happens in your browser, with **Google or Yahoo**; afterwards the browser sends you back to the app.
-
-All app features are available for free after sign-in. No payment card, trial, purchase or unlock code is needed.
-
-Use the same account on your other computers. The app checks your account periodically, so connect to the internet to renew an expired session. Manage signed-in computers at `auth.labs.atmt.dev/account`.
+Jepoy Floor AI has no account and no sign-in. Every feature works as soon as it is installed, on as many computers as you like. The source is at https://github.com/jeffreycayao/Dev-Labs under the MIT License.
 
 ## 3. First run
 
@@ -36,7 +32,7 @@ Use the same account on your other computers. The app checks your account period
 2. **Set up, in 4 steps:** a home for the app, Ramon's engine, your projects, and permissions.
 3. **You land on the office floor.** Ramon boots at the head desk.
 
-To work on another repo with a clean team, open **Settings → General → new project floor…** and choose the existing repo or folder. Confirm the restart: running agents stop, and the app opens a new floor with fresh conversations, tasks and memory. Your previous floor remains on disk and appears in the config picker next time the app starts. New hires default to the chosen folder; Ramon is told which project this floor owns. Each floor restores its own project list, schedules and inbound trigger state. App account and license settings remain shared. To add a second repo to the current floor instead, use **add agent → add project**.
+To work on another repo with a clean team, open **Settings → General → new project floor…** and choose the existing repo or folder. Confirm the restart: running agents stop, and the app opens a new floor with fresh conversations, tasks and memory. Your previous floor remains on disk and appears in the config picker next time the app starts. New hires default to the chosen folder; Ramon is told which project this floor owns. Each floor restores its own project list, schedules and inbound trigger state. App settings remain shared. To add a second repo to the current floor instead, use **add agent → add project**.
 
 ## 4. Hire agents
 
@@ -69,9 +65,9 @@ A **floor** is a whole team saved in one file (`.floor.json`).
 
 **Export your floor:** **add agent** → **export floor…** → name it → **save file…** The file includes each agent's name, role, goal, look, engine, model and token budget. It never includes your folders, keys, memory or conversations.
 
-**Reset your floor:** **Settings → General → reset floor**. Confirm with **back up ZIP & reset** or **reset without backup**. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your account, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.
+**Reset your floor:** **Settings → General → reset floor**. Confirm with **back up ZIP & reset** or **reset without backup**. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.
 
-The ZIP contains `floor/` (roster, hive and shared memory), matching Claude session transcripts under `claude-projects/`, a manifest and `RESTORE.txt`. It can contain private prompts and messages, so keep it in a private place. To restore, quit Jepoy Floor AI, extract `floor/` into the original home folder named in the manifest and `claude-projects/` into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and account credentials are not bundled.
+The ZIP contains `floor/` (roster, hive and shared memory), matching Claude session transcripts under `claude-projects/`, a manifest and `RESTORE.txt`. It can contain private prompts and messages, so keep it in a private place. To restore, quit Jepoy Floor AI, extract `floor/` into the original home folder named in the manifest and `claude-projects/` into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and connector keys are not bundled.
 
 **Try it:** the *Online Seller Team* is a shop manager, a landing-page designer and a product copywriter. It's built for Pancake POS and Webcake.
 
@@ -149,12 +145,12 @@ Today, connectors only reach **Claude Code** agents.
 ## 10. Privacy
 
 - Your code, prompts, agent output and connector keys stay on your computer.
-- The account service knows your email and which computers have signed in.
+- There is no account: no email or sign-in is sent anywhere.
 - Anonymous usage stats are optional: Settings → General → **Anonymous usage stats**.
 
-Details: [Privacy Policy](https://labs.atmt.dev/privacy) · [Terms / License Agreement](https://labs.atmt.dev/terms) · [Telemetry](../TELEMETRY.md).
+Details: [Privacy Policy](https://jepoy.dev/privacy) · [MIT License](../LICENSE) · [Telemetry](../TELEMETRY.md).
 
-This guide is also online at **https://labs.atmt.dev/guide**.
+This guide is also online at **https://jepoy.dev/guide**.
 
 ## 11. Updates and What's New
 
@@ -168,7 +164,6 @@ page. The app does not need a GitHub sign-in or token for updates.
 
 | You see | Do this |
 |---|---|
-| "ACCOUNT CHECK NEEDED" | Connect to the internet and try again. Your free account session needs to renew. |
 | An agent exits right away | Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name. |
 | Codex says "Set up Agent sandbox to continue" on Windows | Open the agent's terminal, choose **Set up**, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's `unelevated` sandbox fallback (below). |
 | A delivery says "Not delivered: … (outside the agent's folders)" | Ask the agent to save the file inside its project folder and deliver again. |

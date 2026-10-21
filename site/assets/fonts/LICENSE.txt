@@ -1,4 +1,4 @@
-Fonts served by the labs.atmt.dev site and their licenses
+Fonts served by the jepoy.dev site and their licenses
 ==============================================================
 
 These files in site/assets/fonts/ are NOT ours. All families are

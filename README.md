@@ -6,7 +6,9 @@
 
 **An office of AI coding agents, running on your machine.**
 
-Local-first · multi-agent · Philippine edition · by [Automatika](https://automatika.ph)
+Local-first · multi-agent · open source (MIT) · Philippine edition · [jepoy.dev](https://jepoy.dev)
+
+A fork of [**Munder Difflin**](https://github.com/chaitanyagiri/munder-difflin) by [Chaitanya Giri](https://github.com/chaitanyagiri)
 
 </div>
 
@@ -34,7 +36,7 @@ team: each agent gets its own terminal, working directory, memory and inbox, and
 
 | Feature | In short | Docs |
 | --- | --- | --- |
-| **Free account** | Sign in with Google or Yahoo to use every app feature. The app renews a short-lived signed account token. | [docs/licensing/](docs/licensing/DESIGN.md) |
+| **No account** | Free and open source. No sign-in, no license key: every feature works on install. | [LICENSE](LICENSE) |
 | **Floors** | Import or export a whole team of agents as one `.floor.json` file or `atmtlabs://floor` link. | [.documentations/FLOORS.md](.documentations/FLOORS.md) |
 | **Hires** | Share a single agent as a `.json` manifest or link. | [docs/hires/](docs/hires/) |
 | **Connections** | Let agents work in Pancake POS, Webcake, GitHub and more; keys stay encrypted on your computer. | [.documentations/CONNECTORS.md](.documentations/CONNECTORS.md) |
@@ -77,10 +79,8 @@ part of the desktop app.
 
 ## Docs
 
-- [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — **for customers**: free account, first run, hiring, floors, connections
+- [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — **for users**: first run, hiring, floors, connections
 - [AGENTS.md](AGENTS.md) — orientation for AI coding agents and contributors working in this repo
-- [.documentations/GO_LIVE.md](.documentations/GO_LIVE.md) — production checklist (account service and website)
-- [.documentations/HANDOFF.md](.documentations/HANDOFF.md) — where things stand and what to do next
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the main process, hive and renderer fit together
 - [DESIGN.md](DESIGN.md) · [docs/DESIGN.md](docs/DESIGN.md) — design system
 - [HIVE.md](HIVE.md) — agent coordination model
@@ -95,6 +95,10 @@ Brand assets live in [`brand/`](brand/). App name, slugs and the release repo ar
 
 ## License
 
-Proprietary — © 2026 Automatika Consulting (Jepoy Floor AI). All rights reserved. See [LICENSE](LICENSE).
-End users are licensed under the [End User License Agreement](EULA.md); personal data is covered by the [Privacy Policy](PRIVACY.md).
-Third-party components (including the MIT-licensed foundation this app is built on) keep their own licenses — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSE-ASSETS](LICENSE-ASSETS).
+[MIT](LICENSE) — © 2026 Chaitanya Giri and Automatika Consulting.
+
+Jepoy Floor AI is built on [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin), created by
+Chaitanya Giri and its [contributors](CONTRIBUTORS.md), and is released under the same MIT License.
+Office tilesets are by [LimeZu](https://limezu.itch.io/) under their own license ([LICENSE-ASSETS](LICENSE-ASSETS));
+other third-party components are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+The [Privacy Policy](PRIVACY.md) covers the optional anonymous usage stats.

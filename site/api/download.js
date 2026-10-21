@@ -26,7 +26,7 @@ function pickAsset(release, os) {
 }
 
 async function fetchLatestRelease() {
-  const headers = { accept: 'application/vnd.github+json', 'user-agent': 'labs.atmt.dev-download' };
+  const headers = { accept: 'application/vnd.github+json', 'user-agent': 'jepoy.dev-download' };
   // Optional: a read-only token raises GitHub's rate limit (60/h per IP without one).
   if (process.env.GITHUB_TOKEN) headers.authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers });
@@ -42,7 +42,7 @@ function redirect(res, location, cache) {
 }
 
 async function handler(req, res) {
-  const os = new URL(req.url, 'https://labs.atmt.dev').searchParams.get('os') || '';
+  const os = new URL(req.url, 'https://jepoy.dev').searchParams.get('os') || '';
   if (!Object.prototype.hasOwnProperty.call(PLATFORMS, os)) {
     res.statusCode = 404;
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');

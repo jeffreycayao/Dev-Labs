@@ -21,7 +21,7 @@ This is an early prototype. Security fixes target the `main` branch only.
 Please **do not** open a public issue for security problems.
 
 - Use GitHub's **private vulnerability reporting**: the *Security → Report a
-  vulnerability* tab on https://github.com/automatika/jepoy-floor-ai, **or**
+  vulnerability* tab on https://github.com/jeffreycayao/Dev-Labs, **or**
 - Email **hello@automatika.ph** with a description, reproduction steps, and
   impact.
 

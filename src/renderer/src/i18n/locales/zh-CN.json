@@ -223,8 +223,8 @@
     "floorReset": {
       "title": "重置当前楼层？",
       "action": "重置楼层",
-      "description": "清除当前楼层的智能体、对话、任务、看板和共享记忆，保留应用设置与许可证。",
-      "body": "这会终止所有运行中的智能体，并清除当前楼层的对话、任务、看板和共享记忆。应用设置、许可证和项目源文件会保留。要先保存可恢复的 ZIP 备份吗？",
+      "description": "清除当前楼层的智能体、对话、任务、看板和共享记忆，保留应用设置。",
+      "body": "这会终止所有运行中的智能体，并清除当前楼层的对话、任务、看板和共享记忆。应用设置和项目源文件会保留。要先保存可恢复的 ZIP 备份吗？",
       "backupAndReset": "备份 ZIP 并重置",
       "withoutBackup": "不备份直接重置"
     },
@@ -1465,50 +1465,6 @@
     "viewSource": "查看源码",
     "loading": "正在加载图片…",
     "decodeFailed": "无法解码此图片——文件可能已损坏或扩展名有误"
-  },
-  "license": {
-    "title": "登录 Jepoy Floor AI",
-    "intro": "Jepoy Floor AI 免费使用。请在浏览器中使用 Google 或 Yahoo 登录后使用应用。",
-    "createAccount": "创建免费账户",
-    "signIn": "我已有账户 — 登录",
-    "waitingTitle": "请在浏览器中完成登录",
-    "waitingBody": "我们已在浏览器中打开 auth.labs.atmt.dev。登录后会自动返回应用。",
-    "reopen": "重新打开浏览器",
-    "cancel": "取消",
-    "checkAgain": "重新检查账户",
-    "checking": "检查中…",
-    "manageAccount": "管理账户",
-    "signOut": "退出登录",
-    "offlineTitle": "需要检查账户",
-    "offlineBody": "请连接互联网以续期账户会话，然后重试。",
-    "errorTitle": "账户问题",
-    "errorBody": "无法验证您的账户。请重试或重新登录。",
-    "retry": "重试",
-    "signedInAs": "已登录：{{email}}",
-    "errors": {
-      "network": "无法连接 Jepoy Floor AI 服务器。请检查网络连接。",
-      "server_error": "Jepoy Floor AI 服务器出现问题。请稍后重试。",
-      "session_expired": "会话已结束。请重新登录。",
-      "state_mismatch": "该登录链接并非由此应用发起。请从此处重新开始。",
-      "sign_in_cancelled": "已取消登录。",
-      "sign_in_timeout": "登录超时。请重新开始。",
-      "device_limit": "无法登记这台电脑。请重试。",
-      "device_mismatch": "此账户会话属于另一台电脑。请在本机重新登录。",
-      "invalid_token": "无法验证账户。请重新登录。",
-      "clock_rollback": "电脑时钟似乎不正确。请校正日期和时间后重试。",
-      "misconfigured": "此版本的 Jepoy Floor AI 缺少账户验证密钥。请从 labs.atmt.dev 下载最新版本。",
-      "code_invalid": "不再需要此解锁码。请登录免费账户。",
-      "code_used": "不再需要此解锁码。请登录免费账户。",
-      "code_expired": "不再需要此解锁码。请登录免费账户。",
-      "already_licensed": "不再需要此解锁码。请登录免费账户。"
-    },
-    "account": {
-      "title": "账户",
-      "free": "免费账户 — 可使用 Jepoy Floor AI 的全部功能。"
-    },
-    "legalPrefix": "登录即表示您同意",
-    "terms": "服务条款",
-    "privacy": "隐私政策"
   },
   "floor": {
     "importBtn": "导入团队…",

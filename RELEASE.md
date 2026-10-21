@@ -40,7 +40,7 @@ built, unless:
   (`bump-version.cjs` now turns your Unreleased entries into the release section);
 - `build/release-notes.md` has 1–5 bullets and changed since the last release;
 - every download link and version string in the docs matches (`check:links`);
-- the tagged commit is on `main` and CI (Typecheck, Licensing service) passed on it.
+- the tagged commit is on `main` and CI (Typecheck, Build) passed on it.
 
 Run the same checks locally, free, before pushing a tag: `npm run release:check`.
 The `release:*` scripts run it automatically before `npm run dist`.

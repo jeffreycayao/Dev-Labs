@@ -59,6 +59,9 @@
     'pty-bug14-c': () => ({ ok: true, resumed: true })
   };
 
+  // PTYs main would report as live; spawnAndObservePty checks it after spawning.
+  const livePtys = new Set(Object.keys(spawnBehavior));
+
   const fakeCth = {
     getConfig: async () => ({
       onboardingComplete: true,
@@ -69,14 +72,16 @@
       defaultModel: 'claude-fable-5-1'
     }),
     updateConfig: async () => ({ ok: true }),
-    killPty: async (id) => { record('killPty', { ptyId: id }); return { ok: true }; },
+    killPty: async (id) => { record('killPty', { ptyId: id }); livePtys.delete(id); return { ok: true }; },
     spawnPty: async (opts) => {
       record('spawnPty', {
         ptyId: opts.id, resume: true, requireResume: !!opts.requireResume,
         resumeSessionId: opts.resumeSessionId, command: opts.command, args: opts.args
       });
       const behave = spawnBehavior[opts.id];
-      return behave ? behave() : { ok: true, resumed: true };
+      const res = behave ? behave() : { ok: true, resumed: true };
+      if (res.ok) livePtys.add(opts.id);
+      return res;
     },
     onPtyData: () => () => {},
     onPtyExit: () => () => {},
@@ -84,7 +89,7 @@
     writePty: () => {},
     resizePty: (id) => { record('resizePty', { ptyId: id }); },
     redrawPty: (id) => { record('redrawPty', { ptyId: id }); },
-    listPtys: async () => [],
+    listPtys: async () => [...livePtys].map((id) => ({ id })),
     controlSnapshot: async () => ({ autoDeliveryPaused: false }),
     controlAutoDelivery: async () => ({}),
     telemetrySnapshot: async () => ({ usage: [], spans: {} }),
@@ -100,6 +105,9 @@
     resolveSessionCwd: async () => CWD,
     hiveSend: async () => ({ ok: true }),
     hiveTasks: async () => [],
+    hiveDeliveries: async () => [],
+    isPtyCommandAvailable: async () => true,
+    onHiveDelivery: () => () => {},
     hivePatchTask: async () => ({ ok: true }),
     hiveDeleteTask: async () => ({ ok: true }),
     hiveLog: async () => [],
@@ -384,7 +392,14 @@
     const startSeq = calls.length;
     btn.click();
     await new Promise((r) => requestAnimationFrame(() => r()));
-    await new Promise((r) => setTimeout(r, 800));
+    // restartWithModel watches each spawn for 6 s (ptyStartup.ts) and a failure
+    // respawns the previous engine, so wait until it leaves 'starting engine…'.
+    for (let waited = 0; waited < 20_000; waited += 100) {
+      await new Promise((r) => setTimeout(r, 100));
+      const now = useStore.getState().agents.find((x) => x.id === agent.id);
+      if (waited >= 300 && now && now.action !== 'starting engine…') break;
+    }
+    await new Promise((r) => setTimeout(r, 300));
 
     const entryAfter = poolModule.acquireTerminal(agent.ptyId);
     const a = useStore.getState().agents.find((x) => x.id === agent.id);

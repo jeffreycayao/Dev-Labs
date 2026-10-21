@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>User Guide · Jepoy Floor AI Floor</title>
-<meta name="description" content="How to install, sign in and use Jepoy Floor AI Floor: hire AI agents, build floors and a whole building, connect apps, and stay safe.">
+<meta name="description" content="How to install and use Jepoy Floor AI Floor: hire AI agents, build floors and a whole building, connect apps, and stay safe.">
 <meta property="og:title" content="User Guide · Jepoy Floor AI Floor">
-<meta property="og:url" content="https://labs.atmt.dev/guide">
+<meta property="og:url" content="https://jepoy.dev/guide">
 <meta name="theme-color" content="#0a0e0b">
-<link rel="canonical" href="https://labs.atmt.dev/guide">
+<link rel="canonical" href="https://jepoy.dev/guide">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -27,7 +27,7 @@
       <a class="hide-sm" href="/#building">How it works</a>
       <a class="hide-sm" href="/guide">User guide</a>
       <a class="hide-sm" href="/#download">Download</a>
-      <a class="hide-sm" href="https://auth.labs.atmt.dev/account">Sign in</a>
+      <a class="hide-sm" href="https://github.com/jeffreycayao/Dev-Labs">GitHub</a>
       <a class="btn primary" href="/#download">Download free</a>
     </nav>
   </div>
@@ -43,7 +43,7 @@
       <h4>Contents</h4>
       <ol>
         <li><a href="#before">Before you start</a></li>
-        <li><a href="#license">Sign in to your free account</a></li>
+        <li><a href="#license">It is free and open source</a></li>
         <li><a href="#first-run">First run</a></li>
         <li><a href="#hire">Hire agents</a></li>
         <li><a href="#floors">Floors: hire a whole team</a></li>
@@ -71,9 +71,8 @@
     </table></div>
     <p>Jepoy Floor AI doesn't include AI usage. <strong>Each tool bills you through your own account with that company.</strong></p>
 
-    <h2 id="license">2. Sign in to your free account</h2>
-    <p>When Jepoy Floor AI opens, sign in with <strong>Google or Yahoo</strong> in your browser. The browser sends you back to the app. All app features are then available for free; no card, purchase or unlock code is needed.</p>
-    <p>Use the same account on your other computers. The app checks your account periodically, so connect to the internet to renew an expired session. Manage signed-in computers at <code>auth.labs.atmt.dev/account</code>.</p>
+    <h2 id="license">2. Free and open source</h2>
+    <p>Jepoy Floor AI has no account and no sign-in. Every feature works as soon as it is installed, on as many computers as you like. The source is on <a href="https://github.com/jeffreycayao/Dev-Labs">GitHub</a> under the MIT License.</p>
 
     <h2 id="first-run">3. First run</h2>
     <ol>
@@ -103,8 +102,8 @@
       <li><strong>cancel:</strong> hires nobody.</li>
     </ul>
     <p><strong>Export your floor:</strong> <strong>add agent</strong> → <strong>export floor…</strong> → name it → <strong>save file…</strong> The file includes each agent's name, role, goal, look, engine, model and token budget. It never includes your folders, keys, memory or conversations.</p>
-    <p><strong>Reset your floor:</strong> <strong>Settings → General → reset floor</strong>. Confirm with <strong>back up ZIP &amp; reset</strong> or <strong>reset without backup</strong>. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your account, app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.</p>
-    <p>The ZIP contains <code>floor/</code> (roster, hive and shared memory), matching Claude session transcripts under <code>claude-projects/</code>, a manifest and <code>RESTORE.txt</code>. It can contain private prompts and messages, so keep it in a private place. To restore, quit Jepoy Floor AI, extract <code>floor/</code> into the original home folder named in the manifest and <code>claude-projects/</code> into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and account credentials are not bundled.</p>
+    <p><strong>Reset your floor:</strong> <strong>Settings → General → reset floor</strong>. Confirm with <strong>back up ZIP &amp; reset</strong> or <strong>reset without backup</strong>. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.</p>
+    <p>The ZIP contains <code>floor/</code> (roster, hive and shared memory), matching Claude session transcripts under <code>claude-projects/</code>, a manifest and <code>RESTORE.txt</code>. It can contain private prompts and messages, so keep it in a private place. To restore, quit Jepoy Floor AI, extract <code>floor/</code> into the original home folder named in the manifest and <code>claude-projects/</code> into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and connector keys are not bundled.</p>
     <p><strong>Try it:</strong> the <em>Online Seller Team</em> is a shop manager, a landing-page designer and a product copywriter. It's built for Pancake POS and Webcake.</p>
 
     <h2 id="building">6. Your building: many floors at once</h2>
@@ -181,10 +180,10 @@
     <h2 id="privacy">10. Privacy</h2>
     <ul>
       <li>Your code, prompts, agent output and connector keys stay on your computer.</li>
-      <li>The account service knows your email and which computers have signed in.</li>
+      <li>There is no account: no email or sign-in is sent anywhere.</li>
       <li>Anonymous usage stats are optional: Settings → General → <strong>Anonymous usage stats</strong>.</li>
     </ul>
-    <p>Details: <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms and License Agreement</a>.</p>
+    <p>Details: <a href="/privacy">Privacy Policy</a> · <a href="https://github.com/jeffreycayao/Dev-Labs/blob/main/LICENSE">MIT License</a>.</p>
 
     <h2 id="updates">11. Updates and What's New</h2>
     <p>Packaged builds check the public Jepoy Floor AI release feed while auto-update is enabled in <strong>Settings → General</strong>. When a newer version is ready, the update badge tells you; you choose when to restart and install it. <strong>What's New</strong> shows the release highlights, and <strong>full changelog</strong> opens the public Releases page. The app does not need a GitHub sign-in or token for updates.</p>
@@ -193,7 +192,6 @@
     <div class="table"><table>
       <thead><tr><th>You see</th><th>Do this</th></tr></thead>
       <tbody>
-        <tr><td>"ACCOUNT CHECK NEEDED"</td><td>Connect to the internet and try again. Your free account session needs to renew.</td></tr>
         <tr><td>An agent exits right away</td><td>Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name.</td></tr>
         <tr><td>Codex says "Set up Agent sandbox to continue" on Windows</td><td>Open the agent's terminal, choose <strong>Set up</strong>, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's <code>unelevated</code> sandbox fallback (below).</td></tr>
         <tr><td>A delivery says "Not delivered: … (outside the agent's folders)"</td><td>Ask the agent to save the file inside its project folder and deliver again.</td></tr>
@@ -215,9 +213,9 @@ sandbox = "unelevated"</code></pre>
       <p class="fine">Jepoy Floor AI Floor: a harness that runs a whole building of AI agents on your own computer.</p>
     </div>
     <div><h4>Product</h4><a href="/#building">How it works</a><a href="/#tour">Features</a><a href="/#download">Download</a><a href="/guide">User guide</a></div>
-    <div><h4>Account</h4><a href="https://auth.labs.atmt.dev/account">Sign in</a></div>
-    <div><h4>Company</h4><a href="https://automatika.ph">Automatika</a><a href="mailto:hello@automatika.ph">Contact</a><a href="/terms">Terms &amp; License</a><a href="/privacy">Privacy Policy</a></div>
-    <div class="legal">© 2026 Automatika Consulting. Jepoy Floor AI Floor is proprietary software. Claude, Codex, Gemini, Cursor and other names belong to their owners and are used only to describe compatibility.</div>
+    <div><h4>Open source</h4><a href="https://github.com/jeffreycayao/Dev-Labs">Source code</a><a href="https://github.com/jeffreycayao/Dev-Labs/blob/main/LICENSE">MIT License</a><a href="https://github.com/chaitanyagiri/munder-difflin">Original project</a></div>
+    <div><h4>Company</h4><a href="https://jepoy.dev">jepoy.dev</a><a href="https://github.com/jeffreycayao/Dev-Labs/issues">Contact</a><a href="/privacy">Privacy Policy</a></div>
+    <div class="legal">© 2026 Automatika Consulting. Jepoy Floor AI is open source under the MIT License, built on <a href="https://github.com/chaitanyagiri/munder-difflin">Munder Difflin</a> by Chaitanya Giri. Claude, Codex, Gemini, Cursor and other names belong to their owners and are used only to describe compatibility.</div>
   </div>
 </footer>
 

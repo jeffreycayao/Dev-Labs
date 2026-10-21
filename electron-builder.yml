@@ -4,7 +4,7 @@ appId: ph.automatika.jepoyfloorai
 # updater does not migrate across appIds). userData still carries over via
 # src/main/legacyUserData.ts.
 productName: Jepoy Floor AI
-copyright: Copyright © 2026 Automatika Consulting
+copyright: Copyright © 2026 Chaitanya Giri and Automatika Consulting
 
 # Where electron-updater looks for new versions (latest*.yml + assets on GitHub
 # releases). The release workflow still uploads assets itself (--publish never);

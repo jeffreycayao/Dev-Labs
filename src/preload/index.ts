@@ -5,7 +5,6 @@ export type { HireManifest } from '../shared/hire';
 import type { IntegrationRecord, IntegrationTemplate } from '../shared/integrations';
 export type { IntegrationRecord, IntegrationTemplate } from '../shared/integrations';
 import type { UpdateStatus } from '../shared/updateState';
-import type { LicenseStatus } from '../shared/license';
 import type { FloorManifest } from '../shared/floor';
 export type { FloorManifest } from '../shared/floor';
 /** A validated floor plus the connector ids the human must be asked about. */
@@ -1074,7 +1073,7 @@ const api = {
   chooseFloorResetBackup: (): Promise<{ ok: boolean; path?: string; error?: string }> =>
     ipcRenderer.invoke('floor:chooseResetBackup'),
   /** Stop the current floor, verify an optional ZIP, clear floor data and relaunch.
-   * General settings and the license survive. The process normally exits. */
+   * General settings survive. The process normally exits. */
   resetFloor: (backupPath: string | null): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('app:resetFloor', backupPath),
 
@@ -1467,23 +1466,6 @@ const api = {
    *  contents as a backup and refuses a first write that would empty a full file. */
   rosterWrite: (snap: RosterSnapshot): Promise<{ ok: boolean; skipped?: string; error?: string }> =>
     ipcRenderer.invoke('roster:write', snap),
-
-  // ─── Account + licensing (docs/licensing/DESIGN.md) ─────────────────────────
-  /** Push channel: every licensing state change (sign-in, renewal, expiry). */
-  onLicenseStatus: (cb: (status: LicenseStatus) => void): (() => void) => {
-    const listener = (_e: IpcRendererEvent, payload: LicenseStatus) => cb(payload);
-    ipcRenderer.on('license:status', listener);
-    return () => ipcRenderer.removeListener('license:status', listener);
-  },
-  licenseCurrent: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:current'),
-  /** Open the system browser on auth.labs.atmt.dev. 'signup' opens on the
-   *  create-account screen. */
-  licenseSignIn: (hint?: 'signin' | 'signup'): Promise<LicenseStatus> =>
-    ipcRenderer.invoke('license:signIn', hint),
-  licenseCancelSignIn: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:cancelSignIn'),
-  licenseRefresh: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:refresh'),
-  licenseSignOut: (): Promise<LicenseStatus> => ipcRenderer.invoke('license:signOut'),
-  accountOpen: (): Promise<void> => ipcRenderer.invoke('account:open'),
 
   // ─── Auto-update (v0.3.4; full state model v0.3.7) ──────────────────────────
   /** Push channel from main's updater — every stage of the pipeline, so the

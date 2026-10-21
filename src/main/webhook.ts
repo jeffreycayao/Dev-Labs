@@ -241,7 +241,8 @@ export class WebhookServer {
       const server = createServer((req, res) => this.handleRequest(req, res));
       const onError = (e: Error): void => reject(e);
       server.once('error', onError);
-      server.listen(this.port, () => {
+      // localhost only: the tunnel connects locally, so the LAN never needs to reach this.
+      server.listen(this.port, 'localhost', () => {
         server.off('error', onError);
         this.server = server;
         resolve();

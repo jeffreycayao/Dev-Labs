@@ -1,4 +1,4 @@
-// labs.atmt.dev motion layer. Progressive enhancement only: every page reads
+// jepoy.dev motion layer. Progressive enhancement only: every page reads
 // and works with this script blocked, and prefers-reduced-motion turns all of
 // it off. Build: `npm run build` in tools/site-bundle → site/assets/js/.
 import Lenis from 'lenis';

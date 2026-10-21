@@ -223,8 +223,8 @@
     "floorReset": {
       "title": "RESET FLOOR?",
       "action": "reset floor",
-      "description": "Clear this floor's agents, conversations, tasks, board and shared memory. Keep your app settings and license.",
-      "body": "This ends all running agents and clears the current floor, including agent conversations, tasks, board and shared memory. Your app settings, license and project source folders stay. Would you like a restorable ZIP backup first?",
+      "description": "Clear this floor's agents, conversations, tasks, board and shared memory. Keep your app settings.",
+      "body": "This ends all running agents and clears the current floor, including agent conversations, tasks, board and shared memory. Your app settings and project source folders stay. Would you like a restorable ZIP backup first?",
       "backupAndReset": "back up ZIP & reset",
       "withoutBackup": "reset without backup"
     },
@@ -1465,50 +1465,6 @@
     "viewSource": "view source",
     "loading": "loading image…",
     "decodeFailed": "could not decode this image — the file may be corrupt or misnamed"
-  },
-  "license": {
-    "title": "SIGN IN TO JEPOY FLOOR AI",
-    "intro": "Jepoy Floor AI is free. Sign in with Google or Yahoo in your browser to use the app.",
-    "createAccount": "create free account",
-    "signIn": "I already have an account — sign in",
-    "waitingTitle": "FINISH IN YOUR BROWSER",
-    "waitingBody": "We opened auth.labs.atmt.dev in your browser. Once you sign in, it sends you back here automatically.",
-    "reopen": "open the browser again",
-    "cancel": "cancel",
-    "checkAgain": "check account again",
-    "checking": "checking…",
-    "manageAccount": "manage account",
-    "signOut": "sign out",
-    "offlineTitle": "ACCOUNT CHECK NEEDED",
-    "offlineBody": "Connect to the internet to renew your account session, then try again.",
-    "errorTitle": "ACCOUNT PROBLEM",
-    "errorBody": "We could not verify your account. Try again or sign in again.",
-    "retry": "try again",
-    "signedInAs": "Signed in as {{email}}",
-    "errors": {
-      "network": "Couldn't reach the Jepoy Floor AI servers. Check your connection.",
-      "server_error": "The Jepoy Floor AI servers had a problem. Try again in a moment.",
-      "session_expired": "Your session ended. Sign in again.",
-      "state_mismatch": "That sign-in link wasn't started from this app. Start again from here.",
-      "sign_in_cancelled": "Sign-in was cancelled.",
-      "sign_in_timeout": "Sign-in took too long. Start again.",
-      "device_limit": "Could not register this computer. Try again.",
-      "device_mismatch": "This account session belongs to a different computer. Sign in again on this one.",
-      "invalid_token": "Your account couldn't be verified. Sign in again.",
-      "clock_rollback": "Your computer's clock looks wrong. Fix the date and time, then try again.",
-      "misconfigured": "This build of Jepoy Floor AI is missing its account verification key. Download the latest version from labs.atmt.dev.",
-      "code_invalid": "This code is no longer needed. Sign in to your free account.",
-      "code_used": "This code is no longer needed. Sign in to your free account.",
-      "code_expired": "This code is no longer needed. Sign in to your free account.",
-      "already_licensed": "This code is no longer needed. Sign in to your free account."
-    },
-    "account": {
-      "title": "ACCOUNT",
-      "free": "Free account — all Jepoy Floor AI features are available."
-    },
-    "legalPrefix": "By signing in you agree to the",
-    "terms": "Terms of Service",
-    "privacy": "Privacy Policy"
   },
   "floor": {
     "importBtn": "import floor…",

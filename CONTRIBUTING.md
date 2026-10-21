@@ -37,7 +37,7 @@ much cheaper than finding out in review.
 ### Prerequisites
 
 - **macOS, Windows, or Linux** — signed/notarized macOS builds, plus Windows and
-  Linux builds, ship from the [releases page](https://github.com/automatika/jepoy-floor-ai/releases/latest).
+  Linux builds, ship from the [releases page](https://github.com/jeffreycayao/Dev-Labs/releases/latest).
   Cross-platform smoke-testing and fixes are still very welcome (see
   [Good first areas](#good-first-areas)).
 - **Node.js 18+** and npm.
@@ -133,7 +133,7 @@ negotiate, and every one of them is cheaper to avoid than to fix in review:
 - **Wholesale reformatting** of files, or a diff where the real change is buried
   in whitespace and import reordering.
 - **A rewrite nobody asked for.** Large architectural changes need an issue or a
-  [discussion](https://github.com/automatika/jepoy-floor-ai/discussions) with
+  [discussion](https://github.com/jeffreycayao/Dev-Labs/discussions) with
   agreement **before** you write the code. We would rather say no to a paragraph
   than to a week of your work.
 - **Generated or unattributed content** — art that isn't yours or compatibly

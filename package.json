@@ -1,12 +1,19 @@
 {
   "name": "jepoy-floor-ai",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "Jepoy Floor AI — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
   "main": "out/main/index.js",
   "author": "Automatika Consulting <hello@automatika.ph>",
-  "homepage": "https://automatika.ph/",
-  "license": "UNLICENSED",
+  "contributors": [
+    "Chaitanya Giri (original author, https://github.com/chaitanyagiri/munder-difflin)"
+  ],
+  "homepage": "https://jepoy.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jeffreycayao/Dev-Labs.git"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build && npm run copy:main-assets",
@@ -54,10 +61,8 @@
     "@xterm/addon-webgl": "^0.19.0",
     "@xterm/xterm": "^5.5.0",
     "better-sqlite3": "^11.10.0",
-    "commit-graph": "^2.4.0",
     "electron-updater": "^6.8.9",
     "i18next": "^26.3.6",
-    "localtunnel": "^2.0.2",
     "monaco-editor": "^0.52.2",
     "node-pty": "^1.0.0",
     "pixi.js": "^8.5.1",
@@ -76,7 +81,6 @@
     "@electron/notarize": "^2.5.0",
     "@electron/rebuild": "^3.7.0",
     "@types/better-sqlite3": "^7.6.13",
-    "@types/localtunnel": "^2.0.4",
     "@types/node": "^22.7.5",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",

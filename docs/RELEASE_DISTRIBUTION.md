@@ -1,8 +1,8 @@
 # Public release distribution
 
-The application source stays in the private
-`jeffreycayao/ATMT_LABS_FLOOR` repository. Installers, updater metadata,
-checksums, and release notes are mirrored to the public
+The application source is in the public, MIT-licensed
+`jeffreycayao/Dev-Labs` repository. Installers, updater metadata,
+checksums, and release notes are mirrored to the
 `jeffreycayao/ATMT_LABS_FLOOR-releases` repository. The installed application
 uses only that public repository and needs no GitHub token.
 
@@ -55,7 +55,7 @@ To backfill a release published before this workflow existed:
 
 ```bash
 gh workflow run publish-public-release.yml \
-  --repo jeffreycayao/ATMT_LABS_FLOOR -f tag=vX.Y.Z
+  --repo jeffreycayao/Dev-Labs -f tag=vX.Y.Z
 ```
 
 Wait for **Publish public release mirror** to finish. Stable releases appear at
@@ -91,7 +91,7 @@ expects this feed before publishing its first public release.
 
 ## 5. Website download buttons
 
-The download buttons on `labs.atmt.dev` (`/download/mac`, `/download/windows`,
+The download buttons on `jepoy.dev` (`/download/mac`, `/download/windows`,
 `/download/linux`, plus `/download/mac-zip` and `/download/windows-portable`)
 read the public repository's latest stable release at request time and
 redirect to the matching installer. Once the mirror job above finishes, the

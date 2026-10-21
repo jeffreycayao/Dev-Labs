@@ -1,6 +1,6 @@
 'use strict';
 
-// site/api/download.js: /download/:os on labs.atmt.dev redirects to that
+// site/api/download.js: /download/:os on jepoy.dev redirects to that
 // platform's installer in the latest public release.
 
 const test = require('node:test');

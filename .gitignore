@@ -37,4 +37,6 @@ docs/blog-preview-*/
 *\ 2.*
 *\ [0-9].*
 
-graphify-out/cache/
+graphify-out/
+.mimosa/
+.video_agent/

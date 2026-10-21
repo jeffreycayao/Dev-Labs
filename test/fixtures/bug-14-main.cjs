@@ -73,6 +73,8 @@ app.whenReady().then(async () => {
 
   const payload = fs.readFileSync(rendererJs, 'utf8');
   const bootstrap = 'globalThis.__BUG14_REPO__=' + JSON.stringify(repo) + ';';
+  // Forward renderer console output so a harness failure shows the real error.
+  win.webContents.on('console-message', (_e, _level, message) => console.log('[renderer]', message));
   await win.webContents.executeJavaScript(bootstrap + '\n' + payload, true);
 
   // Normal completion ships the result over IPC, which exits the app. If the

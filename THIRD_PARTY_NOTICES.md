@@ -1,16 +1,16 @@
 # Third-Party Notices
 
-Jepoy Floor AI is proprietary software of Automatika Consulting (Jepoy Floor AI / Automatika PH Labs).
+Jepoy Floor AI is open-source software released under the MIT License (see LICENSE).
 It incorporates third-party components that are licensed under their own terms, reproduced
-below as those licenses require. These notices do not change the license under which
-Jepoy Floor AI itself is provided (see LICENSE).
+below as those licenses require.
 
 ---
 
-## Original application foundation — MIT License
+## Original application — Munder Difflin by Chaitanya Giri (MIT License)
 
-Portions of Jepoy Floor AI are derived from an open-source multi-agent desktop harness,
-used under the following license:
+Jepoy Floor AI is a fork of **Munder Difflin** (https://github.com/chaitanyagiri/munder-difflin,
+https://munderdiffl.in/), the open-source multi-agent desktop harness created by
+**Chaitanya Giri**. Thank you, Chaitanya. It is used under the following license:
 
 ```
 MIT License

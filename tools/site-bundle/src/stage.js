@@ -1,6 +1,8 @@
 // Shared WebGL stage for the site's 3D scenes: one transparent canvas sized to
-// its host, a camera, pointer parallax, and a render loop that only runs while
-// the host is on screen and the tab is visible.
+// its host, a camera, pointer parallax, touch/mouse drag-to-spin with inertia
+// (and optional pinch-to-zoom) via use-gesture, and a render loop that only
+// runs while the host is on screen and the tab is visible.
+import { Gesture } from '@use-gesture/vanilla';
 import { Color, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 
 export const LIME = new Color('#CDF252');
@@ -40,6 +42,10 @@ export function createStage(host, { fov = 42, className = 'stage-3d' } = {}) {
     pointer.ty = (e.clientY / innerHeight - 0.5) * 2;
   }, { passive: true });
 
+  // Drag/fling spin and pinch zoom. Scenes add `spin.angle` to their rotation
+  // and divide camera distance by `spin.zoom`.
+  const spin = { angle: 0, vel: 0, zoom: 1, dragging: false };
+
   let visible = false, raf = 0, onFrame = null;
   const t0 = performance.now();
   const kick = () => { if (onFrame && visible && !document.hidden && !raf) raf = requestAnimationFrame(frame); };
@@ -48,6 +54,7 @@ export function createStage(host, { fov = 42, className = 'stage-3d' } = {}) {
     if (!visible || document.hidden) return;
     pointer.x += (pointer.tx - pointer.x) * 0.05;
     pointer.y += (pointer.ty - pointer.y) * 0.05;
+    if (!spin.dragging) { spin.angle += spin.vel; spin.vel *= 0.95; }
     onFrame((now - t0) / 1000);
     renderer.render(scene, camera);
     raf = requestAnimationFrame(frame);
@@ -56,7 +63,25 @@ export function createStage(host, { fov = 42, className = 'stage-3d' } = {}) {
   document.addEventListener('visibilitychange', kick);
 
   return {
-    scene, camera, renderer, pointer,
+    scene, camera, renderer, pointer, spin,
+    /** Horizontal drag spins the scene (vertical swipes still scroll the page);
+     * `pinch` also lets two fingers (or ctrl+wheel) zoom. Taps pass through. */
+    enableGestures(target, { pinch = false } = {}) {
+      target.classList.add('grab');
+      const handlers = {
+        onDrag: ({ delta: [dx], velocity: [vx], direction: [dir], down, tap }) => {
+          if (tap) return;
+          spin.dragging = down;
+          spin.angle += dx * 0.01;
+          if (!down) spin.vel = dir * Math.min(vx, 4) * 0.16;
+        }
+      };
+      if (pinch) handlers.onPinch = ({ offset: [s] }) => { spin.zoom = s; };
+      new Gesture(target, handlers, {
+        drag: { axis: 'x', filterTaps: true },
+        pinch: { scaleBounds: { min: 0.7, max: 1.6 }, rubberband: true }
+      });
+    },
     start(fn) {
       onFrame = fn;
       kick();

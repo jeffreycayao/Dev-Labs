@@ -14,7 +14,8 @@ const W = 5.2, D = 3.6;
 const ease = (x) => 1 - Math.pow(1 - x, 3);
 
 export function mountBuilding(host) {
-  const { scene, camera, pointer, start } = createStage(host, { fov: 36, className: 'building-3d' });
+  const { scene, camera, pointer, spin, enableGestures, start } = createStage(host, { fov: 36, className: 'building-3d' });
+  enableGestures(host, { pinch: true });
   const tower = new Group();
   scene.add(tower);
   const r = rand(4012);
@@ -80,9 +81,9 @@ export function mountBuilding(host) {
     rails.geometry.attributes.position.needsUpdate = true;
     rails.geometry.computeBoundingSphere();
 
-    tower.rotation.y = t * 0.12 + shown * Math.PI * 0.5 + pointer.x * 0.25;
+    tower.rotation.y = t * 0.12 + shown * Math.PI * 0.5 + pointer.x * 0.25 + spin.angle;
     const h = Math.max(top, 3);
-    camera.position.set(0, h * 0.6 + 3 - pointer.y * 1.2, 18 + h * 0.9);
+    camera.position.set(0, h * 0.6 + 3 - pointer.y * 1.2, (18 + h * 0.9) / spin.zoom);
     camera.lookAt(0, h * 0.5, 0);
   });
 

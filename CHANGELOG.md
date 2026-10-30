@@ -4,6 +4,14 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **Website: touch interactions and more sections.**
+  - **Touch library:** [@use-gesture/vanilla](https://use-gesture.netlify.app) adds touch and drag. You can spin the 3D scenes (with fling), pinch the tower to zoom, swipe the feature carousel on phones, and press and tilt tiles on tablets.
+  - **New sections:**
+    - a draggable "works with" strip of AI tools;
+    - "a day in the building", with a time scrubber;
+    - a swipeable deck of the built-in role templates;
+    - a "you stay in charge" Auto / Ask-first switch;
+    - an open-source section.
 - **New brand colors and headline type, in the app and on the website.**
   - **Colors:** main lime `#CDF252` (fills, pills, highlighted words), key orange `#E1642D` (the one key word, asterisks) and dark `#181C17` (dark scenes and text). The dark theme now sits on `#181C17`, with surfaces and text tinted from it. Every text and border value was checked against the existing contrast floors.
   - **Type:** headlines and labels use Plus Jakarta Sans ExtraBold in lowercase with tight letter spacing (bundled, 12 KB).

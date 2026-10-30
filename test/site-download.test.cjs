@@ -66,6 +66,18 @@ test('picks the installer for each platform and skips blockmaps and metadata', (
   assert.equal(pickAsset(RELEASE, 'solaris'), null);
   assert.equal(pickAsset({}, 'mac'), null);
   assert.equal(pickAsset({ assets: [asset('latest.yml')] }, 'mac'), null);
+  const foreign = { name: 'DevLabs-9.9.9-mac-universal.dmg', browser_download_url: 'https://evil.example/DevLabs.dmg' };
+  assert.equal(pickAsset({ assets: [foreign] }, 'mac'), null);
+});
+
+test('gives GitHub a deadline so a hung API still reaches the fallback', async () => {
+  let signal;
+  const res = await call('mac', async (_url, opts) => {
+    signal = opts.signal;
+    return okFetch(RELEASE)();
+  });
+  assert.ok(signal instanceof AbortSignal, 'fetch was called without an abort signal');
+  assert.equal(res.statusCode, 302);
 });
 
 test('patterns match the artifact names electron-builder produces', () => {

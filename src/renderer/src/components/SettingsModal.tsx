@@ -90,10 +90,10 @@ const slackLabelStyle: CSSProperties = {
 /** The exact connect walkthrough shown behind the i icon. Steps 6 & 7 spell out
  *  the both-lists requirement: subscribe to message.channels / message.groups in
  *  BOTH "Subscribe to bot events" AND "Subscribe to events on behalf of users". */
-const SLACK_CONNECT_STEPS = `Connect Jepoy Floor AI to Slack
+const SLACK_CONNECT_STEPS = `Connect DevLabs to Slack
 
 1. api.slack.com/apps -> Create New App -> From scratch. Name it
-   "Jepoy Floor AI" and pick your workspace.
+   "DevLabs" and pick your workspace.
 2. Basic Information -> Signing Secret -> copy it into the
    "Signing secret" field here.
 3. OAuth & Permissions -> Bot Token Scopes: add

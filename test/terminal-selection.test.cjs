@@ -11,19 +11,19 @@ const {
 
 test('the reported paste: Claude Code blockquote rail is dropped', () => {
   assert.equal(
-    sanitizeTerminalSelection('▎ Jepoy Floor AI — clones for you and your team, working 24/7.'),
-    'Jepoy Floor AI — clones for you and your team, working 24/7.'
+    sanitizeTerminalSelection('▎ DevLabs — clones for you and your team, working 24/7.'),
+    'DevLabs — clones for you and your team, working 24/7.'
   );
 });
 
 test('every line of a multi-line quote loses its rail', () => {
   const copied = [
-    '▎ Jepoy Floor AI is live on Product Hunt today.',
+    '▎ DevLabs is live on Product Hunt today.',
     '▎',
     '▎ Free, open source, local-first.'
   ].join('\n');
   assert.equal(sanitizeTerminalSelection(copied), [
-    'Jepoy Floor AI is live on Product Hunt today.',
+    'DevLabs is live on Product Hunt today.',
     '',
     'Free, open source, local-first.'
   ].join('\n'));

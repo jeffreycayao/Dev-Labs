@@ -1,10 +1,10 @@
-appId: ph.automatika.jepoyfloorai
-# appId changed with the Jepoy Floor AI rebrand: existing ATMT Labs installs
-# keep their own registry entry, so existing users must install fresh (the
-# updater does not migrate across appIds). userData still carries over via
-# src/main/legacyUserData.ts.
-productName: Jepoy Floor AI
-copyright: Copyright © 2026 Chaitanya Giri and Automatika Consulting
+appId: dev.jepoy.devlabs
+# appId changed with the DevLabs rebrand (was ph.automatika.jepoyfloorai, and
+# earlier ATMT Labs): older installs keep their own registry entry, so existing
+# users must install fresh (the updater does not migrate across appIds).
+# userData still carries over via src/main/legacyUserData.ts.
+productName: DevLabs
+copyright: Copyright © 2026 Chaitanya Giri and jepoy.dev
 
 # Where electron-updater looks for new versions (latest*.yml + assets on GitHub
 # releases). The release workflow still uploads assets itself (--publish never);
@@ -42,7 +42,7 @@ afterSign: build/notarize.cjs
 # Register the atmtlabs:// URL scheme (shareable-hires deep link) in the
 # packaged app: CFBundleURLTypes on macOS, registry entries via NSIS on Windows.
 protocols:
-  - name: Jepoy Floor AI
+  - name: DevLabs
     schemes:
       - atmtlabs
 
@@ -105,15 +105,15 @@ mac:
   # the privacy prompt and, for a signed app, remembers the grant — so the user
   # is asked ONCE instead of on every agent action.
   extendInfo:
-    NSDocumentsFolderUsageDescription: "Jepoy Floor AI runs your Claude Code agents, which read and write files in the project folders you point them at."
-    NSDesktopFolderUsageDescription: "Jepoy Floor AI's agents may work on projects located on your Desktop."
-    NSDownloadsFolderUsageDescription: "Jepoy Floor AI's agents may work on projects located in your Downloads."
-    NSRemovableVolumesUsageDescription: "Jepoy Floor AI's agents may work on projects located on external volumes."
-    NSNetworkVolumesUsageDescription: "Jepoy Floor AI's agents may work on projects located on network volumes."
+    NSDocumentsFolderUsageDescription: "DevLabs runs your Claude Code agents, which read and write files in the project folders you point them at."
+    NSDesktopFolderUsageDescription: "DevLabs' agents may work on projects located on your Desktop."
+    NSDownloadsFolderUsageDescription: "DevLabs' agents may work on projects located in your Downloads."
+    NSRemovableVolumesUsageDescription: "DevLabs' agents may work on projects located on external volumes."
+    NSNetworkVolumesUsageDescription: "DevLabs' agents may work on projects located on network volumes."
     # The microphone is used by two opt-in, off-by-default voice features: Free
     # Flow dictation (Groq transcription) and Realtime Michael (live voice chat
     # with the orchestrator via OpenAI). Mic access only happens while one is on.
-    NSMicrophoneUsageDescription: "Jepoy Floor AI uses your microphone only for its opt-in voice features: Free Flow dictation (transcribed by Groq into the message queue) and talking to Michael in real time (streamed to OpenAI). The mic is off unless you turn one of these on."
+    NSMicrophoneUsageDescription: "DevLabs uses your microphone only for its opt-in voice features: Free Flow dictation (transcribed by Groq into the message queue) and talking to Michael in real time (streamed to OpenAI). The mic is off unless you turn one of these on."
   # Hardened runtime + entitlements so the spawned `claude` agents inherit this
   # app's TCC responsibility (one grant covers them all) and node-pty can load.
   hardenedRuntime: true
@@ -143,10 +143,10 @@ mac:
       arch: [universal]
     - target: zip
       arch: [universal]
-  artifactName: Jepoy-Floor-AI-${version}-mac-${arch}.${ext}
+  artifactName: DevLabs-${version}-mac-${arch}.${ext}
 
 dmg:
-  title: Jepoy Floor AI ${version}
+  title: DevLabs ${version}
 
 # ---- Windows ----
 win:
@@ -161,11 +161,11 @@ nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
-  artifactName: Jepoy-Floor-AI-${version}-win-x64-setup.exe
-  shortcutName: Jepoy Floor AI
+  artifactName: DevLabs-${version}-win-x64-setup.exe
+  shortcutName: DevLabs
 
 portable:
-  artifactName: Jepoy-Floor-AI-${version}-win-x64-portable.exe
+  artifactName: DevLabs-${version}-win-x64-portable.exe
 
 # ---- Linux ----
 linux:
@@ -174,4 +174,4 @@ linux:
   target:
     - target: AppImage
       arch: [x64]
-  artifactName: Jepoy-Floor-AI-${version}-linux-x86_64.AppImage
+  artifactName: DevLabs-${version}-linux-x86_64.AppImage

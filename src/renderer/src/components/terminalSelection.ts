@@ -7,7 +7,7 @@
  * triple-click or a full-width drag does) therefore copies the rail with the
  * prose, and the paste lands as:
  *
- *     ▎ Jepoy Floor AI — clones for you and your team, working 24/7.
+ *     ▎ DevLabs — clones for you and your team, working 24/7.
  *
  * Nothing downstream wants that glyph, so strip it on the way to the clipboard.
  *

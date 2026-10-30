@@ -1,13 +1,13 @@
 # Contributors
 
-Jepoy Floor AI is a fork of [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin),
+DevLabs is a fork of [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin),
 created by **[Chaitanya Giri](https://github.com/chaitanyagiri)** and released under the MIT License.
 Most of the code in this repository was written by Chaitanya and the Munder Difflin contributors
 listed below. Thank you all.
 
 ## This fork
 
-- [Jeffrey Cayao](https://github.com/jeffreycayao) / Automatika Consulting ([jepoy.dev](https://jepoy.dev)): Philippine edition, rebrand, connectors, floors
+- [Jeffrey Cayao](https://github.com/jeffreycayao) ([jepoy.dev](https://jepoy.dev)): Philippine edition, rebrand, connectors, floors
 
 Contributions to this fork are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -1,6 +1,6 @@
 # Telemetry
 
-Jepoy Floor AI collects a small set of **anonymous** usage events so we can
+DevLabs collects a small set of **anonymous** usage events so we can
 understand adoption (how many people launch the app, whether they get a first
 agent running, which features get used) and make the product better. This
 document is the complete, authoritative

@@ -8,13 +8,17 @@
 
 const REPO = 'jeffreycayao/Dev-Labs';
 const RELEASES_PAGE = `https://github.com/${REPO}/releases/latest`;
+/** Only installers from this repo's releases are ever redirected to. */
+const ASSET_PREFIX = `https://github.com/${REPO}/releases/download/`;
+/** Give up on GitHub before the function times out, so visitors get the fallback. */
+const GITHUB_TIMEOUT_MS = 4000;
 
 const PLATFORMS = {
-  mac: /^Jepoy-Floor-AI-.+-mac-universal\.dmg$/,
-  'mac-zip': /^Jepoy-Floor-AI-.+-mac-universal\.zip$/,
-  windows: /^Jepoy-Floor-AI-.+-win-x64-setup\.exe$/,
-  'windows-portable': /^Jepoy-Floor-AI-.+-win-x64-portable\.exe$/,
-  linux: /^Jepoy-Floor-AI-.+-linux-x86_64\.AppImage$/
+  mac: /^DevLabs-.+-mac-universal\.dmg$/,
+  'mac-zip': /^DevLabs-.+-mac-universal\.zip$/,
+  windows: /^DevLabs-.+-win-x64-setup\.exe$/,
+  'windows-portable': /^DevLabs-.+-win-x64-portable\.exe$/,
+  linux: /^DevLabs-.+-linux-x86_64\.AppImage$/
 };
 
 /** The download URL for `os` in a GitHub release object, or null. */
@@ -22,14 +26,18 @@ function pickAsset(release, os) {
   const pattern = PLATFORMS[os];
   if (!pattern || !release || !Array.isArray(release.assets)) return null;
   const asset = release.assets.find((a) => a && typeof a.name === 'string' && pattern.test(a.name));
-  return asset && typeof asset.browser_download_url === 'string' ? asset.browser_download_url : null;
+  const url = asset && asset.browser_download_url;
+  return typeof url === 'string' && url.startsWith(ASSET_PREFIX) ? url : null;
 }
 
 async function fetchLatestRelease() {
   const headers = { accept: 'application/vnd.github+json', 'user-agent': 'jepoy.dev-download' };
   // Optional: a read-only token raises GitHub's rate limit (60/h per IP without one).
   if (process.env.GITHUB_TOKEN) headers.authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-  const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers });
+  const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+    headers,
+    signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS)
+  });
   if (!res.ok) throw new Error(`GitHub API ${res.status}`);
   return res.json();
 }

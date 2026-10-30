@@ -11,7 +11,7 @@ import type { ThemeId } from '@/scene/office/themeRegistry';
 // fallback note on switch. Theme changes keep the hired team intact.
 interface ThemeMeta { id: ThemeId; label: string; blurb: string; built: boolean; swatch: string; }
 const THEME_META: ThemeMeta[] = [
-  { id: 'office',        label: 'The Office',         blurb: 'Jepoy Floor AI — the original floor', built: true,  swatch: '#6b5a4a' },
+  { id: 'office',        label: 'The Office',         blurb: 'DevLabs — the original floor', built: true,  swatch: '#6b5a4a' },
   { id: 'friends',       label: 'Friends',            blurb: 'Central Perk coffee house',           built: false, swatch: '#9a5a32' },
   { id: 'brooklyn99',    label: 'Brooklyn Nine-Nine', blurb: 'The 99th precinct bullpen',           built: true,  swatch: '#3a5a7a' },
   { id: 'siliconvalley', label: 'Silicon Valley',     blurb: 'The Hacker Hostel',                   built: false, swatch: '#4a6a4a' },

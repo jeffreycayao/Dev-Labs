@@ -66,8 +66,8 @@ body:
   - type: input
     id: app-version
     attributes:
-      label: Jepoy Floor AI version
-      description: Settings → the version is on the hero card. Or `Jepoy Floor AI → About`.
+      label: DevLabs version
+      description: Settings → the version is on the hero card. Or `DevLabs → About`.
       placeholder: e.g. 0.4.5
     validations:
       required: true

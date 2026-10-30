@@ -1,8 +1,13 @@
 # Changelog
 
-All notable changes to Jepoy Floor AI. App versions rise before each source push; published releases use `npm run release:<patch|minor|major>` (see RELEASE.md).
+All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise before each source push; published releases use `npm run release:<patch|minor|major>` (see RELEASE.md).
 
 ## Unreleased
+
+- **Renamed to DevLabs™, by jepoy.dev.** The app, installers, menus, Help, website and docs now say DevLabs. Installers are named `DevLabs-<version>-…`.
+- **Install fresh once.** The app ID changed to `dev.jepoy.devlabs`, so the updater cannot move an existing Jepoy Floor AI install across. Install DevLabs from https://jepoy.dev/#download; your agents, floors and settings carry over automatically from the old Jepoy Floor AI data folder. You can then uninstall Jepoy Floor AI.
+- Shared hire links (`atmtlabs://`), hire and floor files, and skills from the existing catalog keep working unchanged.
+- **Website:** removed the leftover "Pay once" claims (DevLabs is free), a duplicate Download link in the nav, and screen-reader noise from decorative emoji. Download links now fall back to the releases page within 4 seconds if GitHub hangs, and only ever redirect to installers in this repository's releases.
 
 ## v3.0.4 — 2026-10-21
 

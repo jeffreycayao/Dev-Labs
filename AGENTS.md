@@ -11,7 +11,7 @@ Read this first, then [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the deep 
 
 ## What this is
 
-Jepoy Floor AI is an open-source (MIT) Electron desktop app, forked from [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin) by Chaitanya Giri. It runs a team of terminal AI agents (Claude Code, Codex, Antigravity, Cursor and others) in a pixel-art office, with an orchestrator named Ramon.
+DevLabs is an open-source (MIT) Electron desktop app, forked from [Munder Difflin](https://github.com/chaitanyagiri/munder-difflin) by Chaitanya Giri. It runs a team of terminal AI agents (Claude Code, Codex, Antigravity, Cursor and others) in a pixel-art office, with an orchestrator named Ramon.
 
 There is no account, sign-in or license check. Agents start as soon as the app is installed.
 

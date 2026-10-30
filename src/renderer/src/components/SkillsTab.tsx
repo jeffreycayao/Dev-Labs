@@ -1,4 +1,4 @@
-/** Local skills and the first-party Jepoy Floor AI Skills Library. */
+/** Local skills and the first-party DevLabs Skills Library. */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PixelButton } from './PixelButton';

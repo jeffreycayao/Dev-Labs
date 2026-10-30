@@ -1,10 +1,10 @@
-# Jepoy Floor AI — Privacy Policy
+# DevLabs — Privacy Policy
 
 > Published policy: https://jepoy.dev/privacy (`site/privacy.html`). Keep this copy aligned with that page.
 
 **Last updated:** October 21, 2026
 
-Automatika Consulting explains here how data is handled for the open-source Jepoy Floor AI desktop app and the jepoy.dev website.
+jepoy.dev (Jeffrey Cayao) explains here how data is handled for the open-source DevLabs desktop app and the jepoy.dev website.
 
 ## The short version
 

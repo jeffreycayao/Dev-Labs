@@ -16,13 +16,13 @@ const asset = (name) => ({ name, browser_download_url: `https://github.com/${REP
 const RELEASE = {
   tag_name: 'v9.9.9',
   assets: [
-    'Jepoy-Floor-AI-9.9.9-mac-universal.dmg.blockmap',
-    'Jepoy-Floor-AI-9.9.9-mac-universal.dmg',
-    'Jepoy-Floor-AI-9.9.9-mac-universal.zip',
-    'Jepoy-Floor-AI-9.9.9-win-x64-setup.exe.blockmap',
-    'Jepoy-Floor-AI-9.9.9-win-x64-setup.exe',
-    'Jepoy-Floor-AI-9.9.9-win-x64-portable.exe',
-    'Jepoy-Floor-AI-9.9.9-linux-x86_64.AppImage',
+    'DevLabs-9.9.9-mac-universal.dmg.blockmap',
+    'DevLabs-9.9.9-mac-universal.dmg',
+    'DevLabs-9.9.9-mac-universal.zip',
+    'DevLabs-9.9.9-win-x64-setup.exe.blockmap',
+    'DevLabs-9.9.9-win-x64-setup.exe',
+    'DevLabs-9.9.9-win-x64-portable.exe',
+    'DevLabs-9.9.9-linux-x86_64.AppImage',
     'latest.yml',
     'latest-mac.yml',
     'SHA256SUMS-mac.txt'
@@ -53,11 +53,11 @@ const okFetch = (release) => async () => ({ ok: true, status: 200, json: async (
 
 test('picks the installer for each platform and skips blockmaps and metadata', () => {
   const want = {
-    mac: 'Jepoy-Floor-AI-9.9.9-mac-universal.dmg',
-    'mac-zip': 'Jepoy-Floor-AI-9.9.9-mac-universal.zip',
-    windows: 'Jepoy-Floor-AI-9.9.9-win-x64-setup.exe',
-    'windows-portable': 'Jepoy-Floor-AI-9.9.9-win-x64-portable.exe',
-    linux: 'Jepoy-Floor-AI-9.9.9-linux-x86_64.AppImage'
+    mac: 'DevLabs-9.9.9-mac-universal.dmg',
+    'mac-zip': 'DevLabs-9.9.9-mac-universal.zip',
+    windows: 'DevLabs-9.9.9-win-x64-setup.exe',
+    'windows-portable': 'DevLabs-9.9.9-win-x64-portable.exe',
+    linux: 'DevLabs-9.9.9-linux-x86_64.AppImage'
   };
   assert.deepEqual(Object.keys(PLATFORMS).sort(), Object.keys(want).sort());
   for (const [os, name] of Object.entries(want)) {
@@ -66,6 +66,18 @@ test('picks the installer for each platform and skips blockmaps and metadata', (
   assert.equal(pickAsset(RELEASE, 'solaris'), null);
   assert.equal(pickAsset({}, 'mac'), null);
   assert.equal(pickAsset({ assets: [asset('latest.yml')] }, 'mac'), null);
+  const foreign = { name: 'DevLabs-9.9.9-mac-universal.dmg', browser_download_url: 'https://evil.example/DevLabs.dmg' };
+  assert.equal(pickAsset({ assets: [foreign] }, 'mac'), null);
+});
+
+test('gives GitHub a deadline so a hung API still reaches the fallback', async () => {
+  let signal;
+  const res = await call('mac', async (_url, opts) => {
+    signal = opts.signal;
+    return okFetch(RELEASE)();
+  });
+  assert.ok(signal instanceof AbortSignal, 'fetch was called without an abort signal');
+  assert.equal(res.statusCode, 302);
 });
 
 test('patterns match the artifact names electron-builder produces', () => {
@@ -96,7 +108,7 @@ test('points at the same public repo as the app updater', () => {
 test('redirects to the latest installer, cached at the CDN', async () => {
   const res = await call('windows', okFetch(RELEASE));
   assert.equal(res.statusCode, 302);
-  assert.equal(res.headers.location, asset('Jepoy-Floor-AI-9.9.9-win-x64-setup.exe').browser_download_url);
+  assert.equal(res.headers.location, asset('DevLabs-9.9.9-win-x64-setup.exe').browser_download_url);
   assert.match(res.headers['cache-control'], /s-maxage=300/);
 });
 

@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Jepoy Floor AI is open-source software released under the MIT License (see LICENSE).
+DevLabs is open-source software released under the MIT License (see LICENSE).
 It incorporates third-party components that are licensed under their own terms, reproduced
 below as those licenses require.
 
@@ -8,7 +8,7 @@ below as those licenses require.
 
 ## Original application — Munder Difflin by Chaitanya Giri (MIT License)
 
-Jepoy Floor AI is a fork of **Munder Difflin** (https://github.com/chaitanyagiri/munder-difflin,
+DevLabs is a fork of **Munder Difflin** (https://github.com/chaitanyagiri/munder-difflin,
 https://munderdiffl.in/), the open-source multi-agent desktop harness created by
 **Chaitanya Giri**. Thank you, Chaitanya. It is used under the following license:
 
@@ -48,6 +48,6 @@ with credit. See LICENSE-ASSETS.
 
 ## Other open-source components
 
-Jepoy Floor AI is built with Electron, React, PixiJS, xterm.js, node-pty, better-sqlite3 and
+DevLabs is built with Electron, React, PixiJS, xterm.js, node-pty, better-sqlite3 and
 other open-source packages. Each is distributed under its own license (MIT, Apache-2.0,
 BSD or similar), included with the package in the application bundle.

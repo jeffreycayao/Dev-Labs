@@ -1,4 +1,4 @@
-# Releasing Jepoy Floor AI
+# Releasing DevLabs
 
 Versions follow [semver](https://semver.org) and start at `0.0.1`.
 
@@ -53,7 +53,7 @@ Other cost rules:
   default; pick `linux+windows` or `all` when you really need them.
 
 Publish: `git push --follow-tags`. The tag workflow creates a draft release
-named "Jepoy Floor AI vX.Y.Z" on this repository, uploads every installer, and
+named "DevLabs vX.Y.Z" on this repository, uploads every installer, and
 publishes it. No extra token or second repository is needed.
 
 Before each release, edit `build/release-notes.md` (3–5 bullets, ≤280 chars) — it is the in-app "What's new" toast.

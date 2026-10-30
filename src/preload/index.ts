@@ -826,7 +826,7 @@ const api = {
   skillsCatalog: (force?: boolean): Promise<{
     skills: CatalogSkill[]; fetchedAt: number; stale: boolean; error?: string;
   }> => ipcRenderer.invoke('skills:catalog', force),
-  /** Install or update a validated Jepoy Floor AI catalog ID into ~/.claude/skills. */
+  /** Install or update a validated DevLabs catalog ID into ~/.claude/skills. */
   skillsInstall: (id: string, expectedVersion: string, expectedSourceCommit: string): Promise<
     { ok: true; path: string } | { ok: false; error: string }
   > => ipcRenderer.invoke('skills:install', id, expectedVersion, expectedSourceCommit),

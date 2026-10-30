@@ -30,7 +30,7 @@ const t = (
   id,
   track,
   role,
-  manifest: { spec: HIRE_SPEC_V1, description: role, author: 'Jepoy Floor AI', ...m }
+  manifest: { spec: HIRE_SPEC_V1, description: role, author: 'DevLabs', ...m }
 });
 
 export const AGENT_TEMPLATES: readonly AgentTemplate[] = [

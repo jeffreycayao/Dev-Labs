@@ -18,7 +18,7 @@ const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const skillMarkdown = (body) => `---\nname: taglish-customer-replies\ndescription: Draft replies in Taglish.\n---\n${body}\n`;
 const fixture = (content, version = '0.1.0', commit = commit1) => ({
   schemaVersion: 1,
-  publisher: 'Jepoy Floor AI',
+  publisher: 'DevLabs',
   skills: [{
     id, name: 'Taglish Customer Replies', description: 'Draft replies in Taglish.',
     category: 'Customer Support', version, sourceCommit: commit,
@@ -71,7 +71,7 @@ test('catalogs and installed metadata from the pre-rebrand publisher still valid
   const legacy = structuredClone(fixture('# skill\n'));
   legacy.publisher = 'ATMT Labs';
   const parsed = validateCatalog(legacy);
-  assert.equal(parsed.publisher, 'Jepoy Floor AI');
+  assert.equal(parsed.publisher, 'DevLabs');
   const unknown = structuredClone(fixture('# skill\n'));
   unknown.publisher = 'Someone Else';
   assert.throws(() => validateCatalog(unknown));
@@ -130,7 +130,7 @@ test('install pins URLs, verifies bytes, preserves edited installs and replaces 
   assert.match(refused.error, /local edits/);
   assert.match(fs.readFileSync(path.join(target, 'SKILL.md'), 'utf8'), /user edit/);
 
-  // Restore the original bytes to model an unmodified Jepoy Floor AI-managed update.
+  // Restore the original bytes to model an unmodified DevLabs-managed update.
   fs.writeFileSync(path.join(target, 'SKILL.md'), source1);
   const updated = await installCatalogSkill(id, '0.2.0', commit2, cache, { homeDir: home, fetchBytes: fetch2 });
   assert.equal(updated.ok, true);

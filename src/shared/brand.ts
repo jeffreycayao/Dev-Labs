@@ -1,11 +1,11 @@
 // Brand identity — single source of truth for the app name, slugs and the
 // Public GitHub distribution repo for updates; remote catalogs are separate.
 
-export const APP_NAME = 'Jepoy Floor AI';
+export const APP_NAME = 'DevLabs';
 /** Lowercase slug for user-agents and dev overrides. */
-export const APP_SLUG = 'jepoy-floor-ai';
+export const APP_SLUG = 'devlabs';
 /** Prefix of packaged installer file names (must match electron-builder.yml). */
-export const ARTIFACT_PREFIX = 'Jepoy-Floor-AI';
+export const ARTIFACT_PREFIX = 'DevLabs';
 /** Deep-link scheme for shareable hires (must match electron-builder.yml).
  * Kept as `atmtlabs` on purpose: links already shared by older builds use it. */
 export const PROTOCOL = 'atmtlabs';

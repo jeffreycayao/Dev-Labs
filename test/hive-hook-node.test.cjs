@@ -354,7 +354,7 @@ test('a missing exposed directory is repaired on the next spawn', (t) => {
   assert.equal(fs.statSync(sessions).isDirectory(), true, 'the stale link still has no writable target');
 });
 
-test('an unsafe agent id cannot escape the Jepoy Floor AI scan namespace', (t) => {
+test('an unsafe agent id cannot escape the DevLabs scan namespace', (t) => {
   const { home, harness } = isolatedHomes(t);
   const hive = new HiveManager(() => harness);
   hive.ensureHive();
@@ -370,7 +370,7 @@ test('an unsafe agent id cannot escape the Jepoy Floor AI scan namespace', (t) =
   assert.equal(fs.existsSync(path.join(home, '.codex', 'sessions', 'atmt-labs', 'outside')), false);
 });
 
-test('reset cleanup removes only exposed Jepoy Floor AI rollouts', (t) => {
+test('reset cleanup removes only exposed DevLabs rollouts', (t) => {
   const { home, harness } = isolatedHomes(t);
   const hive = new HiveManager(() => harness);
   hive.ensureHive();
@@ -386,7 +386,7 @@ test('reset cleanup removes only exposed Jepoy Floor AI rollouts', (t) => {
 
   hive.removeExposedCodexData();
 
-  assert.equal(fs.existsSync(exposed), false, 'reset left Jepoy Floor AI rollout data behind');
+  assert.equal(fs.existsSync(exposed), false, 'reset left DevLabs rollout data behind');
   assert.equal(fs.readFileSync(personal, 'utf8'), 'personal\n', 'reset touched a personal Codex session');
 });
 

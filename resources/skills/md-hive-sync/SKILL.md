@@ -2,13 +2,13 @@
 name: md-hive-sync
 version: 1.0.0
 description: |
-  Jepoy Floor AI hive sync — runs the start-of-task hive protocol steps:
+  DevLabs hive sync — runs the start-of-task hive protocol steps:
   reads memory.md, checks inbox/ for new messages, and reminds you to record
   durable facts in memory.md and write coordination files before ending.
   Use when asked to "sync with the hive", "check my inbox", "hive status",
   or "hive sync".
   Proactively suggest at the start of a new task if you haven't checked your
-  hive inbox in this conversation. (jepoy-floor-ai)
+  hive inbox in this conversation. (devlabs)
 allowed-tools:
   - Read
   - Bash

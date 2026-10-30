@@ -24,7 +24,7 @@ function load(): AppTheme {
     const v = window.localStorage.getItem(LS_KEY) ?? window.localStorage.getItem(LEGACY_LS_KEY);
     if (v === 'dark' || v === 'light') return v;
   } catch { /* noop */ }
-  return 'dark'; // Jepoy Floor AI is dark-first
+  return 'dark'; // DevLabs is dark-first
 }
 
 let theme: AppTheme = load();

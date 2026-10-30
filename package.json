@@ -1,6 +1,6 @@
 {
   "name": "devlabs",
-  "version": "4.0.4",
+  "version": "4.0.5",
   "private": true,
   "description": "DevLabs — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
   "main": "out/main/index.js",
@@ -8,7 +8,7 @@
   "contributors": [
     "Chaitanya Giri (original author, https://github.com/chaitanyagiri/munder-difflin)"
   ],
-  "homepage": "https://jepoy.dev/",
+  "homepage": "https://devlabs.atmt.dev/",
   "repository": {
     "type": "git",
     "url": "https://github.com/jeffreycayao/Dev-Labs.git"

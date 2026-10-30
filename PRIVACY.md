@@ -1,10 +1,10 @@
 # DevLabs — Privacy Policy
 
-> Published policy: https://jepoy.dev/privacy (`site/privacy.html`). Keep this copy aligned with that page.
+> Published policy: https://devlabs.atmt.dev/privacy (`site/privacy.html`). Keep this copy aligned with that page.
 
 **Last updated:** October 21, 2026
 
-jepoy.dev (Jeffrey Cayao) explains here how data is handled for the open-source DevLabs desktop app and the jepoy.dev website.
+jepoy.dev (Jeffrey Cayao) explains here how data is handled for the open-source DevLabs desktop app and the devlabs.atmt.dev website.
 
 ## The short version
 
@@ -26,7 +26,7 @@ While auto-update is on, the app asks GitHub for the latest public release. GitH
 
 ## Website
 
-jepoy.dev sets no cookies and runs no analytics or advertising scripts. The host (Vercel) keeps short-lived request logs for security and error diagnosis.
+devlabs.atmt.dev sets no cookies and runs no analytics or advertising scripts. The host (Vercel) keeps short-lived request logs for security and error diagnosis.
 
 ## Your rights and contact
 

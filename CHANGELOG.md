@@ -4,6 +4,9 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **Website moved to https://devlabs.atmt.dev.** Links in the app's Help and About, the README, guides and privacy policy now point there. jepoy.dev stays as the developer credit.
+- **Removed leftover sign-in data.** Versions with sign-in kept an encrypted account token in `license.json` in the app's data folder, and nothing deleted it after sign-in was removed. DevLabs now deletes it on start, from its own folder and from older Jepoy Floor AI / ATMT Labs folders, and never copies it forward. The account service it belonged to (auth.labs.atmt.dev / api.labs.atmt.dev) is already offline.
+
 - **Website: touch interactions and more sections.**
   - **Touch library:** [@use-gesture/vanilla](https://use-gesture.netlify.app) adds touch and drag. You can spin the 3D scenes (with fling), pinch the tower to zoom, swipe the feature carousel on phones, and press and tilt tiles on tablets.
   - **New sections:**

@@ -4,7 +4,7 @@ DevLabs turns the AI coding tools you already use into a **team of agents in a v
 - Each agent has its own desk, terminal, project folder, memory and inbox.
 - **Ramon**, your orchestrator at the head desk, plans work, hands it out and keeps the floor moving.
 
-Download: **https://jepoy.dev** · Help: **https://github.com/jeffreycayao/Dev-Labs/issues**
+Download: **https://devlabs.atmt.dev** · Help: **https://github.com/jeffreycayao/Dev-Labs/issues**
 
 ---
 
@@ -148,9 +148,9 @@ Today, connectors only reach **Claude Code** agents.
 - There is no account: no email or sign-in is sent anywhere.
 - Anonymous usage stats are optional: Settings → General → **Anonymous usage stats**.
 
-Details: [Privacy Policy](https://jepoy.dev/privacy) · [MIT License](../LICENSE) · [Telemetry](../TELEMETRY.md).
+Details: [Privacy Policy](https://devlabs.atmt.dev/privacy) · [MIT License](../LICENSE) · [Telemetry](../TELEMETRY.md).
 
-This guide is also online at **https://jepoy.dev/guide**.
+This guide is also online at **https://devlabs.atmt.dev/guide**.
 
 ## 11. Updates and What's New
 

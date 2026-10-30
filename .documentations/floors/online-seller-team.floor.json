@@ -3,7 +3,7 @@
   "name": "Online Seller Team",
   "description": "A small team for an online shop on Pancake POS and Webcake: sales and stock, landing pages, and product content. Add your Pancake POS key and Webcake token in Settings → Connections first.",
   "author": "DevLabs",
-  "homepage": "https://jepoy.dev",
+  "homepage": "https://devlabs.atmt.dev",
   "connectors": ["pancake-pos", "webcake-landing"],
   "hires": [
     {

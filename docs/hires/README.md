@@ -1,7 +1,7 @@
 # Agent Gallery
 
 A community gallery of **shareable hires** — portable agent role templates for the
-[DevLabs](https://jepoy.dev) multi-agent harness. Browse a role, download
+[DevLabs](https://devlabs.atmt.dev) multi-agent harness. Browse a role, download
 its manifest, and import it in the app — its goal, model, flags, and token budget land
 pre-filled (you always review before it spawns).
 

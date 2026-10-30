@@ -1,4 +1,4 @@
-# jepoy.dev — the DevLabs website
+# devlabs.atmt.dev — the DevLabs website
 
 Static HTML and CSS with no build step on Vercel. One server function, `api/download.js`, handles download links. A small motion script (`assets/js/site.js`) adds smooth scrolling, scroll reveals and the 3D hero; the pages work fully without it.
 The look is a dark, futuristic HUD: near-black glass panels, neon lime (`#d8ff00`), Manrope headlines and IBM Plex Mono labels. Fonts are self-hosted under `assets/fonts/` with their OFL notice.
@@ -15,7 +15,7 @@ The look is a dark, futuristic HUD: near-black glass panels, neon lime (`#d8ff00
 ## Deploy (Vercel)
 
 1. Vercel → **Add New → Project** → this repo. Set **Root Directory** to `site` and **Framework Preset** to **Other**, with no build command.
-2. **Settings → Domains:** add `jepoy.dev`.
+2. **Settings → Domains:** add `devlabs.atmt.dev`.
 
 ## Before launch, fill in
 

@@ -1,4 +1,4 @@
-// jepoy.dev motion layer: Lenis smooth scroll, Motion (Framer Motion's vanilla
+// devlabs.atmt.dev motion layer: Lenis smooth scroll, Motion (Framer Motion's vanilla
 // API) for reveals, springs and scroll-linked effects, and three.js scenes that
 // load lazily. Progressive enhancement only: every page reads and works with
 // this script blocked, and prefers-reduced-motion turns all of it off.

@@ -1521,7 +1521,7 @@ async function showAboutDialog(parent: BrowserWindow | null): Promise<void> {
       '© 2026 Chaitanya Giri and jepoy.dev. Open source under the MIT License.',
       '',
       'Original project: github.com/chaitanyagiri/munder-difflin',
-      'Developer: jepoy.dev · Source & issues: github.com/jeffreycayao/Dev-Labs',
+      'Developer: jepoy.dev · devlabs.atmt.dev · Source & issues: github.com/jeffreycayao/Dev-Labs',
       '',
       `Electron ${process.versions.electron} · Chromium ${process.versions.chrome} · Node ${process.versions.node}`
     ].join('\n'),

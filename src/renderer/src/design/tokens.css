@@ -1,0 +1,184 @@
+/* Design tokens — mirrors tokens.ts. Update both together.
+   DevLabs palette (jepoy.dev brand), three colors:
+     main   #CDF252  lime — fills, pills, highlighted words (the `lemon` slot)
+     key    #E1642D  orange — the ONE key word and asterisks (`--cth-key`)
+     dark   #181C17  dark scenes and text (dark-theme ground, light-theme ink)
+   Surfaces and the text ramp are tints of `dark`. Other hues are status
+   semantics or per-agent colors only. Headlines: Plus Jakarta Sans ExtraBold,
+   tight tracking, lowercase (see fonts.css and global.css). */
+:root {
+  /* Base */
+  --cth-cream-50:  #F7F9F2;
+  --cth-cream-100: #F0F3E8;
+  --cth-cream-200: #E5EADB;
+  --cth-cream-300: #D8DFCB;
+  --cth-paper-100: #FFFFFB;
+  --cth-paper-200: #EDF1E3;
+
+  /* Ink */
+  --cth-ink-900: #181C17;
+  --cth-ink-700: #363D32;
+  --cth-ink-500: #596254;
+  --cth-ink-300: #737C6A;
+  --cth-ink-100: #D9DFCF;
+
+  /* Accents — v0.3.4 recalibration: same hues, professional saturation.
+     The originals (#FFD93D, #FF6B6B, …) were full-saturation arcade tones that
+     read as noise at UI density; these sit in the calmer band that products
+     like Linear/Radix use — recognizable color, no glare. */
+  --cth-coral: #CF5F52;       --cth-coral-light: #F5D9D2;
+  --cth-mint:  #5E9A4E;       --cth-mint-light:  #DCEBD2;
+  --cth-sky:   #4A8A9A;       --cth-sky-light:   #D3E6EA;
+  --cth-lemon: #CDF252;       --cth-lemon-light: #F0FBCF;
+  --cth-lilac: #8A79C2;       --cth-lilac-light: #E3DDF2;
+  --cth-peach: #D4AF37;       --cth-peach-light: #F4E9C4;
+
+  /* Brand key accent: the ONE key word, asterisks. Same in both themes; it is
+     never a fill behind body text (dark on it is 4.98:1, white only 3.46:1). */
+  --cth-key: #E1642D;
+
+  /* Status — same recalibration; hue meanings unchanged */
+  --cth-status-idle:     #A3977F;
+  --cth-status-thinking: #4A8A9A;
+  --cth-status-working:  #9DBB2E;
+  --cth-status-waiting:  #6D87D6;
+  --cth-status-blocked:  #CF5F52;
+  --cth-status-success:  #5E9A4E;
+  --cth-status-ghost:    #D9DFCF;
+  --cth-status-compacting: #8F7CC7; /* #5C — mid-/compact, "boxing up context" */
+  --cth-status-looping:    #D6903F; /* #5C — circuit-breaker armed (runaway) */
+  --cth-status-typing:     #D4AF37; /* unsent text on the prompt — queue is held */
+
+  /* Spacing */
+  --cth-space-0: 0px;
+  --cth-space-1: 4px;
+  --cth-space-2: 8px;
+  --cth-space-3: 12px;
+  --cth-space-4: 16px;
+  --cth-space-5: 24px;
+  --cth-space-6: 32px;
+  --cth-space-7: 48px;
+  --cth-space-8: 64px;
+
+  /* Type — Plus Jakarta Sans ExtraBold is the BRAND face for headlines and
+     labels (lowercase, tight tracking: global.css); everything the user reads
+     at length is Inter (UI) and JetBrains Mono (code/terminal). */
+  /* The bundled Jakarta file is latin-only. CJK and Arabic text in a display
+     slot falls through to a system face rather than to generic sans. */
+  --cth-font-display: "Plus Jakarta Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", sans-serif;
+  --cth-font-ui:      "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", sans-serif;
+  --cth-font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, "PingFang SC", "Microsoft YaHei", "Noto Sans Mono CJK SC", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", monospace;
+
+  /* Type scale — v0.3.4: one step tighter (Inter reads larger than Pixelify
+     at equal px, and the controls were oversized) */
+  --cth-text-display-lg: 16px;
+  --cth-text-display-md: 12px;
+  --cth-text-display-sm: 8px;
+  --cth-text-body-lg:    16px;
+  --cth-text-body-md:    14px;
+  --cth-text-body-sm:    13px;
+  --cth-text-mono-md:    14px;
+  --cth-text-mono-sm:    13px;
+
+  /* Line heights — integer multiples */
+  --cth-lh-display-lg: 24px;
+  --cth-lh-display-md: 20px;
+  --cth-lh-display-sm: 12px;
+  --cth-lh-body-lg:    24px;
+  --cth-lh-body-md:    20px;
+  --cth-lh-body-sm:    18px;
+  --cth-lh-mono:       20px;
+
+  /* Hard drop shadow — no blur, softer than before */
+  --cth-shadow-hard: 3px 3px 0 rgba(24, 28, 23, 0.14);
+
+  /* Panel borders — v0.3.4: single hairlines. The old three-layer package
+     boxed every surface in thick chrome; structure now comes from surface
+     contrast, not outlines. Dialogs keep one slightly stronger line. */
+  --cth-panel-border:          inset 0 0 0 1px var(--cth-ink-300);
+  /* Text that sits ON an accent fill (a selected tab, a filled chip). The
+     accents are LIGHT surfaces in BOTH themes, so this is dark in both — using
+     ink-900 here inverts with the theme and paints near-white on a pale accent,
+     which is the one place the theme switch actively hurts legibility. */
+  --cth-on-accent: #181C17;
+
+  --cth-panel-border-inset:    inset 0 0 0 1px var(--cth-ink-100);
+  --cth-panel-border-terminal: inset 0 0 0 1px var(--cth-ink-300);
+  --cth-panel-border-dialog:   inset 0 0 0 1px var(--cth-ink-500);
+}
+
+/* ── Dark theme ──────────────────────────────────────────────────────────────
+   One token swap darkens the WHOLE app. Shades of black with a near-white text
+   ramp, tuned for READABILITY first and measured rather than eyeballed. Stamped
+   by design/theme.ts as data-cth-theme on <html>; the terminal palette and
+   per-agent Claude session themes follow the same switch.
+
+   THE BUG THIS FIXES. Text was never the problem — ink-900 measured 11-14:1 and
+   ink-700 8-9.6:1 against every surface. `ink-300` was, at 1.73-2.09:1. That
+   token is not decoration: it is this app's entire structural language, used
+   187 times and 93 of those as `inset 0 0 0 1px` — the border on every button,
+   input, panel, card and chip. Below ~3:1 a 1px line is not perceivable, so in
+   dark mode the edges defining every control simply were not there, and the UI
+   read as flat washes of grey. ink-300 is now 3.12-3.59:1 and ink-100 stays
+   deliberately quieter (1.47-1.69:1) for dividers that should recede.
+
+   NOT BLACK, AND NOT WHITE. A first pass took the ground to #0E0E11 and text to
+   #EDECEA, which measured beautifully and read as harsh: near-black behind
+   near-white is maximum contrast, and maximum contrast is not the same as
+   comfortable. The ground now sits at luminance 0.009-0.020 (visibly lifted off
+   black, still unambiguously a dark theme) and text at 0.71 rather than 0.84 —
+   a warm off-white. Everything still clears its floor with room to spare.
+
+   Every value below is verified against WCAG contrast for the five surfaces it
+   can appear on: body text >= 4.5, structural borders >= 3.0. Accents are held
+   to a narrow luminance band (0.36-0.44) so no single hue fluoresces against
+   the black and colour never becomes the thing carrying the layout. */
+:root[data-cth-theme='dark'] {
+  /* Base surfaces — a graded elevation ramp, darkest where light mode was
+     lightest. Neutral with a whisper of the brand's violet warmth. */
+  --cth-cream-50:  #181C17;   /* app ground — brand dark, deliberately NOT black */
+  --cth-cream-100: #1D221C;
+  --cth-cream-200: #232922;
+  --cth-cream-300: #2F362D;
+  --cth-paper-100: #232922;   /* cards, inputs, terminals */
+  --cth-paper-200: #2A3128;
+
+  /* Ink → off-white text ramp (never #FFF — glare) */
+  --cth-ink-900: #E6ECDD;   /* 10.3-14.3:1 — primary text, soft off-white */
+  --cth-ink-700: #C1C9B6;   /*  7.3-10.1:1 — secondary text */
+  --cth-ink-500: #9AA38F;   /*  4.8-6.6:1  — tertiary / hints */
+  --cth-ink-300: #828C78;   /*  3.5-4.9:1  — BORDERS. must stay >= 3.0 */
+  --cth-ink-100: #2F362D;   /*  1.0-1.4:1  — dividers, meant to recede */
+
+  /* Accents — one step lighter/softer than the light set so they read on dark
+     without fluorescing */
+  --cth-coral: #E0826F;       --cth-mint:  #8CC56F;
+  --cth-sky:   #6FAFBE;       --cth-lemon: #CDF252;
+  --cth-lilac: #A596DB;       --cth-peach: #D4AF37;
+
+  /* Accent "-light" fills double as chip/selection backgrounds — deep muted
+     versions so light text (ink-900) stays readable on top. */
+  --cth-coral-light: #3A221C;
+  --cth-mint-light:  #1E2E17;
+  --cth-sky-light:   #18292D;
+  --cth-lemon-light: #2D3517;
+  --cth-lilac-light: #26213A;
+  --cth-peach-light: #322A10;
+
+  /* Status — dark-tuned counterparts (same hue language) */
+  --cth-status-idle:     #7A6E5E;
+  --cth-status-thinking: #6FAFBE;
+  --cth-status-working:  #CDF252;
+  --cth-status-waiting:  #8095DC;
+  --cth-status-blocked:  #E0826F;
+  --cth-status-success:  #8CC56F;
+  /* The quietest status, but still a MARK the user must be able to find — at
+     the old #3D3C44 it measured 1.54:1 on the new ground and simply vanished. */
+  --cth-status-ghost:    #6E6352;
+  --cth-status-compacting: #A596DB;
+  --cth-status-looping:    #D69A55;
+  --cth-status-typing:     #D4AF37;
+
+  /* Hard shadow reads as depth, not void */
+  --cth-shadow-hard: 4px 4px 0 rgba(0, 0, 0, 0.45);
+}

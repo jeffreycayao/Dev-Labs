@@ -1,0 +1,57 @@
+/* Self-hosted typography.
+ *
+ * These three faces used to load from fonts.googleapis.com at runtime. Both that
+ * host and fonts.gstatic.com are blocked in mainland China, so the app booted
+ * there with every face silently falling back: the Press Start 2P brand chrome
+ * rendered as generic monospace and the whole UI looked broken to exactly the
+ * users we had just added a zh-CN locale for. A desktop app should not need the
+ * network to render its own typography, so the files ship inside the bundle.
+ *
+ * Latin subsets only, and Inter/JetBrains Mono are VARIABLE fonts, so one file
+ * per family covers weights 400 to 700. 84KB for all three. CJK and Arabic are
+ * deliberately NOT bundled: a full CJK face is 8-10MB, which is not worth it
+ * when every OS we ship on already has a good one. The token stacks in
+ * tokens.css name those system faces instead.
+ *
+ * Vite fingerprints and inlines these URLs at build time, so the paths below are
+ * source paths, not runtime ones. */
+
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/press-start-2p-latin-400.woff2') format('woff2');
+}
+
+/* Brand headline face: Plus Jakarta Sans ExtraBold (the only weight shipped).
+ * It replaced Press Start 2P in --cth-font-display, whose call sites were sized
+ * for a pixel font (8-13px, mostly 8). size-adjust scales the glyphs so those
+ * sizes keep roughly the old cap height without touching every component. The
+ * declared weight range stops the browser faking bold or light from one file.
+ * Press Start 2P stays for the pixel-art office scene (Pixi), which names it. */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  size-adjust: 130%;
+  src: url('../assets/fonts/plus-jakarta-sans-latin-800-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  /* Variable: one file answers every weight the design tokens ask for. */
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/inter-latin-var.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/jetbrains-mono-latin-var.woff2') format('woff2');
+}

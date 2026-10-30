@@ -1,0 +1,2 @@
+- Updates and downloads now come straight from the open-source repo, github.com/jeffreycayao/Dev-Labs.
+- DevLabs is free and open source (MIT). No account, no sign-in.

@@ -1,0 +1,14 @@
+{
+  "name": "atmt-site-bundle",
+  "private": true,
+  "description": "Builds site/assets/js/*.js from src/ (three.js hero + Lenis smooth scroll). Output is committed; Vercel serves it as static files.",
+  "scripts": {
+    "build": "rm -rf ../../site/assets/js && esbuild src/site.js --bundle --splitting --minify --format=esm --target=es2020 --legal-comments=linked --outdir=../../site/assets/js --chunk-names=[name]-[hash]"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "lenis": "1.3.26",
+    "motion": "14.1.1",
+    "three": "0.186.1"
+  }
+}

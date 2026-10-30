@@ -1,60 +1,46 @@
-// Hero backdrop: a night city of agent "buildings" whose windows (desks) light
-// up and flicker, with a lime grid ground and slow drifting sparks. Sits behind
-// the hero copy at low contrast; pauses when off screen or the tab is hidden.
+// Hero backdrop: a night city of agent "buildings" whose windows (desks) flicker
+// on and off, a holographic spire at the centre with rotating floor rings, a
+// scan ring sweeping up the skyline, data packets arcing between towers, and
+// slow rising sparks over a lime grid.
 import {
-  AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, Color, EdgesGeometry, Fog,
-  GridHelper, Group, InstancedMesh, LineBasicMaterial, LineSegments, MeshBasicMaterial, Object3D,
-  PerspectiveCamera, Points, PointsMaterial, Scene, WebGLRenderer
+  AdditiveBlending, BoxGeometry, BufferAttribute, BufferGeometry, EdgesGeometry, Fog, GridHelper,
+  Group, InstancedMesh, LineBasicMaterial, LineLoop, LineSegments, Mesh, MeshBasicMaterial, Object3D,
+  Points, PointsMaterial, QuadraticBezierCurve3, RingGeometry, Vector3, DoubleSide
 } from 'three';
+import { BG, LIME, createStage, rand } from './stage.js';
 
-const LIME = new Color('#d8ff00');
-const BG = new Color('#0a0e0b');
-
-function rand(seed) { // deterministic, so the skyline is the same every visit
-  let s = seed >>> 0;
-  return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
-}
+const SPIRE = new Vector3(0, 0, -6);
 
 export function mountHero(hero, getScroll) {
-  const canvas = document.createElement('canvas');
-  canvas.className = 'hero-3d';
-  canvas.setAttribute('aria-hidden', 'true');
-  hero.prepend(canvas);
-
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-  renderer.setClearColor(0x000000, 0);
-
-  const scene = new Scene();
-  scene.fog = new Fog(BG, 26, 70);
-  const camera = new PerspectiveCamera(42, 1, 0.1, 200);
-
+  const { scene, camera, pointer, start } = createStage(hero, { className: 'hero-3d' });
+  scene.fog = new Fog(BG, 26, 72);
   const city = new Group();
   scene.add(city);
   const r = rand(20260928);
 
-  // Towers: dark bodies + faint lime edges.
+  // Towers: dark bodies + faint lime edges, kept clear of the spire.
   const TOWERS = 64;
   const bodyGeo = new BoxGeometry(1, 1, 1);
   bodyGeo.translate(0, 0.5, 0);
   const bodies = new InstancedMesh(bodyGeo, new MeshBasicMaterial({ color: '#10140d' }), TOWERS);
-  const edges = new LineSegments(new EdgesGeometry(bodyGeo), new LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.16 }));
-  const edgeGroup = new Group();
+  const edgeMat = new LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.16 });
+  const edgeGeo = new EdgesGeometry(bodyGeo);
   const dummy = new Object3D();
   const windowPos = [];
-  const towers = [];
+  const tops = [];
   for (let i = 0; i < TOWERS; i++) {
-    const ring = 5 + r() * 26;
+    const ring = 7 + r() * 26;
     const a = r() * Math.PI * 2;
-    const x = Math.cos(a) * ring, z = Math.sin(a) * ring - 6;
+    const x = Math.cos(a) * ring + SPIRE.x, z = Math.sin(a) * ring + SPIRE.z;
     const w = 1.2 + r() * 1.8, d = 1.2 + r() * 1.8;
     const floors = 4 + Math.floor(r() * r() * 40);
     const h = floors * 0.42;
     dummy.position.set(x, 0, z); dummy.scale.set(w, h, d); dummy.updateMatrix();
     bodies.setMatrixAt(i, dummy.matrix);
-    const e = edges.clone(); e.position.set(x, 0, z); e.scale.set(w, h, d); edgeGroup.add(e);
-    towers.push({ x, z, w, d, floors });
-    // Windows on the two faces that face the camera-ish (front + one side).
+    const e = new LineSegments(edgeGeo, edgeMat);
+    e.position.set(x, 0, z); e.scale.set(w, h, d);
+    city.add(e);
+    tops.push(new Vector3(x, h, z));
     for (let f = 0; f < floors; f++) {
       const y = 0.25 + f * 0.42;
       for (let k = 0; k < 4; k++) {
@@ -64,7 +50,7 @@ export function mountHero(hero, getScroll) {
       }
     }
   }
-  city.add(bodies, edgeGroup);
+  city.add(bodies);
 
   // Windows as points, with per-window brightness we flicker over time.
   const nWin = windowPos.length / 3;
@@ -79,15 +65,61 @@ export function mountHero(hero, getScroll) {
   };
   for (let i = 0; i < nWin; i++) setWin(i, r() < 0.55);
   winGeo.setAttribute('color', new BufferAttribute(winCol, 3));
-  const windows = new Points(winGeo, new PointsMaterial({
+  city.add(new Points(winGeo, new PointsMaterial({
     size: 0.16, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false, blending: AdditiveBlending
-  }));
-  city.add(windows);
+  })));
 
   // Ground grid.
   const grid = new GridHelper(140, 70, LIME, LIME);
   grid.material.transparent = true; grid.material.opacity = 0.07;
   city.add(grid);
+
+  // Holographic spire: a vertical beam wrapped in hexagonal floor rings.
+  const spire = new Group();
+  spire.position.copy(SPIRE);
+  city.add(spire);
+  const beamGeo = new BufferGeometry().setFromPoints([new Vector3(0, 0, 0), new Vector3(0, 20, 0)]);
+  spire.add(new LineSegments(beamGeo, new LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.5 })));
+  const hex = (rad) => new BufferGeometry().setFromPoints(
+    Array.from({ length: 6 }, (_, k) => new Vector3(Math.cos(k / 6 * Math.PI * 2) * rad, 0, Math.sin(k / 6 * Math.PI * 2) * rad)));
+  const rings = [];
+  for (let i = 0; i < 18; i++) {
+    const t = i / 17;
+    const ring = new LineLoop(hex(2.6 - t * 1.6), new LineBasicMaterial({
+      color: LIME, transparent: true, opacity: 0.25 + (1 - t) * 0.35, blending: AdditiveBlending
+    }));
+    ring.position.y = 0.6 + i * 0.95;
+    ring.userData.spin = (i % 2 ? 1 : -1) * (0.15 + t * 0.35);
+    spire.add(ring);
+    rings.push(ring);
+  }
+
+  // Scan ring sweeping up through the skyline.
+  const scan = new Mesh(new RingGeometry(3, 34, 96, 1), new MeshBasicMaterial({
+    color: LIME, transparent: true, opacity: 0.05, side: DoubleSide, depthWrite: false, blending: AdditiveBlending
+  }));
+  scan.rotation.x = -Math.PI / 2;
+  scan.position.copy(SPIRE);
+  city.add(scan);
+
+  // Data packets: each one travels an arc from a tower top to the spire.
+  const ARCS = 26;
+  const arcs = [];
+  const arcMat = new LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.12, blending: AdditiveBlending });
+  const pkt = new Float32Array(ARCS * 3);
+  for (let i = 0; i < ARCS; i++) {
+    const from = tops[(r() * tops.length) | 0];
+    const to = new Vector3(SPIRE.x, 3 + r() * 14, SPIRE.z);
+    const mid = from.clone().lerp(to, 0.5); mid.y += 4 + r() * 6;
+    const curve = new QuadraticBezierCurve3(from, mid, to);
+    city.add(new LineSegments(new BufferGeometry().setFromPoints(curve.getPoints(40).flatMap((p, k, all) => k ? [all[k - 1], p] : [])), arcMat));
+    arcs.push({ curve, t: r(), speed: 0.12 + r() * 0.25 });
+  }
+  const pktGeo = new BufferGeometry();
+  pktGeo.setAttribute('position', new BufferAttribute(pkt, 3));
+  city.add(new Points(pktGeo, new PointsMaterial({
+    color: '#f4ffb3', size: 0.34, transparent: true, opacity: 0.95, depthWrite: false, blending: AdditiveBlending
+  })));
 
   // Rising sparks.
   const SPARKS = 420;
@@ -99,45 +131,18 @@ export function mountHero(hero, getScroll) {
   }
   const sparkGeo = new BufferGeometry();
   sparkGeo.setAttribute('position', new BufferAttribute(sp, 3));
-  const sparks = new Points(sparkGeo, new PointsMaterial({
+  scene.add(new Points(sparkGeo, new PointsMaterial({
     color: LIME, size: 0.07, transparent: true, opacity: 0.55, depthWrite: false, blending: AdditiveBlending
-  }));
-  scene.add(sparks);
+  })));
 
-  // Sizing.
-  const resize = () => {
-    const w = hero.clientWidth, h = hero.clientHeight;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / Math.max(h, 1);
-    camera.updateProjectionMatrix();
-  };
-  resize();
-  new ResizeObserver(resize).observe(hero);
-
-  // Pointer parallax.
-  let px = 0, py = 0, tx = 0, ty = 0;
-  addEventListener('pointermove', (e) => {
-    tx = (e.clientX / innerWidth - 0.5) * 2;
-    ty = (e.clientY / innerHeight - 0.5) * 2;
-  }, { passive: true });
-
-  // Run only while visible.
-  let visible = true, raf = 0;
-  new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible && !raf) raf = requestAnimationFrame(frame); }).observe(hero);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && visible && !raf) raf = requestAnimationFrame(frame); });
-
-  let t0 = performance.now();
-  function frame(now) {
-    raf = 0;
-    if (!visible || document.hidden) return;
-    const t = (now - t0) / 1000;
-    px += (tx - px) * 0.04; py += (ty - py) * 0.04;
+  const tmp = new Vector3();
+  let last = 0;
+  start((t) => {
+    const dt = Math.min(t - last, 0.05); last = t;
     const scroll = Math.min(getScroll(), 900);
-
-    const ang = t * 0.035 + px * 0.25;
-    const rad = 30;
-    camera.position.set(Math.sin(ang) * rad, 9 + py * -1.5 + scroll * 0.012, Math.cos(ang) * rad + 4);
-    camera.lookAt(0, 5 + scroll * 0.006, -6);
+    const ang = t * 0.035 + pointer.x * 0.25;
+    camera.position.set(Math.sin(ang) * 30, 9 + pointer.y * -1.5 + scroll * 0.012, Math.cos(ang) * 30 + 4);
+    camera.lookAt(0, 6 + scroll * 0.006, -6);
 
     // Flicker: a few windows change each frame, like agents starting/finishing.
     for (let n = 0; n < 6; n++) {
@@ -146,15 +151,22 @@ export function mountHero(hero, getScroll) {
     }
     winGeo.attributes.color.needsUpdate = true;
 
+    for (const ring of rings) ring.rotation.y += ring.userData.spin * dt;
+    const s = (t * 0.12) % 1;
+    scan.position.y = s * 20;
+    scan.material.opacity = 0.07 * Math.sin(s * Math.PI);
+
+    arcs.forEach((a, i) => {
+      a.t = (a.t + a.speed * dt) % 1;
+      a.curve.getPoint(a.t, tmp);
+      pkt[i * 3] = tmp.x; pkt[i * 3 + 1] = tmp.y; pkt[i * 3 + 2] = tmp.z;
+    });
+    pktGeo.attributes.position.needsUpdate = true;
+
     for (let i = 0; i < SPARKS; i++) {
       sp[i * 3 + 1] += speed[i];
       if (sp[i * 3 + 1] > 22) sp[i * 3 + 1] = 0;
     }
     sparkGeo.attributes.position.needsUpdate = true;
-
-    renderer.render(scene, camera);
-    raf = requestAnimationFrame(frame);
-  }
-  raf = requestAnimationFrame(frame);
-  requestAnimationFrame(() => canvas.classList.add('on'));
+  });
 }

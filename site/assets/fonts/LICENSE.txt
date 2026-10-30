@@ -4,10 +4,6 @@ Fonts served by the jepoy.dev site and their licenses
 These files in site/assets/fonts/ are NOT ours. All families are
 licensed under the SIL Open Font License, Version 1.1, whose full text follows.
 
-  instrument-serif-latin.woff2, instrument-serif-italic-latin.woff2
-    Instrument Serif (Latin subset, regular and italic)
-    Source: https://www.automatika.ph/
-
   manrope-latin.woff2
     Manrope (Latin subset, variable weights)
     Source: https://www.automatika.ph/
@@ -15,16 +11,6 @@ licensed under the SIL Open Font License, Version 1.1, whose full text follows.
   ibm-plex-mono-latin-600.woff2
     IBM Plex Mono (Latin subset, weight 600)
     Source: https://www.automatika.ph/
-
-  inter-latin-var.woff2
-    Inter (latin subset, variable, weights 400 to 700)
-    Copyright (c) 2016 The Inter Project Authors
-    https://github.com/rsms/inter
-
-  poppins-latin-600-normal.woff2, poppins-latin-700-normal.woff2
-    Poppins (latin subset, weights 600 and 700), via @fontsource/poppins 5.3.0
-    Copyright 2020 The Poppins Project Authors
-    https://github.com/itfoundry/Poppins
 
 -----------------------------------------------------------
 SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007

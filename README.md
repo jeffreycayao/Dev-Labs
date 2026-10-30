@@ -26,10 +26,10 @@ Wraps [Claude Code](https://claude.com/claude-code), OpenAI Codex, Antigravity a
   <img alt="Platform: macOS | Windows | Linux" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-F4F1EA.svg?style=flat-square&labelColor=0B0A06">
   <img alt="No account needed" src="https://img.shields.io/badge/account-not%20needed-F4F1EA.svg?style=flat-square&labelColor=0B0A06">
   <a href="./CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
-  <a href="https://jepoy.dev"><img alt="Website: jepoy.dev" src="https://img.shields.io/badge/web-jepoy.dev-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
+  <a href="https://devlabs.atmt.dev"><img alt="Website: devlabs.atmt.dev" src="https://img.shields.io/badge/web-devlabs.atmt.dev-CDF252.svg?style=flat-square&labelColor=181C17"></a>
 </p>
 
-**[⬇ Download for macOS, Windows or Linux](https://jepoy.dev/#download)**
+**[⬇ Download for macOS, Windows or Linux](https://devlabs.atmt.dev/#download)**
 
 <sub>No account, no sign-in, no license key. Every installer is on the
 <a href="https://github.com/jeffreycayao/Dev-Labs/releases/latest">releases page</a>.</sub>
@@ -254,7 +254,7 @@ CLI shows as an **Install** card in the agent's terminal instead of an error.
 ### Download the app
 
 **Most people want this one.** DevLabs is free and open source, with no account or sign-in.
-Installers for macOS, Windows and Linux are on [jepoy.dev](https://jepoy.dev/#download) and the
+Installers for macOS, Windows and Linux are on [devlabs.atmt.dev](https://devlabs.atmt.dev/#download) and the
 [releases page](https://github.com/jeffreycayao/Dev-Labs/releases/latest). Install it,
 open it, and the wizard takes you the rest of the way.
 

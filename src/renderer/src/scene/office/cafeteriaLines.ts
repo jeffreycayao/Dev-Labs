@@ -69,7 +69,7 @@ const BY_CHARACTER: Partial<Record<OfficeCharacterName, readonly string[]>> = {
   michael:  ['team building sa Tagaytay, sino G?', 'ako na bahala sa merienda. charot.', 'walang meeting bago kape. rule yan.', 'family tayo dito. pero may deadline.'],
   dwight:   ['MALI.', 'bawal kumain sa desk. memo ’yan.', 'ang late ay late. kahit 8:01.', 'sino gumalaw ng stapler ko??', 'nakalista ka na sa notebook ko.'],
   jim:      ['nilagay ko ulit sa jelly ang stapler ni Rodel', 'andito lang ako para sa chika', 'prank lang, mars. prank lang.', '*tumingin sa camera*'],
-  pam:      ['Jepoy Floor AI, good morning! si Maricel po ito', 'dino-drawing ko yung vending machine', 'may bagong chika sa reception, ha'],
+  pam:      ['DevLabs, good morning! si Maricel po ito', 'dino-drawing ko yung vending machine', 'may bagong chika sa reception, ha'],
   kevin:    ['sino nagluto ng adobo? ako’y nagugutom', 'unli-rice ba ’to?', 'kanin pa. kanin pa. kanin pa.', 'merienda na ba? 10am pa lang? eh di brunch.'],
   angela:   ['ang dumi ng pantry. sino ’to?', 'Christmas party committee, 3pm. walang late.', 'hinuhusgahan ko yung ref.', 'resibo muna bago reimburse.'],
   oscar:    ['actually, "espresso" ’yan, hindi "expresso"', 'technically naman…', 'bongga ng budget sa snacks, ha. shonga.', 'keri lang, beshie.'],

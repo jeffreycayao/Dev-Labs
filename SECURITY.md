@@ -2,7 +2,7 @@
 
 ## Scope
 
-Jepoy Floor AI is a **local-first desktop app**. It spawns local processes in PTYs and
+DevLabs is a **local-first desktop app**. It spawns local processes in PTYs and
 reads/writes files under directories you register. It opens **no network listeners
 beyond a local Unix domain socket** used for the in-app hook server, and has no auth or
 remote surface by design.

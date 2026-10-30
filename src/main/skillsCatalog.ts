@@ -1,4 +1,4 @@
-/** The first-party Jepoy Floor AI Skills Library. The public catalog is data, never an
+/** The first-party DevLabs Skills Library. The public catalog is data, never an
  * install URL supplied by the renderer. A catalog entry pins every file to one
  * Git commit and SHA-256 so an install can be checked before an agent sees it. */
 import {
@@ -24,10 +24,10 @@ const MAX_FILE_DEPTH = 5;
 const METADATA_NAME = '.atmt-skill.json';
 
 /** Publisher values accepted on the wire. The app was rebranded from ATMT
- * Labs; the live catalog repo and metadata files already installed on agent
+ * Labs and then Jepoy Floor AI; the live catalog repo and metadata files already installed on agent
  * machines still carry the old name until they are republished/reinstalled. */
-const PUBLISHERS: ReadonlySet<string> = new Set(['Jepoy Floor AI', 'ATMT Labs']);
-const APP_PUBLISHER = 'Jepoy Floor AI';
+const PUBLISHERS: ReadonlySet<string> = new Set(['DevLabs', 'Jepoy Floor AI', 'ATMT Labs']);
+const APP_PUBLISHER = 'DevLabs';
 
 export interface CatalogFile { path: string; sha256: string; size: number }
 export interface CatalogSkill {
@@ -110,14 +110,14 @@ function validateFiles(id: string, value: unknown): CatalogFile[] {
 export function validateCatalog(value: unknown): CatalogDocument {
   if (!record(value) || value.schemaVersion !== 1 || !PUBLISHERS.has(value.publisher as string) ||
       !Array.isArray(value.skills) || value.skills.length === 0 || value.skills.length > MAX_SKILLS) {
-    throw new Error('Invalid Jepoy Floor AI skills catalog schema');
+    throw new Error('Invalid DevLabs skills catalog schema');
   }
   const seen = new Set<string>();
   const skills: CatalogSkill[] = value.skills.map((raw) => {
     if (!record(raw) || !validId(raw.id) || seen.has(raw.id) ||
         !validText(raw.name, 100) || !validText(raw.description, 500) ||
         !validText(raw.category, 80) || !validVersion(raw.version) || !validCommit(raw.sourceCommit)) {
-      throw new Error('Invalid Jepoy Floor AI skill entry');
+      throw new Error('Invalid DevLabs skill entry');
     }
     seen.add(raw.id);
     const files = validateFiles(raw.id, raw.files);
@@ -140,10 +140,10 @@ export function fetchBoundedBytes(url: string, maxBytes: number): Promise<Buffer
   const parsed = new URL(url);
   if (parsed.protocol !== 'https:' || parsed.hostname !== 'raw.githubusercontent.com' ||
       parsed.port || parsed.username || parsed.password || !parsed.pathname.startsWith(`/${OWNER}/${REPO}/`)) {
-    return Promise.reject(new Error('Untrusted Jepoy Floor AI skill source'));
+    return Promise.reject(new Error('Untrusted DevLabs skill source'));
   }
   return new Promise((resolve, reject) => {
-    const req = httpsRequest(parsed, { headers: { 'user-agent': 'jepoy-floor-ai' } }, (res) => {
+    const req = httpsRequest(parsed, { headers: { 'user-agent': 'devlabs' } }, (res) => {
       if (res.statusCode !== 200) {
         res.resume();
         reject(new Error(`HTTP ${res.statusCode}`));
@@ -397,7 +397,7 @@ export async function installCatalogSkill(
   try {
     const response = await loadSkillCatalog(cachePath, { ...opts, force: true });
     const skill = response.skills.find((s) => s.id === id);
-    if (!skill) return { ok: false, error: 'Skill is not in the Jepoy Floor AI catalog' };
+    if (!skill) return { ok: false, error: 'Skill is not in the DevLabs catalog' };
     if (skill.version !== expectedVersion || skill.sourceCommit !== expectedSourceCommit) {
       return { ok: false, error: 'Catalog changed; refresh the library before installing' };
     }
@@ -409,7 +409,7 @@ export async function installCatalogSkill(
         ? 'An interrupted update backup needs review before installing'
         : 'A local skill already uses this folder; it will not be overwritten' };
     }
-    if (skill.installState === 'modified') return { ok: false, error: 'This Jepoy Floor AI skill has local edits; it will not be overwritten' };
+    if (skill.installState === 'modified') return { ok: false, error: 'This DevLabs skill has local edits; it will not be overwritten' };
     if (skill.installState === 'newer-installed') return { ok: false, error: 'The installed skill is newer than this catalog' };
     if (skill.installState === 'installed') return { ok: true, path: target };
     mkdirSync(root, { recursive: true });

@@ -5,7 +5,7 @@
  * Release gate: every download link we advertise must actually resolve.
  *
  * WHY THIS EXISTS. Installer links in the release guide and website may use
- * `/releases/latest/download/Jepoy-Floor-AI-<version>-<platform>.<ext>`. That URL
+ * `/releases/latest/download/DevLabs-<version>-<platform>.<ext>`. That URL
  * form requires the EXACT filename present in whichever release is currently
  * "latest", and electron-builder bakes ${version} into every artifact name — so a
  * version string left behind in RELEASE.md turns all four download links into
@@ -47,13 +47,13 @@ function compareVersions(a, b) {
 }
 
 // — 1. every pinned artifact name must carry the current version —
-const assetRe = /Jepoy-Floor-AI-(\d+\.\d+\.\d+)-([^\s`)]+)/g;
+const assetRe = /DevLabs-(\d+\.\d+\.\d+)-([^\s`)]+)/g;
 const assets = new Set();
 for (const m of releaseMd.matchAll(assetRe)) {
   if (m[1] !== version) {
-    problems.push(`RELEASE.md advertises Jepoy-Floor-AI-${m[1]}-${m[2]} but package.json says ${version}`);
+    problems.push(`RELEASE.md advertises DevLabs-${m[1]}-${m[2]} but package.json says ${version}`);
   }
-  assets.add(`Jepoy-Floor-AI-${m[1]}-${m[2]}`);
+  assets.add(`DevLabs-${m[1]}-${m[2]}`);
 }
 
 // — 2. source tarball tags too; a stale tag silently ships last release's source —
@@ -79,8 +79,8 @@ if (fs.existsSync(indexHtml)) {
   }
   const base = /var BASE = '([^']+)'/.exec(html);
   if (m && base) {
-    for (const f of html.matchAll(/'Jepoy-Floor-AI-' \+ REL \+ '([^']+)'/g)) {
-      siteAssets.push(`${base[1]}Jepoy-Floor-AI-${m[1]}${f[1]}`);
+    for (const f of html.matchAll(/'DevLabs-' \+ REL \+ '([^']+)'/g)) {
+      siteAssets.push(`${base[1]}DevLabs-${m[1]}${f[1]}`);
     }
   }
 }

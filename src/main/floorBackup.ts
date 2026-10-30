@@ -135,9 +135,9 @@ export async function createFloorBackup(home: string, destination: string, claud
   zip.addBuffer(Buffer.from(JSON.stringify(manifest, null, 2) + '\n'), 'floor-backup.json');
   names.push('floor-backup.json');
   zip.addBuffer(Buffer.from(
-    'Jepoy Floor AI floor backup\n\n' +
-    'Quit Jepoy Floor AI. Extract the contents of floor/ into the original home folder named in floor-backup.json. ' +
-    'Extract claude-projects/ into your ~/.claude/projects/ folder. Restart Jepoy Floor AI. ' +
+    'DevLabs floor backup\n\n' +
+    'Quit DevLabs. Extract the contents of floor/ into the original home folder named in floor-backup.json. ' +
+    'Extract claude-projects/ into your ~/.claude/projects/ folder. Restart DevLabs. ' +
     'Do not overwrite a live floor. Project source folders and credentials are not included.\n'
   ), 'RESTORE.txt');
   names.push('RESTORE.txt');

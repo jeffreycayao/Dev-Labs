@@ -1,6 +1,6 @@
 /**
  * Default MCP server catalog (Workstream 3). A dependency-free, importable-by-both
- * (main + renderer) registry of the MCP servers Jepoy Floor AI can wire into each
+ * (main + renderer) registry of the MCP servers DevLabs can wire into each
  * agent's per-session `settings.json`. Keep it free of electron/UI/node imports.
  *
  * Tiers gate consent:

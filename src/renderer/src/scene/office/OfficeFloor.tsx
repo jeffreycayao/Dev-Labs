@@ -1114,7 +1114,7 @@ export function OfficeFloor() {
       };
       drawTaskBoard([]);
 
-      // ─── Wall decor: the Philippine flag + the Jepoy Floor AI sign ─────────────
+      // ─── Wall decor: the Philippine flag + the DevLabs sign ─────────────
       // Pure decoration (no pointer events), only for themes that set anchors.
       if (theme.anchors.flag) {
         const f = new Graphics();
@@ -1136,7 +1136,7 @@ export function OfficeFloor() {
       if (theme.anchors.sign) {
         try { await document.fonts.load('8px "Press Start 2P"'); } catch { /* falls back */ }
         const label = new Text({
-          text: 'Jepoy Floor AI',
+          text: 'DevLabs',
           style: { fontFamily: '"Press Start 2P", monospace', fontSize: 8, fill: 0xdbf914 },
           resolution: 4,
         });

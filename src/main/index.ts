@@ -1490,7 +1490,7 @@ function openHelpWindow(section?: string): void {
   }
   helpWindow = new BrowserWindow({
     width: 1100, height: 820, minWidth: 420, minHeight: 480,
-    title: 'How to use Jepoy Floor AI',
+    title: 'How to use DevLabs',
     backgroundColor: '#0B0A06',
     autoHideMenuBar: true,
     webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false }
@@ -1513,15 +1513,15 @@ function openHelpWindow(section?: string): void {
 async function showAboutDialog(parent: BrowserWindow | null): Promise<void> {
   const opts: Electron.MessageBoxOptions = {
     type: 'info',
-    title: 'About Jepoy Floor AI',
-    message: `Jepoy Floor AI  v${app.getVersion()}`,
+    title: 'About DevLabs',
+    message: `DevLabs™  v${app.getVersion()}`,
     detail: [
-      'Philippine edition — an AI agent workspace for Filipino teams and businesses, built on Munder Difflin by Chaitanya Giri and extended, localized and maintained by Jepoy Floor AI.',
+      'Philippine edition — an AI agent workspace for Filipino teams and businesses, built on Munder Difflin by Chaitanya Giri and extended, localized and maintained by jepoy.dev.',
       '',
-      '© 2026 Chaitanya Giri and Automatika Consulting. Open source under the MIT License.',
+      '© 2026 Chaitanya Giri and jepoy.dev. Open source under the MIT License.',
       '',
       'Original project: github.com/chaitanyagiri/munder-difflin',
-      'Source & issues: github.com/jeffreycayao/Dev-Labs · jepoy.dev',
+      'Developer: jepoy.dev · Source & issues: github.com/jeffreycayao/Dev-Labs',
       '',
       `Electron ${process.versions.electron} · Chromium ${process.versions.chrome} · Node ${process.versions.node}`
     ].join('\n'),
@@ -2413,7 +2413,7 @@ ipcMain.handle('floor:drainPending', () => {
 ipcMain.handle('floor:openFile', async () => {
   const res = await dialog.showOpenDialog({
     title: 'Import a floor',
-    filters: [{ name: 'Jepoy Floor AI floor', extensions: ['json'] }],
+    filters: [{ name: 'DevLabs floor', extensions: ['json'] }],
     properties: ['openFile']
   });
   if (res.canceled || res.filePaths.length === 0) return { ok: false, error: 'cancelled' };
@@ -2431,7 +2431,7 @@ ipcMain.handle('floor:save', async (_evt, payload: unknown) => {
   const res = await dialog.showSaveDialog({
     title: 'Export floor',
     defaultPath: floorFileName(v.floor.name),
-    filters: [{ name: 'Jepoy Floor AI floor', extensions: ['json'] }]
+    filters: [{ name: 'DevLabs floor', extensions: ['json'] }]
   });
   if (res.canceled || !res.filePath) return { ok: false, error: 'cancelled' };
   try {
@@ -2482,7 +2482,7 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
     ...(geom && geom.x !== undefined && geom.y !== undefined ? { x: geom.x, y: geom.y } : {}),
     minWidth: MIN_WIN.width,
     minHeight: MIN_WIN.height,
-    title: isFloor ? 'Jepoy Floor AI — Floor' : 'Jepoy Floor AI',
+    title: isFloor ? 'DevLabs — Floor' : 'DevLabs',
     backgroundColor: '#FFF8E7',
     titleBarStyle: 'hiddenInset',
     show: false,
@@ -2654,7 +2654,7 @@ function openFloor(): BrowserWindow | null {
     void dialog.showMessageBox({
       type: 'info',
       message: 'Your building is full',
-      detail: `Jepoy Floor AI runs up to ${BUILDING_MAX_FLOORS} floors at once. Close a floor you no longer need, then open a new one.`
+      detail: `DevLabs runs up to ${BUILDING_MAX_FLOORS} floors at once. Close a floor you no longer need, then open a new one.`
     });
     return null;
   }
@@ -2708,12 +2708,12 @@ function installAppMenu(multiWindow: boolean): void {
     {
       role: 'help',
       submenu: [
-        { label: 'How to use Jepoy Floor AI', accelerator: 'F1', click: () => openHelpWindow() },
+        { label: 'How to use DevLabs', accelerator: 'F1', click: () => openHelpWindow() },
         { label: 'Security & FAQ', click: () => openHelpWindow('faq') },
         { type: 'separator' as const },
         { label: 'License Agreement', click: () => openBundledDoc('LICENSE') },
         { label: 'Third-Party Notices', click: () => openBundledDoc('THIRD_PARTY_NOTICES.md') },
-        { label: 'About Jepoy Floor AI', click: () => { void showAboutDialog(BrowserWindow.getFocusedWindow()); } }
+        { label: 'About DevLabs', click: () => { void showAboutDialog(BrowserWindow.getFocusedWindow()); } }
       ]
     }
   ];
@@ -3494,7 +3494,7 @@ ipcMain.handle('config:prepareProjectFloor', (_evt, selectedPath: unknown) => {
     let homePath: string;
     try { homePath = key(realpathSync(resolve(expandTilde(home)))); } catch { continue; }
     if (projectKey === homePath || projectKey.startsWith(homePath + sep) || homePath.startsWith(projectKey + sep)) {
-      return { ok: false, error: 'Choose a project folder separate from Jepoy Floor AI floor data.' };
+      return { ok: false, error: 'Choose a project folder separate from DevLabs floor data.' };
     }
   }
   const slug = basename(projectPath).replace(/[^A-Za-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'project';
@@ -3905,7 +3905,7 @@ ipcMain.handle('skills:local', (_evt, cwd: unknown): LocalSkill[] => {
     return [];
   }
 });
-/** Validated Jepoy Floor AI catalog, with a separate last-good cache from the old
+/** Validated DevLabs catalog, with a separate last-good cache from the old
  *  community browser. `force` is the user's explicit refresh. */
 ipcMain.handle('skills:catalog', async (_evt, force: unknown) => {
   const cachePath = join(app.getPath('userData'), 'skill-catalog.json');
@@ -4212,7 +4212,7 @@ ipcMain.handle('floor:chooseResetBackup', async () => {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const result = await dialog.showSaveDialog({
     title: 'Back up floor before reset',
-    defaultPath: `Jepoy-Floor-AI-floor-${stamp}.zip`,
+    defaultPath: `DevLabs-floor-${stamp}.zip`,
     filters: [{ name: 'ZIP archive', extensions: ['zip'] }]
   });
   return result.canceled || !result.filePath

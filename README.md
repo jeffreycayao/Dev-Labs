@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="./brand/JEPOY.DEV%20charcoal%20lime%20logo%20lockup.png" alt="Jepoy Floor AI by jepoy.dev" width="240">
+<img src="./brand/JEPOY.DEV%20charcoal%20lime%20logo%20lockup.png" alt="DevLabs by jepoy.dev" width="240">
 
-# Jepoy Floor AI
+# DevLabs™
 
 ### An office of AI coding agents, running on your machine
 
@@ -45,7 +45,7 @@ Wraps [Claude Code](https://claude.com/claude-code), OpenAI Codex, Antigravity a
 
 > [!NOTE]
 > **Your agents, one office, one manager.**
-> Jepoy Floor AI takes the terminal-agent CLIs you already run (`claude`, `codex`, `agy`, `gemini`,
+> DevLabs takes the terminal-agent CLIs you already run (`claude`, `codex`, `agy`, `gemini`,
 > `grok`, `kimi`, `qwen`, `opencode`, `crush`, `pi`, `copilot` and `cursor-agent`) and turns them into
 > a self-coordinating team: each agent gets long-term memory, a mailbox and a desk on a pixel-art
 > office floor, and **Ramon** at the head desk plans the work and hands it out while you watch.
@@ -91,7 +91,7 @@ models through Ollama.
 
 ## What it is
 
-Jepoy Floor AI is a desktop app that wraps **real terminal-agent CLIs** as fully capable agents,
+DevLabs is a desktop app that wraps **real terminal-agent CLIs** as fully capable agents,
 wires them into a **hive** of shared files, and puts **Ramon**, the orchestrator, in charge. Ramon
 is the one agent *you* brief to get things done.
 
@@ -238,7 +238,7 @@ CLI shows as an **Install** card in the agent's terminal instead of an error.
 
 **Command Center**
 - Kanban tasks, an **Ask me** inbox for agent questions, weekday schedules, live fleet monitoring, memory search, activity log and Deliveries.
-- **Skills**: browse and install skills from the [Jepoy Floor AI skills repository](https://github.com/jeffreycayao/atmt_labs_floor_agentskills). Each file is checked against a pinned commit and SHA-256 hash.
+- **Skills**: browse and install skills from the [DevLabs skills repository](https://github.com/jeffreycayao/atmt_labs_floor_agentskills). Each file is checked against a pinned commit and SHA-256 hash.
 - **Built-in Monaco IDE**: file tree, editor tabs and git rails (changes, history, compare) with a commit graph and diffs.
 
 **Getting work in and out**
@@ -247,13 +247,13 @@ CLI shows as an **Install** card in the agent's terminal instead of an error.
 - **Your language**: English, Simplified Chinese and Arabic, with right-to-left layout for Arabic.
 - **Updates in one click** from the public releases feed; no GitHub account or token needed.
 
-<div align="right">(<a href="#jepoy-floor-ai">↑ back to top</a>)</div>
+<div align="right">(<a href="#devlabs">↑ back to top</a>)</div>
 
 ## Getting started
 
 ### Download the app
 
-**Most people want this one.** Jepoy Floor AI is free and open source, with no account or sign-in.
+**Most people want this one.** DevLabs is free and open source, with no account or sign-in.
 Installers for macOS, Windows and Linux are on [jepoy.dev](https://jepoy.dev/#download) and the
 [releases page](https://github.com/jeffreycayao/Dev-Labs/releases/latest). Install it,
 open it, and the wizard takes you the rest of the way.
@@ -311,7 +311,7 @@ Contributors and AI coding agents should read [`AGENTS.md`](./AGENTS.md) first. 
 and the release repo are in [`src/shared/brand.ts`](./src/shared/brand.ts); colors in
 [`src/renderer/src/design/tokens.css`](./src/renderer/src/design/tokens.css).
 
-<div align="right">(<a href="#jepoy-floor-ai">↑ back to top</a>)</div>
+<div align="right">(<a href="#devlabs">↑ back to top</a>)</div>
 
 ## Roadmap
 
@@ -328,7 +328,7 @@ Next up:
 - [ ] **One code editor**: move the remaining CodeMirror editors to Monaco.
 - [ ] **Filipino interface language**.
 
-<div align="right">(<a href="#jepoy-floor-ai">↑ back to top</a>)</div>
+<div align="right">(<a href="#devlabs">↑ back to top</a>)</div>
 
 ## Contributing
 
@@ -360,7 +360,7 @@ feature used), never prompts, code, file paths or agent output. Turn it off in S
 > [`src/renderer/src/assets/ATTRIBUTION.md`](./src/renderer/src/assets/ATTRIBUTION.md).
 
 The **source code** is licensed under the **[MIT License](./LICENSE)**, © 2026 Chaitanya Giri and
-Automatika Consulting. The MIT grant covers the code only; the bundled pixel art is licensed
+jepoy.dev. The MIT grant covers the code only; the bundled pixel art is licensed
 separately and carved out in [`LICENSE-ASSETS`](./LICENSE-ASSETS). Other third-party components are
 listed in [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md). Claude, Codex, Gemini, Cursor and
 other names belong to their owners and are used only to describe compatibility.

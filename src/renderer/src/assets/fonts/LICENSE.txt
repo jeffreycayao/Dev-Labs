@@ -1,7 +1,7 @@
 Bundled fonts and their licenses
 ================================
 
-Jepoy Floor AI ships three font files inside the application bundle, in
+DevLabs ships three font files inside the application bundle, in
 src/renderer/src/assets/fonts/. They are NOT ours. All three are licensed under
 the SIL Open Font License, Version 1.1, whose full text follows the attributions
 below. The OFL requires this notice to travel with every copy of the software.

@@ -3,7 +3,7 @@
  * md-slack-reply.cjs — post a message back into the Slack thread that triggered
  * an office run, WITHOUT ever handling the bot token.
  *
- * The Jepoy Floor AI main process runs a loopback-only HTTP endpoint (bound to
+ * The DevLabs main process runs a loopback-only HTTP endpoint (bound to
  * 127.0.0.1, never tunneled) and writes its `{ port, token }` to a small
  * discovery file under the app's userData dir. This helper reads that file and
  * POSTs the reply to the endpoint, which holds the bot token and forwards to

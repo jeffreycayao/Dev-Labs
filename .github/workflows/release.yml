@@ -87,7 +87,7 @@ jobs:
             echo "Reusing an existing draft release."
           else
             gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
-              --verify-tag --draft --title "Jepoy Floor AI $GITHUB_REF_NAME" \
+              --verify-tag --draft --title "DevLabs $GITHUB_REF_NAME" \
               --notes-file "$RUNNER_TEMP/release-body.md"
           fi
 

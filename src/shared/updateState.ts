@@ -42,9 +42,9 @@ export const REPO = GITHUB_REPO;
 export function installerUrl(version: string, platform: string, _arch: string): string {
   const v = version.replace(/^v/, '');
   // electron-builder.yml currently emits one universal Mac DMG.
-  const file = platform === 'darwin' ? `Jepoy-Floor-AI-${v}-mac-universal.dmg`
-    : platform === 'win32' ? `Jepoy-Floor-AI-${v}-win-x64-setup.exe`
-    : `Jepoy-Floor-AI-${v}-linux-x86_64.AppImage`;
+  const file = platform === 'darwin' ? `DevLabs-${v}-mac-universal.dmg`
+    : platform === 'win32' ? `DevLabs-${v}-win-x64-setup.exe`
+    : `DevLabs-${v}-linux-x86_64.AppImage`;
   return `https://github.com/${REPO}/releases/download/v${v}/${file}`;
 }
 
@@ -282,7 +282,7 @@ export function describeUpdateSettings(
     case 'downloaded':
       return {
         headline: `v${status.version} is ready to install`,
-        detail: `Restart Jepoy Floor AI to finish updating from v${v}.`,
+        detail: `Restart DevLabs to finish updating from v${v}.`,
         button: 'Restart to update', action: 'restart', busy: false, tone: 'ready'
       };
     case 'available-manual':
@@ -329,7 +329,7 @@ export function manualInstallSteps(platform: string): { os: string; steps: strin
     return {
       os: 'macOS',
       steps: [
-        'Open the .dmg and drag Jepoy Floor AI onto Applications. Choose Replace when asked.',
+        'Open the .dmg and drag DevLabs onto Applications. Choose Replace when asked.',
         'Quit this app, open the new one from Applications, and pick the same project.'
       ]
     };
@@ -339,7 +339,7 @@ export function manualInstallSteps(platform: string): { os: string; steps: strin
       os: 'Windows',
       steps: [
         'Quit this app, then run the downloaded setup .exe. It replaces the installed version.',
-        'Open Jepoy Floor AI again and pick the same project.'
+        'Open DevLabs again and pick the same project.'
       ]
     };
   }

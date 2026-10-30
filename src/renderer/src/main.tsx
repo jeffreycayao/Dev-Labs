@@ -15,7 +15,7 @@ const splashMark = document.querySelector('#cth-splash .mk');
 if (splashMark) {
   const img = document.createElement('img');
   img.src = brandLogo;
-  img.alt = 'Jepoy Floor AI';
+  img.alt = 'DevLabs';
   img.style.cssText = 'height:56px;width:auto;display:block';
   splashMark.replaceWith(img);
 }

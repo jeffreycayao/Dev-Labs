@@ -1,4 +1,4 @@
-# Contributing to Jepoy Floor AI
+# Contributing to DevLabs
 
 Thanks for your interest! This is an early prototype, so there's a lot of surface
 area and plenty of room to help. This guide covers setup, the gotchas, and the
@@ -17,7 +17,7 @@ much cheaper than finding out in review.
 - **Keep the change scoped to one clear improvement, fix, or refactor.** A fix
   plus a rename plus a refactor is three pull requests, and all three merge
   faster than the one.
-- **Jepoy Floor AI targets macOS, Windows and Linux.** Every change has to work
+- **DevLabs targets macOS, Windows and Linux.** Every change has to work
   on all three unless it sits behind an explicit runtime platform check. Most
   of our cross-platform bugs are paths: use `path.join` and the Node path
   helpers, never a hand-built `"a/b"` string.
@@ -52,8 +52,8 @@ much cheaper than finding out in review.
 ### Install & run
 
 ```bash
-git clone <your-fork-url> jepoy-floor-ai
-cd jepoy-floor-ai
+git clone <your-fork-url> devlabs
+cd devlabs
 npm install        # postinstall rebuilds node-pty against Electron's ABI
 npm run dev        # live-reloading Electron build
 ```

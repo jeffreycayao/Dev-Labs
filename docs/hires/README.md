@@ -1,7 +1,7 @@
 # Agent Gallery
 
 A community gallery of **shareable hires** — portable agent role templates for the
-[Jepoy Floor AI](https://automatika.ph) multi-agent harness. Browse a role, download
+[DevLabs](https://jepoy.dev) multi-agent harness. Browse a role, download
 its manifest, and import it in the app — its goal, model, flags, and token budget land
 pre-filled (you always review before it spawns).
 
@@ -66,5 +66,5 @@ auto-spawns — a human reviews the final command and clicks spawn.
 
 ## License
 
-MIT. Not affiliated with NBC's *The Office*, Jepoy Floor AI, or (yet) the Jepoy Floor AI
+MIT. Not affiliated with NBC's *The Office*, DevLabs, or (yet) the DevLabs
 project — the integration PR lives in [`../app-pr`](../app-pr).

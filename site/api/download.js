@@ -10,11 +10,11 @@ const REPO = 'jeffreycayao/Dev-Labs';
 const RELEASES_PAGE = `https://github.com/${REPO}/releases/latest`;
 
 const PLATFORMS = {
-  mac: /^Jepoy-Floor-AI-.+-mac-universal\.dmg$/,
-  'mac-zip': /^Jepoy-Floor-AI-.+-mac-universal\.zip$/,
-  windows: /^Jepoy-Floor-AI-.+-win-x64-setup\.exe$/,
-  'windows-portable': /^Jepoy-Floor-AI-.+-win-x64-portable\.exe$/,
-  linux: /^Jepoy-Floor-AI-.+-linux-x86_64\.AppImage$/
+  mac: /^DevLabs-.+-mac-universal\.dmg$/,
+  'mac-zip': /^DevLabs-.+-mac-universal\.zip$/,
+  windows: /^DevLabs-.+-win-x64-setup\.exe$/,
+  'windows-portable': /^DevLabs-.+-win-x64-portable\.exe$/,
+  linux: /^DevLabs-.+-linux-x86_64\.AppImage$/
 };
 
 /** The download URL for `os` in a GitHub release object, or null. */

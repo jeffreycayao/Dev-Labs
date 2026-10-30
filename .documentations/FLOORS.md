@@ -50,7 +50,7 @@ Agents the importer would reject (for example, an unsupported engine) are listed
 
 The ZIP backup includes `floor/hive` (including delivered files in `floor/hive/deliveries`), `floor/palace`, `floor/roster.json`, `floor/roster-backups` and matching Claude Code session transcripts under `claude-projects/`. It contains `floor-backup.json` and `RESTORE.txt`. Generated Codex auth/config links and package installs are excluded; Codex session data inside the hive is included. A ZIP may contain private conversations, agent memory and task content, so store it securely. The app stops floor writers, creates the archive, then reads every ZIP entry to verify it before removing the floor. If the picker is cancelled or backup fails, no floor data is removed.
 
-To restore: quit Jepoy Floor AI; extract the ZIP's `floor/` contents into the original home folder listed in `floor-backup.json`, and extract `claude-projects/` into `~/.claude/projects/`; then start the app. Restore into an empty floor and keep the ZIP until you have confirmed the roster and conversations. External project source folders and account credentials are not part of the backup.
+To restore: quit DevLabs; extract the ZIP's `floor/` contents into the original home folder listed in `floor-backup.json`, and extract `claude-projects/` into `~/.claude/projects/`; then start the app. Restore into an empty floor and keep the ZIP until you have confirmed the roster and conversations. External project source folders and account credentials are not part of the backup.
 
 ## File format (`atmt-labs/floor@1`)
 

@@ -16,7 +16,7 @@ try {
     process.exit(0);
   }
   execFileSync('git', ['config', '--local', 'core.hooksPath', '.githooks'], { cwd: root, stdio: 'ignore' });
-  console.log('Jepoy Floor AI Git push version check installed.');
+  console.log('DevLabs Git push version check installed.');
 } catch {
   console.log('Git checkout unavailable; skipped local push hook.');
 }

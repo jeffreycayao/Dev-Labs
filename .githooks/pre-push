@@ -1,0 +1,3 @@
+#!/bin/sh
+# The committed version must rise before a source branch can be pushed.
+node tools/app-version.cjs pre-push

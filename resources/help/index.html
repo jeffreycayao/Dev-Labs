@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>How to use Jepoy Floor AI</title>
+<style>
+  :root {
+    --bg: #0B0A06; --surface: #1A1712; --surface-2: #221E17; --border: #2A251C;
+    --cream: #E4D5C3; --light: #F6F0E5; --muted: #9E8E74; --muted-2: #837259;
+    --lime: #DBF914; --lime-press: #C5E012; --gold: #D4AF37; --coral: #E0826F;
+    --radius: 10px;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--cream); font: 15px/1.65 var(--font); }
+  a { color: var(--lime); }
+  a:hover { color: var(--lime-press); }
+  kbd { font: 12px var(--mono); background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; color: var(--light); }
+  code { font: 13px var(--mono); color: var(--light); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  .top {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 14px; padding: 14px 28px;
+    background: rgba(11, 10, 6, 0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .top img { width: 32px; height: 32px; border-radius: 6px; }
+  .brand { font-weight: 700; color: var(--light); letter-spacing: -0.02em; font-size: 17px; }
+  .brand small { display: block; font: 500 10px var(--mono); letter-spacing: 0.18em; color: var(--muted-2); text-transform: uppercase; }
+  .ver { font: 12px var(--mono); color: var(--bg); background: var(--lime); padding: 2px 8px; border-radius: 999px; }
+  .search { margin-left: auto; width: min(320px, 40vw); }
+  .search input {
+    width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--light); font: 14px var(--font); outline: none;
+  }
+  .search input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(219, 249, 20, 0.15); }
+
+  .layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1180px; margin: 0 auto; }
+  nav.side { position: sticky; top: 64px; align-self: start; height: calc(100vh - 64px); overflow: auto; padding: 24px 12px 24px 28px; }
+  nav.side a { display: block; padding: 6px 10px; border-radius: 6px; color: var(--cream); text-decoration: none; font-size: 14px; }
+  nav.side a:hover { background: var(--surface); color: var(--light); }
+  nav.side .grp { font: 500 10px var(--mono); letter-spacing: 0.18em; color: var(--muted-2); text-transform: uppercase; margin: 16px 10px 6px; }
+  main { padding: 28px 28px 80px; min-width: 0; }
+
+  .hero {
+    position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 16px;
+    padding: 36px 32px; background: linear-gradient(135deg, var(--surface-2), var(--surface));
+  }
+  .hero::after {
+    content: ""; position: absolute; right: -80px; top: -80px; width: 280px; height: 280px;
+    background: var(--lime); opacity: 0.06; filter: blur(60px); border-radius: 50%;
+  }
+  .eyebrow { font: 500 11px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted-2); }
+  h1 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.02; letter-spacing: -0.04em; color: var(--light); margin: 10px 0 12px; }
+  h1 em { font-style: italic; font-family: Georgia, "Times New Roman", serif; font-weight: 400; color: var(--lime); }
+  h2 { font-size: 26px; letter-spacing: -0.03em; color: var(--light); margin: 52px 0 8px; scroll-margin-top: 80px; }
+  h3 { font-size: 17px; color: var(--light); margin: 20px 0 6px; }
+  .lead { font-size: 17px; max-width: 720px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .pill { font: 12px var(--mono); color: var(--light); border: 1px solid var(--border); background: var(--bg); padding: 4px 10px; border-radius: 999px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 14px 0; }
+  .card { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 16px; }
+  .card b { color: var(--light); display: block; margin-bottom: 4px; }
+  .card .ico { font-size: 22px; line-height: 1; margin-bottom: 8px; display: block; }
+
+  details {
+    border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius);
+    margin: 10px 0; transition: border-color .25s var(--ease);
+  }
+  details[open] { border-color: rgba(219, 249, 20, 0.35); }
+  summary {
+    cursor: pointer; list-style: none; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+    color: var(--light); font-weight: 600;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before {
+    content: "+"; flex: none; width: 22px; height: 22px; display: grid; place-items: center;
+    border-radius: 6px; background: var(--surface-2); color: var(--lime); font: 700 15px var(--mono);
+    transition: transform .25s var(--ease);
+  }
+  details[open] > summary::before { content: "–"; }
+  .num { font: 12px var(--mono); color: var(--muted-2); }
+  details > div { padding: 0 18px 16px 52px; }
+  details > div p:first-child { margin-top: 0; }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; }
+  ol.steps > li { counter-increment: s; position: relative; padding: 0 0 14px 44px; }
+  ol.steps > li::before {
+    content: counter(s); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 8px;
+    display: grid; place-items: center; background: var(--lime); color: var(--bg); font: 700 13px var(--mono);
+  }
+  .note { border-left: 3px solid var(--lime); background: var(--surface); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; }
+  .warn { border-left-color: var(--coral); }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font: 500 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
+  td b { color: var(--light); }
+  .about { border: 1px solid var(--border); border-radius: 16px; background: var(--surface); padding: 24px; }
+  .about dl { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; margin: 0; }
+  .about dt { color: var(--muted); font: 500 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; padding-top: 3px; }
+  .about dd { margin: 0; color: var(--light); }
+  .hidden { display: none !important; }
+  .empty { display: none; color: var(--muted); padding: 20px 0; }
+  footer { margin-top: 60px; color: var(--muted-2); font-size: 13px; border-top: 1px solid var(--border); padding-top: 18px; }
+
+  @media (max-width: 820px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.side { display: none; }
+    main { padding: 20px 16px 60px; }
+    .top { padding: 12px 16px; }
+    .about dl { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <img src="logo.png" alt="">
+  <div class="brand">Jepoy Floor AI<small>User guide</small></div>
+  <span class="ver" id="ver">v—</span>
+  <div class="search"><input id="q" type="search" placeholder="Search the guide… (e.g. API key, Ramon, cost)" aria-label="Search the guide"></div>
+</header>
+
+<div class="layout">
+<nav class="side" aria-label="Sections">
+  <div class="grp">Start here</div>
+  <a href="#what">What is Jepoy Floor AI?</a>
+  <a href="#before">Before you start</a>
+  <a href="#words">Words you'll see</a>
+  <div class="grp">Using the app</div>
+  <a href="#tour">A tour of the screen</a>
+  <a href="#first">Your first 10 minutes</a>
+  <a href="#agents">Adding agents</a>
+  <a href="#work">Giving work &amp; checking results</a>
+  <a href="#ramon">Working with Ramon</a>
+  <a href="#engines">AI engines &amp; costs</a>
+  <div class="grp">Stay safe</div>
+  <a href="#safety">Safety &amp; good habits</a>
+  <a href="#trouble">Troubleshooting</a>
+  <a href="#faq">Top 20 FAQ</a>
+  <div class="grp">Info</div>
+  <a href="#about">About Jepoy Floor AI</a>
+</nav>
+
+<main id="content">
+
+<section class="hero searchable">
+  <div class="eyebrow">AI agents · your computer · your team</div>
+  <h1>An office of AI helpers, <em>working while you sleep.</em></h1>
+  <p class="lead">Jepoy Floor AI turns the AI assistant you already use into a small team. Each helper — we call them <b>agents</b> — sits at a desk on a pixel-art office floor, works on its own task, and reports back. You stay the boss: you give the work, you review the results, you decide what goes live.</p>
+  <div class="pills"><span class="pill">Runs on your computer</span><span class="pill">You approve what matters</span><span class="pill">Philippine edition</span><span class="pill">Built &amp; supported in PH</span></div>
+</section>
+
+<h2 id="what">What is Jepoy Floor AI?</h2>
+<div class="searchable">
+<p>Think of it as <b>a virtual office for AI assistants</b>. Normally you chat with one AI at a time and wait. In Jepoy Floor AI you can have several — a programmer, a marketer, a researcher — each doing their own job at the same time, and one manager (<b>Ramon</b>) who keeps everyone coordinated.</p>
+<div class="cards">
+  <div class="card"><span class="ico">🏢</span><b>The floor</b>Your workspace. Every agent you add appears at a desk, and you can watch them walk, work and take coffee breaks.</div>
+  <div class="card"><span class="ico">🧑‍💼</span><b>Ramon, the boss</b>Always at the head desk. Tell Ramon what you want; he breaks it into tasks and hands them to the right agent.</div>
+  <div class="card"><span class="ico">🤖</span><b>Agents</b>AI helpers with a name, a role and a goal. Each one runs its own AI session, so they work in parallel.</div>
+  <div class="card"><span class="ico">🔒</span><b>Local-first</b>The app, your files and your agents' memory stay on your computer. Only the AI requests go to the AI company you chose.</div>
+</div>
+</div>
+
+<h2 id="before">Before you start</h2>
+<div class="searchable">
+<p>You need four things. If you're unsure about any of them, ask whoever set up Jepoy Floor AI for you.</p>
+<table>
+  <tr><th>You need</th><th>Why</th><th>Example</th></tr>
+  <tr><td><b>A Windows or Mac computer</b></td><td>The app runs on your machine and keeps working while it's on.</td><td>Windows 10/11, macOS 12+</td></tr>
+  <tr><td><b>An AI account (an "engine")</b></td><td>The agents' brains come from an AI service. You sign in to it once.</td><td>Claude, ChatGPT/Codex, Gemini, or GLM via OpenCode</td></tr>
+  <tr><td><b>A project folder</b></td><td>Agents work on files inside a folder you choose — nothing outside it.</td><td><code>Documents\MyShop</code></td></tr>
+  <tr><td><b>A budget in mind</b></td><td>AI services charge per use (or by subscription). More agents = more usage.</td><td>Start with 1–2 agents</td></tr>
+</table>
+<div class="note">💡 <b>Tip:</b> Start small. One agent on one clear task teaches you more than five agents on vague ones.</div>
+</div>
+
+<h2 id="words">Words you'll see</h2>
+<div class="searchable">
+<table>
+  <tr><th>Word</th><th>What it means</th></tr>
+  <tr><td><b>Floor / Workspace</b></td><td>One office. Its settings, agents, memory and history live in one folder (the "harness config"). You can have more than one.</td></tr>
+  <tr><td><b>Agent</b></td><td>One AI helper with a name, a character, a role and a goal.</td></tr>
+  <tr><td><b>Ramon</b></td><td>The boss agent (the "orchestrator"). He plans, delegates and checks the team's work.</td></tr>
+  <tr><td><b>Engine</b></td><td>The AI service an agent uses — Claude, Codex, Gemini, OpenCode, etc.</td></tr>
+  <tr><td><b>Role template</b></td><td>A ready-made job (e.g. <i>Jr. Programmer</i>, <i>Social Media Manager</i>) that fills in the agent form for you.</td></tr>
+  <tr><td><b>Queue</b></td><td>Messages waiting for an agent. If the agent is busy, your message waits in line.</td></tr>
+  <tr><td><b>Tasks board</b></td><td>The team's to-do list: to do, doing, blocked, done.</td></tr>
+  <tr><td><b>Ask me</b></td><td>Questions the agents need <i>you</i> to answer before continuing.</td></tr>
+  <tr><td><b>Memory</b></td><td>Facts the team remembers between sessions (your preferences, project decisions).</td></tr>
+  <tr><td><b>Triggers</b></td><td>Things that wake the team without you — a schedule, or a message from Slack/GitHub.</td></tr>
+  <tr><td><b>Auto mode</b></td><td>Agents act without asking permission for each step. Faster, but only use it on projects you trust.</td></tr>
+</table>
+</div>
+
+<h2 id="tour">A tour of the screen</h2>
+<div class="searchable">
+<details open><summary>Top bar</summary><div>
+  <p>Shows the version (right now <code class="v-live">v—</code>) and whether <b>auto mode</b> is on. The buttons on the right open settings, tools and full-screen view.</p>
+</div></details>
+<details><summary>The office floor (centre)</summary><div>
+  <p>Every agent is a character at a desk. A speech bubble above their head shows what they're doing right now ("reading files", "running tests"). When they take a break they chat in the pantry — just for fun.</p>
+  <p>Some objects are shortcuts: the <b>calendar</b> on Ramon's wall opens Triggers, the <b>wall boards</b> open Tasks, and the <b>wall clock</b> is "clock out" (close the app).</p>
+</div></details>
+<details><summary>Agent cards (bottom)</summary><div>
+  <p>One card per agent with its status: <b>idle</b>, <b>working</b>, <b>waiting</b> or <b>blocked</b>. Click a card to select that agent. <b>+ add agent</b> hires a new one.</p>
+</div></details>
+<details><summary>Command Center (right side)</summary><div>
+  <p>When you select Ramon or an agent, the right panel shows its live work. Tabs include:</p>
+  <ul>
+    <li><b>Terminal</b> — the agent's live session (what it's typing and doing).</li>
+    <li><b>Tasks</b> and <b>Ask me</b> — the to-do board and questions waiting for you.</li>
+    <li><b>Triggers</b>, <b>Memory</b>, <b>Activity</b>, <b>Skills</b>, <b>Workers</b> — schedules, what the team remembers, history, extra abilities, and helper agents.</li>
+  </ul>
+</div></details>
+<details><summary>Queue &amp; message box (bottom right)</summary><div>
+  <p>Type instructions here and press <b>send</b>. Attach files with <b>+ files</b> or speak with <b>voice</b>. If the agent is busy, the message joins the queue and runs next.</p>
+</div></details>
+</div>
+
+<h2 id="first">Your first 10 minutes</h2>
+<div class="searchable">
+<ol class="steps">
+  <li><b>Open or create a workspace.</b> The first screen asks for a <i>harness config</i> — the folder that holds this office. Pick the suggested one or create a new one.</li>
+  <li><b>Answer "Who are you?"</b> Choose <i>technical</i> or <i>non-technical</i>. This only changes how the app explains things and which role templates it suggests first.</li>
+  <li><b>Connect an AI engine.</b> Follow the prompts to install and sign in to your AI service. If something is missing, the app shows an <b>Install</b> card and does it for you.</li>
+  <li><b>Meet Ramon.</b> He's already at the head desk. Say hello in the message box: <i>"Hi Ramon, what can you help me with?"</i></li>
+  <li><b>Add your first agent.</b> Click <b>+ add agent</b>, pick a <b>role template</b>, choose the project folder, and press <b>spawn</b>.</li>
+  <li><b>Give a small, clear task.</b> For example: <i>"Read my product list and write 5 Facebook captions in Taglish."</i></li>
+  <li><b>Review the result</b> before using it. Agents are fast, not perfect.</li>
+</ol>
+</div>
+
+<h2 id="agents">Adding agents</h2>
+<div class="searchable">
+<p>Click <b>+ add agent</b>. The form has four short steps:</p>
+<table>
+  <tr><th>Step</th><th>What you fill in</th></tr>
+  <tr><td><b>1 · Identity</b></td><td>Name, character and colour — so you can tell agents apart on the floor.</td></tr>
+  <tr><td><b>2 · Workspace</b></td><td>The project folder the agent may work in. Optionally, <i>isolation</i> gives it a private copy so it can't disturb others' work.</td></tr>
+  <tr><td><b>3 · Engine</b></td><td>Which AI service and model it uses. Leave the default if unsure.</td></tr>
+  <tr><td><b>4 · Briefing</b></td><td>A job description and a standing goal — the agent's "job post".</td></tr>
+</table>
+<h3>The fast way: role templates</h3>
+<p>Under <b>Role templates</b>, pick a job — <i>Jr. Programmer, Security Auditor, Scrum Master, Marketing Executive, Social Media Manager, Bookkeeper</i> and more. Every field is filled in for you, including safe limits (for example, the Bookkeeper never moves money, the Social Media Manager never posts directly). Review, then press <b>spawn</b>.</p>
+<p>You can also <b>import hire</b> (load a ready-made agent file) or use <b>generate one with AI</b> to design a custom role.</p>
+</div>
+
+<h2 id="work">Giving work &amp; checking results</h2>
+<div class="searchable">
+<details open><summary>Write good instructions</summary><div>
+  <ul>
+    <li><b>Be specific:</b> say what you want, for whom, and what "done" looks like.</li>
+    <li><b>One task at a time</b> per agent. Big jobs? Give them to Ramon to split up.</li>
+    <li><b>Give examples</b> of the style you like.</li>
+  </ul>
+  <p>✅ <i>"Write 3 short product descriptions for our ube cheese pandesal, friendly Taglish, under 60 words each."</i><br>❌ <i>"Do marketing."</i></p>
+</div></details>
+<details><summary>Watch progress</summary><div>
+  <p>Speech bubbles and the card status tell you what's happening. Select an agent to see its live terminal. Anything waiting on you appears under <b>Ask me</b>.</p>
+</div></details>
+<details><summary>Review before you use</summary><div>
+  <p>Always read the output before sending it to customers, publishing it, or deploying code. You can reply to the agent to request changes — it keeps the context.</p>
+</div></details>
+<details><summary>Stop or pause an agent</summary><div>
+  <p>Select the agent and use <b>stop after this step</b>, or close its card. Closing the app (or clicking the wall clock) asks before stopping agents that are still working.</p>
+</div></details>
+</div>
+
+<h2 id="ramon">Working with Ramon</h2>
+<div class="searchable">
+<p>Ramon is your manager. Instead of instructing every agent yourself, tell Ramon the outcome you want:</p>
+<p class="note">"Ramon, we're launching a new ube flavour next week. Have the team prepare the product page copy, 5 social posts and a customer email. Show me drafts by Friday."</p>
+<p>He plans the work, assigns it, follows up, and brings back what needs your decision. You can also talk to him by voice using the <b>talk</b> button on his card.</p>
+</div>
+
+<h2 id="engines">AI engines &amp; costs</h2>
+<div class="searchable">
+<p>Each agent uses an AI engine. Supported engines include <b>Claude Code</b>, <b>OpenAI Codex</b>, <b>Gemini</b>, <b>Kimi</b>, <b>Qwen</b>, <b>GitHub Copilot</b>, <b>Cursor</b> and <b>OpenCode</b> — which can use many models, including <b>GLM (Z.ai Coding Plan)</b>, DeepSeek and local models via Ollama.</p>
+<div class="note warn">💸 <b>Costs:</b> AI services charge you directly — by subscription or per use. Every active agent uses your plan. Watch the usage counter, start with few agents, and set token limits for agents that run for a long time.</div>
+</div>
+
+<h2 id="safety">Safety &amp; good habits</h2>
+<div class="searchable">
+<div class="cards">
+  <div class="card"><span class="ico">📁</span><b>Only share the right folder</b>Point agents at a project folder — never your whole drive, Desktop or Downloads.</div>
+  <div class="card"><span class="ico">🔑</span><b>Use limited API keys</b>Create a separate key for Jepoy Floor AI with a spending limit, so a mistake can't run up a big bill.</div>
+  <div class="card"><span class="ico">🛑</span><b>Auto mode with care</b>Auto mode lets agents act without asking. Use it only on projects you trust, and keep a backup.</div>
+  <div class="card"><span class="ico">👀</span><b>Review before publishing</b>Agents draft; people approve. Don't let agents post, email customers or pay anything on their own.</div>
+  <div class="card"><span class="ico">🧾</span><b>No secrets in chat</b>Don't paste passwords, bank details or customer personal data into messages.</div>
+  <div class="card"><span class="ico">💾</span><b>Keep backups</b>Use Git or regular copies of your project folder so any change can be undone.</div>
+</div>
+</div>
+
+<h2 id="trouble">Troubleshooting</h2>
+<div class="searchable">
+<details><summary>An agent is stuck on "working" for a long time</summary><div><p>Select it and look at the terminal. It may be waiting for an answer or a permission. Check <b>Ask me</b>. If it's truly stuck, use <b>stop after this step</b> and send the task again.</p></div></details>
+<details><summary>"Engine not installed" or sign-in problems</summary><div><p>Use the <b>Install</b> card in the agent's terminal, then sign in when asked. Settings → Prerequisites lists everything that's missing.</p></div></details>
+<details><summary>I don't see my AI models (e.g. GLM) in the list</summary><div><p>For OpenCode, sign in to the provider inside OpenCode first. Jepoy Floor AI reads the models you have access to automatically — wait a few seconds after opening the model list. You can also type any model name in the command field.</p></div></details>
+<details><summary>The app opened a "Select a harness config" screen</summary><div><p>That's the workspace picker. Choose the one marked <b>current</b> to continue where you left off.</p></div></details>
+<details><summary>Windows says "unknown publisher" or macOS blocks the app</summary><div><p>Test builds may not be signed yet. On Windows click <b>More info → Run anyway</b>; on Mac right-click the app → <b>Open</b>. Only do this for installers you received from Jepoy Floor AI directly.</p></div></details>
+</div>
+
+<h2 id="faq">Top 20 FAQ</h2>
+<div class="searchable" id="faqs">
+<details><summary><span class="num">01</span> How is Jepoy Floor AI licensed?</summary><div><p>Jepoy Floor AI is free and open source under the MIT License. It is a fork of <a href="https://github.com/chaitanyagiri/munder-difflin">Munder Difflin</a> by Chaitanya Giri. There is no account or sign-in. Your AI service (Claude, ChatGPT, Z.ai, etc.) is billed separately by that provider under its own pricing. Source code: <a href="https://github.com/jeffreycayao/Dev-Labs">github.com/jeffreycayao/Dev-Labs</a>.</p></div></details>
+<details><summary><span class="num">02</span> Do I need to know how to code?</summary><div><p>No. Choose <b>non-technical</b> at setup and use the non-technical role templates — marketing, content, support, research, admin, HR and bookkeeping.</p></div></details>
+<details><summary><span class="num">03</span> What can agents actually do?</summary><div><p>Read and write files in your project folder, research, draft content, write and test code, organise information and report back. They work through the AI engine you chose, inside the folder you allowed.</p></div></details>
+<details><summary><span class="num">04</span> How many agents should I run?</summary><div><p>Start with Ramon plus 1–2 agents. Add more once you see how much work (and cost) each one creates.</p></div></details>
+<details><summary><span class="num">05</span> Does it keep working when I close the app?</summary><div><p>No — agents run while the app is open and your computer is awake. Leave it open (and plugged in) for long jobs. Closing the app asks first if agents are still working.</p></div></details>
+<details><summary><span class="num">06</span> Can agents make mistakes?</summary><div><p>Yes. AI can be confidently wrong. Always review output before you publish, send, pay or deploy anything.</p></div></details>
+<details><summary><span class="num">07</span> Can I use it in Taglish or Filipino?</summary><div><p>Yes. Write your instructions in Taglish, Filipino or English, and ask for replies in the language you want.</p></div></details>
+<details><summary><span class="num">08</span> Can I use GLM, DeepSeek or local (offline) models?</summary><div><p>Yes, through OpenCode (and Crush or pi). Sign in to the provider in OpenCode — for example the Z.ai Coding Plan for GLM — and pick the model in step 3 of Add Agent. Local models run through Ollama.</p></div></details>
+<details><summary><span class="num">09</span> Where is my data stored?</summary><div><p>On your computer: the app's settings folder plus the workspace (harness config) folder you chose. Agents' work stays in your project folders.</p></div></details>
+<details><summary><span class="num">10</span> 🔒 Is my data sent anywhere?</summary><div><p>Only what an agent needs is sent to the <b>AI service you chose</b> — for example, the text of a file it's working on. Jepoy Floor AI has no server of its own collecting your files or chats.</p></div></details>
+<details><summary><span class="num">11</span> 🔒 How are my API keys protected?</summary><div><p>Keys you enter under <b>Settings → AI Engines</b> and integration credentials are <b>encrypted with your operating system's keychain</b> (Windows DPAPI / macOS Keychain). The app's screens can't read them back, and a key is only given to an agent when it starts. <i>Note:</i> the voice-dictation (Free Flow) key is currently kept in the app's settings file; an update will encrypt it too — use a limited key for it.</p></div></details>
+<details><summary><span class="num">12</span> 🔒 Can an agent see my API key?</summary><div><p>An agent receives the key it needs to call its AI service, so a misbehaving agent could read it. That's why we recommend a <b>separate, spending-limited key</b> for Jepoy Floor AI, and turning auto mode on only for trusted projects.</p></div></details>
+<details><summary><span class="num">13</span> 🔒 Can agents access my whole computer?</summary><div><p>They work in the project folder you give them. In <b>auto mode</b> they can run commands without asking, so keep them on project folders — never your whole drive — and keep backups.</p></div></details>
+<details><summary><span class="num">14</span> 🔒 What is auto mode and is it safe?</summary><div><p>Auto mode skips "may I?" prompts so agents work faster. It's safe on projects you trust and back up. Avoid it when agents read content from untrusted sources (random websites, unknown files), which could contain hidden instructions.</p></div></details>
+<details><summary><span class="num">15</span> 🔒 Does Jepoy Floor AI track me?</summary><div><p>Jepoy Floor AI builds ship without usage tracking. The app contains no hidden reporting to the original project or to third parties.</p></div></details>
+<details><summary><span class="num">16</span> 🔒 Is customer or personal data safe to use?</summary><div><p>Follow the Data Privacy Act (RA 10173): share only what's necessary, remove personal details where you can, and check your AI provider's data policy before sending customer information.</p></div></details>
+<details><summary><span class="num">17</span> 🔒 What if I think a key has leaked?</summary><div><p>Revoke it immediately on the AI provider's website, create a new one, enter it again in Settings → AI Engines, and check the provider's usage page for anything unusual.</p></div></details>
+<details><summary><span class="num">18</span> How do I update the app?</summary><div><p>When updates are published the app tells you in the top bar. Otherwise install the newest version you receive from Jepoy Floor AI over the old one — your settings and agents are kept.</p></div></details>
+<details><summary><span class="num">19</span> Can I have separate offices for different projects?</summary><div><p>Yes. Use <b>File → New Floor</b> or create a new <i>harness config</i> at startup. Each has its own agents, memory and history.</p></div></details>
+<details><summary><span class="num">20</span> Who do I contact for help?</summary><div><p>Open an issue at <a href="https://github.com/jeffreycayao/Dev-Labs/issues">github.com/jeffreycayao/Dev-Labs</a> or visit <a href="https://jepoy.dev">jepoy.dev</a>. Include your version number (top of this page) and a screenshot.</p></div></details>
+</div>
+<p class="empty" id="empty">No matches. Try another word, or clear the search.</p>
+
+<h2 id="about">About Jepoy Floor AI</h2>
+<div class="about searchable">
+  <dl>
+    <dt>Version</dt><dd id="ver2">—</dd>
+    <dt>Edition</dt><dd>Philippine localized edition</dd>
+    <dt>Maintainer</dt><dd>Jepoy Floor AI (Automatika PH Labs)</dd>
+    <dt>Built on</dt><dd><a href="https://github.com/chaitanyagiri/munder-difflin">Munder Difflin</a> by Chaitanya Giri (MIT License), extended, localized and maintained by Jepoy Floor AI.</dd>
+    <dt>License</dt><dd>Open source under the MIT License (Help → License Agreement). Third-party components keep their own licenses (Help → Third-Party Notices).</dd>
+    <dt>Why we ship it</dt><dd>To give Filipino teams and businesses an easy, local-first way to put AI agents to work — localized, supported and maintained here.</dd>
+    <dt>Contact</dt><dd><a href="https://github.com/jeffreycayao/Dev-Labs">Source &amp; issues on GitHub</a> · <a href="https://jepoy.dev">jepoy.dev</a></dd>
+  </dl>
+</div>
+
+<footer>© 2026 Chaitanya Giri and Automatika Consulting. MIT License. Includes third-party open-source components under their own licenses. AI output can be wrong — always review before use.</footer>
+</main>
+</div>
+
+<script>
+  // Version is passed by the app (?v=) from the running build — never hard-coded.
+  (function () {
+    var v = new URLSearchParams(location.search).get('v');
+    var label = v ? 'v' + v.replace(/^v/, '') : 'dev';
+    document.getElementById('ver').textContent = label;
+    document.getElementById('ver2').textContent = label;
+    document.querySelectorAll('.v-live').forEach(function (el) { el.textContent = label; });
+    if (location.hash === '#about') document.getElementById('about').scrollIntoView();
+  })();
+
+  // Search: filters accordions/sections, opens matching accordions.
+  (function () {
+    var q = document.getElementById('q');
+    var blocks = Array.prototype.slice.call(document.querySelectorAll('main .searchable'));
+    var items = Array.prototype.slice.call(document.querySelectorAll('main details'));
+    var heads = Array.prototype.slice.call(document.querySelectorAll('main h2'));
+    var empty = document.getElementById('empty');
+    q.addEventListener('input', function () {
+      var t = q.value.trim().toLowerCase();
+      var any = false;
+      items.forEach(function (d) {
+        var hit = !t || d.textContent.toLowerCase().indexOf(t) !== -1;
+        d.classList.toggle('hidden', !hit);
+        if (t) d.open = hit;
+        any = any || (hit && !!t);
+      });
+      blocks.forEach(function (b) {
+        var hasDetails = b.querySelector('details');
+        var hit = !t || (hasDetails ? b.querySelector('details:not(.hidden)') : b.textContent.toLowerCase().indexOf(t) !== -1);
+        b.classList.toggle('hidden', !hit);
+        if (hit && t) any = true;
+      });
+      heads.forEach(function (h) {
+        var next = h.nextElementSibling;
+        h.classList.toggle('hidden', !!t && next && next.classList.contains('hidden'));
+      });
+      empty.style.display = t && !any ? 'block' : 'none';
+    });
+  })();
+</script>
+</body>
+</html>

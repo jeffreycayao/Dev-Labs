@@ -1,0 +1,14 @@
+NOTE ON BUNDLED ART ASSETS
+
+The LICENSE and THIRD_PARTY_NOTICES.md terms cover the SOURCE CODE. They do
+NOT apply to the bundled pixel-art assets under src/renderer/src/assets/
+(tilesets and maps). Those are "Modern Interiors - RPG Tileset [16X16]" by
+LimeZu, licensed separately under the LimeZu Complete Version license, which
+permits editing and use in commercial and non-commercial projects and REQUIRES
+credit to LimeZu (https://limezu.itch.io/).
+
+The office cast sprites are not LimeZu art -- they are drawn procedurally in
+src/renderer/src/scene/office/portraitArt.ts and are covered by the same terms
+as the rest of the source: the MIT LICENSE.
+
+See src/renderer/src/assets/ATTRIBUTION.md for details.

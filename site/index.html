@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jepoy Floor AI Floor · Build a whole building of AI agents</title>
+<meta name="description" content="Jepoy Floor AI Floor turns the AI tools you already use into a team that works for you. Hire agents onto a floor, stack floors into a building, up to 200 floors. Runs on your computer. Pay once.">
+<meta property="og:title" content="Jepoy Floor AI Floor · Build a whole building of AI agents">
+<meta property="og:description" content="Hire AI agents onto office floors and stack them into a building. Up to 200 floors, on your own computer.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jepoy.dev/">
+<meta name="theme-color" content="#0a0e0b">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css?v=20260928c">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Jepoy Floor AI Floor home">
+      <img src="/assets/logo.png" alt="Jepoy Floor AI" width="36" height="36">
+      <span class="app">Jepoy Floor AI Floor</span>
+    </a>
+    <nav aria-label="Main">
+      <a class="hide-sm" href="#building">How it works</a>
+      <a class="hide-sm" href="#tour">Features</a>
+      <a class="hide-sm" href="#download">Download</a>
+      <a class="hide-sm" href="#download">Download</a>
+      <a class="hide-sm" href="#faq">FAQ</a>
+      <a class="hide-sm" href="https://github.com/jeffreycayao/Dev-Labs">GitHub</a>
+      <a class="btn primary" href="#download">Download free</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ───────── HERO ───────── -->
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow"><span class="dot"></span>Jepoy Floor AI Floor</div>
+      <h1>Build a whole <span class="hl">building</span> of AI agents.</h1>
+      <p class="lead">Your AI tools, working as a team. Each agent gets its own desk. A floor is a team. Add floors and you have a building, run by one manager: up to <strong>200 floors</strong> working at once, all on your own computer.</p>
+      <div class="btns">
+        <a class="btn primary lg" href="#download">Download free</a>
+        <a class="btn lg" href="#video">▶ Watch how it works</a>
+      </div>
+      <div class="trust">
+        <span>Works with Claude, ChatGPT Codex, Gemini, Cursor &amp; more</span>
+        <span>Your work stays on your computer</span>
+        <span>Pay once, no subscription</span>
+      </div>
+    </div>
+
+    <div class="building" aria-hidden="true">
+      <div class="roof"></div>
+      <div class="tower">
+        <div class="floor"><span class="num">F200</span><span class="desks"><i class="desk on"></i><i class="desk on"></i><i class="desk"></i><i class="desk on"></i><i class="desk on"></i></span></div>
+        <div class="floor"><span class="num">F199</span><span class="desks"><i class="desk on"></i><i class="desk"></i><i class="desk on"></i><i class="desk on"></i><i class="desk"></i></span></div>
+        <div class="floor more">· · ·</div>
+        <div class="floor"><span class="num">F3</span><span class="desks"><i class="desk on"></i><i class="desk on"></i><i class="desk on"></i><i class="desk"></i><i class="desk on"></i></span></div>
+        <div class="floor"><span class="num">F2</span><span class="desks"><i class="desk"></i><i class="desk on"></i><i class="desk on"></i><i class="desk on"></i><i class="desk on"></i></span></div>
+        <div class="floor"><span class="num">F1</span><span class="desks"><i class="desk on"></i><i class="desk on"></i><i class="desk on"></i><i class="desk on"></i><i class="desk on"></i></span></div>
+        <div class="ground">Lobby · You</div>
+      </div>
+      <div class="tag t1"><b>F1</b>Ramon is planning today's work</div>
+      <div class="tag t2"><b>F2</b>3 agents busy · 1 needs you</div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── VIDEO ───────── -->
+<section class="section" id="video">
+  <div class="wrap">
+    <div class="center head">
+      <div class="eyebrow"><span class="dot"></span>See it in action</div>
+      <h2>A building that works while you rest</h2>
+      <p class="lead mt-14">Two minutes: hire a team, give it a goal, then watch the floor get to work.</p>
+    </div>
+    <!-- VIDEO PLACEHOLDER: replace this div with your embed, e.g.
+         <iframe class="video" src="https://www.youtube-nocookie.com/embed/VIDEO_ID" title="Jepoy Floor AI Floor demo" allowfullscreen></iframe>
+         (then allow that host in vercel.json's Content-Security-Policy: frame-src). -->
+    <div class="video" role="img" aria-label="Product video coming soon">
+      <div class="play"></div>
+      <div class="cap">Product video coming soon</div>
+      <div class="sub">A tour of one floor, then a whole building</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>200</b><span>floors in one building</span></div>
+      <div class="stat"><b>24</b><span>agents in one shareable team</span></div>
+      <div class="stat"><b>12+</b><span>AI tools supported</span></div>
+      <div class="stat"><b>MIT</b><span>open source, no account</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── THE BIG IDEA ───────── -->
+<section class="section cream" id="building">
+  <div class="wrap">
+    <div class="center head">
+      <div class="eyebrow"><span class="dot"></span>The big idea</div>
+      <h2>Agents make a floor. Floors make a building.</h2>
+      <p class="lead mt-14">An AI agent is like a smart assistant that can use a computer: it reads, writes, and gets tasks done on its own. Jepoy Floor AI Floor is the building those assistants work in: a <strong>harness</strong> that gives each one a desk, a manager and rules to follow.</p>
+    </div>
+    <div class="stack">
+      <div class="card unit">
+        <div class="icon">🧑‍💻</div>
+        <div class="big">1 agent</div>
+        <h3>A desk</h3>
+        <p>One AI worker with a job, its own workspace, its own notebook and its own inbox for messages.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="card unit">
+        <div class="icon">🏢</div>
+        <div class="big">1 floor</div>
+        <h3>A team</h3>
+        <p>A group of agents working side by side on one project, each at its own desk, all reporting to <strong>Ramon</strong>.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="card unit">
+        <div class="icon">🏙️</div>
+        <div class="big">200 floors</div>
+        <h3>A building</h3>
+        <p>Open a new floor for each project, client or department. Ramon runs the whole building, and agents on different floors can work together.</p>
+      </div>
+    </div>
+
+    <div class="grid g3 mt-56">
+      <div class="card"><div class="step-n">1</div><h3>Hire your team</h3><p>Pick ready-made roles like shop manager or copywriter, or describe the helper you want. It takes about a minute.</p></div>
+      <div class="card"><div class="step-n">2</div><h3>Give it a goal</h3><p>Tell Ramon what you need in plain words. He breaks it into tasks and assigns them to the right agents.</p></div>
+      <div class="card"><div class="step-n">3</div><h3>Watch it happen</h3><p>See every agent at its desk. Check progress anytime, answer their questions and approve their work.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── ELEVATOR TOUR (features) ───────── -->
+<section class="section" id="tour">
+  <div class="wrap">
+    <div class="head">
+      <div class="eyebrow"><span class="dot"></span>Take the elevator</div>
+      <h2>Everything in the building, floor by floor</h2>
+      <p class="lead mt-14">Here's what Jepoy Floor AI Floor does, explained without the tech talk.</p>
+    </div>
+
+    <div class="tour">
+      <aside class="elevator" aria-label="Jump to a floor">
+        <h3>Elevator</h3>
+        <a href="#lobby"><b>L</b>Your AI tools</a>
+        <a href="#f1"><b>1F</b>Ramon, your manager</a>
+        <a href="#f2"><b>2F</b>Hiring agents</a>
+        <a href="#f3"><b>3F</b>Floors &amp; the building</a>
+        <a href="#f4"><b>4F</b>Memory</a>
+        <a href="#f5"><b>5F</b>Tasks &amp; questions</a>
+        <a href="#f6"><b>6F</b>The night shift</a>
+        <a href="#f7"><b>7F</b>Budgets &amp; safety</a>
+        <a href="#f8"><b>8F</b>Connections</a>
+        <a href="#f9"><b>9F</b>Voice</a>
+        <a href="#f10"><b>10F</b>Skills</a>
+        <a href="#roof"><b>R</b>Privacy</a>
+      </aside>
+
+      <div>
+        <article class="level" id="lobby">
+          <div class="badge">L<small>Lobby</small></div>
+          <div>
+            <h3>Bring the AI tools you already use</h3>
+            <p>Jepoy Floor AI Floor doesn't replace your AI subscriptions. It puts them to work together. Mix and match on the same floor: one agent can use Claude, the next ChatGPT's Codex, another Gemini.</p>
+            <div class="chips">
+              <span class="chip">Claude Code</span><span class="chip">OpenAI Codex</span><span class="chip">Gemini CLI</span><span class="chip">Antigravity</span><span class="chip">Cursor</span><span class="chip">GitHub Copilot</span><span class="chip">Grok</span><span class="chip">Kimi</span><span class="chip">Qwen</span><span class="chip">OpenCode</span><span class="chip">Crush</span><span class="chip">pi</span><span class="chip">Your own command</span>
+            </div>
+            <p class="note">Each AI tool bills you through your own account with that company. Jepoy Floor AI Floor doesn't add a markup on AI usage.</p>
+          </div>
+        </article>
+
+        <article class="level" id="f1">
+          <div class="badge">1F<small>Floor</small></div>
+          <div>
+            <h3>Ramon, your building manager</h3>
+            <p>Your building has one manager at the head desk. Ramon sees every agent on every floor. He turns your request into a plan, hands tasks to the right agents wherever they sit, follows up with anyone who goes quiet, and reports back when it's done. You talk to one person, and the whole building gets to work.</p>
+            <ul class="points">
+              <li>Plans and splits big jobs into small tasks</li>
+              <li>Assigns work and checks results</li>
+              <li>Wakes up agents that have new messages</li>
+              <li>Tells you when something needs your decision</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="level" id="f2">
+          <div class="badge">2F<small>Floor</small></div>
+          <div>
+            <h3>Hire an agent in about a minute</h3>
+            <p>Give each agent a name, a look, a project folder to work in, the AI tool it uses, and a standing goal. Nothing starts until you press <strong>spawn</strong>.</p>
+            <ul class="points">
+              <li><strong>Role templates:</strong> ready-made technical and non-technical roles</li>
+              <li><strong>Share a hire:</strong> send one agent to a friend as a small file or link</li>
+              <li><strong>Describe it:</strong> ask any AI chat to write the agent for you, then import it</li>
+              <li><strong>Pick a look:</strong> every agent has a character on the office map</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="level" id="f3">
+          <div class="badge">3F<small>Floor</small></div>
+          <div>
+            <h3>Floors: whole teams in one click, and a building to hold them</h3>
+            <p>Save your whole team as one <strong>floor file</strong> and share it with anyone. They review who's on it and hire everyone at once, or one by one. A shared floor never includes your folders, passwords, memory or conversations.</p>
+            <p class="mt-10">Need more than one team? Open a <strong>New Floor</strong> (Ctrl/Cmd + Shift + N). Each floor is its own office with its own agents, so a client project never mixes with another. Stack up to <strong>200 floors</strong> in one building.</p>
+            <ul class="points">
+              <li>Up to 24 agents in one shareable floor file</li>
+              <li>Mix AI tools on the same floor</li>
+              <li>Try the ready-made <em>Online Seller Team</em>: shop manager, page designer, copywriter</li>
+              <li>Floors run side by side without stepping on each other</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="level" id="f4">
+          <div class="badge">4F<small>Floor</small></div>
+          <div>
+            <h3>Agents that remember</h3>
+            <p>Most AI chats forget everything when you close them. Here, every agent keeps a notebook of what it learned, decided and still has to do. Old notes are summarized automatically, so the notebook stays useful instead of growing forever. The whole team can look things up in one shared memory, and you can add your company's documents to a knowledge base they all read.</p>
+            <ul class="points">
+              <li>Personal notebook for every agent</li>
+              <li>Shared team memory, searchable by meaning</li>
+              <li>Company knowledge base</li>
+              <li>A visual map of what the team knows</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="level" id="f5">
+          <div class="badge">5F<small>Floor</small></div>
+          <div>
+            <h3>A task board, and agents that ask before guessing</h3>
+            <p>Every job shows up on a task board, so you can see what's waiting, in progress and done. When an agent is unsure, it doesn't guess: it posts a question to your <strong>Ask Me</strong> board and waits for your answer. Every message between agents is kept as a readable conversation.</p>
+            <ul class="points">
+              <li>Task board for the whole floor</li>
+              <li>"Ask Me" inbox for decisions only you can make</li>
+              <li>Readable message threads between agents</li>
+              <li>Live view of each agent's screen when you want detail</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="level" id="f6">
+          <div class="badge">6F<small>Floor</small></div>
+          <div>
+            <h3>The night shift</h3>
+            <p>Schedule work to run on a clock, like a daily sales report every morning. Your computer can stay awake so schedules fire on time, and the app can reopen after a restart. When it's time to stop, <strong>Closing Time</strong> ends the day properly: every agent saves its work and notes before the lights go off, so nothing is lost.</p>
+            <ul class="points">
+              <li>Scheduled, repeating jobs</li>
+              <li>Stays awake while you're away</li>
+              <li>Picks up again after a restart</li>
+              <li>"Closing Time": a clean end of day, no lost work</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="level" id="f7">
+          <div class="badge">7F<small>Floor</small></div>
+          <div>
+            <h3>Budgets and safety rails</h3>
+            <p>Set how much AI usage each agent, or the whole floor, is allowed. If an agent starts going in circles or spending too fast, a built-in safety switch first steers it back on track, then slows it down, and only stops it if you've allowed that. You choose whether agents act on their own or ask first.</p>
+            <ul class="points">
+              <li>Spending limits per agent and per floor</li>
+              <li>Automatic brakes for runaway agents</li>
+              <li>"Ask first" mode for approvals</li>
+              <li>Separate copies of your project, so you review changes before they count</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="level" id="f8">
+          <div class="badge">8F<small>Floor</small></div>
+          <div>
+            <h3>Connected to the apps you run your business on</h3>
+            <p>Connections let agents work inside other apps: check orders and stock in Pancake POS, publish a landing page on Webcake, and more. Your keys are locked on your computer, and agents never see them. You can also send work to your building from Slack or from your own tools.</p>
+            <div class="chips">
+              <span class="chip">Pancake POS</span><span class="chip">Webcake Landing</span><span class="chip">GitHub</span><span class="chip">Database</span><span class="chip">Email &amp; Calendar</span><span class="chip">Web Search</span><span class="chip">Slack</span><span class="chip">Webhooks</span>
+            </div>
+            <p class="note">Connections can change real data, so give each one only the access it needs. Today they work with Claude Code agents.</p>
+          </div>
+        </article>
+
+        <article class="level" id="f9">
+          <div class="badge">9F<small>Floor</small></div>
+          <div>
+            <h3>Just talk</h3>
+            <p>Have a voice conversation with Ramon to check on the floor or give new instructions, hands-free. Prefer typing without typing? Hold a key, speak, and your words appear in the message box.</p>
+            <ul class="points">
+              <li>Voice chat with your manager</li>
+              <li>Push-to-talk dictation</li>
+            </ul>
+            <p class="note">Voice uses your own OpenAI key. Dictation uses a free Groq key.</p>
+          </div>
+        </article>
+
+        <article class="level" id="f10">
+          <div class="badge">10F<small>Floor</small></div>
+          <div>
+            <h3>A library of skills and prompts</h3>
+            <p>Teach your agents new tricks with the Jepoy Floor AI Skills Library: ready-made skills you install in one click, checked for safety before they're installed and updated only when you say so. Save your favorite instructions in a prompt library and reuse them anytime.</p>
+            <ul class="points">
+              <li>One-click skills, safety-checked</li>
+              <li>Updates only when you choose</li>
+              <li>Reusable prompt library</li>
+              <li>Built-in file viewer and project history</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="level" id="roof">
+          <div class="badge">R<small>Roof</small></div>
+          <div>
+            <h3>Private by design</h3>
+            <p>Your work, messages, agent output and keys stay on your computer. There is no account and no sign-in.</p>
+            <ul class="points">
+              <li>Runs on your own computer</li>
+              <li>Keys encrypted by your operating system</li>
+              <li>Usage stats are optional</li>
+              <li>English, Chinese and Arabic interface</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── WHO IT'S FOR ───────── -->
+<section class="section cream">
+  <div class="wrap">
+    <div class="center head">
+      <div class="eyebrow"><span class="dot"></span>Who moves in</div>
+      <h2>Built for people with more work than hours</h2>
+    </div>
+    <div class="grid g4">
+      <div class="card"><div class="icon">🛍️</div><h3>Online sellers</h3><p>Daily sales reports, product copy and landing pages, handled by a floor that knows your shop.</p></div>
+      <div class="card"><div class="icon">📣</div><h3>Agencies</h3><p>One floor per client. Every client's work stays separate, and every team keeps its own memory.</p></div>
+      <div class="card"><div class="icon">🛠️</div><h3>Developers</h3><p>A team of coding agents working side by side on separate copies of your project.</p></div>
+      <div class="card"><div class="icon">🚀</div><h3>Founders</h3><p>Hand off the busywork. Get a plan, a draft and a status report without hiring yet.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── FREE ACCESS ───────── -->
+<section class="section" id="free">
+  <div class="wrap">
+    <div class="center head">
+      <div class="eyebrow"><span class="dot"></span>Free and open source</div>
+      <h2>Download Jepoy Floor AI Floor for free.</h2>
+      <p class="lead mt-14">Every app feature is free. No account, sign-in, card or unlock code. The source is on <a href="https://github.com/jeffreycayao/Dev-Labs">GitHub</a> under the MIT License.</p>
+    </div>
+    <p class="center"><a class="btn primary lg" href="#download">Choose your download</a></p>
+    <p class="fine center mt-22">AI tools such as Claude, ChatGPT and Gemini may bill separately through their own accounts.</p>
+  </div>
+</section>
+
+<!-- ───────── DOWNLOAD ───────── -->
+<!-- /download/<os> is served by api/download.js: it always points at the latest public release. -->
+<section class="section" id="download">
+  <div class="wrap">
+    <div class="center head">
+      <div class="eyebrow"><span class="dot"></span>Download</div>
+      <h2>Get Jepoy Floor AI Floor</h2>
+      <p class="lead">Always the latest version. Install it and start hiring agents.</p>
+    </div>
+    <div class="dl">
+      <a class="btn primary lg" href="/download/mac">Download for Mac</a>
+      <a class="btn lg" href="/download/windows">Download for Windows</a>
+      <a class="btn lg" href="/download/linux">Download for Linux</a>
+    </div>
+    <p class="fine center">Mac: universal (Apple silicon and Intel). Windows: 64-bit installer, or the <a href="/download/windows-portable">portable app</a>. Linux: AppImage. <a href="https://github.com/jeffreycayao/Dev-Labs/releases/latest">All files and release notes</a>.</p>
+  </div>
+</section>
+
+<!-- ───────── FAQ ───────── -->
+<section class="section cream" id="faq">
+  <div class="wrap">
+    <div class="center head">
+      <div class="eyebrow"><span class="dot"></span>Questions</div>
+      <h2>Good questions, plain answers</h2>
+    </div>
+    <div class="faq">
+      <details><summary>What exactly is an "AI agent"?</summary><p>Think of it as an assistant that can use a computer by itself: read files, write documents or code, and finish a task step by step. A chatbot answers; an agent does the work.</p></details>
+      <details><summary>Do I need to know how to code?</summary><p>No. You hire agents from ready-made roles and give instructions in plain words. You do need at least one AI tool (like Claude or ChatGPT's Codex) installed and signed in; the setup guide walks you through it.</p></details>
+      <details><summary>What's the difference between a floor and a building?</summary><p>A floor is one team of agents in one office window. A building is all your floors together, up to 200. Ramon manages the whole building, and agents can message agents on other floors.</p></details>
+      <details><summary>Is there a limit on how many floors I can have?</summary><p>Up to 200 floors can be open at once. A single shareable floor file holds up to 24 agents. In practice, your computer's power and your AI plans are the real limit, so start small and grow.</p></details>
+      <details><summary>Does Jepoy Floor AI Floor include AI usage?</summary><p>No. It runs the AI tools you already pay for. Each tool bills you through your own account with that company. You can set spending limits per agent and per floor.</p></details>
+      <details><summary>Is my data safe?</summary><p>Your work, prompts and keys stay on your computer. There is no account. Usage stats are optional.</p></details>
+      <details><summary>Can agents do something I don't want?</summary><p>Agents act with your computer's permissions. Switch on "ask first" so they ask before acting, give each agent only the folder it needs, and use separate project copies to review changes before they count.</p></details>
+      <details><summary>Is Jepoy Floor AI free?</summary><p>Yes, and it is open source under the MIT License. There is no account, card or app purchase. The AI tools you connect may have their own fees.</p></details>
+      <details><summary>Can I use it on more than one computer?</summary><p>Yes. Install it on as many computers as you like.</p></details>
+      <details><summary>Which computers does it run on?</summary><p>It's a desktop app for Mac, Windows and Linux.</p></details>
+      <details><summary>What if I need help?</summary><p>Email <a href="mailto:hello@automatika.ph">hello@automatika.ph</a> with your app version (Settings → General → Updates), and a real person will reply.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── CLOSING CTA ───────── -->
+<section class="section">
+  <div class="wrap">
+    <div class="band">
+      <h2>You go home. Your building keeps working.</h2>
+      <p>Start with one floor today. Add the next when you're ready. Use every app feature for free.</p>
+      <div class="btns jc-center">
+        <a class="btn primary lg" href="#download">Download free</a>
+        <a class="btn lg" href="#tour">Take the tour again</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <img src="/assets/logo.png" alt="Jepoy Floor AI" width="36" height="36">
+      <p class="fine mt-14 mw-320">Jepoy Floor AI Floor: a harness that runs a whole building of AI agents on your own computer.</p>
+    </div>
+    <div><h4>Product</h4><a href="#download">Download</a><a href="#building">How it works</a><a href="#tour">Features</a><a href="#faq">FAQ</a><a href="/guide">User guide</a></div>
+    <div><h4>Open source</h4><a href="https://github.com/jeffreycayao/Dev-Labs">Source code</a><a href="https://github.com/jeffreycayao/Dev-Labs/blob/main/LICENSE">MIT License</a><a href="https://github.com/chaitanyagiri/munder-difflin">Original project</a></div>
+    <div><h4>Company</h4><a href="https://jepoy.dev">jepoy.dev</a><a href="https://github.com/jeffreycayao/Dev-Labs/issues">Contact</a><a href="/privacy">Privacy Policy</a></div>
+    <div class="legal">© 2026 Automatika Consulting. Jepoy Floor AI is open source under the MIT License, built on <a href="https://github.com/chaitanyagiri/munder-difflin">Munder Difflin</a> by Chaitanya Giri. Claude, Codex, Gemini, Cursor and other names belong to their owners and are used only to describe compatibility.</div>
+  </div>
+</footer>
+
+<script type="module" src="/assets/js/site.js?v=20260928c"></script>
+</body>
+</html>

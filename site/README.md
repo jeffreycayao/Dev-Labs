@@ -39,5 +39,14 @@ The look is a dark, futuristic HUD: near-black glass panels, neon lime (`#d8ff00
   - `core3d`: the wireframe core next to the download buttons.
 - The 3D scenes load lazily, only on screens 720px and wider with WebGL, and pause when off screen. Phones get CSS fallbacks: the perspective grid, the floor-control tower and the orbit rings.
 - Everything is off for visitors with "reduce motion" turned on, and the pages read normally with scripts blocked.
+- Touch and drag use [@use-gesture/vanilla](https://use-gesture.netlify.app) (`tools/site-bundle/src/touch.js` and `stage.js`):
+  - **3D scenes:** drag or fling the 3D scenes to spin them, and pinch the tower to zoom.
+  - **Tools strip:** drag the tools marquee.
+  - **Day timeline:** scrub it, or swipe its cards.
+  - **Role cards:** swipe the deck, or use the buttons and arrow keys.
+  - **Safety switch:** slide or tap it.
+  - **Tablets:** press and tilt the feature tiles.
+  - **Phones:** the feature grid becomes a swipe carousel.
+  - Without JavaScript, the interactive parts fall back to plain lists and scroll rows.
 - These files are **built output**. Edit `tools/site-bundle/src/`, then run `npm install && npm run build` in `tools/site-bundle` and commit the result. Vercel still has no build step.
 - The CSP allows `script-src 'self'` only. It blocks inline `style="…"` attributes, so use classes in `assets/site.css` (see the `.mt-*` utilities).

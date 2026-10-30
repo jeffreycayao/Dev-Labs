@@ -7,7 +7,8 @@ import {
 import { KEY, LIME, createStage } from './stage.js';
 
 export function mountCore(host) {
-  const { scene, camera, pointer, start } = createStage(host, { fov: 40, className: 'core-3d' });
+  const { scene, camera, pointer, spin, enableGestures, start } = createStage(host, { fov: 40, className: 'core-3d' });
+  enableGestures(host);
   const core = new Group();
   scene.add(core);
 
@@ -41,7 +42,7 @@ export function mountCore(host) {
 
   camera.position.set(0, 0, 14.5);
   start((t) => {
-    core.rotation.y = t * 0.25 + pointer.x * 0.4;
+    core.rotation.y = t * 0.25 + pointer.x * 0.4 + spin.angle;
     core.rotation.x = Math.sin(t * 0.3) * 0.2 + pointer.y * 0.3;
     inner.rotation.y = -t * 0.6;
     orbits.forEach((o, i) => { o.rotation.y = t * (0.15 + i * 0.08) * (i % 2 ? -1 : 1); });

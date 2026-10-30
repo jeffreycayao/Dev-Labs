@@ -12,7 +12,8 @@ import { BG, KEY, LIME, createStage, rand } from './stage.js';
 const SPIRE = new Vector3(0, 0, -6);
 
 export function mountHero(hero, getScroll) {
-  const { scene, camera, pointer, start } = createStage(hero, { className: 'hero-3d' });
+  const { scene, camera, pointer, spin, enableGestures, start } = createStage(hero, { className: 'hero-3d' });
+  enableGestures(hero);
   scene.fog = new Fog(BG, 26, 72);
   const city = new Group();
   scene.add(city);
@@ -140,7 +141,7 @@ export function mountHero(hero, getScroll) {
   start((t) => {
     const dt = Math.min(t - last, 0.05); last = t;
     const scroll = Math.min(getScroll(), 900);
-    const ang = t * 0.035 + pointer.x * 0.25;
+    const ang = t * 0.035 + pointer.x * 0.25 + spin.angle;
     camera.position.set(Math.sin(ang) * 30, 9 + pointer.y * -1.5 + scroll * 0.012, Math.cos(ang) * 30 + 4);
     camera.lookAt(0, 6 + scroll * 0.006, -6);
 

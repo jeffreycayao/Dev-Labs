@@ -5,6 +5,7 @@
 // Build: `npm run build` in tools/site-bundle → site/assets/js/.
 import Lenis from 'lenis';
 import { animate, inView, scroll } from 'motion';
+import { dayline, deck, marquee, safetySwitch, touchTilt } from './touch.js';
 
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -54,8 +55,11 @@ if (!reduced) {
 if (!reduced) {
   // ─── Reveals: rise, unblur and stagger with siblings ────────────────────
   const REVEAL = [
-    '.hero-inner > *', '.head', '.steps > *', '.holo', '.bento > *', '.who > *',
-    '.dl > *', '.dl-copy > *', '.faq details', '.doc > *', 'footer .wrap > div'
+    // On phones the feature grid is a sideways carousel: tiles off to the right
+    // never enter the viewport, so reveal the carousel as one block there.
+    '.hero-inner > *', '.head', '.steps > *', '.holo', innerWidth <= 620 ? '.bento' : '.bento > *', '.who > *', '.day-wrap',
+    '.deck', '.deck-copy > *', '.safety > *', '.oss > *', '.dl > *', '.dl-copy > *', '.faq details',
+    '.doc > *', 'footer .wrap > div'
   ].join(',');
   const items = [...document.querySelectorAll(REVEAL)];
   items.forEach((el) => el.classList.add('reveal'));
@@ -95,6 +99,16 @@ if (!reduced) {
       tile.addEventListener('pointerleave', () => animate(tile, { rotateX: 0, rotateY: 0, z: 0 }, SPRING));
     }
   }
+}
+
+// ─── Touch interactives (use-gesture): marquee, day scrubber, role deck,
+// safety switch, and press-to-tilt tiles on touch screens ────────────────
+for (const el of document.querySelectorAll('.marquee')) marquee(el, reduced);
+for (const el of document.querySelectorAll('.day')) dayline(el);
+for (const el of document.querySelectorAll('.deck')) deck(el, reduced);
+for (const el of document.querySelectorAll('.safety')) safetySwitch(el);
+if (!reduced && matchMedia('(hover: none) and (pointer: coarse)').matches && innerWidth > 620) {
+  touchTilt(document.querySelectorAll('.tilt'));
 }
 
 // ─── Floors counter, driven by scroll (works with or without WebGL) ───────

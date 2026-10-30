@@ -17,7 +17,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/plus-jakarta-sans-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/site.css?v=20261031">
+<link rel="stylesheet" href="/assets/site.css?v=20261101">
 </head>
 <body>
 
@@ -30,6 +30,7 @@
     <nav aria-label="Main">
       <a class="hide-sm" href="#building">How it works</a>
       <a class="hide-sm" href="#tour">Features</a>
+      <a class="hide-sm" href="#roles">Roles</a>
       <a class="hide-sm" href="#faq">FAQ</a>
       <a class="hide-sm" href="https://github.com/jeffreycayao/Dev-Labs">GitHub</a>
       <a class="btn primary" href="#download">Download free</a>
@@ -58,6 +59,27 @@
         <div><dt>MIT</dt><dd>open source, no account</dd></div>
       </dl>
     </div>
+  </div>
+</section>
+
+<!-- ───────── WORKS WITH (drag or fling on touch) ───────── -->
+<section class="tools" aria-label="Works with these AI tools">
+  <div class="marquee">
+    <ul class="marquee-track">
+      <li>Claude Code</li>
+      <li>OpenAI Codex</li>
+      <li>Gemini CLI</li>
+      <li>Antigravity</li>
+      <li>Cursor</li>
+      <li>GitHub Copilot</li>
+      <li>Grok</li>
+      <li>Kimi</li>
+      <li>Qwen</li>
+      <li>OpenCode</li>
+      <li>Crush</li>
+      <li>pi</li>
+      <li>Your own command</li>
+    </ul>
   </div>
 </section>
 
@@ -93,6 +115,35 @@
   </div>
 </section>
 
+<!-- ───────── A DAY IN THE BUILDING (swipe or scrub) ───────── -->
+<section class="section" id="day">
+  <div class="wrap">
+    <div class="head center">
+      <div class="eyebrow"><span class="dot"></span>A day in the building</div>
+      <h2>it works while you <span class="key">sleep</span></h2>
+    </div>
+    <div class="day">
+      <div class="day-wrap">
+        <div class="day-track">
+      <article class="day-card"><span class="time">08:00</span><h3>morning plan</h3><p>Ramon reads your goal, splits it into tasks and puts them on the board for the right agents.</p></article>
+      <article class="day-card"><span class="time">11:00</span><h3>heads down</h3><p>Agents work at their own desks, on separate copies of your project. Anything unclear goes to your Ask Me board.</p></article>
+      <article class="day-card"><span class="time">17:30</span><h3>closing time</h3><p>Every agent saves its work and notes before the lights go off, so nothing is lost overnight.</p></article>
+      <article class="day-card"><span class="time">02:00</span><h3>night shift</h3><p>Scheduled jobs run on the clock, like tomorrow morning's sales report. Your computer can stay awake for them.</p></article>
+        </div>
+        <div class="scrub" aria-label="Time of day">
+          <div class="scrub-line"><span class="scrub-knob" aria-hidden="true"></span></div>
+          <div class="scrub-stops">
+          <button type="button" class="scrub-stop">08:00</button>
+          <button type="button" class="scrub-stop">11:00</button>
+          <button type="button" class="scrub-stop">17:30</button>
+          <button type="button" class="scrub-stop">02:00</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ───────── FEATURES ───────── -->
 <section class="section" id="tour">
   <div class="wrap">
@@ -100,6 +151,7 @@
       <div class="eyebrow"><span class="dot"></span>Floor directory</div>
       <h2><span class="key">everything</span> in the <mark>building</mark></h2>
     </div>
+    <p class="swipe-hint fine" aria-hidden="true">Swipe to explore →</p>
     <div class="bento">
       <article class="tile tilt w2">
         <span class="lvl">L</span>
@@ -130,6 +182,85 @@
       <div><b>Developers</b><span>Coding agents on separate copies of your project.</span></div>
       <div><b>Founders</b><span>Plans, drafts and status reports before you hire.</span></div>
     </div>
+  </div>
+</section>
+
+<!-- ───────── ROLES (swipeable deck) ───────── -->
+<section class="section" id="roles">
+  <div class="wrap roles-grid">
+    <div class="deck-copy">
+      <div class="eyebrow"><span class="dot"></span>Ready-made roles</div>
+      <h2>hire a team in a <span class="key">minute</span></h2>
+      <p class="lead">Pick a role, give it a goal and press spawn. Every template is an ordinary hire file you can edit, and nothing runs until you say so.</p>
+      <p class="fine mt-14">Swipe the cards, drag them with a mouse, or use the arrow keys.</p>
+    </div>
+    <div class="deck" tabindex="0" aria-roledescription="carousel" aria-label="Role templates">
+      <div class="deck-stack">
+        <article class="role-card"><span class="lvl">floor · 3 agents</span><h3>Online Seller Team</h3><p>Shop manager, landing page designer and product copywriter for a shop on Pancake POS and Webcake.</p></article>
+        <article class="role-card"><span class="lvl">Jr. Programmer</span><h3>Paolo</h3><p>Ships small, well-scoped fixes, UI tweaks and missing tests, and escalates architecture questions.</p></article>
+        <article class="role-card"><span class="lvl">Sr. Programmer</span><h3>Rodel</h3><p>Owns complex features, architecture and risky refactors. Plans first, reviews the Jr.'s work.</p></article>
+        <article class="role-card"><span class="lvl">Security Auditor</span><h3>Lito</h3><p>Reviews code for vulnerabilities and leaked secrets. Reports ranked findings, no unapproved edits.</p></article>
+        <article class="role-card"><span class="lvl">QA Tester</span><h3>Jomar</h3><p>Runs the tests, writes missing ones and tries edge cases. Files reproducible bug reports.</p></article>
+        <article class="role-card"><span class="lvl">DevOps Engineer</span><h3>Carlo</h3><p>Keeps builds, CI and deployments healthy. Never touches production without approval.</p></article>
+        <article class="role-card"><span class="lvl">Scrum Master</span><h3>Rowena</h3><p>Breaks goals into tickets, keeps the board current and posts a daily standup.</p></article>
+        <article class="role-card"><span class="lvl">Social Media Manager</span><h3>Divina</h3><p>A week of posts in Taglish or English: captions, hooks, hashtags. Never posts directly.</p></article>
+        <article class="role-card"><span class="lvl">Customer Support Lead</span><h3>Lorna</h3><p>Reply templates, FAQ and a weekly report of recurring complaints. Drafts only.</p></article>
+        <article class="role-card"><span class="lvl">Sales Researcher</span><h3>Miguel</h3><p>Lead lists with decision makers and personalised openers, from public information.</p></article>
+        <article class="role-card"><span class="lvl">Bookkeeper</span><h3>Bong</h3><p>Reconciles records and prepares a monthly summary. Never moves money.</p></article>
+      </div>
+      <div class="deck-nav">
+        <button type="button" class="btn" data-deck-prev aria-label="Previous role">←</button>
+        <span class="fine" data-deck-count aria-live="polite"></span>
+        <button type="button" class="btn primary" data-deck-next aria-label="Next role">→</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── YOU STAY IN CHARGE (tap or slide the switch) ───────── -->
+<section class="section" id="safety">
+  <div class="wrap safety" data-mode="ask">
+    <div class="head">
+      <div class="eyebrow"><span class="dot"></span>Safety rails</div>
+      <h2>you stay <span class="key">in charge</span></h2>
+      <p class="lead mt-14">Flip the switch to see what an agent does in each mode.</p>
+    </div>
+    <div class="console">
+      <div class="console-bar">
+        <span>Auto</span>
+        <button type="button" role="switch" aria-checked="true" aria-label="Ask first mode" class="switch"><span class="thumb"></span></button>
+        <span>Ask first</span>
+      </div>
+      <ol class="log log-ask">
+        <li><b>Jomar</b> wants to delete 3 old test files.</li>
+        <li><b>Ask Me</b> "Remove tests/legacy/*? Yes / No"</li>
+        <li><b>You</b> tap No. Nothing changes.</li>
+      </ol>
+      <ol class="log log-auto">
+        <li><b>Jomar</b> runs the tests and fixes the failing one.</li>
+        <li><b>Budget</b> stays under this floor's limit.</li>
+        <li><b>Brakes</b> step in if it starts going in circles.</li>
+      </ol>
+    </div>
+    <ul class="rails">
+      <li><b>Budgets</b><span>Spending limits per agent and per floor.</span></li>
+      <li><b>Brakes</b><span>Runaway agents are steered back, then slowed.</span></li>
+      <li><b>Copies</b><span>Agents work on separate copies you review first.</span></li>
+      <li><b>Keys</b><span>Locked by your operating system. Agents never see them.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ───────── OPEN SOURCE ───────── -->
+<section class="section" id="source">
+  <div class="wrap oss">
+    <div class="head center">
+      <div class="eyebrow"><span class="dot"></span>Open source</div>
+      <h2>built in the <mark>open</mark><span class="ast">*</span></h2>
+    </div>
+    <a class="tile" href="https://github.com/jeffreycayao/Dev-Labs"><span class="lvl">MIT</span><h3>read every line</h3><p>The whole app is on GitHub under the MIT License. No account, no telemetry you can't switch off.</p></a>
+    <a class="tile" href="https://github.com/jeffreycayao/Dev-Labs/blob/main/CONTRIBUTING.md"><span class="lvl">PR</span><h3>make it better</h3><p>Fix a bug, add a role or a floor, translate the interface. Contributions are welcome.</p></a>
+    <a class="tile" href="https://github.com/chaitanyagiri/munder-difflin"><span class="lvl">fork</span><h3>standing on shoulders</h3><p>DevLabs is built on Munder Difflin by Chaitanya Giri and its contributors.</p></a>
   </div>
 </section>
 
@@ -186,6 +317,6 @@
   </div>
 </footer>
 
-<script type="module" src="/assets/js/site.js?v=20261031"></script>
+<script type="module" src="/assets/js/site.js?v=20261101"></script>
 </body>
 </html>

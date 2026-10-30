@@ -1,10 +1,7 @@
 # jepoy.dev — the DevLabs website
 
 Static HTML and CSS with no build step on Vercel. One server function, `api/download.js`, handles download links. A small motion script (`assets/js/site.js`) adds smooth scrolling, scroll reveals and the 3D hero; the pages work fully without it.
-The pages use the live visual language of
-[automatika.ph](https://www.automatika.ph/): dark espresso surfaces, lime
-accents, Instrument Serif headlines, Manrope body text, and IBM Plex Mono
-labels. Fonts are self-hosted under `assets/fonts/` with their OFL notice.
+The look is a dark, futuristic HUD: near-black glass panels, neon lime (`#d8ff00`), Manrope headlines and IBM Plex Mono labels. Fonts are self-hosted under `assets/fonts/` with their OFL notice.
 
 | Path | File | Who links to it |
 |---|---|---|
@@ -22,7 +19,6 @@ labels. Fonts are self-hosted under `assets/fonts/` with their OFL notice.
 
 ## Before launch, fill in
 
-- **Video:** replace the placeholder in `index.html` (search `VIDEO PLACEHOLDER`). If you embed YouTube or Vimeo, add that host to `frame-src` in `vercel.json`'s Content-Security-Policy.
 - **Privacy:** when you change `privacy.html`, update its "Last updated" date and `PRIVACY.md`.
 
 ## Download links (automatic)
@@ -36,8 +32,12 @@ labels. Fonts are self-hosted under `assets/fonts/` with their OFL notice.
 
 ## Motion and 3D (assets/js)
 
-- `assets/js/site.js` (~22 KB): [Lenis](https://github.com/darkroomengineering/lenis) smooth scroll, scroll reveals, count-up numbers, card spotlight, nav blur, scroll progress bar.
-- `assets/js/hero3d-*.js` (~135 KB gzipped): a [three.js](https://threejs.org) night city behind the hero. Loaded lazily, only on screens 720px and wider with WebGL, and paused when off screen.
+- `assets/js/site.js` (~30 KB gzipped): [Lenis](https://github.com/darkroomengineering/lenis) smooth scroll and [Motion](https://motion.dev) (Framer Motion's vanilla-JS API). Motion handles the scroll reveals, count-up numbers, the scroll progress bar, hero parallax, spring 3D tilt on feature tiles, and the scroll-driven floor counter.
+- Three [three.js](https://threejs.org) scenes share one chunk (~135 KB gzipped):
+  - `hero3d`: a night city with flickering windows, a holographic spire, a scan ring and data packets.
+  - `building3d`: the "How it works" tower, assembling floor by floor as you scroll.
+  - `core3d`: the wireframe core next to the download buttons.
+- The 3D scenes load lazily, only on screens 720px and wider with WebGL, and pause when off screen. Phones get CSS fallbacks: the perspective grid, the floor-control tower and the orbit rings.
 - Everything is off for visitors with "reduce motion" turned on, and the pages read normally with scripts blocked.
 - These files are **built output**. Edit `tools/site-bundle/src/`, then run `npm install && npm run build` in `tools/site-bundle` and commit the result. Vercel still has no build step.
 - The CSP allows `script-src 'self'` only. It blocks inline `style="…"` attributes, so use classes in `assets/site.css` (see the `.mt-*` utilities).

@@ -8,6 +8,7 @@
   "devDependencies": {
     "esbuild": "0.25.10",
     "lenis": "1.3.26",
+    "motion": "14.1.1",
     "three": "0.186.1"
   }
 }

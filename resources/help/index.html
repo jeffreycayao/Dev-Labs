@@ -7,9 +7,9 @@
 <title>How to use DevLabs</title>
 <style>
   :root {
-    --bg: #0B0A06; --surface: #1A1712; --surface-2: #221E17; --border: #2A251C;
-    --cream: #E4D5C3; --light: #F6F0E5; --muted: #9E8E74; --muted-2: #837259;
-    --lime: #DBF914; --lime-press: #C5E012; --gold: #D4AF37; --coral: #E0826F;
+    --bg: #181C17; --surface: #232922; --surface-2: #2A3128; --border: #2F362D;
+    --cream: #E6ECDD; --light: #F4F7EE; --muted: #9AA38F; --muted-2: #828C78;
+    --lime: #CDF252; --lime-press: #B9DE3C; --gold: #D4AF37; --coral: #E0826F; --key: #E1642D;
     --radius: 10px;
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
     --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -26,7 +26,7 @@
   .top {
     position: sticky; top: 0; z-index: 10;
     display: flex; align-items: center; gap: 14px; padding: 14px 28px;
-    background: rgba(11, 10, 6, 0.92); backdrop-filter: blur(12px);
+    background: rgba(24, 28, 23, 0.92); backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
   .top img { width: 32px; height: 32px; border-radius: 6px; }
@@ -38,7 +38,7 @@
     width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
     background: var(--surface); color: var(--light); font: 14px var(--font); outline: none;
   }
-  .search input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(219, 249, 20, 0.15); }
+  .search input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(205, 242, 82, 0.15); }
 
   .layout { display: grid; grid-template-columns: 240px 1fr; max-width: 1180px; margin: 0 auto; }
   nav.side { position: sticky; top: 64px; align-self: start; height: calc(100vh - 64px); overflow: auto; padding: 24px 12px 24px 28px; }
@@ -56,8 +56,9 @@
     background: var(--lime); opacity: 0.06; filter: blur(60px); border-radius: 50%;
   }
   .eyebrow { font: 500 11px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted-2); }
+  h1, h2 { font-weight: 800; text-transform: lowercase; }
   h1 { font-size: clamp(30px, 4.4vw, 46px); line-height: 1.02; letter-spacing: -0.04em; color: var(--light); margin: 10px 0 12px; }
-  h1 em { font-style: italic; font-family: Georgia, "Times New Roman", serif; font-weight: 400; color: var(--lime); }
+  h1 em { font-style: normal; color: var(--key); }
   h2 { font-size: 26px; letter-spacing: -0.03em; color: var(--light); margin: 52px 0 8px; scroll-margin-top: 80px; }
   h3 { font-size: 17px; color: var(--light); margin: 20px 0 6px; }
   .lead { font-size: 17px; max-width: 720px; }
@@ -73,7 +74,7 @@
     border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius);
     margin: 10px 0; transition: border-color .25s var(--ease);
   }
-  details[open] { border-color: rgba(219, 249, 20, 0.35); }
+  details[open] { border-color: rgba(205, 242, 82, 0.35); }
   summary {
     cursor: pointer; list-style: none; padding: 14px 18px; display: flex; align-items: center; gap: 12px;
     color: var(--light); font-weight: 600;

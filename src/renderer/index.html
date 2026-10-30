@@ -15,24 +15,25 @@
       #cth-splash {
         position: fixed; inset: 0; display: flex; flex-direction: column;
         align-items: center; justify-content: center; gap: 14px;
-        background: #0B0A06; color: #E4D5C3;
+        background: #181C17; color: #E6ECDD;
         font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       }
       #cth-splash .mk {
         display: grid; place-items: center; width: 56px; height: 56px;
-        background: #DBF914; color: #0B0A06; border: 4px solid #C5E012;
-        font-family: "Press Start 2P", monospace; font-size: 16px; letter-spacing: -2px;
-        box-shadow: 0 0 40px rgba(219,249,20,0.25);
+        background: #CDF252; color: #181C17; border-radius: 14px;
+        font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.04em;
+        box-shadow: 0 0 40px rgba(205,242,82,0.25);
       }
-      #cth-splash .title { font-family: "Press Start 2P", monospace; font-size: 13px; }
-      #cth-splash .hint { font-size: 15px; color: #837259; }
+      #cth-splash .title { font-family: "Plus Jakarta Sans", sans-serif; font-weight: 800; font-size: 26px; letter-spacing: -0.04em; text-transform: lowercase; }
+      #cth-splash .title i { font-style: normal; color: #E1642D; }
+      #cth-splash .hint { font-size: 15px; color: #9AA38F; }
     </style>
   </head>
   <body>
     <div id="root">
       <div id="cth-splash">
-        <div class="mk">DL</div>
-        <div class="title">DevLabs™</div>
+        <div class="mk">dl</div>
+        <div class="title">devlabs<i>*</i></div>
         <div class="hint">booting the hive…</div>
       </div>
     </div>

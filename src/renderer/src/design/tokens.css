@@ -1,23 +1,26 @@
 /* Design tokens — mirrors tokens.ts. Update both together.
-   DevLabs palette (Automatika brand): warm-dark ground #0B0A06, surfaces
-   #1A1712/#221E17, border #2A251C, cream text #E4D5C3, muted #837259, and ONE
-   signature accent — lime #DBF914 (the `lemon` slot; press #C5E012). Gold
-   #D4AF37 sits in the `peach` slot. Other hues are status semantics only. */
+   DevLabs palette (jepoy.dev brand), three colors:
+     main   #CDF252  lime — fills, pills, highlighted words (the `lemon` slot)
+     key    #E1642D  orange — the ONE key word and asterisks (`--cth-key`)
+     dark   #181C17  dark scenes and text (dark-theme ground, light-theme ink)
+   Surfaces and the text ramp are tints of `dark`. Other hues are status
+   semantics or per-agent colors only. Headlines: Plus Jakarta Sans ExtraBold,
+   tight tracking, lowercase (see fonts.css and global.css). */
 :root {
   /* Base */
-  --cth-cream-50:  #FBF8F1;
-  --cth-cream-100: #F6F0E5;
-  --cth-cream-200: #ECE3D3;
-  --cth-cream-300: #E4D5C3;
-  --cth-paper-100: #FFFDF8;
-  --cth-paper-200: #F1EADC;
+  --cth-cream-50:  #F7F9F2;
+  --cth-cream-100: #F0F3E8;
+  --cth-cream-200: #E5EADB;
+  --cth-cream-300: #D8DFCB;
+  --cth-paper-100: #FFFFFB;
+  --cth-paper-200: #EDF1E3;
 
   /* Ink */
-  --cth-ink-900: #0B0A06;
-  --cth-ink-700: #3A3329;
-  --cth-ink-500: #6B5D48;
-  --cth-ink-300: #958670;
-  --cth-ink-100: #DDD3C2;
+  --cth-ink-900: #181C17;
+  --cth-ink-700: #363D32;
+  --cth-ink-500: #596254;
+  --cth-ink-300: #737C6A;
+  --cth-ink-100: #D9DFCF;
 
   /* Accents — v0.3.4 recalibration: same hues, professional saturation.
      The originals (#FFD93D, #FF6B6B, …) were full-saturation arcade tones that
@@ -26,18 +29,22 @@
   --cth-coral: #CF5F52;       --cth-coral-light: #F5D9D2;
   --cth-mint:  #5E9A4E;       --cth-mint-light:  #DCEBD2;
   --cth-sky:   #4A8A9A;       --cth-sky-light:   #D3E6EA;
-  --cth-lemon: #C5E012;       --cth-lemon-light: #F1FAC4;
+  --cth-lemon: #CDF252;       --cth-lemon-light: #F0FBCF;
   --cth-lilac: #8A79C2;       --cth-lilac-light: #E3DDF2;
   --cth-peach: #D4AF37;       --cth-peach-light: #F4E9C4;
+
+  /* Brand key accent: the ONE key word, asterisks. Same in both themes; it is
+     never a fill behind body text (dark on it is 4.98:1, white only 3.46:1). */
+  --cth-key: #E1642D;
 
   /* Status — same recalibration; hue meanings unchanged */
   --cth-status-idle:     #A3977F;
   --cth-status-thinking: #4A8A9A;
-  --cth-status-working:  #A8BF0E;
+  --cth-status-working:  #9DBB2E;
   --cth-status-waiting:  #6D87D6;
   --cth-status-blocked:  #CF5F52;
   --cth-status-success:  #5E9A4E;
-  --cth-status-ghost:    #DDD3C2;
+  --cth-status-ghost:    #D9DFCF;
   --cth-status-compacting: #8F7CC7; /* #5C — mid-/compact, "boxing up context" */
   --cth-status-looping:    #D6903F; /* #5C — circuit-breaker armed (runaway) */
   --cth-status-typing:     #D4AF37; /* unsent text on the prompt — queue is held */
@@ -53,12 +60,12 @@
   --cth-space-7: 48px;
   --cth-space-8: 64px;
 
-  /* Type — v0.3.4: Press Start 2P stays as the BRAND face for small caps
-     labels; everything the user actually reads is Inter (UI) and JetBrains
-     Mono (code/terminal). Pixelify/VT323 were the main readability drag. */
-  /* Press Start 2P is latin-only by design. CJK and Arabic text in a display
-     slot falls through to a system face rather than to generic monospace. */
-  --cth-font-display: "Press Start 2P", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", monospace;
+  /* Type — Plus Jakarta Sans ExtraBold is the BRAND face for headlines and
+     labels (lowercase, tight tracking: global.css); everything the user reads
+     at length is Inter (UI) and JetBrains Mono (code/terminal). */
+  /* The bundled Jakarta file is latin-only. CJK and Arabic text in a display
+     slot falls through to a system face rather than to generic sans. */
+  --cth-font-display: "Plus Jakarta Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", sans-serif;
   --cth-font-ui:      "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", sans-serif;
   --cth-font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, "PingFang SC", "Microsoft YaHei", "Noto Sans Mono CJK SC", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", monospace;
 
@@ -83,7 +90,7 @@
   --cth-lh-mono:       20px;
 
   /* Hard drop shadow — no blur, softer than before */
-  --cth-shadow-hard: 3px 3px 0 rgba(11, 10, 6, 0.14);
+  --cth-shadow-hard: 3px 3px 0 rgba(24, 28, 23, 0.14);
 
   /* Panel borders — v0.3.4: single hairlines. The old three-layer package
      boxed every surface in thick chrome; structure now comes from surface
@@ -93,7 +100,7 @@
      accents are LIGHT surfaces in BOTH themes, so this is dark in both — using
      ink-900 here inverts with the theme and paints near-white on a pale accent,
      which is the one place the theme switch actively hurts legibility. */
-  --cth-on-accent: #0B0A06;
+  --cth-on-accent: #181C17;
 
   --cth-panel-border-inset:    inset 0 0 0 1px var(--cth-ink-100);
   --cth-panel-border-terminal: inset 0 0 0 1px var(--cth-ink-300);
@@ -129,24 +136,24 @@
 :root[data-cth-theme='dark'] {
   /* Base surfaces — a graded elevation ramp, darkest where light mode was
      lightest. Neutral with a whisper of the brand's violet warmth. */
-  --cth-cream-50:  #0B0A06;   /* app ground — dark, deliberately NOT black */
-  --cth-cream-100: #13110C;
-  --cth-cream-200: #1A1712;
-  --cth-cream-300: #2A251C;
-  --cth-paper-100: #1A1712;   /* cards, inputs, terminals */
-  --cth-paper-200: #221E17;
+  --cth-cream-50:  #181C17;   /* app ground — brand dark, deliberately NOT black */
+  --cth-cream-100: #1D221C;
+  --cth-cream-200: #232922;
+  --cth-cream-300: #2F362D;
+  --cth-paper-100: #232922;   /* cards, inputs, terminals */
+  --cth-paper-200: #2A3128;
 
   /* Ink → off-white text ramp (never #FFF — glare) */
-  --cth-ink-900: #E4D5C3;   /* 10.9-13.0:1 — primary text, warm off-white */
-  --cth-ink-700: #C2B39E;   /*  7.0-8.3:1  — secondary text */
-  --cth-ink-500: #9E8E74;   /*  4.9-5.8:1  — tertiary / hints */
-  --cth-ink-300: #837259;   /*  3.4-4.0:1  — BORDERS. must stay >= 3.0 */
-  --cth-ink-100: #2A251C;   /*  1.4-1.7:1  — dividers, meant to recede */
+  --cth-ink-900: #E6ECDD;   /* 10.3-14.3:1 — primary text, soft off-white */
+  --cth-ink-700: #C1C9B6;   /*  7.3-10.1:1 — secondary text */
+  --cth-ink-500: #9AA38F;   /*  4.8-6.6:1  — tertiary / hints */
+  --cth-ink-300: #828C78;   /*  3.5-4.9:1  — BORDERS. must stay >= 3.0 */
+  --cth-ink-100: #2F362D;   /*  1.0-1.4:1  — dividers, meant to recede */
 
   /* Accents — one step lighter/softer than the light set so they read on dark
      without fluorescing */
   --cth-coral: #E0826F;       --cth-mint:  #8CC56F;
-  --cth-sky:   #6FAFBE;       --cth-lemon: #DBF914;
+  --cth-sky:   #6FAFBE;       --cth-lemon: #CDF252;
   --cth-lilac: #A596DB;       --cth-peach: #D4AF37;
 
   /* Accent "-light" fills double as chip/selection backgrounds — deep muted
@@ -154,14 +161,14 @@
   --cth-coral-light: #3A221C;
   --cth-mint-light:  #1E2E17;
   --cth-sky-light:   #18292D;
-  --cth-lemon-light: #2A3008;
+  --cth-lemon-light: #2D3517;
   --cth-lilac-light: #26213A;
   --cth-peach-light: #322A10;
 
   /* Status — dark-tuned counterparts (same hue language) */
   --cth-status-idle:     #7A6E5E;
   --cth-status-thinking: #6FAFBE;
-  --cth-status-working:  #DBF914;
+  --cth-status-working:  #CDF252;
   --cth-status-waiting:  #8095DC;
   --cth-status-blocked:  #E0826F;
   --cth-status-success:  #8CC56F;

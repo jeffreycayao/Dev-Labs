@@ -1,14 +1,18 @@
-// jepoy.dev motion layer. Progressive enhancement only: every page reads
-// and works with this script blocked, and prefers-reduced-motion turns all of
-// it off. Build: `npm run build` in tools/site-bundle → site/assets/js/.
+// jepoy.dev motion layer: Lenis smooth scroll, Motion (Framer Motion's vanilla
+// API) for reveals, springs and scroll-linked effects, and three.js scenes that
+// load lazily. Progressive enhancement only: every page reads and works with
+// this script blocked, and prefers-reduced-motion turns all of it off.
+// Build: `npm run build` in tools/site-bundle → site/assets/js/.
 import Lenis from 'lenis';
+import { animate, inView, scroll } from 'motion';
 
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-root.classList.add('js');
+const EASE = [0.2, 0.7, 0.2, 1];
+if (!reduced) root.classList.add('js');
 
 // ─── Smooth scroll ────────────────────────────────────────────────────────
-const NAV_OFFSET = -104; // sticky nav height + breathing room
+const NAV_OFFSET = -96; // sticky nav height + breathing room
 let lenis = null;
 if (!reduced) {
   lenis = new Lenis({ duration: 1.15, easing: (t) => 1 - Math.pow(1 - t, 4), smoothWheel: true });
@@ -33,90 +37,97 @@ if (location.hash && lenis) {
   if (t) addEventListener('load', () => lenis.scrollTo(t, { offset: NAV_OFFSET, immediate: true }));
 }
 
-// ─── Nav state ────────────────────────────────────────────────────────────
+// ─── Nav state + scroll progress ──────────────────────────────────────────
 const nav = document.querySelector('.nav');
-const bar = document.createElement('div');
-bar.className = 'scroll-progress';
-bar.setAttribute('aria-hidden', 'true');
-document.body.append(bar);
-const onScroll = () => {
-  if (nav) nav.classList.toggle('scrolled', scrollY > 24);
-  const max = root.scrollHeight - innerHeight;
-  bar.style.setProperty('--p', max > 0 ? String(Math.min(1, scrollY / max)) : '0');
-};
+const onScroll = () => { if (nav) nav.classList.toggle('scrolled', scrollY > 24); };
 addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
-// ─── Scroll reveals ───────────────────────────────────────────────────────
-const REVEAL = [
-  '.hero .eyebrow', '.hero h1', '.hero .lead', '.hero .btns', '.hero .trust', '.building',
-  '.head', '.stack > *', '.grid > *', '.level', '.elevator', '.price', '.faq details',
-  '.band', '.dl > *', '#download .fine', '.video', '.stats', '.panel', '.doc > *', 'footer .wrap > div'
-].join(',');
-const items = [...document.querySelectorAll(REVEAL)];
-items.forEach((el) => {
-  el.classList.add('reveal');
-  const sibs = el.parentElement ? [...el.parentElement.children].filter((c) => items.includes(c)) : [];
-  el.style.setProperty('--d', `${Math.min(sibs.indexOf(el), 6) * 90}ms`);
-});
-if (reduced || !('IntersectionObserver' in window)) {
-  items.forEach((el) => el.classList.add('in'));
-} else {
-  const io = new IntersectionObserver((entries) => {
-    for (const en of entries) {
-      if (!en.isIntersecting) continue;
-      const el = en.target;
-      el.classList.add('in');
-      io.unobserve(el);
-      // Drop the reveal classes once shown so hover transitions have no delay.
-      const delay = parseFloat(el.style.getPropertyValue('--d')) || 0;
-      setTimeout(() => el.classList.remove('reveal', 'in'), 1100 + delay);
-    }
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-  items.forEach((el) => io.observe(el));
+if (!reduced) {
+  const bar = document.createElement('div');
+  bar.className = 'scroll-progress';
+  bar.setAttribute('aria-hidden', 'true');
+  document.body.append(bar);
+  scroll(animate(bar, { scaleX: [0, 1] }, { ease: 'linear' }));
 }
 
-// ─── Count-up numbers ("200 floors", stats) ───────────────────────────────
-const counters = document.querySelectorAll('.unit .big, .stat b');
-const countIO = !reduced && 'IntersectionObserver' in window && new IntersectionObserver((entries) => {
-  for (const en of entries) {
-    if (!en.isIntersecting) continue;
-    countIO.unobserve(en.target);
-    const el = en.target;
-    const m = el.textContent.match(/^(\D*)(\d[\d,]*)(.*)$/s);
-    if (!m) continue;
-    const end = Number(m[2].replace(/,/g, ''));
-    if (!end || end < 2) continue;
-    const start = performance.now();
-    const dur = Math.min(1600, 500 + end * 6);
-    const tick = (now) => {
-      const p = Math.min(1, (now - start) / dur);
-      const v = Math.round(end * (1 - Math.pow(1 - p, 3)));
-      el.textContent = `${m[1]}${v.toLocaleString('en-US')}${m[3]}`;
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+if (!reduced) {
+  // ─── Reveals: rise, unblur and stagger with siblings ────────────────────
+  const REVEAL = [
+    '.hero-inner > *', '.head', '.steps > *', '.holo', '.bento > *', '.who > *',
+    '.dl > *', '.dl-copy > *', '.faq details', '.doc > *', 'footer .wrap > div'
+  ].join(',');
+  const items = [...document.querySelectorAll(REVEAL)];
+  items.forEach((el) => el.classList.add('reveal'));
+  inView(items, (el) => {
+    const sibs = el.parentElement ? [...el.parentElement.children].filter((c) => items.includes(c)) : [];
+    const i = Math.min(Math.max(sibs.indexOf(el), 0), 8);
+    animate(el, { opacity: [0, 1], y: [26, 0], filter: ['blur(10px)', 'blur(0px)'] },
+      { duration: 0.85, delay: i * 0.07, ease: EASE })
+      .then(() => { el.style.filter = ''; el.classList.remove('reveal'); });
+  }, { margin: '0px 0px -6% 0px', amount: 0.05 });
+
+  // ─── Hero copy drifts up and fades as the hero scrolls away ─────────────
+  const hero = document.querySelector('.hero');
+  const heroInner = document.querySelector('.hero-wrap');
+  if (hero && heroInner) {
+    scroll(animate(heroInner, { y: [0, -90], opacity: [1, 0.2] }, { ease: 'linear' }),
+      { target: hero, offset: ['start start', 'end start'] });
   }
-}, { threshold: 0.6 });
-if (countIO) counters.forEach((c) => countIO.observe(c));
 
-// ─── Card spotlight follows the pointer ───────────────────────────────────
-if (!reduced && matchMedia('(hover: hover)').matches) {
-  document.addEventListener('pointermove', (e) => {
-    const card = e.target.closest && e.target.closest('.card, .price, .level, .faq details');
-    if (!card) return;
-    const r = card.getBoundingClientRect();
-    card.style.setProperty('--mx', `${e.clientX - r.left}px`);
-    card.style.setProperty('--my', `${e.clientY - r.top}px`);
-  }, { passive: true });
+  // ─── Count-up numbers ───────────────────────────────────────────────────
+  inView('[data-count]', (el) => {
+    const end = Number(el.dataset.count);
+    animate(0, end, { duration: Math.min(1.8, 0.6 + end / 150), ease: EASE, onUpdate: (v) => { el.textContent = String(Math.round(v)); } });
+  }, { amount: 0.6 });
+
+  // ─── 3D tilt + spotlight on tiles (springs) ─────────────────────────────
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const SPRING = { type: 'spring', stiffness: 260, damping: 22 };
+    for (const tile of document.querySelectorAll('.tilt')) {
+      tile.addEventListener('pointermove', (e) => {
+        const r = tile.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        tile.style.setProperty('--mx', `${x * 100}%`);
+        tile.style.setProperty('--my', `${y * 100}%`);
+        animate(tile, { rotateX: (0.5 - y) * 9, rotateY: (x - 0.5) * 11, z: 18 }, SPRING);
+      });
+      tile.addEventListener('pointerleave', () => animate(tile, { rotateX: 0, rotateY: 0, z: 0 }, SPRING));
+    }
+  }
 }
 
-// ─── Hero 3D city (lazy; desktop + WebGL only) ────────────────────────────
-const hero = document.querySelector('.hero');
+// ─── Floors counter, driven by scroll (works with or without WebGL) ───────
+const holo = document.querySelector('.holo');
+const readout = document.querySelector('[data-floors]');
+let building = null;
+if (holo) {
+  const setFloors = (p) => {
+    if (readout) readout.textContent = String(Math.round(1 + p * 199)).padStart(3, '0');
+    if (building) building.setProgress(p);
+  };
+  if (reduced) setFloors(1);
+  else scroll(setFloors, { target: holo, offset: ['start end', 'center center'] });
+}
+
+// ─── three.js scenes (lazy; desktop-sized screens with WebGL only) ────────
 function webgl() {
   try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; }
 }
-if (hero && !reduced && innerWidth >= 720 && webgl()) {
+if (!reduced && innerWidth >= 720 && webgl()) {
   const idle = window.requestIdleCallback || ((f) => setTimeout(f, 200));
-  idle(() => import('./hero3d.js').then((m) => m.mountHero(hero, () => lenis ? lenis.scroll : scrollY)).catch(() => {}));
+  const hero = document.querySelector('.hero');
+  if (hero) idle(() => import('./hero3d.js').then((m) => m.mountHero(hero, () => (lenis ? lenis.scroll : scrollY))).catch(() => {}));
+  // The other two scenes load when their section first comes near the screen.
+  if (holo) {
+    inView(holo, () => {
+      import('./building3d.js').then((m) => { building = m.mountBuilding(holo); holo.classList.add('has-3d'); }).catch(() => {});
+    }, { margin: '300px 0px' });
+  }
+  const core = document.querySelector('.core');
+  if (core) {
+    inView(core, () => {
+      import('./core3d.js').then((m) => { m.mountCore(core); core.classList.add('has-3d'); }).catch(() => {});
+    }, { margin: '300px 0px' });
+  }
 }

@@ -4,6 +4,18 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **New brand colors and headline type, in the app and on the website.**
+  - **Colors:** main lime `#CDF252` (fills, pills, highlighted words), key orange `#E1642D` (the one key word, asterisks) and dark `#181C17` (dark scenes and text). The dark theme now sits on `#181C17`, with surfaces and text tinted from it. Every text and border value was checked against the existing contrast floors.
+  - **Type:** headlines and labels use Plus Jakarta Sans ExtraBold in lowercase with tight letter spacing (bundled, 12 KB).
+  - **Updated surfaces:** the splash screen, Help page, terminal colors and the office wall sign follow the palette.
+
+- **Website redesign (jepoy.dev).** A shorter, futuristic page:
+  - **Layout:** hero, how it works, a 12-tile feature grid, download and six FAQs. The video placeholder, long floor-by-floor tour and duplicate calls to action are gone.
+  - **3D:** three three.js scenes (an upgraded hero city with a holographic spire, a tower that builds floor by floor as you scroll, and a wireframe core by the download buttons) plus a CSS 3D grid horizon.
+  - **Motion:** Motion (Framer Motion's vanilla-JS API) drives the reveals, spring tilt, count-ups and scroll-linked effects.
+  - **Phones and reduced motion:** phones get lighter CSS versions, and "reduce motion" turns all animation off.
+  - **Fonts:** five unused files removed.
+
 - **Renamed to DevLabs™, by jepoy.dev.** The app, installers, menus, Help, website and docs now say DevLabs. Installers are named `DevLabs-<version>-…`.
 - **Install fresh once.** The app ID changed to `dev.jepoy.devlabs`, so the updater cannot move an existing Jepoy Floor AI install across. Install DevLabs from https://jepoy.dev/#download; your agents, floors and settings carry over automatically from the old Jepoy Floor AI data folder. You can then uninstall Jepoy Floor AI.
 - Shared hire links (`atmtlabs://`), hire and floor files, and skills from the existing catalog keep working unchanged.

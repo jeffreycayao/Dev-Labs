@@ -1,8 +1,8 @@
 Bundled fonts and their licenses
 ================================
 
-DevLabs ships three font files inside the application bundle, in
-src/renderer/src/assets/fonts/. They are NOT ours. All three are licensed under
+DevLabs ships four font files inside the application bundle, in
+src/renderer/src/assets/fonts/. They are NOT ours. All four are licensed under
 the SIL Open Font License, Version 1.1, whose full text follows the attributions
 below. The OFL requires this notice to travel with every copy of the software.
 
@@ -10,6 +10,11 @@ below. The OFL requires this notice to travel with every copy of the software.
     Press Start 2P (latin subset, weight 400)
     Copyright (c) 2012, Cody "CodeMan38" Boisclair (cody@zone38.net)
     https://fonts.google.com/specimen/Press+Start+2P
+
+  plus-jakarta-sans-latin-800-normal.woff2
+    Plus Jakarta Sans (latin subset, weight 800), via @fontsource/plus-jakarta-sans 5.2.8
+    Copyright 2020 The Plus Jakarta Sans Project Authors
+    https://github.com/tokotype/PlusJakartaSans
 
   inter-latin-var.woff2
     Inter (latin subset, variable, weights 400 to 700)

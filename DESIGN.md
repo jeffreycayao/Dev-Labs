@@ -36,6 +36,16 @@
 
 ## 3. Color system
 
+> **Current brand palette (DevLabs™ by jepoy.dev). This overrides the tables below; `src/renderer/src/design/tokens.css` is the source of truth.**
+>
+> | Role | Hex | Use |
+> |---|---|---|
+> | **Main** | `#CDF252` | Fills, pills, highlighted words (`--cth-lemon`) |
+> | **Key accent** | `#E1642D` | The one key word, asterisks (`--cth-key`) |
+> | **Dark** | `#181C17` | Dark scenes and text (dark-theme ground, light-theme ink) |
+>
+> Surfaces and the text ramp are tints of Dark. Other hues are status semantics or per-agent colors.
+
 All colors specified in `#RRGGBB`. Token names use a `--cth-<category>-<weight>` pattern (CSS variables) and a parallel TypeScript `tokens.colors.<category>.<weight>` (objects).
 
 ### 3.1 Base (panels, floors, surfaces)
@@ -111,6 +121,8 @@ No gradients except: vertical 2-stop on title bars (`cream-100` → `cream-200`)
 ---
 
 ## 4. Typography
+
+> **Current type (overrides the tables below).** Headlines and labels (`--cth-font-display`) use **Plus Jakarta Sans ExtraBold**: lowercase, tight tracking (`-0.01em` in app labels, `-0.045em` to `-0.055em` for website headlines). Body is Inter; code and terminals are JetBrains Mono. All faces are bundled (`design/fonts.css`). Press Start 2P now appears only in the pixel-art office scene.
 
 Three fonts, all loaded from Google Fonts. **Every text element must declare a font from this set.** No system fonts.
 

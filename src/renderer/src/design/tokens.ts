@@ -3,21 +3,21 @@
 
 export const colors = {
   cream: {
-    50: 0xfbf8f1,
-    100: 0xf6f0e5,
-    200: 0xece3d3,
-    300: 0xe4d5c3
+    50: 0xf7f9f2,
+    100: 0xf0f3e8,
+    200: 0xe5eadb,
+    300: 0xd8dfcb
   },
   paper: {
-    100: 0xfffdf8,
-    200: 0xf1eadc
+    100: 0xfffffb,
+    200: 0xedf1e3
   },
   ink: {
-    900: 0x0b0a06,
-    700: 0x3a3329,
-    500: 0x6b5d48,
-    300: 0x958670,
-    100: 0xddd3c2
+    900: 0x181c17,
+    700: 0x363d32,
+    500: 0x596254,
+    300: 0x737c6a,
+    100: 0xd9dfcf
   },
   // v0.3.4 recalibration: same hues, professional saturation (mirrors tokens.css)
   accent: {
@@ -27,20 +27,22 @@ export const colors = {
     mintLight: 0xdcebd2,
     sky: 0x4a8a9a,
     skyLight: 0xd3e6ea,
-    lemon: 0xc5e012,
-    lemonLight: 0xf1fac4,
+    lemon: 0xcdf252,
+    lemonLight: 0xf0fbcf,
     lilac: 0x8a79c2,
     lilacLight: 0xe3ddf2,
     peach: 0xd4af37,
     peachLight: 0xf4e9c4
   },
+  // Brand key accent (--cth-key): the ONE key word, asterisks.
+  key: 0xe1642d,
   status: {
     idle: 0xa3977f,
     thinking: 0x4a8a9a,
-    working: 0xc5e012,
+    working: 0x9dbb2e,
     blocked: 0xcf5f52,
     success: 0x5e9a4e,
-    ghost: 0xddd3c2
+    ghost: 0xd9dfcf
   },
   world: {
     grassLight: 0xd4eab0,
@@ -57,7 +59,7 @@ export const space = {
 } as const;
 
 export const type = {
-  display: '"Press Start 2P", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", monospace',
+  display: '"Plus Jakarta Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", sans-serif',
   ui: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", sans-serif',
   mono: '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, "PingFang SC", "Microsoft YaHei", "Noto Sans Mono CJK SC", "Noto Sans CJK SC", "Geeza Pro", "Noto Naskh Arabic", "Segoe UI Historic", monospace'
 } as const;

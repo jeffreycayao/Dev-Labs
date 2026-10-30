@@ -17,11 +17,12 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 const FONT_DIR = 'src/renderer/src/assets/fonts';
 const FILES = [
   'press-start-2p-latin-400.woff2',
+  'plus-jakarta-sans-latin-800-normal.woff2',
   'inter-latin-var.woff2',
   'jetbrains-mono-latin-var.woff2'
 ];
 
-test('the three faces are real woff2 files inside the repo', () => {
+test('the bundled faces are real woff2 files inside the repo', () => {
   for (const f of FILES) {
     const buf = fs.readFileSync(path.join(root, FONT_DIR, f));
     // 'wOF2' — a truncated or HTML-error-page download would not carry it.
@@ -40,14 +41,14 @@ test('bundling stays small: no CJK face was quietly added', () => {
 test('the OFL license and attribution ship with the fonts', () => {
   const lic = read(`${FONT_DIR}/LICENSE.txt`);
   assert.match(lic, /SIL OPEN FONT LICENSE Version 1\.1/);
-  for (const name of ['Press Start 2P', 'Inter', 'JetBrains Mono']) {
+  for (const name of ['Press Start 2P', 'Plus Jakarta Sans', 'Inter', 'JetBrains Mono']) {
     assert.ok(lic.includes(name), `${name} has no attribution`);
   }
 });
 
 test('@font-face points at the bundled files, not a URL', () => {
   const css = read('src/renderer/src/design/fonts.css');
-  assert.equal((css.match(/@font-face/g) || []).length, 3);
+  assert.equal((css.match(/@font-face/g) || []).length, 4);
   for (const f of FILES) assert.ok(css.includes(f), `fonts.css does not reference ${f}`);
   assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /https?:/);
 });

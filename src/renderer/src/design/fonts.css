@@ -24,6 +24,21 @@
   src: url('../assets/fonts/press-start-2p-latin-400.woff2') format('woff2');
 }
 
+/* Brand headline face: Plus Jakarta Sans ExtraBold (the only weight shipped).
+ * It replaced Press Start 2P in --cth-font-display, whose call sites were sized
+ * for a pixel font (8-13px, mostly 8). size-adjust scales the glyphs so those
+ * sizes keep roughly the old cap height without touching every component. The
+ * declared weight range stops the browser faking bold or light from one file.
+ * Press Start 2P stays for the pixel-art office scene (Pixi), which names it. */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  size-adjust: 130%;
+  src: url('../assets/fonts/plus-jakarta-sans-latin-800-normal.woff2') format('woff2');
+}
+
 @font-face {
   font-family: 'Inter';
   font-style: normal;

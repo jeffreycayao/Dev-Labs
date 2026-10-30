@@ -84,12 +84,12 @@ const lightTheme = {
 // apart from the panel holding it. Muted-professional ANSI: recognizable hues, no
 // fluorescing on the dark ground; brights are one legible step up, not pastels.
 const darkTheme = {
-  background: '#1A1A1F',        // = --cth-paper-100
-  foreground: '#DEDBD6',        // = --cth-ink-900
+  background: '#232922',        // = --cth-paper-100
+  foreground: '#E6ECDD',        // = --cth-ink-900
   cursor: '#E08C82',
-  cursorAccent: '#1A1A1F',
-  selectionBackground: '#37363F',
-  selectionForeground: '#DEDBD6',
+  cursorAccent: '#232922',
+  selectionBackground: '#3A4337',
+  selectionForeground: '#E6ECDD',
   black:        '#222229',
   red:          '#E08C82',
   green:        '#74C096',

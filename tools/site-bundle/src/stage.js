@@ -3,8 +3,9 @@
 // the host is on screen and the tab is visible.
 import { Color, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 
-export const LIME = new Color('#d8ff00');
-export const BG = new Color('#0a0e0b');
+export const LIME = new Color('#CDF252');
+export const KEY = new Color('#E1642D');
+export const BG = new Color('#181C17');
 
 export function rand(seed) { // deterministic, so scenes look the same every visit
   let s = seed >>> 0;

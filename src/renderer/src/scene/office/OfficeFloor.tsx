@@ -1137,7 +1137,7 @@ export function OfficeFloor() {
         try { await document.fonts.load('8px "Press Start 2P"'); } catch { /* falls back */ }
         const label = new Text({
           text: 'DevLabs',
-          style: { fontFamily: '"Press Start 2P", monospace', fontSize: 8, fill: 0xdbf914 },
+          style: { fontFamily: '"Press Start 2P", monospace', fontSize: 8, fill: 0xcdf252 },
           resolution: 4,
         });
         const padX = 6;
@@ -1146,10 +1146,10 @@ export function OfficeFloor() {
         sign.position.set(theme.anchors.sign.x * ts0, theme.anchors.sign.y * ts0 + 5);
         sign.zIndex = 3 * ts0;
         const plate = new Graphics();
-        plate.rect(-2, -2, w + 4, 20).fill({ color: 0xdbf914, alpha: 0.12 }); // soft lime glow
-        plate.rect(0, 0, w, 16).fill(0x0b0a06).stroke({ color: 0xdbf914, width: 1 });
-        plate.poly([padX, 12, padX + 4, 3, padX + 8, 12]).fill(0xdbf914); // "A" mark
-        plate.rect(padX + 3, 9, 2, 3).fill(0x0b0a06);
+        plate.rect(-2, -2, w + 4, 20).fill({ color: 0xcdf252, alpha: 0.12 }); // soft lime glow
+        plate.rect(0, 0, w, 16).fill(0x181c17).stroke({ color: 0xcdf252, width: 1 });
+        plate.poly([padX, 12, padX + 4, 3, padX + 8, 12]).fill(0xcdf252); // "A" mark
+        plate.rect(padX + 3, 9, 2, 3).fill(0x181c17);
         label.position.set(padX + 12, 4);
         sign.addChild(plate, label);
         charLayer.addChild(sign);

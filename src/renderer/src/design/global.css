@@ -24,7 +24,7 @@ body {
   background-image:
     repeating-linear-gradient(
       45deg,
-      rgba(232, 217, 160, 0.20) 0 1px,
+      rgba(205, 242, 82, 0.10) 0 1px,
       transparent 1px 6px
     );
 }
@@ -369,3 +369,14 @@ canvas, img, svg { image-rendering: pixelated; image-rendering: crisp-edges; }
 .cth-md-card hr { margin: 0.8em 0; }
 .cth-md-card table { margin: 0.5em 0; }
 .cth-md-card th, .cth-md-card td { padding: 3px 7px; font-size: 0.9em; }
+
+/* Brand headlines: Plus Jakarta Sans ExtraBold, lowercase, tight tracking.
+   The display face is applied inline (`fontFamily: 'var(--cth-font-display)'`)
+   at ~130 call sites, many of which also set uppercase and positive tracking
+   for the old pixel font. Matching the rendered style attribute keeps the rule
+   in ONE place; !important is what lets it win over those inline values. */
+[style*="--cth-font-display"] {
+  font-weight: 800;
+  text-transform: lowercase !important;
+  letter-spacing: -0.01em !important;
+}

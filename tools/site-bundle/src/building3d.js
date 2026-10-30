@@ -24,7 +24,7 @@ export function mountBuilding(host) {
   const floors = [];
   for (let i = 0; i < FLOORS; i++) {
     const g = new Group();
-    const glass = new Mesh(slabGeo, new MeshBasicMaterial({ color: '#1b2410', transparent: true, opacity: 0, depthWrite: false }));
+    const glass = new Mesh(slabGeo, new MeshBasicMaterial({ color: '#2a3317', transparent: true, opacity: 0, depthWrite: false }));
     const edge = new LineSegments(edgeGeo, new LineBasicMaterial({ color: LIME, transparent: true, opacity: 0 }));
     // Desks: a 6×3 grid of points on the slab, some lit.
     const pos = [], col = [];

@@ -1491,7 +1491,7 @@ function openHelpWindow(section?: string): void {
   helpWindow = new BrowserWindow({
     width: 1100, height: 820, minWidth: 420, minHeight: 480,
     title: 'How to use DevLabs',
-    backgroundColor: '#0B0A06',
+    backgroundColor: '#181C17',
     autoHideMenuBar: true,
     webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false }
   });

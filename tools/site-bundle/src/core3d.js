@@ -4,7 +4,7 @@ import {
   AdditiveBlending, BufferAttribute, BufferGeometry, EdgesGeometry, Group, IcosahedronGeometry,
   LineBasicMaterial, LineLoop, LineSegments, Points, PointsMaterial, Vector3
 } from 'three';
-import { LIME, createStage } from './stage.js';
+import { KEY, LIME, createStage } from './stage.js';
 
 export function mountCore(host) {
   const { scene, camera, pointer, start } = createStage(host, { fov: 40, className: 'core-3d' });
@@ -14,7 +14,7 @@ export function mountCore(host) {
   const shell = new LineSegments(new EdgesGeometry(new IcosahedronGeometry(2.4, 1)),
     new LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.45 }));
   const inner = new LineSegments(new EdgesGeometry(new IcosahedronGeometry(1.2, 0)),
-    new LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.8 }));
+    new LineBasicMaterial({ color: KEY, transparent: true, opacity: 0.9 }));
   core.add(shell, inner);
 
   // Fibonacci sphere of points between the two shells.

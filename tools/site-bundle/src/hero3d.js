@@ -7,7 +7,7 @@ import {
   Group, InstancedMesh, LineBasicMaterial, LineLoop, LineSegments, Mesh, MeshBasicMaterial, Object3D,
   Points, PointsMaterial, QuadraticBezierCurve3, RingGeometry, Vector3, DoubleSide
 } from 'three';
-import { BG, LIME, createStage, rand } from './stage.js';
+import { BG, KEY, LIME, createStage, rand } from './stage.js';
 
 const SPIRE = new Vector3(0, 0, -6);
 
@@ -22,7 +22,7 @@ export function mountHero(hero, getScroll) {
   const TOWERS = 64;
   const bodyGeo = new BoxGeometry(1, 1, 1);
   bodyGeo.translate(0, 0.5, 0);
-  const bodies = new InstancedMesh(bodyGeo, new MeshBasicMaterial({ color: '#10140d' }), TOWERS);
+  const bodies = new InstancedMesh(bodyGeo, new MeshBasicMaterial({ color: '#1d221c' }), TOWERS);
   const edgeMat = new LineBasicMaterial({ color: LIME, transparent: true, opacity: 0.16 });
   const edgeGeo = new EdgesGeometry(bodyGeo);
   const dummy = new Object3D();
@@ -118,7 +118,7 @@ export function mountHero(hero, getScroll) {
   const pktGeo = new BufferGeometry();
   pktGeo.setAttribute('position', new BufferAttribute(pkt, 3));
   city.add(new Points(pktGeo, new PointsMaterial({
-    color: '#f4ffb3', size: 0.34, transparent: true, opacity: 0.95, depthWrite: false, blending: AdditiveBlending
+    color: KEY, size: 0.34, transparent: true, opacity: 0.95, depthWrite: false, blending: AdditiveBlending
   })));
 
   // Rising sparks.

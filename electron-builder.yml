@@ -158,6 +158,11 @@ mac:
     - target: zip
       arch: [universal]
   artifactName: DevLabs-${version}-mac-${arch}.${ext}
+  # The universal merge refuses Mach-O files that are identical in the x64 and
+  # arm64 halves unless listed here. The native modules' prebuilds folders hold
+  # both darwin-x64 and darwin-arm64 binaries in each half (nothing is rebuilt
+  # per arch any more, see npmRebuild), and each loads only its own arch.
+  x64ArchFiles: "Contents/Resources/app.asar.unpacked/node_modules/{better-sqlite3,node-pty}/prebuilds/**"
 
 dmg:
   title: DevLabs ${version}

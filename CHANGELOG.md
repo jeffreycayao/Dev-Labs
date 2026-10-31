@@ -4,7 +4,7 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
-## v4.2.0 — 2026-11-01
+## v4.2.1 — 2026-11-01
 
 - **Built on Electron 45** (Chromium 156, Node 24), up from Electron 32, which stopped getting security fixes in March 2025. You get about 19 months of browser-engine security fixes.
 - **New minimum systems: macOS 13 Ventura or newer, and 64-bit Windows 10 or 11.** Electron 45 no longer runs on macOS 11 or 12. If your Mac is on one of those, keep DevLabs 4.1.3.

@@ -4,7 +4,7 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
-## v4.1.0 — 2026-10-31
+## v4.1.1 — 2026-10-31
 
 - **Delete empty office floors.** Open an empty floor in the floor bar and click **− Delete floor N**. After you confirm, the floor and its furniture layout are removed, and the floors above it move down one with their own layouts and agents. A floor that still has agents can't be deleted (the button is grey until you move them), and Floor 1, Ramon's floor, can't be deleted at all. Deleting a floor never deletes an agent or any work.
 - **Website:** the landing page now shows the 3D office, and the online User Guide (devlabs.atmt.dev/guide) matches the new plain-language guide in the app's docs.

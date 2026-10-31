@@ -1,6 +1,6 @@
 {
   "name": "devlabs",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "private": true,
   "description": "DevLabs — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
   "main": "out/main/index.js",

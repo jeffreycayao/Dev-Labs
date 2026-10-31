@@ -1,7 +1,8 @@
-// Office jukebox state for the 3D floor: opens the Spotify panel from the jukebox
+// Office jukebox state for the 3D floor: opens the jukebox panel from the jukebox
 // object and reports whether music is playing (so agents can dance).
 import { createElement, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { JukeboxPanel } from '@/features/office/components/JukeboxPanel';
+import { useRadio } from '@/features/office/hooks/radioPlayer';
 import type { SpotifyPlayback } from '@shared/office/spotify';
 
 const POLL_MS = 15_000;
@@ -34,6 +35,7 @@ export function useJukebox(): {
     return () => { alive = false; window.clearInterval(id); };
   }, [open, onPlayback]);
 
+  const radioPlaying = useRadio().status === 'playing';
   const panel = open ? createElement(JukeboxPanel, { onClose: () => setOpen(false), onPlayback }) : null;
-  return { open, setOpen, panel, isPlaying };
+  return { open, setOpen, panel, isPlaying: isPlaying || radioPlaying };
 }

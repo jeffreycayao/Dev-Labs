@@ -229,7 +229,8 @@
     <ul>
       <li><strong>Working agents walk to their own desk</strong> and sit facing their computer.</li>
       <li><strong>Ramon works in his own BOSS office</strong> whenever he has a task. He only walks around and chats when he's free.</li>
-      <li><strong>Free (idle) agents</strong> get coffee, hang around the kitchen and the café tables, and <strong>chismis</strong>: little speech bubbles with office gossip pop up over their heads. When Ramon walks by, they suddenly get very polite.</li>
+      <li><strong>Free (idle) agents</strong> head to the <strong>Kapihan</strong>, the office cafeteria on the right side of the floor (look for the neon KAPIHAN sign). They grab coffee at the coffee bar, sit at the round tables and <strong>chismis</strong>: little speech bubbles with office gossip pop up over their heads. When Ramon walks by, they suddenly get very polite.</li>
+      <li><strong>The gym and the QA lab</strong> are the two rooms in the far right corner, gym on top and QA lab below, with their doors facing the Kapihan.</li>
       <li><strong>When an agent finishes a job</strong>, it cheers ("tapos na!"-style messages).</li>
       <li><strong>When agents message each other</strong>, the message title pops up over the sender's head.</li>
       <li><strong>Cleaners</strong> sweep the floor after an agent restarts or clears its memory.</li>
@@ -239,8 +240,8 @@
       <thead><tr><th>Say</th><th>It goes to</th></tr></thead>
       <tbody>
         <tr><td>"go to the gym"</td><td>the gym, for a minute</td></tr>
-        <tr><td>"review PRs" or "check github"</td><td>the server room</td></tr>
-        <tr><td>"write tests" or "run tests"</td><td>the QA lab</td></tr>
+        <tr><td>"review PRs" or "check github"</td><td>the server room, for about a minute and a half</td></tr>
+        <tr><td>"write tests" or "run tests"</td><td>the QA lab, for about a minute and a half</td></tr>
         <tr><td>"call Maya and tell her the build is green"</td><td>the phone booth</td></tr>
         <tr><td>"text Joseph saying I'll be late"</td><td>the text booth</td></tr>
         <tr><td>"go to your desk"</td><td>its desk</td></tr>
@@ -253,12 +254,12 @@
       <thead><tr><th>Object</th><th>What opens</th></tr></thead>
       <tbody>
         <tr><td><strong>Kanban board</strong> (button top-left, or the board in the office)</td><td>Your task board: to do, doing, blocked, done.</td></tr>
-        <tr><td><strong>Server rack / server terminal</strong></td><td>GitHub pull requests (code changes waiting for review) for the selected agent's project: read them, approve, request changes, comment. Needs the free GitHub command-line tool, signed in with <code>gh auth login</code>.</td></tr>
+        <tr><td><strong>Server rack / server terminal</strong></td><td>GitHub pull requests (code changes waiting for review) for the selected agent's project: read them, approve, request changes, comment. It opens on <strong>This Repo</strong>; <strong>My Queue</strong> has pull requests waiting for you and ones you opened. On your own pull request you can only comment (a GitHub rule). Needs the free GitHub command-line tool, signed in with <code>gh auth login</code>.</td></tr>
         <tr><td><strong>ATM</strong></td><td>How much your agents have cost, per agent and per day. You choose a PIN the first time you use it.</td></tr>
         <tr><td><strong>Meeting table</strong></td><td>A stand-up meeting: agents walk to the table and each reads out what they're working on, what's blocking them and what they've recently saved.</td></tr>
         <tr><td><strong>An agent's computer</strong></td><td>That agent's screen: the tools it just used, the commands it ran and the last file it touched.</td></tr>
         <tr><td><strong>Phone booth / text booth</strong></td><td>A short call or text-message scene.</td></tr>
-        <tr><td><strong>Jukebox</strong></td><td>Spotify music for the office (see <a href="#15-extras-looks-personality-voice-music">section 15</a>). Everyone dances while music plays.</td></tr>
+        <tr><td><strong>Jukebox</strong></td><td>Philippine radio played inside DevLabs, or a Spotify remote, for the office (see <a href="#15-extras-looks-personality-voice-music">section 15</a>). Free agents dance and wander while music plays; busy ones keep working.</td></tr>
         <tr><td><strong>Ping-pong table</strong></td><td>Two free agents play a match.</td></tr>
       </tbody>
     </table></div>
@@ -398,7 +399,8 @@
       <li><strong>Personality:</strong> <strong>edit</strong> → <strong>personality</strong>. Describe who the agent is, its vibe, its rules and how it talks. This is written into the agent's instruction file in its project folder (<code>CLAUDE.md</code>, <code>AGENTS.md</code> or <code>GEMINI.md</code>), as its own section; the rest of the file is left alone. The agent uses it from its next session.</li>
       <li><strong>Company builder:</strong> <strong>add agent → company builder</strong>. Describe your business, get a planned team, review and hire.</li>
       <li><strong>Spoken replies:</strong> press the <strong>gear</strong> at the top right of the office, switch <strong>Voice replies</strong> on, paste an <strong>ElevenLabs</strong> key (from elevenlabs.io → Profile → API keys), pick a voice and speed, and press <strong>Preview</strong>. The first sentences of each agent reply are then read out loud. Reply text is sent to ElevenLabs to make the audio.</li>
-      <li><strong>Jukebox (Spotify):</strong> click the jukebox in the office. You need <strong>Spotify Premium</strong> and Spotify open on one of your devices (phone, computer or speaker). The first time: create a free app at <strong>developer.spotify.com</strong>, add <code>http://127.0.0.1:43821/callback</code> as its redirect address, paste its <strong>Client ID</strong> into the jukebox, and press <strong>Connect</strong>. Then search songs, play, pause and skip.</li>
+      <li><strong>Jukebox (Radio):</strong> click the jukebox in the office. The <strong>Radio</strong> tab lists live Philippine stations (from radio-browser.info). Type to search by name, city or genre, press <strong>Play</strong>, and set the volume. No account needed. The station keeps playing when you close the panel, and a small player at the bottom of the office lets you skip to the previous or next station or stop. While music plays, agents without a task dance and wander; agents with work stay at their desks.</li>
+      <li><strong>Jukebox (Spotify):</strong> click the jukebox in the office and open the <strong>Spotify</strong> tab. You need <strong>Spotify Premium</strong> and Spotify open on one of your devices (phone, computer or speaker). The first time: create a free app at <strong>developer.spotify.com</strong>, add <code>http://127.0.0.1:43821/callback</code> as its redirect address, paste its <strong>Client ID</strong> into the jukebox, and press <strong>Connect</strong>. Then search songs, play, pause and skip.</li>
     </ul>
 
     <h2 id="16-money-limits-and-staying-in-control">16. Money, limits and staying in control</h2>
@@ -449,6 +451,7 @@
         <tr><td>A connector doesn't work</td><td>Check it's <strong>On</strong> with a key saved, start a <strong>new</strong> agent, and make sure it's a Claude Code agent.</td></tr>
         <tr><td>The server room says to install GitHub CLI</td><td>Install it from cli.github.com, then run <code>gh auth login</code> once.</td></tr>
         <tr><td>The jukebox says Premium or "no active device"</td><td>Spotify needs Premium, and Spotify must be playing or open on a device.</td></tr>
+        <tr><td>A radio station says it isn't streaming</td><td>That station is offline right now. Pick another one; stations come and go.</td></tr>
         <tr><td>The office looks empty or frozen</td><td>Press <strong>Overview</strong> (top left) or double-click the floor. If it's still blank, press <strong>Ctrl+R</strong> to reload the window.</td></tr>
         <tr><td>"Your building is full"</td><td>You have 200 windows open. Close one you don't need.</td></tr>
       </tbody>

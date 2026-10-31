@@ -32,6 +32,7 @@ import * as THREE from "three";
 import { SettingsPanel } from "@/features/office/components/panels/SettingsPanel";
 import { AtmImmersiveScreen } from "@/features/office/screens/AtmImmersiveScreen";
 import { GithubImmersiveScreen } from "@/features/office/screens/GithubImmersiveScreen";
+import { nearestFreeDesk } from "@shared/office/officeActivity";
 import { KanbanImmersiveScreen } from "@/features/office/screens/KanbanImmersiveScreen";
 import {
   PhoneBoothImmersiveScreen,
@@ -80,6 +81,8 @@ import {
 } from "@/features/retro-office/core/constants";
 import {
   ensureOfficeAtm,
+  ensureOfficeCafeteria,
+  hasOfficeCafeteria,
   ensureOfficeGymRoom,
   ensureOfficeKanbanBoard,
   ensureOfficePhoneBooth,
@@ -136,6 +139,7 @@ import {
 import {
   loadFurniture,
   markAtmMigrationApplied,
+  markCafeteriaMigrationApplied,
   markGymRoomMigrationApplied,
   markPhoneBoothMigrationApplied,
   markQaLabMigrationApplied,
@@ -517,6 +521,8 @@ function useAgentTick(
   const gymByAgentRef = useRef<Map<string, number>>(new Map());
   const qaByAgentRef = useRef<Map<string, number>>(new Map());
   const stickyUntilRef = useRef<Map<string, number>>(new Map());
+  // Desk an unassigned agent borrowed for its current task (released when it goes idle).
+  const borrowedDeskRef = useRef<Map<string, number>>(new Map());
   const nextGymRef = useRef(0);
   const nextQaRef = useRef(0);
 
@@ -578,6 +584,10 @@ function useAgentTick(
       if (!activeIds.has(id)) qaByAgentRef.current.delete(id);
     for (const id of stickyUntilRef.current.keys())
       if (!activeIds.has(id)) stickyUntilRef.current.delete(id);
+    for (const id of borrowedDeskRef.current.keys())
+      if (!activeIds.has(id)) borrowedDeskRef.current.delete(id);
+    const assignedDesks = new Set(Object.values(assignedDeskIndexByAgentId));
+    const takenDesks = new Set([...assignedDesks, ...borrowedDeskRef.current.values()]);
 
     const currentMap = new Map(renderAgentsRef.current.map((a) => [a.id, a]));
     const next: RenderAgent[] = [];
@@ -621,7 +631,27 @@ function useAgentTick(
         } as RenderAgent);
         return;
       }
-      const assignedDeskIndex = assignedDeskIndexByAgentId[agent.id];
+      let assignedDeskIndex: number | undefined = assignedDeskIndexByAgentId[agent.id];
+      if (assignedDeskIndex === undefined) {
+        // No desk of its own: a working agent sits at the nearest free desk
+        // and keeps it until it's idle again (after the desk's sticky time).
+        const borrowed = borrowedDeskRef.current.get(agent.id);
+        const usable = borrowed !== undefined && !assignedDesks.has(borrowed);
+        const stillAtWork = usable && (stickyUntilRef.current.get(agent.id) ?? 0) > now;
+        if (agent.status === "working" || stillAtWork) {
+          assignedDeskIndex = usable
+            ? borrowed
+            : nearestFreeDesk(existing ?? null, deskLocations, takenDesks);
+        }
+        if (borrowed !== undefined && borrowed !== assignedDeskIndex) {
+          borrowedDeskRef.current.delete(agent.id);
+          if (!assignedDesks.has(borrowed)) takenDesks.delete(borrowed);
+        }
+        if (assignedDeskIndex !== undefined) {
+          borrowedDeskRef.current.set(agent.id, assignedDeskIndex);
+          takenDesks.add(assignedDeskIndex);
+        }
+      }
       if (
         typeof assignedDeskIndex === "number" &&
         assignedDeskIndex >= 0 &&
@@ -682,8 +712,7 @@ function useAgentTick(
         idx % Math.max(qaLabStations.length, 1);
       const deskPos =
         typeof deskIdx === "number" ? (deskLocations[deskIdx] ?? null) : null;
-      // Unassigned agents intentionally have no synthetic desk fallback. Desk routing is now
-      // driven by persisted workspace assignments instead of sequential scene-local ownership.
+      // Unassigned agents only have a desk while they work (borrowed above).
       if (!deskPos) {
         stickyUntilRef.current.delete(agent.id);
       }
@@ -1826,7 +1855,7 @@ function useAgentTick(
         }
       }
 
-      if ((danceUntilByAgentId[agent.id] ?? 0) > now && ns !== "away") {
+      if ((danceUntilByAgentId[agent.id] ?? 0) > now && ns !== "away" && agent.status !== "working") {
         ns = "dancing";
         npath = [];
       }
@@ -1892,7 +1921,7 @@ const buildInitialFurnitureLayout = (
   storageNamespace: string,
   layoutPreset: OfficeLayoutPreset,
 ): FurnitureItem[] =>
-  ensureOfficeKanbanBoard(
+  ensureOfficeCafeteria(ensureOfficeKanbanBoard(
     ensureOfficeJukebox(
       ensureOfficeQaLab(
         ensureOfficeGymRoom(
@@ -1910,7 +1939,7 @@ const buildInitialFurnitureLayout = (
         ),
       ),
     ),
-  );
+  ), storageNamespace);
 
 export function RetroOffice3D({
   agents,
@@ -2188,6 +2217,12 @@ export function RetroOffice3D({
     }
     return texts;
   }, [feedEvents]);
+  // Live tool activity per agent ("$ git push"), shown when nothing else is said.
+  const activityByAgentId = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const agent of agents) if (agent.activity) out[agent.id] = agent.activity;
+    return out;
+  }, [agents]);
   const standupSpeechTextByAgentId = useMemo(() => {
     if (!standupMeeting || standupMeeting.phase !== "in_progress") return {};
     const currentCard =
@@ -2390,16 +2425,8 @@ export function RetroOffice3D({
       }
       taken.add(bossDesk);
     }
-    // Every other agent gets its own workstation: agents without an explicit
-    // assignment take the next free desk in roster order.
-    let free = 0;
-    for (const agent of agents) {
-      if (agent.id in next) continue;
-      while (free < deskItems.length && taken.has(free)) free += 1;
-      if (free >= deskItems.length) break;
-      next[agent.id] = free;
-      taken.add(free);
-    }
+    // Agents without an assignment have no fixed desk: while they work they
+    // borrow the nearest free one (useAgentTick), and roam when they're free.
     return next;
   }, [agents, bossAgentId, deskAssignmentByDeskUid, deskItems]);
   const janitorCleaningStops = useMemo(
@@ -2750,7 +2777,9 @@ export function RetroOffice3D({
     ) ?? null;
   const activeMonitorComputer = useMemo(() => {
     if (!monitorAgentId) return null;
-    const deskIdx = assignedDeskIndexByAgentId[monitorAgentId];
+    const deskIdx =
+      assignedDeskIndexByAgentId[monitorAgentId] ??
+      deskByAgentRef.current.get(monitorAgentId);
     if (typeof deskIdx !== "number") return null;
     const computerItems = furniture.filter((item) => item.type === "computer");
     return (
@@ -2758,7 +2787,7 @@ export function RetroOffice3D({
         (item) => resolveDeskIndexForItem(item, deskLocations) === deskIdx,
       ) ?? null
     );
-  }, [assignedDeskIndexByAgentId, deskLocations, furniture, monitorAgentId]);
+  }, [assignedDeskIndexByAgentId, deskByAgentRef, deskLocations, furniture, monitorAgentId]);
   const agentRosterVisible = agentRosterOpen && !immersiveOverlayActive;
   const selectedItem = useMemo(
     () => furniture.find((item) => item._uid === selectedUid) ?? null,
@@ -2790,6 +2819,10 @@ export function RetroOffice3D({
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       saveFurniture(furniture, storageNamespace);
+      // Marked when a layout WITH the kapihan is saved, so a re-run of the layout
+      // reset (StrictMode, namespace change) still adds it; after that a kapihan
+      // the user deleted stays deleted.
+      if (hasOfficeCafeteria(furniture)) markCafeteriaMigrationApplied(storageNamespace);
     }, 300);
     return () => {
       window.clearTimeout(timeoutId);
@@ -5395,7 +5428,8 @@ export function RetroOffice3D({
                         ? Boolean(standupSpeechTextByAgentId[agent.id])
                         : speechAgentIds.has(agent.id) ||
                           Boolean(streamingTextByAgentId[agent.id]) ||
-                          Boolean(chatterByAgentId[agent.id])
+                          Boolean(chatterByAgentId[agent.id]) ||
+                          Boolean(activityByAgentId[agent.id])
                   }
                   speechText={
                     isJanitor
@@ -5405,7 +5439,16 @@ export function RetroOffice3D({
                         : (speechTextByAgentId[agent.id] ??
                             streamingTextByAgentId[agent.id] ??
                             chatterByAgentId[agent.id] ??
+                            activityByAgentId[agent.id] ??
                             null)
+                  }
+                  speechIsActivity={
+                    !isJanitor &&
+                    standupMeeting?.phase !== "in_progress" &&
+                    !(speechAgentIds.has(agent.id) && speechTextByAgentId[agent.id]) &&
+                    !streamingTextByAgentId[agent.id] &&
+                    !chatterByAgentId[agent.id] &&
+                    Boolean(activityByAgentId[agent.id])
                   }
                   suppressSpeechBubble={
                     suppressSceneSpeechBubbles &&

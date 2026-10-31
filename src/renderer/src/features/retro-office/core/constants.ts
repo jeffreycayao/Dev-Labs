@@ -6,6 +6,7 @@ export const SERVER_ROOM_MIGRATION_KEY =
   "openclaw-office-server-room-migration-v3";
 export const GYM_ROOM_MIGRATION_KEY = "openclaw-office-gym-room-migration-v3";
 export const QA_LAB_MIGRATION_KEY = "openclaw-office-qa-lab-migration-v3";
+export const CAFETERIA_MIGRATION_KEY = "devlabs-office-cafeteria-migration-v1";
 export const PHONE_BOOTH_MIGRATION_KEY = "openclaw-office-phone-booth-migration-v1";
 export const SMS_BOOTH_MIGRATION_KEY = "openclaw-office-sms-booth-migration-v1";
 export const ROTATION_STEP_DEG = 15;
@@ -36,6 +37,24 @@ export const GYM_ROOM_END_X = GYM_ROOM_X + GYM_ROOM_WIDTH;
 export const QA_LAB_X = GYM_ROOM_END_X + EAST_HALL_WIDTH;
 export const QA_LAB_WIDTH = EAST_WING_SPECIALTY_ROOM_WIDTH;
 export const QA_LAB_END_X = QA_LAB_X + QA_LAB_WIDTH;
+// Before v4.2.2 the gym and QA lab stood side by side in this east wing. The
+// EAST_WING_*, GYM_ROOM_* and QA_LAB_* values above still describe that layout,
+// so saved floors can be recognised and migrated (furnitureDefaults.ts).
+// Since v4.2.2 both rooms are stacked in the east strip, doors facing west, and
+// a cafeteria (kapihan) fills the space they left.
+export const EAST_ROOM_X = 1550;
+export const EAST_ROOM_END_X = 1792;
+export const EAST_ROOM_WIDTH = EAST_ROOM_END_X - EAST_ROOM_X;
+export const GYM_TOP_Y = 40;
+export const GYM_BOTTOM_Y = 390;
+/** Centre of the gym door gap (175–225: two whole 25-unit nav rows). */
+export const GYM_DOOR_Y = 200;
+export const QA_TOP_Y = 390;
+export const QA_BOTTOM_Y = 680;
+/** Centre of the QA lab door gap (500–550). */
+export const QA_DOOR_Y = 525;
+export const CAFETERIA_X = 1140;
+export const CAFETERIA_END_X = 1540;
 export const EAST_WING_DOOR_Y = 260;
 export const SCALE = 0.018;
 export const WORLD_W = CANVAS_W * SCALE;

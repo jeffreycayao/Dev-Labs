@@ -776,7 +776,18 @@
       "Kape sa pantry, pang-tatlong araw na. Parang deadline natin.",
       "Mahabang kwento 'to, Mars. Mga tatlong standup ang haba.",
       "May bagong framework na naman daw. Hindi pa nga tapos yung luma.",
-      "'It works on my machine' daw. Eh di sa machine mo i-deploy."
+      "'It works on my machine' daw. Eh di sa machine mo i-deploy.",
+      "Uy mars, magka-holding hands si Manager at HR kanina!",
+      "Resign na si Bryan, sobrang toxic daw ni boss.",
+      "Alam mo ba, may asawa na pala si crush!",
+      "Walang bayad OT natin ngayon, teh. Kuripot talaga nila.",
+      "Nahuli raw silang naghahalikan sa fire exit kagabi!",
+      "Bakit promoted agad si Bea, puro absent naman siya?",
+      "Teh, fake sick leave lang pala yung taga-marketing!",
+      "Kabahan na kayo, may surprise audit si boss bukas!",
+      "Staggered daw 13th month pay, tipid daw ang management.",
+      "Nag-leave kunwari pero nag-beach kasama si Team Lead!",
+      "Mars, nakita ko si anes sa Sogo... esmiringhoy na naman!"
     ],
     "cheer": [
       "done! ✔",
@@ -814,6 +825,16 @@
     "avatar": {
       "edit3d": "3D look",
       "personality": "personality"
+    },
+    "radio": {
+      "player": "Office radio",
+      "live": "Live",
+      "connecting": "Connecting…",
+      "offline": "Not streaming",
+      "previous": "Previous station",
+      "next": "Next station",
+      "play": "Play",
+      "stop": "Stop"
     }
   },
   "setupPanel": {

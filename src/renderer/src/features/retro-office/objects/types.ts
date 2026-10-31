@@ -42,6 +42,8 @@ export type AgentModelProps = {
   onContextMenu?: (id: string, x: number, y: number) => void;
   showSpeech?: boolean;
   speechText?: string | null;
+  /** The bubble shows live tool activity, not a reply: keep it gently pulsing. */
+  speechIsActivity?: boolean;
   suppressSpeechBubble?: boolean;
   /** DevLabs: the orchestrator gets a red nameplate. */
   boss?: boolean;

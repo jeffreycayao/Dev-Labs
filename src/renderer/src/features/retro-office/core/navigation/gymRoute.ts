@@ -1,29 +1,29 @@
 import type { FacingPoint, GymRoute } from "@/features/retro-office/core/types";
 import {
-  EAST_WING_DOOR_Y,
-  EAST_WING_ROOM_HEIGHT,
-  EAST_WING_ROOM_TOP_Y,
-  GYM_ROOM_END_X,
-  GYM_ROOM_WIDTH,
-  GYM_ROOM_X,
+  EAST_ROOM_END_X,
+  EAST_ROOM_X,
+  GYM_BOTTOM_Y,
+  GYM_DOOR_Y,
+  GYM_TOP_Y,
 } from "@/features/retro-office/core/constants";
 
+// The gym's door is on its west wall, so agents walk in heading east.
 export const GYM_DEFAULT_TARGET = {
-  x: GYM_ROOM_X + GYM_ROOM_WIDTH / 2,
-  y: 180,
-  facing: -Math.PI / 2,
+  x: EAST_ROOM_X + 60,
+  y: GYM_DOOR_Y + 40,
+  facing: Math.PI / 2,
 };
 
 const GYM_DOOR_OUTER_TARGET = {
-  x: GYM_ROOM_END_X + 40,
-  y: EAST_WING_DOOR_Y + 20,
-  facing: -Math.PI / 2,
+  x: EAST_ROOM_X - 40,
+  y: GYM_DOOR_Y,
+  facing: Math.PI / 2,
 };
 
 const GYM_DOOR_INNER_TARGET = {
-  x: GYM_ROOM_END_X - 50,
-  y: EAST_WING_DOOR_Y + 20,
-  facing: -Math.PI / 2,
+  x: EAST_ROOM_X + 50,
+  y: GYM_DOOR_Y,
+  facing: Math.PI / 2,
 };
 
 const DOOR_APPROACH_RADIUS = 60;
@@ -35,9 +35,9 @@ export const resolveGymRoute = (
   workoutTarget: FacingPoint = GYM_DEFAULT_TARGET,
 ): GymRoute => {
   const insideGym =
-    (x >= GYM_ROOM_X && x <= GYM_ROOM_END_X &&
-      y >= EAST_WING_ROOM_TOP_Y &&
-      y <= EAST_WING_ROOM_TOP_Y + EAST_WING_ROOM_HEIGHT) ||
+    (x >= EAST_ROOM_X && x <= EAST_ROOM_END_X &&
+      y >= GYM_TOP_Y &&
+      y <= GYM_BOTTOM_Y) ||
     Math.hypot(
       x - GYM_DOOR_INNER_TARGET.x,
       y - GYM_DOOR_INNER_TARGET.y,

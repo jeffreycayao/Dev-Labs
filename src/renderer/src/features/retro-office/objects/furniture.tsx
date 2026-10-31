@@ -197,6 +197,30 @@ const buildFurnitureItemMatrix = (item: FurnitureItem, itemType: string) => {
     .multiply(scaleMatrix);
 };
 
+// Desk computers draw as a triple-monitor rig (the agents are programmers and
+// designers): one "computer" item, three screens, all clicking through to it.
+// Drawn by FurnitureModel (desk computers are not instanced).
+// Copies live in the model's own space (computerScreen.glb: width 0.393, depth
+// 0.104, origin at a bottom corner), so they follow the desk's rotation. The
+// side screens turn inward with their outer edges toward the chair, and the
+// rig (about 0.98 world units wide) still fits the 1.08-wide desk.
+const COMPUTER_MODEL_W = 0.393;
+const COMPUTER_MODEL_D = 0.104;
+const TRIPLE_MONITOR: THREE.Matrix4[] = (() => {
+  const scale = 0.8;
+  const angle = 0.4;
+  const half = (COMPUTER_MODEL_W * scale) / 2;
+  const screen = (dx: number, dz: number, rotY: number) =>
+    new THREE.Matrix4()
+      .makeTranslation(COMPUTER_MODEL_W / 2 + dx, 0, -COMPUTER_MODEL_D / 2 + dz)
+      .multiply(new THREE.Matrix4().makeRotationY(rotY))
+      .multiply(new THREE.Matrix4().makeScale(scale, scale, scale))
+      .multiply(new THREE.Matrix4().makeTranslation(-COMPUTER_MODEL_W / 2, 0, COMPUTER_MODEL_D / 2));
+  const side = half * (1 + Math.cos(angle)) + 0.004;
+  const forward = half * Math.sin(angle);
+  return [screen(0, 0, 0), screen(-side, forward, angle), screen(side, forward, -angle)];
+})();
+
 export function InstancedFurnitureItems({
   itemType,
   items,
@@ -318,6 +342,10 @@ export function FurnitureModel({
     [glbPath, item.color, itemType, scene],
   );
   const cloned = useMemo(() => template.clone(true), [template]);
+  const monitorClones = useMemo(
+    () => (itemType === "computer" ? TRIPLE_MONITOR.map(() => template.clone(true)) : null),
+    [itemType, template],
+  );
   const [wx, , wz] = toWorld(item.x, item.y);
   const yOffset = (FURNITURE_Y_OFFSET[itemType] ?? 0) + (item.elevation ?? 0);
   const scale = FURNITURE_SCALE[itemType] ?? [1, 1, 1];
@@ -534,7 +562,15 @@ export function FurnitureModel({
           ]}
           scale={scale}
         >
-          <primitive object={cloned} />
+          {monitorClones ? (
+            monitorClones.map((screen, index) => (
+              <group key={index} matrixAutoUpdate={false} matrix={TRIPLE_MONITOR[index]}>
+                <primitive object={screen} />
+              </group>
+            ))
+          ) : (
+            <primitive object={cloned} />
+          )}
         </group>
         {itemType === "kanban_board" ? (
           <>

@@ -244,6 +244,9 @@ export function friendlyGhError(err: { code?: unknown; killed?: unknown; stderr?
   const text = (trimText(err.stderr) ?? trimText(err.message) ?? '').replace(/\s+/g, ' ');
   if (/gh auth login|not logged in|authentication|HTTP 401|bad credentials/i.test(text)) return GH_SIGNED_OUT;
   if (/not a git repository|no git remotes|none of the git remotes/i.test(text)) return "This folder isn't a GitHub repository. Pick another folder.";
+  if (/(approve|request changes on) your own pull request/i.test(text)) {
+    return "GitHub doesn't let you approve or request changes on your own pull request. Leave a comment, or ask a teammate to review it.";
+  }
   if (/could not resolve host|network|timed? ?out/i.test(text)) return "Can't reach GitHub. Check your connection and press Refresh.";
   return text ? text.slice(0, 300) : 'GitHub CLI failed. Press Refresh to try again.';
 }

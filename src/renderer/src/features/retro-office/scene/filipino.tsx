@@ -85,6 +85,69 @@ export function useBanigTexture(repeatX: number, repeatY: number) {
   }, [repeatX, repeatY]);
 }
 
+/** Machuca-style heritage cement tiles for the kapihan: cream and buff squares
+ *  with a terracotta diamond and teal dots that join into rosettes across tile
+ *  corners. Four tiles per texture repeat. */
+export function useMachucaTexture(repeatX: number, repeatY: number) {
+  return useMemo(() => {
+    const size = 128;
+    const half = size / 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    for (let ty = 0; ty < 2; ty += 1) {
+      for (let tx = 0; tx < 2; tx += 1) {
+        const x0 = tx * half;
+        const y0 = ty * half;
+        const cx = x0 + half / 2;
+        const cy = y0 + half / 2;
+        ctx.fillStyle = (tx + ty) % 2 === 0 ? "#f1e2c6" : "#e6cfa7";
+        ctx.fillRect(x0, y0, half, half);
+        ctx.fillStyle = "#b9563a";
+        ctx.beginPath();
+        ctx.moveTo(cx, y0 + 9);
+        ctx.lineTo(x0 + half - 9, cy);
+        ctx.lineTo(cx, y0 + half - 9);
+        ctx.lineTo(x0 + 9, cy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#f1e2c6";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#2f6f73";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+        ctx.fill();
+        for (const [qx, qy] of [[x0, y0], [x0 + half, y0], [x0, y0 + half], [x0 + half, y0 + half]]) {
+          ctx.beginPath();
+          ctx.arc(qx, qy, 7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+    // Grout lines.
+    ctx.strokeStyle = "rgba(110,80,50,0.45)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, size - 2, size - 2);
+    ctx.beginPath();
+    ctx.moveTo(half, 0);
+    ctx.lineTo(half, size);
+    ctx.moveTo(0, half);
+    ctx.lineTo(size, half);
+    ctx.stroke();
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(repeatX, repeatY);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
+    return texture;
+  }, [repeatX, repeatY]);
+}
+
 const PAROL_SHAPE = (() => {
   const shape = new THREE.Shape();
   const outer = 0.22;

@@ -4,6 +4,18 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **Activity bubbles are back.** A working agent's bubble shows what it's doing right now, the way the old 2D office did: `$ git push origin main` for a terminal command, `> App.tsx` when editing a file, `< SPEC.md` when reading, `?` for searches and `@` for the web. The bubble gently pulses while the agent works. It only shows animated dots when there's nothing concrete yet (thinking). The agent card shows the same line.
+- **New: the Kapihan, the office cafeteria.** Where the gym and QA lab used to stand there's now a cafeteria with Filipino machuca-style tiles and a neon KAPIHAN sign: a coffee bar (two coffee machines, microwave, two vending machines, water cooler), six round tables with 24 seats, and a lounge corner with a couch and beanbags. Free agents come here for coffee and chikahan.
+- **The gym and QA lab moved** to the empty space on the right side of the floor, gym on top and QA lab below, with their doors facing the Kapihan. Every piece of equipment and every QA station is still reachable. Your saved floors update by themselves: the two rooms move, and the Kapihan is added once if that area is empty (furniture you placed there yourself is kept, and a Kapihan you delete stays deleted).
+- **Smaller, readable bubbles.** Speech and activity bubbles are now crisp screen text (11px, up to 3 lines) instead of large 3D signs, so they stay sharp at any zoom and no longer cover the desks.
+- **Three monitors on every desk.** The agents are programmers and designers, so each desk computer is now a curved triple-monitor setup.
+- **Office radio that plays inside DevLabs.** The jukebox now opens on a **Radio** tab with about 400 live Philippine stations (Love Radio, Barangay LS, Yes FM, DZRH and more) from the free radio-browser.info directory. Search by name, city or genre, press Play, set the volume. No account or setup, and it keeps playing when you close the panel. Agents dance while it plays. The Spotify remote is still there on the **Spotify** tab.
+- **Mini radio player.** While the radio plays, a small player sits at the bottom of the office with the station name and previous, stop/play and next buttons. Stop fades it away; start a station from the jukebox to bring it back.
+- **Music doesn't stop the work.** While music plays, free agents take turns dancing and wandering the office. Agents with a task keep working: at their own desk if you gave them one, otherwise at the nearest free computer, which they give back when they're done.
+- **Code Review Room opens on This Repo.** You see the pull requests for the agent's own project first; **My Queue** is one click away. If the folder isn't on GitHub, it says so and points you to My Queue.
+- **No more "can not approve your own pull request" error.** On a pull request you opened yourself, the Code Review Room only offers **Comment** and explains why: GitHub doesn't let anyone approve or request changes on their own pull request.
+- **11 new chismis lines** in the office gossip, in English (Taglish), Chinese and Arabic.
+
 ## v4.2.1 — 2026-11-01
 
 - **Built on Electron 45** (Chromium 156, Node 24), up from Electron 32, which stopped getting security fixes in March 2025. You get about 19 months of browser-engine security fixes.

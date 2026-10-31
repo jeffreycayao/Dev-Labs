@@ -45,7 +45,7 @@ export function GithubImmersiveScreen({ agentName }: GithubImmersiveScreenProps)
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"queue" | "repo">("queue");
+  const [activeTab, setActiveTab] = useState<"queue" | "repo">("repo");
   const [selectedPr, setSelectedPr] = useState<GitHubPullRequestSummary | null>(null);
   const [reviewBody, setReviewBody] = useState("");
   const [reviewBusyAction, setReviewBusyAction] = useState<GitHubReviewAction | null>(null);
@@ -74,9 +74,8 @@ export function GithubImmersiveScreen({ agentName }: GithubImmersiveScreenProps)
     }
     const next = result.dashboard;
     setDashboard(next);
-    const all = [...next.reviewRequests, ...next.currentRepoPullRequests, ...next.authoredPullRequests];
-    // Keep the open PR (same object, so the detail doesn't reload twice); else open the first one.
-    setSelectedPr((current) => current ?? all[0] ?? null);
+    // Keep the open PR (same object, so the detail doesn't reload twice); else open this repo's first one.
+    setSelectedPr((current) => current ?? next.currentRepoPullRequests[0] ?? null);
   }, [cwd]);
 
   useEffect(() => {
@@ -119,6 +118,10 @@ export function GithubImmersiveScreen({ agentName }: GithubImmersiveScreenProps)
   const currentRepoLabel = dashboard?.currentRepoSlug ? folderName(dashboard.currentRepoSlug) : "Not a GitHub repo";
   const isInitialLoading = loading && dashboard === null && !error;
   const selectedFile = detail?.files.find((file) => file.path === selectedFilePath) ?? null;
+  // GitHub refuses Approve and Request changes on your own pull request; only Comment works.
+  const isOwnPr = Boolean(
+    detail && dashboard?.viewerLogin && detail.author.toLowerCase() === dashboard.viewerLogin.toLowerCase(),
+  );
 
   useEffect(() => {
     if (!selectedFile) return;
@@ -269,7 +272,9 @@ export function GithubImmersiveScreen({ agentName }: GithubImmersiveScreenProps)
                 <div className="rounded-2xl border border-white/6 bg-white/4 px-4 py-4 text-sm text-white/55">
                   {activeTab === "queue"
                     ? "Nothing waiting for your review, and no open pull requests by you."
-                    : "No open pull requests in this repository."}
+                    : dashboard?.currentRepoSlug
+                      ? "No open pull requests in this repository."
+                      : `${folderName(cwd)} isn't a GitHub repository. Pick another folder at the top, or open My Queue.`}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -360,7 +365,7 @@ export function GithubImmersiveScreen({ agentName }: GithubImmersiveScreenProps)
                     <textarea
                       value={reviewBody}
                       onChange={(event) => setReviewBody(event.target.value)}
-                      placeholder="Add a note (optional for approve)."
+                      placeholder={isOwnPr ? "Add a comment." : "Add a note (optional for approve)."}
                       aria-label="Review note"
                       className="mt-3 h-24 w-full resize-none rounded-2xl border border-white/8 bg-black/22 px-4 py-3 text-sm text-white outline-none placeholder:text-white/28"
                     />
@@ -371,18 +376,26 @@ export function GithubImmersiveScreen({ agentName }: GithubImmersiveScreenProps)
                           ["REQUEST_CHANGES", "Request changes", "Sending...", "border-amber-300/24 bg-amber-300/10 text-amber-100 hover:border-amber-200/40"],
                           ["COMMENT", "Comment", "Sending...", "border-cyan-300/24 bg-cyan-300/10 text-cyan-100 hover:border-cyan-200/40"],
                         ] as const
-                      ).map(([action, label, busyLabel, tone]) => (
-                        <button
-                          key={action}
-                          type="button"
-                          onClick={() => void handleSubmitReview(action)}
-                          disabled={Boolean(reviewBusyAction)}
-                          className={`inline-flex h-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-full border px-4 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${tone}`}
-                        >
-                          {reviewBusyAction === action ? busyLabel : label}
-                        </button>
-                      ))}
+                      )
+                        .filter(([action]) => !isOwnPr || action === "COMMENT")
+                        .map(([action, label, busyLabel, tone]) => (
+                          <button
+                            key={action}
+                            type="button"
+                            onClick={() => void handleSubmitReview(action)}
+                            disabled={Boolean(reviewBusyAction)}
+                            className={`inline-flex h-10 cursor-pointer items-center justify-center whitespace-nowrap rounded-full border px-4 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${tone}`}
+                          >
+                            {reviewBusyAction === action ? busyLabel : label}
+                          </button>
+                        ))}
                     </div>
+                    {isOwnPr ? (
+                      <div className="mt-3 text-[12px] leading-5 text-white/55">
+                        This is your own pull request. GitHub doesn't let you approve it or request changes on it; leave a
+                        comment, or ask a teammate to review.
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="mt-5 rounded-3xl border border-white/6 bg-white/4 p-5">

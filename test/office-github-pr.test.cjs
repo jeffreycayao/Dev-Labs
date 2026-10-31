@@ -87,6 +87,10 @@ test('friendlyGhError says what to do next', () => {
   assert.match(gh.friendlyGhError({ killed: true }), /too long/);
   assert.equal(gh.friendlyGhError({ stderr: 'GraphQL: Could not find PR' }), 'GraphQL: Could not find PR');
   assert.match(gh.friendlyGhError({}), /Refresh/);
+  assert.match(
+    gh.friendlyGhError({ stderr: 'failed to create review: GraphQL: Review Can not approve your own pull request (addPullRequestReview)' }),
+    /your own pull request\. Leave a comment/
+  );
 });
 
 test('parseDiffPatch numbers old/new lines and marks what can take a comment', () => {

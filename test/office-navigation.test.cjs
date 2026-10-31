@@ -15,9 +15,9 @@ const entry = `
 import * as fd from "@/features/retro-office/core/furnitureDefaults";
 import * as nav from "@/features/retro-office/core/navigation";
 export const layout = () =>
-  fd.ensureOfficeKanbanBoard(fd.ensureOfficeJukebox(fd.ensureOfficeQaLab(fd.ensureOfficeGymRoom(
+  fd.ensureOfficeCafeteria(fd.ensureOfficeKanbanBoard(fd.ensureOfficeJukebox(fd.ensureOfficeQaLab(fd.ensureOfficeGymRoom(
     fd.ensureOfficeServerRoom(fd.ensureOfficePhoneBooth(fd.ensureOfficeSmsBooth(fd.ensureOfficeAtm(
-      fd.ensureOfficePingPongTable(fd.materializeDefaults("office"))))))))));
+      fd.ensureOfficePingPongTable(fd.materializeDefaults("office")))))))))));
 export { nav };
 `;
 

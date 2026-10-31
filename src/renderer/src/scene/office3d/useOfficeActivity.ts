@@ -7,7 +7,7 @@ import type { MockTextMessageScenario } from '@/lib/office/text/types';
 import { buildMockPhoneCallScenario } from '@/lib/office/call/mock';
 import { buildMockTextMessageScenario } from '@/lib/office/text/mock';
 import { resolveOfficeIntentSnapshot } from '@shared/office/deskDirectives';
-import { activeHolds, isTestCommand, ROOM_HOLD_MS } from '@shared/office/officeActivity';
+import { activeHolds, BUSY_STATUSES, danceUntil, isTestCommand, ROOM_HOLD_MS } from '@shared/office/officeActivity';
 
 // Where agents walk, from real DevLabs signals (Claw3D drove this from chat):
 //  - the last prompt you sent an agent, read by Claw3D's directive parser:
@@ -15,7 +15,8 @@ import { activeHolds, isTestCommand, ROOM_HOLD_MS } from '@shared/office/officeA
 //    "write tests" (QA lab) — those two rooms for ROOM_HOLD_MS / "call Maya and tell her …" (phone booth) /
 //    "text Joseph saying …" (SMS booth) / "standup" (meeting table);
 //  - an agent running a test command (hook events) → QA lab for a minute;
-//  - Spotify playing on the jukebox → everyone on the floor dances.
+//  - music playing on the jukebox (radio or Spotify) → free agents take turns
+//    dancing and roaming; agents with a task keep working at their desks.
 
 const GYM_MS = 60_000;
 const QA_FROM_TOOL_MS = 60_000;
@@ -123,16 +124,28 @@ export function useOfficeActivity(
   const smsBoothAgentId = Object.keys(texts).find((id) => ids.has(id)) ?? null;
 
   const animationState = useMemo(() => {
-    const dance = opts.jukeboxPlaying
-      ? Object.fromEntries(agents.map((a) => [a.id, clock + 10_000]))
-      : {};
+    const deskHoldByAgentId = Object.fromEntries(Object.entries(desk).filter(([id, on]) => on && ids.has(id)));
+    const githubHoldByAgentId = activeHolds(githubUntil, clock, ids);
+    const gymHoldByAgentId = activeHolds(gymUntil, clock, ids);
+    const qaHoldByAgentId = activeHolds(qaUntil, clock, ids);
+    // Free = no task and not sent anywhere; only free agents dance.
+    const free = (a: Agent) =>
+      !BUSY_STATUSES.has(a.status) && a.id !== phoneBoothAgentId && a.id !== smsBoothAgentId &&
+      ![deskHoldByAgentId, githubHoldByAgentId, gymHoldByAgentId, qaHoldByAgentId].some((h) => h[a.id]);
+    const dance: Untils = {};
+    if (opts.jukeboxPlaying) {
+      for (const a of agents) {
+        const until = free(a) ? danceUntil(a.id, clock) : 0;
+        if (until) dance[a.id] = until;
+      }
+    }
     // Only the fields DevLabs drives; RetroOffice3D falls back per field for the rest.
     return {
       cleaningCues: opts.cleaningCues,
-      deskHoldByAgentId: Object.fromEntries(Object.entries(desk).filter(([id, on]) => on && ids.has(id))),
-      githubHoldByAgentId: activeHolds(githubUntil, clock, ids),
-      gymHoldByAgentId: activeHolds(gymUntil, clock, ids),
-      qaHoldByAgentId: activeHolds(qaUntil, clock, ids),
+      deskHoldByAgentId,
+      githubHoldByAgentId,
+      gymHoldByAgentId,
+      qaHoldByAgentId,
       phoneBoothHoldByAgentId: phoneBoothAgentId ? { [phoneBoothAgentId]: true } : {},
       smsBoothHoldByAgentId: smsBoothAgentId ? { [smsBoothAgentId]: true } : {},
       danceUntilByAgentId: dance,

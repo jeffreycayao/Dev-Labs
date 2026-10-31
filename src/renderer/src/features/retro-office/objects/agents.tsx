@@ -1,4 +1,4 @@
-import { Billboard, Text } from "@react-three/drei";
+import { Billboard, Html, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { memo, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -15,8 +15,42 @@ import type {
 import { AgentModelProps } from "@/features/retro-office/objects/types";
 
 const MAX_NAMEPLATE_TEXT_LENGTH = 10;
-const MAX_SPEECH_BUBBLE_TEXT_LENGTH = 180;
-const MAX_SPEECH_BUBBLE_LINES = 4;
+// Three short lines at most: the bubble is a glance, the full reply is one click away.
+const MAX_SPEECH_BUBBLE_TEXT_LENGTH = 90;
+const MAX_SPEECH_BUBBLE_LINES = 3;
+
+// Screen-space speech bubble: fixed 11px text in the app's UI font, so it stays
+// small and readable at any zoom. A 3D-text bubble scaled with the camera:
+// huge up close, unreadable when the whole floor is in view.
+const HTML_BUBBLE_WRAP_STYLE = { display: "none", transformOrigin: "50% 100%" } as const;
+const HTML_BUBBLE_STYLE = {
+  // max-content: the HTML wrapper has no width, so without it the text wraps per word.
+  width: "max-content",
+  maxWidth: 200,
+  padding: "3px 7px",
+  borderRadius: 6,
+  border: "1px solid",
+  background: "rgba(16, 20, 30, 0.94)",
+  color: "#f8fafc",
+  font: "600 11px/1.3 var(--cth-font-ui, Inter, system-ui, sans-serif)",
+  letterSpacing: 0,
+  textTransform: "none",
+  whiteSpace: "pre-wrap",
+  overflowWrap: "anywhere",
+  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.35)",
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: MAX_SPEECH_BUBBLE_LINES,
+  overflow: "hidden",
+} as const;
+const HTML_BUBBLE_TAIL_STYLE = {
+  width: 0,
+  height: 0,
+  margin: "0 auto",
+  borderLeft: "5px solid transparent",
+  borderRight: "5px solid transparent",
+  borderTop: "5px solid rgba(16, 20, 30, 0.94)",
+} as const;
 
 const formatAgentNameplateText = (value: string): string => {
   const normalized = value.replace(/\s+/g, " ").trim();
@@ -62,6 +96,7 @@ export const AgentModel = memo(function AgentModel({
   onContextMenu,
   showSpeech = false,
   speechText = null,
+  speechIsActivity = false,
   suppressSpeechBubble = false,
   boss = false,
 }: AgentModelProps) {
@@ -89,6 +124,7 @@ export const AgentModel = memo(function AgentModel({
   const heldBucketRef = useRef<THREE.Group>(null);
   const heldScrubberRef = useRef<THREE.Group>(null);
   const speechBubbleRef = useRef<THREE.Group>(null);
+  const htmlBubbleRef = useRef<HTMLDivElement>(null);
   const speechBubbleMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const awayBubbleRef = useRef<THREE.Group>(null);
   const bodyMatRef = useRef<THREE.MeshLambertMaterial>(null);
@@ -488,20 +524,26 @@ export const AgentModel = memo(function AgentModel({
       const bubbleVisible =
         !suppressSpeechBubble &&
         (showSpeech || bumpTalking || ambientBubbleVisible);
-      speechBubbleRef.current.visible = bubbleVisible;
-      if (bubbleVisible) {
-        if (showSpeech && speechText?.trim()) {
-          speechBubbleRef.current.scale.setScalar(1);
-        } else {
-          const pulseBase = isError
-            ? 1.06
-            : showSpeech || bumpTalking
-              ? 1.03
-              : 0.98;
-          const pulse =
-            pulseBase + Math.sin(agent.frame * (isError ? 0.18 : 0.12)) * 0.06;
-          speechBubbleRef.current.scale.setScalar(pulse);
-        }
+      const textBubble = bubbleVisible && showSpeech && Boolean(speechText?.trim());
+      // Text goes in the HTML bubble; the 3D one only draws the "..." dots.
+      speechBubbleRef.current.visible = bubbleVisible && !textBubble;
+      if (htmlBubbleRef.current) {
+        htmlBubbleRef.current.style.display = textBubble ? "block" : "none";
+        // Activity bubbles breathe a little so a busy agent reads as busy.
+        htmlBubbleRef.current.style.transform =
+          textBubble && speechIsActivity
+            ? `scale(${(1 + Math.sin(agent.frame * 0.1) * 0.03).toFixed(3)})`
+            : "";
+      }
+      if (bubbleVisible && !textBubble) {
+        const pulseBase = isError
+          ? 1.06
+          : showSpeech || bumpTalking
+            ? 1.03
+            : 0.98;
+        const pulse =
+          pulseBase + Math.sin(agent.frame * (isError ? 0.18 : 0.12)) * 0.06;
+        speechBubbleRef.current.scale.setScalar(pulse);
       }
     }
 
@@ -621,58 +663,17 @@ export const AgentModel = memo(function AgentModel({
   const normalizedSpeechBubbleText = activeSpeechBubble
     ? flattenSpeechBubbleMarkdown(resolvedSpeechText)
     : resolvedSpeechText;
-  const speechBubblePreview = activeSpeechBubble
-    ? clampSpeechBubbleText(normalizedSpeechBubbleText)
-    : { text: normalizedSpeechBubbleText, truncated: false };
-  const speechBubbleDisplayText = speechBubblePreview.text;
-  const speechBubbleWasTruncated = speechBubblePreview.truncated;
-  const speechBubbleTextLength = speechBubbleDisplayText.length;
-  const speechBubbleWidth = activeSpeechBubble
-    ? Math.min(4.6, Math.max(1.8, 1.55 + speechBubbleTextLength * 0.018))
-    : 0.36;
-  const speechBubblePaddingX = activeSpeechBubble ? 0.34 : 0.06;
-  const speechBubblePaddingY = activeSpeechBubble ? 0.3 : 0.06;
-  const speechBubbleMaxWidth = Math.max(
-    0.24,
-    speechBubbleWidth - speechBubblePaddingX,
-  );
-  const estimatedSpeechCharsPerLine = activeSpeechBubble
-    ? Math.max(10, Math.floor(speechBubbleMaxWidth * 7))
-    : 8;
-  const estimatedSpeechLines = activeSpeechBubble
-    ? Math.max(
-        1,
-        Math.min(
-          MAX_SPEECH_BUBBLE_LINES,
-          Math.ceil(speechBubbleTextLength / estimatedSpeechCharsPerLine),
-        ),
-      )
-    : 1;
-  const speechBubbleHeight = activeSpeechBubble
-    ? Math.max(0.72, estimatedSpeechLines * 0.26 + speechBubblePaddingY)
-    : 0.2;
-  const speechBubbleFontSize = activeSpeechBubble
-    ? speechBubbleTextLength > 110
-      ? 0.188
-      : speechBubbleTextLength > 70
-        ? 0.2
-        : 0.216
-    : 0.13;
-  const speechBubbleTextColor = activeSpeechBubble
-    ? "#f8fafc"
-    : status === "error"
-      ? "#ff9aa5"
-      : status === "working"
-        ? "#b9f99d"
-        : "#a0c8ff";
-  const speechBubbleBorderColor = activeSpeechBubble
-    ? status === "error"
-      ? "#ff7f93"
-      : status === "working"
-        ? "#93f57d"
-        : "#8dc4ff"
-    : "transparent";
-  const speechBubbleBorderInset = activeSpeechBubble ? 0.03 : 0;
+  const speechBubbleDisplayText = activeSpeechBubble
+    ? clampSpeechBubbleText(normalizedSpeechBubbleText).text
+    : normalizedSpeechBubbleText;
+  // The 3D bubble only draws the "..." / "error" dots; text uses the HTML bubble.
+  const speechBubbleWidth = 0.36;
+  const speechBubbleHeight = 0.2;
+  const speechBubbleFontSize = 0.13;
+  const speechBubbleTextColor =
+    status === "error" ? "#ff9aa5" : status === "working" ? "#b9f99d" : "#a0c8ff";
+  const speechBubbleBorderColor =
+    status === "error" ? "#ff7f93" : status === "working" ? "#93f57d" : "#8dc4ff";
   const nameplateText = name ? formatAgentNameplateText(name) : "";
   // DevLabs: subtitles are role descriptions that can run to paragraphs; keep
   // the first line, cut to what fits the plate.
@@ -1171,90 +1172,53 @@ export const AgentModel = memo(function AgentModel({
         </Billboard>
       </group>
       <group ref={speechBubbleRef} visible={false}>
-        <Billboard position={[0, 1.45, 0]}>
-          {activeSpeechBubble ? (
-            <mesh
-              position={[-speechBubbleWidth * 0.18, -speechBubbleHeight * 0.53, -0.0005]}
-              rotation={[0, 0, Math.PI / 4]}
-              renderOrder={99997}
-            >
-              <planeGeometry args={[0.22, 0.22]} />
+        {activeSpeechBubble ? null : (
+          <Billboard position={[0, 1.45, 0]}>
+            <mesh position={[0, 0, -0.001]} renderOrder={99999}>
+              <planeGeometry args={[speechBubbleWidth, speechBubbleHeight]} />
               <meshBasicMaterial
+                ref={speechBubbleMatRef}
                 color="#1a2030"
                 transparent
-                opacity={0.82}
+                opacity={0.92}
                 depthTest={false}
                 depthWrite={false}
               />
             </mesh>
-          ) : null}
-          {activeSpeechBubble ? (
-            <mesh position={[0, 0, -0.0015]} renderOrder={99998}>
-              <planeGeometry
-                args={[
-                  speechBubbleWidth + speechBubbleBorderInset,
-                  speechBubbleHeight + speechBubbleBorderInset,
-                ]}
-              />
-              <meshBasicMaterial
-                color={speechBubbleBorderColor}
-                transparent
-                opacity={0.88}
-                depthTest={false}
-                depthWrite={false}
-              />
-            </mesh>
-          ) : null}
-          <mesh position={[0, 0, -0.001]} renderOrder={99999}>
-            <planeGeometry args={[speechBubbleWidth, speechBubbleHeight]} />
-            <meshBasicMaterial
-              ref={speechBubbleMatRef}
-              color="#1a2030"
-              transparent
-              opacity={activeSpeechBubble ? 0.76 : 0.92}
-              depthTest={false}
-              depthWrite={false}
-            />
-          </mesh>
-          <Text
-            position={
-              activeSpeechBubble
-                ? [-speechBubbleWidth / 2 + speechBubblePaddingX / 2, 0, 0.001]
-                : [0, 0, 0.001]
-            }
-            fontSize={speechBubbleFontSize}
-            color={speechBubbleTextColor}
-            anchorX={activeSpeechBubble ? "left" : "center"}
-            anchorY="middle"
-            maxWidth={speechBubbleMaxWidth}
-            textAlign={activeSpeechBubble ? "left" : "center"}
-            lineHeight={1.1}
-            renderOrder={100000}
-            depthOffset={-10}
-            material-depthTest={false}
-            material-depthWrite={false}
-          >
-            {speechBubbleDisplayText}
-          </Text>
-          {activeSpeechBubble && speechBubbleWasTruncated ? (
             <Text
-              position={[0, -speechBubbleHeight * 0.34, 0.001]}
-              fontSize={0.09}
-              color="#8ab4ff"
+              position={[0, 0, 0.001]}
+              fontSize={speechBubbleFontSize}
+              color={speechBubbleTextColor}
               anchorX="center"
               anchorY="middle"
-              maxWidth={speechBubbleMaxWidth}
-              textAlign="center"
-              renderOrder={100001}
+              renderOrder={100000}
               depthOffset={-10}
               material-depthTest={false}
               material-depthWrite={false}
             >
-              click for full chat
+              {speechBubbleDisplayText}
             </Text>
-          ) : null}
-        </Billboard>
+          </Billboard>
+        )}
       </group>
+      {activeSpeechBubble ? (
+        // Bottom-centre of the bubble sits where the nameplate was (it hides while
+        // the bubble shows), just above the head; below the app's
+        // own menus and dialogs (zIndexRange), and never catches the mouse.
+        <Html
+          position={[0, 0.95, 0]}
+          zIndexRange={[20, 10]}
+          pointerEvents="none"
+          style={{ transform: "translate(-50%, -100%)" }}
+        >
+          <div ref={htmlBubbleRef} style={HTML_BUBBLE_WRAP_STYLE}>
+            <div style={{ ...HTML_BUBBLE_STYLE, borderColor: speechBubbleBorderColor }}>
+              {speechBubbleDisplayText}
+            </div>
+            <div style={HTML_BUBBLE_TAIL_STYLE} />
+          </div>
+        </Html>
+      ) : null}
     </group>
   );
 });

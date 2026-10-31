@@ -1,4 +1,5 @@
-- DevLabs now runs on Electron 45, with the latest security fixes.
-- Needs macOS 13 or newer, or 64-bit Windows 10 or 11.
-- Pasting screenshots works with the new clipboard.
-- Faster, simpler installs.
+- Philippine radio now plays inside DevLabs, with a mini player.
+- The Kapihan: a new office cafeteria for coffee and chismis.
+- Agents show what they're doing in small, readable bubbles.
+- Three monitors per desk; busy agents keep working to music.
+- Code Review Room opens on This Repo.

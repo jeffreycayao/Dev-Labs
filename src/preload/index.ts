@@ -5,6 +5,7 @@ import { standupApi } from './office/standup';
 import { voiceReplyApi } from './office/voiceReply';
 import { companyBuilderApi } from './office/companyBuilder';
 import { spotifyApi } from './office/spotify';
+import { radioApi } from './office/radio';
 import type { AgentProvider } from '../shared/agentProvider';
 import type { HireManifest } from '../shared/hire';
 export type { HireManifest } from '../shared/hire';
@@ -558,6 +559,7 @@ const api = {
   ...voiceReplyApi,
   ...companyBuilderApi,
   ...spotifyApi,
+  ...radioApi,
   version: __APP_VERSION__,
 
   // ─── Analytics ───────────────────────────────────────────────────────────

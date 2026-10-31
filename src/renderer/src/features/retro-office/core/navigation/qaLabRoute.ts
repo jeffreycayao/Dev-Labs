@@ -1,29 +1,29 @@
 import type { FacingPoint, QaLabRoute } from "@/features/retro-office/core/types";
 import {
-  EAST_WING_DOOR_Y,
-  EAST_WING_ROOM_HEIGHT,
-  EAST_WING_ROOM_TOP_Y,
-  QA_LAB_END_X,
-  QA_LAB_X,
-  QA_LAB_WIDTH,
+  EAST_ROOM_END_X,
+  EAST_ROOM_X,
+  QA_BOTTOM_Y,
+  QA_DOOR_Y,
+  QA_TOP_Y,
 } from "@/features/retro-office/core/constants";
 
+// The QA lab's door is on its west wall, so agents walk in heading east.
 export const QA_LAB_DEFAULT_TARGET = {
-  x: QA_LAB_X + QA_LAB_WIDTH / 2,
-  y: 180,
-  facing: -Math.PI / 2,
+  x: EAST_ROOM_X + 60,
+  y: QA_DOOR_Y - 40,
+  facing: Math.PI / 2,
 };
 
 const QA_LAB_DOOR_OUTER_TARGET = {
-  x: QA_LAB_X - 36,
-  y: EAST_WING_DOOR_Y + 20,
-  facing: -Math.PI / 2,
+  x: EAST_ROOM_X - 40,
+  y: QA_DOOR_Y,
+  facing: Math.PI / 2,
 };
 
 const QA_LAB_DOOR_INNER_TARGET = {
-  x: QA_LAB_X + 50,
-  y: EAST_WING_DOOR_Y + 20,
-  facing: -Math.PI / 2,
+  x: EAST_ROOM_X + 50,
+  y: QA_DOOR_Y,
+  facing: Math.PI / 2,
 };
 
 const DOOR_APPROACH_RADIUS = 60;
@@ -35,9 +35,9 @@ export const resolveQaLabRoute = (
   stationTarget: FacingPoint = QA_LAB_DEFAULT_TARGET,
 ): QaLabRoute => {
   const insideLab =
-    (x >= QA_LAB_X && x <= QA_LAB_END_X &&
-      y >= EAST_WING_ROOM_TOP_Y &&
-      y <= EAST_WING_ROOM_TOP_Y + EAST_WING_ROOM_HEIGHT) ||
+    (x >= EAST_ROOM_X && x <= EAST_ROOM_END_X &&
+      y >= QA_TOP_Y &&
+      y <= QA_BOTTOM_Y) ||
     Math.hypot(
       x - QA_LAB_DOOR_INNER_TARGET.x,
       y - QA_LAB_DOOR_INNER_TARGET.y,

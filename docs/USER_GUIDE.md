@@ -199,7 +199,8 @@ Click **add agent** (end of the bottom strip, or **add** at the top of the offic
 
 - **Working agents walk to their own desk** and sit facing their computer.
 - **Ramon works in his own BOSS office** whenever he has a task. He only walks around and chats when he's free.
-- **Free (idle) agents** get coffee, hang around the kitchen and the café tables, and **chismis**: little speech bubbles with office gossip pop up over their heads. When Ramon walks by, they suddenly get very polite.
+- **Free (idle) agents** head to the **Kapihan**, the office cafeteria on the right side of the floor (look for the neon KAPIHAN sign). They grab coffee at the coffee bar, sit at the round tables and **chismis**: little speech bubbles with office gossip pop up over their heads. When Ramon walks by, they suddenly get very polite.
+- **The gym and the QA lab** are the two rooms in the far right corner, gym on top and QA lab below, with their doors facing the Kapihan.
 - **When an agent finishes a job**, it cheers ("tapos na!"-style messages).
 - **When agents message each other**, the message title pops up over the sender's head.
 - **Cleaners** sweep the floor after an agent restarts or clears its memory.
@@ -209,8 +210,8 @@ You can also **send an agent somewhere** just by telling it (in its queue or ter
 | Say | It goes to |
 |---|---|
 | "go to the gym" | the gym, for a minute |
-| "review PRs" or "check github" | the server room |
-| "write tests" or "run tests" | the QA lab |
+| "review PRs" or "check github" | the server room, for about a minute and a half |
+| "write tests" or "run tests" | the QA lab, for about a minute and a half |
 | "call Maya and tell her the build is green" | the phone booth |
 | "text Joseph saying I'll be late" | the text booth |
 | "go to your desk" | its desk |
@@ -222,12 +223,12 @@ An agent that starts running tests also walks to the QA lab on its own.
 | Object | What opens |
 |---|---|
 | **Kanban board** (button top-left, or the board in the office) | Your task board: to do, doing, blocked, done. |
-| **Server rack / server terminal** | GitHub pull requests (code changes waiting for review) for the selected agent's project: read them, approve, request changes, comment. Needs the free GitHub command-line tool, signed in with `gh auth login`. |
+| **Server rack / server terminal** | GitHub pull requests (code changes waiting for review) for the selected agent's project: read them, approve, request changes, comment. It opens on **This Repo**; **My Queue** has pull requests waiting for you and ones you opened. On your own pull request you can only comment (a GitHub rule). Needs the free GitHub command-line tool, signed in with `gh auth login`. |
 | **ATM** | How much your agents have cost, per agent and per day. You choose a PIN the first time you use it. |
 | **Meeting table** | A stand-up meeting: agents walk to the table and each reads out what they're working on, what's blocking them and what they've recently saved. |
 | **An agent's computer** | That agent's screen: the tools it just used, the commands it ran and the last file it touched. |
 | **Phone booth / text booth** | A short call or text-message scene. |
-| **Jukebox** | Spotify music for the office (see [section 15](#15-extras-looks-personality-voice-music)). Everyone dances while music plays. |
+| **Jukebox** | Philippine radio played inside DevLabs, or a Spotify remote, for the office (see [section 15](#15-extras-looks-personality-voice-music)). Free agents dance and wander while music plays; busy ones keep working. |
 | **Ping-pong table** | Two free agents play a match. |
 
 The small buttons at the top right of the office also include **add** (hire an agent), a **heat map** (where agents spend time), **walking trails** (footprints showing where agents walked), **full screen**, the **pencil** (edit the office) and the **gear** (office settings: spoken replies).
@@ -388,7 +389,8 @@ Ramon's **triggers** tab lets work start without you typing it:
 - **Personality:** **edit** → **personality**. Describe who the agent is, its vibe, its rules and how it talks. This is written into the agent's instruction file in its project folder (`CLAUDE.md`, `AGENTS.md` or `GEMINI.md`), as its own section; the rest of the file is left alone. The agent uses it from its next session.
 - **Company builder:** **add agent → company builder**. Describe your business, get a planned team, review and hire.
 - **Spoken replies:** press the **gear** at the top right of the office, switch **Voice replies** on, paste an **ElevenLabs** key (from elevenlabs.io → Profile → API keys), pick a voice and speed, and press **Preview**. The first sentences of each agent reply are then read out loud. Reply text is sent to ElevenLabs to make the audio.
-- **Jukebox (Spotify):** click the jukebox in the office. You need **Spotify Premium** and Spotify open on one of your devices (phone, computer or speaker). The first time: create a free app at **developer.spotify.com**, add `http://127.0.0.1:43821/callback` as its redirect address, paste its **Client ID** into the jukebox, and press **Connect**. Then search songs, play, pause and skip.
+- **Jukebox (Radio):** click the jukebox in the office. The **Radio** tab lists live Philippine stations (from radio-browser.info). Type to search by name, city or genre, press **Play**, and set the volume. No account needed. The station keeps playing when you close the panel, and a small player at the bottom of the office lets you skip to the previous or next station or stop. While music plays, agents without a task dance and wander; agents with work stay at their desks.
+- **Jukebox (Spotify):** click the jukebox in the office and open the **Spotify** tab. You need **Spotify Premium** and Spotify open on one of your devices (phone, computer or speaker). The first time: create a free app at **developer.spotify.com**, add `http://127.0.0.1:43821/callback` as its redirect address, paste its **Client ID** into the jukebox, and press **Connect**. Then search songs, play, pause and skip.
 
 ---
 
@@ -447,6 +449,7 @@ When auto-update is on (**Settings → General**, on by default), DevLabs checks
 | A connector doesn't work | Check it's **On** with a key saved, start a **new** agent, and make sure it's a Claude Code agent. |
 | The server room says to install GitHub CLI | Install it from cli.github.com, then run `gh auth login` once. |
 | The jukebox says Premium or "no active device" | Spotify needs Premium, and Spotify must be playing or open on a device. |
+| A radio station says it isn't streaming | That station is offline right now. Pick another one; stations come and go. |
 | The office looks empty or frozen | Press **Overview** (top left) or double-click the floor. If it's still blank, press **Ctrl+R** to reload the window. |
 | "Your building is full" | You have 200 windows open. Close one you don't need. |
 

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Play, SkipBack, SkipForward, Square } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore, type Agent } from '@/store/store';
 import { accentByName } from '@/design/tokens';
@@ -18,6 +19,9 @@ import {
   AGENTS_PER_LEVEL, assignOfficeLevels, levelDesksKey, levelKeyMoves, levelNamespace, moveAgentToLevel,
   parseOfficeLevels, removeOfficeLevel, type OfficeLevels
 } from '@shared/officeLevels';
+import { activityBubble } from '@shared/office/activityBubble';
+import { BUSY_STATUSES } from '@shared/office/officeActivity';
+import { radio, useRadio } from '@/features/office/hooks/radioPlayer';
 import '@/features/retro-office/retro-office.css';
 import { configureTextBuilder } from 'troika-three-text';
 import kenpixelFontUrl from 'three/examples/fonts/ttf/kenpixel.ttf?url';
@@ -37,17 +41,17 @@ const itemFor = (id: string) => {
   return ITEMS[Math.abs(hash) % ITEMS.length];
 };
 
-const BUSY = new Set(['working', 'thinking', 'compacting', 'looping']);
-
 const toOfficeAgent = (a: Agent): OfficeAgent => ({
   id: a.id,
   name: a.name,
   // Ramon's red plate already says "boss"; his long brief doesn't fit a tag.
   subtitle: a.isGod || a.id === 'god' ? null : a.description || null,
-  status: a.status === 'blocked' ? 'error' : BUSY.has(a.status) ? 'working' : 'idle',
+  status: a.status === 'blocked' ? 'error' : BUSY_STATUSES.has(a.status) ? 'working' : 'idle',
   color: `#${(accentByName[a.accent] ?? 0x888888).toString(16).padStart(6, '0')}`,
   item: itemFor(a.id),
-  avatarProfile: a.avatarProfile ?? null
+  avatarProfile: a.avatarProfile ?? null,
+  // What it is doing right now ("$ git push"), shown in its bubble while busy.
+  activity: BUSY_STATUSES.has(a.status) ? activityBubble(a.action) || null : null
 });
 
 // The office only draws the ATM dashboard when this is non-null; no gatewayUrl,
@@ -375,8 +379,73 @@ export function OfficeFloor3D() {
         </div>
       )}
 
+      <MiniRadioPlayer />
       {jukebox.panel}
       {editing && <EditAgentModal agent={editing} onClose={() => setEditingId(null)} />}
+    </div>
+  );
+}
+
+// Bottom-centre radio controls while the jukebox radio is on. Stop eases it out
+// of sight; starting a station from the jukebox brings it back.
+const EASE_OUT = '420ms cubic-bezier(0.22, 1, 0.36, 1)';
+
+function MiniRadioPlayer() {
+  const { t } = useTranslation();
+  const player = useRadio();
+  if (!player.station) return null;
+  const shown = player.status !== 'stopped';
+  const on = player.status === 'playing' || player.status === 'loading';
+  const status = player.status === 'playing' ? 'live' : player.status === 'loading' ? 'connecting' : 'offline';
+  const button = (label: string, onClick: () => void, icon: ReactNode) => (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 6,
+        border: `1px solid ${BRAND.line}`, background: 'transparent', color: BRAND.text, cursor: 'pointer'
+      }}
+    >
+      {icon}
+    </button>
+  );
+  return (
+    <div
+      role="region"
+      aria-label={t('office.radio.player')}
+      aria-hidden={!shown}
+      style={{
+        position: 'absolute', left: '50%', bottom: 10, zIndex: 30, maxWidth: 360,
+        display: 'flex', alignItems: 'center', gap: 6, padding: '4px 5px 4px 10px', borderRadius: 8,
+        background: BRAND.panel, border: `1px solid ${BRAND.line}`, color: BRAND.text,
+        opacity: shown ? 1 : 0,
+        transform: `translate(-50%, ${shown ? 0 : 14}px)`,
+        pointerEvents: shown ? 'auto' : 'none',
+        // Hidden only after the fade, so it can't be tabbed to while invisible.
+        visibility: shown ? 'visible' : 'hidden',
+        transition: `opacity ${EASE_OUT}, transform ${EASE_OUT}, visibility 0s linear ${shown ? '0s' : '420ms'}`
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+          background: status === 'live' ? BRAND.lime : status === 'offline' ? BRAND.key : BRAND.muted
+        }}
+      />
+      <div style={{ minWidth: 0, marginRight: 4 }}>
+        <div style={{ font: '600 12px/1.25 var(--cth-font-ui)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {player.station.name}
+        </div>
+        <div style={{ fontSize: 10, color: status === 'offline' ? BRAND.key : BRAND.muted }}>{t(`office.radio.${status}`)}</div>
+      </div>
+      {button(t('office.radio.previous'), () => radio.step(-1), <SkipBack size={13} />)}
+      {on
+        ? button(t('office.radio.stop'), () => radio.stop(), <Square size={12} />)
+        : button(t('office.radio.play'), () => player.station && radio.play(player.station), <Play size={13} />)}
+      {button(t('office.radio.next'), () => radio.step(1), <SkipForward size={13} />)}
     </div>
   );
 }

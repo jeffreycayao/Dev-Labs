@@ -61,6 +61,7 @@ import { registerStandupIpc } from './office/standup';
 import { registerVoiceReplyIpc } from './office/voiceReply';
 import { registerCompanyBuilderIpc } from './office/companyBuilder';
 import { registerSpotifyIpc } from './office/spotify';
+import { registerRadioIpc } from './office/radio';
 import { initCompletionWatcher } from './realtimeCompletionWatcher';
 import type { TaskCard, InboxMessage } from './realtimeCompletionWatcher';
 import { TelemetryCollector } from './telemetry';
@@ -4887,6 +4888,7 @@ registerStandupIpc();
 registerVoiceReplyIpc();
 registerCompanyBuilderIpc();
 registerSpotifyIpc();
+registerRadioIpc();
 
 // ─── IPC: Realtime Ramon voice ACTIONS (rt-5, Phase 2) ─────────────────────
 // Thin adapters over the SAME main fns the god PTY already uses. ALL of the safety

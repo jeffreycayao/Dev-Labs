@@ -3,12 +3,14 @@
 import * as THREE from "three";
 import { memo, type ReactNode } from "react";
 import {
-  EAST_WING_ROOM_HEIGHT,
-  EAST_WING_ROOM_TOP_Y,
-  GYM_ROOM_WIDTH,
-  GYM_ROOM_X,
-  QA_LAB_WIDTH,
-  QA_LAB_X,
+  CAFETERIA_END_X,
+  CAFETERIA_X,
+  EAST_ROOM_WIDTH,
+  EAST_ROOM_X,
+  GYM_BOTTOM_Y,
+  GYM_TOP_Y,
+  QA_BOTTOM_Y,
+  QA_TOP_Y,
   SCALE,
 } from "@/features/retro-office/core/constants";
 import {
@@ -16,7 +18,8 @@ import {
   LOCAL_OFFICE_CANVAS_WIDTH,
 } from "@/features/retro-office/core/district";
 import { toWorld } from "@/features/retro-office/core/geometry";
-import { NEO_MANILA, NeoManilaAccents, useBanigTexture } from "@/features/retro-office/scene/filipino";
+import { Text } from "@react-three/drei";
+import { NEO_MANILA, NeoManilaAccents, useBanigTexture, useMachucaTexture } from "@/features/retro-office/scene/filipino";
 
 function FramedPicture({
   position,
@@ -157,22 +160,32 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
     LOCAL_OFFICE_CANVAS_WIDTH / 2,
     LOCAL_OFFICE_CANVAS_HEIGHT / 2,
   );
-  const [gymZoneCenterX, , roomZoneCenterZ] = toWorld(
-    GYM_ROOM_X + GYM_ROOM_WIDTH / 2,
-    EAST_WING_ROOM_TOP_Y + EAST_WING_ROOM_HEIGHT / 2,
+  // Gym (top) and QA lab (bottom) are stacked in the east strip since v4.2.2.
+  const [gymZoneCenterX, , gymZoneCenterZ] = toWorld(
+    EAST_ROOM_X + EAST_ROOM_WIDTH / 2,
+    (GYM_TOP_Y + GYM_BOTTOM_Y) / 2,
   );
-  const [qaZoneCenterX] = toWorld(
-    QA_LAB_X + QA_LAB_WIDTH / 2,
-    EAST_WING_ROOM_TOP_Y + EAST_WING_ROOM_HEIGHT / 2,
+  const [qaZoneCenterX, , roomZoneCenterZ] = toWorld(
+    EAST_ROOM_X + EAST_ROOM_WIDTH / 2,
+    (QA_TOP_Y + QA_BOTTOM_Y) / 2,
   );
-  const gymZoneWidth = Math.max(0, GYM_ROOM_WIDTH * SCALE);
-  const qaZoneWidth = Math.max(0, QA_LAB_WIDTH * SCALE);
-  const roomZoneHeight = EAST_WING_ROOM_HEIGHT * SCALE;
+  const gymZoneWidth = Math.max(0, EAST_ROOM_WIDTH * SCALE);
+  const qaZoneWidth = gymZoneWidth;
   const roomFloorInset = 0.08;
-  const roomZoneFloorHeight = Math.max(0, roomZoneHeight - roomFloorInset * 2);
+  const gymZoneFloorHeight = Math.max(0, (GYM_BOTTOM_Y - GYM_TOP_Y) * SCALE - roomFloorInset * 2);
+  const roomZoneFloorHeight = Math.max(0, (QA_BOTTOM_Y - QA_TOP_Y) * SCALE - roomFloorInset * 2);
   const gymZoneFloorWidth = Math.max(0, gymZoneWidth - roomFloorInset * 2);
   const qaZoneFloorWidth = Math.max(0, qaZoneWidth - roomFloorInset * 2);
   const qaZoneStripeHeight = roomZoneFloorHeight * 0.86;
+  // Kapihan floor where the east-wing rooms stood, full depth of the office.
+  const [cafeZoneCenterX, , cafeZoneCenterZ] = toWorld(
+    (CAFETERIA_X + CAFETERIA_END_X) / 2,
+    LOCAL_OFFICE_CANVAS_HEIGHT / 2,
+  );
+  const cafeZoneWidth = (CAFETERIA_END_X - CAFETERIA_X) * SCALE - roomFloorInset * 2;
+  const cafeZoneHeight = LOCAL_OFFICE_CANVAS_HEIGHT * SCALE - roomFloorInset * 2;
+  const cafeTiles = useMachucaTexture(cafeZoneWidth / 0.8, cafeZoneHeight / 0.8);
+  const [kapihanSignX] = toWorld(1470, 0);
   const qaZoneStripeWidth = qaZoneFloorWidth * 0.92;
   const localNorthWallZ = localOfficeCenterZ - localOfficeHeight / 2;
   const localSouthWallZ = localOfficeCenterZ + localOfficeHeight / 2;
@@ -210,14 +223,33 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
         <meshLambertMaterial color={banig ? "#ffffff" : "#c8a97e"} map={banig ?? undefined} />
       </mesh>
 
-      {gymZoneFloorWidth > 0 && roomZoneFloorHeight > 0 ? (
+      {/* Kapihan: machuca tiles and a neon sign above the coffee bar. */}
+      <mesh
+        position={[cafeZoneCenterX, 0.001, cafeZoneCenterZ]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[cafeZoneWidth, cafeZoneHeight]} />
+        <meshLambertMaterial color={cafeTiles ? "#ffffff" : "#e8d6b5"} map={cafeTiles ?? undefined} />
+      </mesh>
+      <group position={[kapihanSignX, 0.78, localNorthWallZ + 0.07]}>
+        <mesh position={[0, 0, -0.005]}>
+          <planeGeometry args={[1.9, 0.4]} />
+          <meshBasicMaterial color="#1a0d06" />
+        </mesh>
+        <Text fontSize={0.24} color={NEO_MANILA.sun} anchorX="center" anchorY="middle" outlineWidth={0.008} outlineColor={NEO_MANILA.neonPink}>
+          KAPIHAN
+        </Text>
+      </group>
+
+      {gymZoneFloorWidth > 0 && gymZoneFloorHeight > 0 ? (
         <>
           <mesh
-            position={[gymZoneCenterX, 0.002, roomZoneCenterZ]}
+            position={[gymZoneCenterX, 0.002, gymZoneCenterZ]}
             rotation={[-Math.PI / 2, 0, 0]}
             receiveShadow
           >
-            <planeGeometry args={[gymZoneFloorWidth, roomZoneFloorHeight]} />
+            <planeGeometry args={[gymZoneFloorWidth, gymZoneFloorHeight]} />
             <meshStandardMaterial
               color="#24272d"
               roughness={0.95}

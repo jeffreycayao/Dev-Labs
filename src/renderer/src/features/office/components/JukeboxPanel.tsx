@@ -1,11 +1,17 @@
-// Office jukebox panel (port of Claw3D's soundclaw JukeboxPanel). Talks to Spotify
-// only through window.cth; sign-in happens in the system browser.
-// Album art is left out: the renderer CSP blocks remote images.
+// Office jukebox panel (port of Claw3D's soundclaw JukeboxPanel). Two sources:
+// Philippine radio played inside DevLabs, and a Spotify remote (sign-in happens
+// in the system browser). Both talk to main only through window.cth.
+// Album art and station logos are left out: the renderer CSP blocks remote images.
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { ListPlus, Music, Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
+import { ListPlus, Music, Pause, Play, Radio, SkipBack, SkipForward, Square, Volume2, X } from "lucide-react";
+import type { RadioStation } from "@shared/office/radio";
 import type { SpotifyPlayback, SpotifyTrack } from "@shared/office/spotify";
+import { radio, useRadio } from "../hooks/radioPlayer";
 
 type Status = { hasClientId: boolean; connected: boolean; redirectUri: string };
+type Source = "radio" | "spotify";
+
+const RADIO_LIST_LIMIT = 60;
 
 export type JukeboxPanelProps = {
   onClose: () => void;
@@ -16,9 +22,24 @@ export type JukeboxPanelProps = {
 const cth = () => window.cth;
 
 export function JukeboxPanel({ onClose, onPlayback }: JukeboxPanelProps) {
+  const [source, setSource] = useState<Source>("radio");
   const [status, setStatus] = useState<Status | null>(null);
   const refreshStatus = useCallback(() => cth().spotifyStatus().then(setStatus), []);
   useEffect(() => { void refreshStatus(); }, [refreshStatus]);
+
+  const tab = (value: Source, label: string) => (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={source === value}
+      onClick={() => setSource(value)}
+      className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+        source === value ? "bg-cyan-500/15 text-cyan-300" : "text-slate-400 hover:text-white"
+      }`}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <div
@@ -34,10 +55,11 @@ export function JukeboxPanel({ onClose, onPlayback }: JukeboxPanelProps) {
         <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
           <div className="flex items-center gap-3">
             <Music className="h-6 w-6 text-cyan-400" aria-hidden />
-            <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-400/70">Spotify</div>
-              <h2 className="text-base font-semibold text-white">Office jukebox</h2>
-            </div>
+            <h2 className="text-base font-semibold text-white">Office jukebox</h2>
+          </div>
+          <div role="tablist" aria-label="Music source" className="ml-auto mr-3 flex gap-1">
+            {tab("radio", "Radio")}
+            {tab("spotify", "Spotify")}
           </div>
           <button
             type="button"
@@ -50,7 +72,9 @@ export function JukeboxPanel({ onClose, onPlayback }: JukeboxPanelProps) {
         </div>
 
         <div className="overflow-y-auto" style={{ maxHeight: "calc(90vh - 68px)" }}>
-          {!status ? null : status.connected ? (
+          {source === "radio" ? (
+            <RadioView />
+          ) : !status ? null : status.connected ? (
             <PlayerView onPlayback={onPlayback} onDisconnected={refreshStatus} />
           ) : (
             <SetupView status={status} onConnected={refreshStatus} />
@@ -66,6 +90,135 @@ function ErrorBox({ text }: { text: string | null }) {
   return (
     <div role="alert" className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-300">
       {text}
+    </div>
+  );
+}
+
+// ─── Radio: Philippine stations, played inside DevLabs ───────────────────────
+const RADIO_STATUS: Record<string, string> = {
+  loading: "Connecting…",
+  playing: "Live",
+  error: "This station isn't streaming right now. Try another one."
+};
+
+function RadioView() {
+  const player = useRadio();
+  const [stations, setStations] = useState<RadioStation[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+
+  const load = useCallback(async () => {
+    setError(null);
+    const r = await cth().radioStations();
+    if (r.ok) {
+      setStations(r.stations);
+      radio.setStations(r.stations);
+    } else setError(r.error);
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  const q = query.trim().toLowerCase();
+  const matches = (stations ?? []).filter(
+    (s) => !q || s.name.toLowerCase().includes(q) || s.tags.toLowerCase().includes(q)
+  );
+  const station = player.station;
+  const on = player.status === "playing" || player.status === "loading";
+
+  return (
+    <div className="flex flex-col gap-4 p-6">
+      <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-4">
+        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">Now playing</div>
+        {station ? (
+          <div className="flex items-center gap-4">
+            <ControlButton
+              label={on ? "Stop" : "Play"}
+              large
+              onClick={() => (on ? radio.stop() : radio.play(station))}
+            >
+              {on ? <Square className="h-4 w-4" /> : <Play className="h-5 w-5" />}
+            </ControlButton>
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-semibold text-white">{station.name}</div>
+              <div className={`truncate text-sm ${player.status === "error" ? "text-red-300" : "text-slate-400"}`}>
+                {RADIO_STATUS[player.status] ?? "Stopped"}
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-slate-400">
+              <Volume2 className="h-4 w-4" aria-hidden />
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={player.volume}
+                aria-label="Volume"
+                onChange={(e) => radio.setVolume(Number(e.target.value))}
+                className="w-24 accent-cyan-400"
+              />
+            </label>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">Pick a station below. It keeps playing when you close this panel.</p>
+        )}
+      </div>
+
+      <ErrorBox text={error} />
+      {error && (
+        <button type="button" onClick={() => void load()} className="self-start text-xs text-cyan-400 underline underline-offset-2">
+          Try again
+        </button>
+      )}
+
+      <div>
+        <label htmlFor="radio-search" className="mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">
+          Philippine stations
+        </label>
+        <input
+          id="radio-search"
+          type="text"
+          value={query}
+          maxLength={100}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Love Radio, Barangay LS, DZRH, news, Cebu…"
+          className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+        />
+        {!stations && !error && <p className="mt-2 text-xs text-slate-500">Loading stations…</p>}
+        {stations && matches.length === 0 && <p className="mt-2 text-xs text-slate-500">No station matches "{query}".</p>}
+        {matches.length > 0 && (
+          <ul className="mt-2 divide-y divide-white/5 overflow-hidden rounded-xl border border-white/5 bg-slate-900/60">
+            {matches.slice(0, RADIO_LIST_LIMIT).map((s) => {
+              const current = station?.id === s.id && on;
+              return (
+                <li key={s.id} className="flex items-center gap-3 px-4 py-2.5 transition hover:bg-white/5">
+                  <Radio className={`h-4 w-4 shrink-0 ${current ? "text-cyan-400" : "text-slate-600"}`} aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-white">{s.name}</div>
+                    <div className="truncate text-xs text-slate-500">
+                      {[s.tags.split(",").slice(0, 3).join(", "), s.codec && `${s.codec}${s.bitrate ? ` ${s.bitrate}k` : ""}`]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={current}
+                    onClick={() => radio.play(s)}
+                    className="shrink-0 rounded-full border border-cyan-500/30 px-3 py-1 text-xs font-medium text-cyan-400 transition hover:bg-cyan-500/10 disabled:opacity-50"
+                  >
+                    {current ? "On air" : "Play"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {matches.length > RADIO_LIST_LIMIT && (
+          <p className="mt-2 text-xs text-slate-500">
+            Showing {RADIO_LIST_LIMIT} of {matches.length}. Type to narrow the list.
+          </p>
+        )}
+        <p className="mt-3 text-[11px] text-slate-600">Station list from radio-browser.info.</p>
+      </div>
     </div>
   );
 }

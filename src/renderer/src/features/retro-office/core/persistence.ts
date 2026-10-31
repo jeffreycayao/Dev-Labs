@@ -1,5 +1,6 @@
 import {
   ATM_MIGRATION_KEY,
+  CAFETERIA_MIGRATION_KEY,
   GYM_ROOM_MIGRATION_KEY,
   PHONE_BOOTH_MIGRATION_KEY,
   QA_LAB_MIGRATION_KEY,
@@ -61,6 +62,13 @@ export const hasServerRoomMigrationApplied = (namespace = "default") =>
 
 export const markServerRoomMigrationApplied = (namespace = "default") => {
   markStorageFlag(SERVER_ROOM_MIGRATION_KEY, namespace);
+};
+
+export const hasCafeteriaMigrationApplied = (namespace = "default") =>
+  hasStorageFlag(CAFETERIA_MIGRATION_KEY, namespace);
+
+export const markCafeteriaMigrationApplied = (namespace = "default") => {
+  markStorageFlag(CAFETERIA_MIGRATION_KEY, namespace);
 };
 
 export const hasGymRoomMigrationApplied = (namespace = "default") =>

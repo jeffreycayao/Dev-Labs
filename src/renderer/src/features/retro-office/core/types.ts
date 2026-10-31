@@ -9,6 +9,8 @@ export type OfficeAgent = {
   color: string;
   item: string;
   avatarProfile?: AgentAvatarProfile | null;
+  /** Live activity for the bubble ("$ npm test"); null when idle or unknown. */
+  activity?: string | null;
 };
 
 export type JanitorTool = "broom" | "vacuum" | "floor_scrubber";

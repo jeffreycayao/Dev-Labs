@@ -1,18 +1,30 @@
 import {
+  CAFETERIA_END_X,
+  CAFETERIA_X,
   DOOR_LENGTH,
   DOOR_THICKNESS,
   EAST_WING_DOOR_Y,
   EAST_WING_ROOM_HEIGHT,
   EAST_WING_ROOM_TOP_Y,
+  EAST_ROOM_END_X,
+  EAST_ROOM_WIDTH,
+  EAST_ROOM_X,
+  GYM_BOTTOM_Y,
+  GYM_DOOR_Y,
   GYM_ROOM_END_X,
   GYM_ROOM_X,
+  GYM_TOP_Y,
+  QA_BOTTOM_Y,
+  QA_DOOR_Y,
   QA_LAB_END_X,
   QA_LAB_X,
+  QA_TOP_Y,
   WALL_THICKNESS,
 } from "@/features/retro-office/core/constants";
-import { nextUid } from "@/features/retro-office/core/geometry";
+import { getItemBounds, nextUid } from "@/features/retro-office/core/geometry";
 import {
   hasAtmMigrationApplied,
+  hasCafeteriaMigrationApplied,
   hasGymRoomMigrationApplied,
   hasPhoneBoothMigrationApplied,
   hasQaLabMigrationApplied,
@@ -298,7 +310,8 @@ const PREVIOUS_QA_LAB_ITEMS: FurnitureSeed[] = [
   { type: "plant", x: 1604, y: 622 },
 ];
 
-const DEFAULT_GYM_ITEMS: FurnitureSeed[] = [
+// The east-wing gym (v4.2.1 and earlier), kept so saved floors can be migrated.
+const EAST_WING_GYM_ITEMS: FurnitureSeed[] = [
   {
     type: "wall",
     x: GYM_ROOM_X,
@@ -354,7 +367,8 @@ const DEFAULT_GYM_ITEMS: FurnitureSeed[] = [
   { type: "plant", x: 1268, y: 622 },
 ];
 
-const DEFAULT_QA_LAB_ITEMS: FurnitureSeed[] = [
+// The east-wing QA lab (v4.2.1 and earlier), kept so saved floors can be migrated.
+const EAST_WING_QA_LAB_ITEMS: FurnitureSeed[] = [
   {
     type: "wall",
     x: QA_LAB_X,
@@ -405,6 +419,84 @@ const DEFAULT_QA_LAB_ITEMS: FurnitureSeed[] = [
   { type: "test_bench", x: 1372, y: 450, facing: 90 },
   { type: "plant", x: 1496, y: 82 },
   { type: "plant", x: 1496, y: 622 },
+];
+
+// v4.2.2: the gym and QA lab are stacked in the east strip (x 1550–1800), doors
+// on their west walls facing the kapihan. Equipment keeps the facings the
+// workout and QA stand points in navigation.ts expect (racks: open floor to
+// their left; treadmill and console: open floor below).
+const eastRoomWalls = (top: number, bottom: number, doorY: number): FurnitureSeed[] => [
+  { type: "wall", x: EAST_ROOM_X, y: top, w: EAST_ROOM_WIDTH + WALL_THICKNESS, h: WALL_THICKNESS },
+  { type: "wall", x: EAST_ROOM_X, y: bottom - WALL_THICKNESS, w: EAST_ROOM_WIDTH + WALL_THICKNESS, h: WALL_THICKNESS },
+  { type: "wall", x: EAST_ROOM_END_X, y: top, w: WALL_THICKNESS, h: bottom - top },
+  { type: "wall", x: EAST_ROOM_X, y: top, w: WALL_THICKNESS, h: doorY - 25 - top },
+  { type: "door", x: EAST_ROOM_X - 16, y: doorY - 4, w: DOOR_LENGTH, h: DOOR_THICKNESS, facing: 90 },
+  { type: "wall", x: EAST_ROOM_X, y: doorY + 25, w: WALL_THICKNESS, h: bottom - doorY - 25 },
+];
+
+const DEFAULT_GYM_ITEMS: FurnitureSeed[] = [
+  ...eastRoomWalls(GYM_TOP_Y, GYM_BOTTOM_Y, GYM_DOOR_Y),
+  // An aisle runs down x 1650–1715. Bag and racks stand at x 1715 so their
+  // stand point (x - 18) lands in it; everything else is used on the piece.
+  { type: "treadmill", x: 1580, y: 70, facing: 90 },
+  { type: "exercise_bike", x: 1650, y: 70, facing: 90 },
+  { type: "weight_bench", x: 1700, y: 80, facing: 90 },
+  { type: "punching_bag", x: 1715, y: 175, facing: 0 },
+  { type: "kettlebell_rack", x: 1715, y: 230, facing: 180 },
+  { type: "dumbbell_rack", x: 1690, y: 290, facing: 90 },
+  { type: "rowing_machine", x: 1570, y: 270, facing: 90 },
+  { type: "yoga_mat", x: 1575, y: 345, facing: 0, color: "#0f766e" },
+  { type: "plant", x: 1564, y: 54 },
+  { type: "plant", x: 1766, y: 354 },
+];
+
+const DEFAULT_QA_LAB_ITEMS: FurnitureSeed[] = [
+  ...eastRoomWalls(QA_TOP_Y, QA_BOTTOM_Y, QA_DOOR_Y),
+  // Console faces the room; its stand point (y + 56) clears its nav padding.
+  { type: "qa_terminal", x: 1580, y: 420, facing: 0 },
+  { type: "device_rack", x: 1715, y: 410, facing: 180 },
+  { type: "device_rack", x: 1715, y: 460, facing: 180 },
+  { type: "test_bench", x: 1640, y: 560, facing: 90 },
+  { type: "test_bench", x: 1720, y: 560, facing: 90 },
+  { type: "plant", x: 1564, y: 640 },
+  { type: "plant", x: 1764, y: 640 },
+];
+
+// v4.2.2 kapihan where the east-wing rooms stood: a coffee bar on the north
+// wall, six round tables (24 seats) for chikahan, a lounge strip, and a clear
+// aisle (x 1444–1550) to the gym and QA lab doors.
+const kapihanTable = (x: number, y: number): FurnitureSeed[] => [
+  { type: "round_table", x, y, r: 50 },
+  { type: "chair", x: x + 40, y, facing: 0 },
+  { type: "chair", x: x + 40, y: y + 80, facing: 180 },
+  { type: "chair", x: x - 10, y: y + 30, facing: 90 },
+  { type: "chair", x: x + 80, y: y + 30, facing: 270 },
+];
+
+const DEFAULT_CAFETERIA_ITEMS: FurnitureSeed[] = [
+  { type: "cabinet", x: 1150, y: 10, w: 200, h: 40, elevation: 0 },
+  { type: "coffee_machine", x: 1170, y: 14, elevation: 0.56 },
+  { type: "coffee_machine", x: 1230, y: 14, elevation: 0.56 },
+  { type: "microwave", x: 1290, y: 18, facing: 0, elevation: 0.56 },
+  { type: "wall_cabinet", x: 1150, y: 0, w: 100, h: 20, elevation: 0.9 },
+  { type: "wall_cabinet", x: 1250, y: 0, w: 100, h: 20, elevation: 0.9 },
+  { type: "vending", x: 1370, y: 8 },
+  { type: "vending", x: 1420, y: 8 },
+  { type: "water_cooler", x: 1475, y: 10 },
+  { type: "trash", x: 1505, y: 20 },
+  ...kapihanTable(1170, 140),
+  ...kapihanTable(1340, 140),
+  ...kapihanTable(1170, 320),
+  ...kapihanTable(1340, 320),
+  ...kapihanTable(1170, 500),
+  ...kapihanTable(1340, 500),
+  { type: "couch", x: 1200, y: 672, w: 100, h: 40 },
+  { type: "beanbag", x: 1320, y: 668, color: "#e65100" },
+  { type: "beanbag", x: 1370, y: 668, color: "#1565c0" },
+  { type: "lamp", x: 1145, y: 610 },
+  { type: "plant", x: 1142, y: 690 },
+  { type: "plant", x: 1430, y: 690 },
+  { type: "plant", x: 1516, y: 340 },
 ];
 
 const DEFAULT_ART_ROOM_ITEMS /* boss office */: FurnitureSeed[] = [
@@ -460,6 +552,7 @@ const DEFAULT_LOBBY_FURNITURE: FurnitureSeed[] = [
   ...DEFAULT_SERVER_ROOM_ITEMS,
   ...DEFAULT_GYM_ITEMS,
   ...DEFAULT_QA_LAB_ITEMS,
+  ...DEFAULT_CAFETERIA_ITEMS,
   ...DEFAULT_ART_ROOM_ITEMS,
 ];
 
@@ -533,6 +626,7 @@ const DEFAULT_FURNITURE: FurnitureSeed[] = [
   ...DEFAULT_SERVER_ROOM_ITEMS,
   ...DEFAULT_GYM_ITEMS,
   ...DEFAULT_QA_LAB_ITEMS,
+  ...DEFAULT_CAFETERIA_ITEMS,
   ...DEFAULT_ART_ROOM_ITEMS,
   DEFAULT_SMS_BOOTH,
   { type: "chair", x: 100, y: 200, facing: 180 },
@@ -580,6 +674,9 @@ const LEGACY_GYM_ROOM_SIGNATURES = new Set(
 const PREVIOUS_GYM_ROOM_SIGNATURES = new Set(
   PREVIOUS_GYM_ROOM_ITEMS.map(createFurnitureSignature),
 );
+const EAST_WING_GYM_SIGNATURES = new Set(
+  EAST_WING_GYM_ITEMS.map(createFurnitureSignature),
+);
 const GYM_ROOM_SIGNATURES = new Set(
   DEFAULT_GYM_ITEMS.map(createFurnitureSignature),
 );
@@ -588,6 +685,9 @@ const LEGACY_QA_LAB_SIGNATURES = new Set(
 );
 const PREVIOUS_QA_LAB_SIGNATURES = new Set(
   PREVIOUS_QA_LAB_ITEMS.map(createFurnitureSignature),
+);
+const EAST_WING_QA_LAB_SIGNATURES = new Set(
+  EAST_WING_QA_LAB_ITEMS.map(createFurnitureSignature),
 );
 const QA_LAB_SIGNATURES = new Set(
   DEFAULT_QA_LAB_ITEMS.map(createFurnitureSignature),
@@ -709,6 +809,14 @@ export const ensureOfficeGymRoom = (
   const hasCurrentGymRoom = hasSignature(items, GYM_ROOM_SIGNATURES);
   if (hasCurrentGymRoom) return items;
 
+  // A floor still on the v4.2.1 east-wing gym moves it to the east strip.
+  if (hasAllSignatures(items, EAST_WING_GYM_SIGNATURES)) {
+    return [
+      ...replaceBySignatureSet(items, EAST_WING_GYM_SIGNATURES),
+      ...DEFAULT_GYM_ITEMS.map((item) => ({ ...item, _uid: nextUid() })),
+    ];
+  }
+
   const hasPreviousGymRoom = hasAllSignatures(
     items,
     PREVIOUS_GYM_ROOM_SIGNATURES,
@@ -752,6 +860,14 @@ export const ensureOfficeQaLab = (items: FurnitureItem[]): FurnitureItem[] => {
   const hasCurrentQaLab = hasSignature(items, QA_LAB_SIGNATURES);
   if (hasCurrentQaLab) return items;
 
+  // A floor still on the v4.2.1 east-wing QA lab moves it to the east strip.
+  if (hasAllSignatures(items, EAST_WING_QA_LAB_SIGNATURES)) {
+    return [
+      ...replaceBySignatureSet(items, EAST_WING_QA_LAB_SIGNATURES),
+      ...DEFAULT_QA_LAB_ITEMS.map((item) => ({ ...item, _uid: nextUid() })),
+    ];
+  }
+
   const hasPreviousQaLab = hasAllSignatures(items, PREVIOUS_QA_LAB_SIGNATURES);
   if (hasPreviousQaLab) {
     return [
@@ -777,5 +893,34 @@ export const ensureOfficeQaLab = (items: FurnitureItem[]): FurnitureItem[] => {
   return [
     ...items,
     ...DEFAULT_QA_LAB_ITEMS.map((item) => ({ ...item, _uid: nextUid() })),
+  ];
+};
+
+const CAFETERIA_SIGNATURES = new Set(
+  DEFAULT_CAFETERIA_ITEMS.map(createFurnitureSignature),
+);
+
+/** Whether this floor has the kapihan (any of its default pieces in place). */
+export const hasOfficeCafeteria = (items: FurnitureItem[]) =>
+  hasSignature(items, CAFETERIA_SIGNATURES);
+
+/** Adds the kapihan to a saved floor once, and only into empty floor: run after
+ *  ensureOfficeGymRoom/ensureOfficeQaLab, which clear the old east-wing rooms. A
+ *  floor with anything left in that band (a moved room, the user's own
+ *  furniture) keeps it, and a deleted kapihan is not added back. */
+export const ensureOfficeCafeteria = (
+  items: FurnitureItem[],
+  namespace = "default",
+): FurnitureItem[] => {
+  if (hasSignature(items, CAFETERIA_SIGNATURES)) return items;
+  if (hasCafeteriaMigrationApplied(namespace)) return items;
+  const occupied = items.some((item) => {
+    const bounds = getItemBounds(item);
+    return bounds.x < CAFETERIA_END_X && bounds.x + bounds.w > CAFETERIA_X;
+  });
+  if (occupied) return items;
+  return [
+    ...items,
+    ...DEFAULT_CAFETERIA_ITEMS.map((item) => ({ ...item, _uid: nextUid() })),
   ];
 };

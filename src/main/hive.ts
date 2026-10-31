@@ -20,7 +20,7 @@
  */
 import {
   existsSync, mkdirSync, readFileSync, writeFileSync, renameSync,
-  readdirSync, statSync, lstatSync, realpathSync, rmSync, appendFileSync,
+  readdirSync, statSync, lstatSync, fstatSync, realpathSync, rmSync, appendFileSync,
   symlinkSync, unlinkSync, copyFileSync, cpSync, openSync, readSync, closeSync,
   constants as fsConstants
 } from 'node:fs';
@@ -303,10 +303,15 @@ function readPlain(p: string): string {
 }
 // O_NOFOLLOW is POSIX-only; on Windows the lstat in appendPlain is the guard.
 const APPEND_NOFOLLOW = fsConstants.O_WRONLY | fsConstants.O_APPEND | fsConstants.O_CREAT | (fsConstants.O_NOFOLLOW ?? 0);
+// Appending is the one write that keeps the old file, so a hard link (nlink > 1,
+// the same file under another name elsewhere) is dropped like a symlink.
 function appendPlain(p: string, data: string): void {
-  try { if (!lstatSync(p).isFile()) rmSync(p, { force: true }); } catch { /* missing: created below */ }
+  try { const st = lstatSync(p); if (!st.isFile() || st.nlink > 1) rmSync(p, { force: true }); } catch { /* missing: created below */ }
   const fd = openSync(p, APPEND_NOFOLLOW);
-  try { appendFileSync(fd, data, 'utf8'); } finally { closeSync(fd); }
+  try {
+    if (fstatSync(fd).nlink > 1) throw new Error(`refusing to append to a hard-linked ${p}`); // linked in between
+    appendFileSync(fd, data, 'utf8');
+  } finally { closeSync(fd); }
 }
 
 /**
@@ -1650,7 +1655,9 @@ export class HiveManager {
   private normalize(partial: Partial<HiveMessage>, from: string): HiveMessage {
     const act = (partial.act ?? 'inform') as MessageAct;
     return {
-      id: partial.id ?? `${stamp()}-${shortRand()}`,
+      // The id names the inbox file (`<id>.json`), and an agent's outbox picks it:
+      // a name with a path in it would land the message outside the inbox.
+      id: isDeliveryId(partial.id) ? partial.id : `${stamp()}-${shortRand()}`,
       conversation: partial.conversation ?? `conv-${shortRand()}`,
       in_reply_to: partial.in_reply_to ?? null,
       from: partial.from ?? from,

@@ -147,6 +147,30 @@ test('hive-root files and folders: a linked bin/ or log is replaced, not followe
   assert.match(fs.readFileSync(path.join(root, 'log.jsonl'), 'utf8'), /"probe"/);
 });
 
+test('a message id with a path in it cannot place the inbox file elsewhere', async (t) => {
+  const { hive, victim, root } = setup(t);
+  await hive.ensureAgent({ id: 'eve-1', name: 'Eve', provider: 'claude', cwd: victim }, {});
+  await hive.ensureAgent({ id: 'jim-1', name: 'Jim', provider: 'claude', cwd: victim }, {});
+  const outbox = path.join(root, 'agents', 'eve-1', 'outbox');
+  const escape = path.relative(path.join(root, 'agents', 'jim-1', 'inbox'), path.join(victim, 'pwned'));
+  fs.writeFileSync(path.join(outbox, 'm1.json'), JSON.stringify({ id: escape, to: 'jim-1', act: 'inform', subject: 'x' }));
+  assert.equal(hive.routeOnce(), 1);
+  untouched(victim);
+  assert.equal(fs.readdirSync(path.join(root, 'agents', 'jim-1', 'inbox')).filter((f) => f.endsWith('.json')).length, 1);
+});
+
+test('a hard-linked log is replaced, not appended to', (t) => {
+  const { hive, victim, root } = setup(t);
+  hive.ensureHive();
+  const log = path.join(root, 'log.jsonl');
+  fs.rmSync(log);
+  try { fs.linkSync(path.join(victim, 'keep.txt'), log); }
+  catch (e) { if (e.code === 'EXDEV' || e.code === 'EPERM') return t.skip('hard links not possible here'); throw e; }
+  hive.appendLog({ kind: 'probe' });
+  assert.equal(fs.readFileSync(path.join(victim, 'keep.txt'), 'utf8'), 'precious');
+  assert.match(fs.readFileSync(log, 'utf8'), /"probe"/);
+});
+
 test('an agent id that climbs out of agents/ is refused', async (t) => {
   const { hive, victim } = setup(t);
   await assert.rejects(hive.ensureAgent({ id: '..', name: 'X', provider: 'claude', cwd: victim }, {}), /refusing path part/);

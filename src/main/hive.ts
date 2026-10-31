@@ -21,7 +21,7 @@
 import {
   existsSync, mkdirSync, readFileSync, writeFileSync, renameSync,
   readdirSync, statSync, lstatSync, realpathSync, rmSync, appendFileSync,
-  symlinkSync, unlinkSync, copyFileSync, cpSync, chmodSync, openSync, readSync, closeSync,
+  symlinkSync, unlinkSync, copyFileSync, cpSync, openSync, readSync, closeSync,
   constants as fsConstants
 } from 'node:fs';
 import { join, dirname, basename, isAbsolute, relative } from 'node:path';
@@ -244,13 +244,69 @@ const OUTBOX_SETTLE_MS = 2_000;
  *  Append-only: writes only the missing lines, leaving any existing entries. */
 function ensureMineIgnore(agentDir: string): void {
   const path = join(agentDir, '.gitignore');
-  let existing = '';
-  try { if (existsSync(path)) existing = readFileSync(path, 'utf8'); } catch { return; }
+  const existing = readPlain(path);
   const have = new Set(existing.split('\n').map((l) => l.trim()));
   const missing = MINE_IGNORE_LINES.filter((l) => !have.has(l));
   if (missing.length === 0) return;
   const prefix = existing && !existing.endsWith('\n') ? existing + '\n' : existing;
-  try { writeFileSync(path, prefix + missing.join('\n') + '\n', 'utf8'); } catch { /* best-effort */ }
+  try { writeFresh(path, prefix + missing.join('\n') + '\n'); } catch { /* best-effort */ }
+}
+
+// — link-safe writes —
+// Main runs unsandboxed but writes into folders agents can write: each agent's
+// own folder, and the hive root that holds every agent folder. So a planted
+// symlink or junction must never redirect a write or a delete. Node has no
+// no-follow directory handles, so each step lstats the exact path right before
+// acting: a link or stray file is removed as itself (rmSync without `recursive`
+// never descends), a real directory is reused, and files are created exclusively.
+// Nothing is deleted recursively. The residual race: a link swapped in between
+// a check and the next call. On POSIX the exclusive create refuses even that;
+// Windows follows a dangling file link on an exclusive create, so there a race
+// won in that window could still land one hive-authored file through a link.
+
+function isRealDir(p: string): boolean {
+  try { return lstatSync(p).isDirectory(); } catch { return false; }
+}
+function realDir(p: string): void {
+  let st;
+  try { st = lstatSync(p); } catch { mkdirSync(p); return; }
+  if (st.isDirectory()) return;
+  rmSync(p, { force: true }); // a link or stray file, never what it points to
+  mkdirSync(p);
+}
+/** `join(base, ...parts)` with every part made a real directory. `base` is trusted
+ *  (the hive root or a folder this walk already made real). */
+function realDirs(base: string, ...parts: string[]): string {
+  let at = base;
+  for (const part of parts.flatMap((p) => p.split(/[\\/]/)).filter(Boolean)) {
+    if (part === '.' || part === '..') throw new Error(`refusing path part "${part}" under ${base}`);
+    realDir(at = join(at, part));
+  }
+  return at;
+}
+/** Replace a file main owns: whatever sits at `p` goes as itself, then an
+ *  exclusive create. */
+function writeFresh(p: string, data: string, mode?: number): void {
+  rmSync(p, { force: true }); // throws on a real directory → nothing written
+  writeFileSync(p, data, { encoding: 'utf8', flag: 'wx', mode });
+}
+/** Seed a file only if nothing is there. A planted link, even a dangling one,
+ *  counts as something (lstat first: Windows would follow a dangling one). */
+function createOnce(p: string, data: string): void {
+  try { lstatSync(p); return; } catch { /* free: create it below */ }
+  try { writeFileSync(p, data, { encoding: 'utf8', flag: 'wx' }); }
+  catch (e) { if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e; }
+}
+/** A file's text, or '' when it is missing or not a regular file (a link). */
+function readPlain(p: string): string {
+  try { return lstatSync(p).isFile() ? readFileSync(p, 'utf8') : ''; } catch { return ''; }
+}
+// O_NOFOLLOW is POSIX-only; on Windows the lstat in appendPlain is the guard.
+const APPEND_NOFOLLOW = fsConstants.O_WRONLY | fsConstants.O_APPEND | fsConstants.O_CREAT | (fsConstants.O_NOFOLLOW ?? 0);
+function appendPlain(p: string, data: string): void {
+  try { if (!lstatSync(p).isFile()) rmSync(p, { force: true }); } catch { /* missing: created below */ }
+  const fd = openSync(p, APPEND_NOFOLLOW);
+  try { appendFileSync(fd, data, 'utf8'); } finally { closeSync(fd); }
 }
 
 /**
@@ -492,10 +548,9 @@ export class HiveManager {
     if (!p) return;
     try {
       if (process.platform === 'win32') {
-        writeFileSync(p, `@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"${process.execPath}" %*\r\n`, 'utf8');
+        writeFresh(p, `@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"${process.execPath}" %*\r\n`);
       } else {
-        writeFileSync(p, `#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "${process.execPath}" "$@"\n`, 'utf8');
-        chmodSync(p, 0o755);
+        writeFresh(p, `#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "${process.execPath}" "$@"\n`, 0o755);
       }
     } catch (e) {
       console.error('[hive] writeNodeLauncher failed:', e);
@@ -556,17 +611,11 @@ export class HiveManager {
     const dir = this.runtimeBinDir();
     if (!dir) return;
     try {
-      mkdirSync(dir, { recursive: true });
+      realDirs(this.root()!, 'bin', 'runtime');
       if (process.platform === 'win32') {
-        writeFileSync(
-          join(dir, 'node.cmd'),
-          `@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"${process.execPath}" %*\r\n`,
-          'utf8'
-        );
+        writeFresh(join(dir, 'node.cmd'), `@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"${process.execPath}" %*\r\n`);
       } else {
-        const p = join(dir, 'node');
-        writeFileSync(p, `#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "${process.execPath}" "$@"\n`, 'utf8');
-        chmodSync(p, 0o755);
+        writeFresh(join(dir, 'node'), `#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "${process.execPath}" "$@"\n`, 0o755);
       }
     } catch (e) {
       console.error('[hive] writeRuntimeShims failed:', e);
@@ -598,7 +647,8 @@ export class HiveManager {
   ensureHive(): void {
     const root = this.root();
     if (!root) return;
-    mkdirSync(join(root, 'agents'), { recursive: true });
+    mkdirSync(root, { recursive: true });
+    realDirs(root, 'agents');
 
     // Refreshed each bootstrap, like COMMANDS.md just below. It used to be
     // written only when absent, which meant a hive created once never saw a
@@ -606,7 +656,7 @@ export class HiveManager {
     // the day it was initialised, so every protocol addition since had reached
     // new hives only. The file is generated, not user-authored, and agents are
     // pointed at it as the authority, so a stale copy is worse than a rewrite.
-    writeFileSync(join(root, 'PROTOCOL.md'), PROTOCOL_MD, 'utf8');
+    writeFresh(join(root, 'PROTOCOL.md'), PROTOCOL_MD);
 
     const registry = join(root, 'registry.json');
     if (!existsSync(registry)) {
@@ -615,22 +665,18 @@ export class HiveManager {
     const userCodexHome = join(homedir(), '.codex');
     for (const [id, agent] of Object.entries(this.registry().agents)) {
       const codexHome = join(root, 'agents', id, '.codex');
-      if (agent.provider === 'codex' && existsSync(codexHome)) {
+      if (agent.provider === 'codex' && isRealDir(join(root, 'agents', id)) && isRealDir(codexHome)) {
         this.exposeCodexDataDirs(codexHome, userCodexHome, id);
       }
     }
-    const board = join(root, 'board.md');
-    if (!existsSync(board)) {
-      writeFileSync(board, '# Hive board\n\n_Shared plans live here. The god agent is the scribe._\n', 'utf8');
-    }
+    createOnce(join(root, 'board.md'), '# Hive board\n\n_Shared plans live here. The god agent is the scribe._\n');
     const tasks = join(root, 'tasks.json');
     if (!existsSync(tasks)) this.writeJson(tasks, { tasks: [] });
-    const log = join(root, 'log.jsonl');
-    if (!existsSync(log)) writeFileSync(log, '', 'utf8');
+    createOnce(join(root, 'log.jsonl'), '');
 
     // The Claude Code command reference Ramon consults (refreshed each bootstrap
     // so it tracks the bundled list).
-    writeFileSync(join(root, 'COMMANDS.md'), COMMANDS_MD, 'utf8');
+    writeFresh(join(root, 'COMMANDS.md'), COMMANDS_MD);
 
     // Keep the churny/ephemeral live files out of the hive git repo.
     const gitignore = join(root, '.gitignore');
@@ -642,17 +688,16 @@ export class HiveManager {
     // `deliveries/` holds finished files agents hand back (HTML, PDFs, images…):
     // potentially large binaries that would bloat a repo committed on every change.
     const want = ['fleet.json', 'hooks.sock', 'cost-ledger.jsonl', 'crashes/', 'deliveries/', '.DS_Store', 'agents/*/mcp.json'];
-    let lines: string[] = [];
-    if (existsSync(gitignore)) { try { lines = readFileSync(gitignore, 'utf8').split('\n'); } catch { lines = []; } }
+    const lines = readPlain(gitignore).split('\n');
     const missing = want.filter((w) => !lines.includes(w));
-    if (missing.length) writeFileSync(gitignore, [...lines.filter(Boolean), ...missing].join('\n') + '\n', 'utf8');
+    if (missing.length) writeFresh(gitignore, [...lines.filter(Boolean), ...missing].join('\n') + '\n');
 
     // The hook shim: a dumb pipe between a `claude` hook and our UDS. Refreshed
     // on every bootstrap so it tracks code changes.
-    mkdirSync(join(root, 'bin'), { recursive: true });
-    writeFileSync(this.shimPath()!, HOOK_SHIM, 'utf8');
+    realDirs(root, 'bin');
+    writeFresh(this.shimPath()!, HOOK_SHIM);
     // The proxy-bridge sidecar for hookless CLIs (qwen). Same refresh policy.
-    writeFileSync(this.proxyShimPath()!, PROXY_BRIDGE_SHIM, 'utf8');
+    writeFresh(this.proxyShimPath()!, PROXY_BRIDGE_SHIM);
     // The bundled-node launcher every shim above is invoked through — MUST be
     // written before any hook installer runs (they probe for it).
     this.writeNodeLauncher();
@@ -729,9 +774,9 @@ export class HiveManager {
     if (!root) return { args: [], env: {} };
     this.ensureHive();
 
-    const dir = this.agentDir(meta.id);
-    mkdirSync(join(dir, 'inbox', '.done'), { recursive: true });
-    mkdirSync(join(dir, 'outbox', '.sent'), { recursive: true });
+    const dir = realDirs(root, 'agents', meta.id);
+    realDirs(dir, 'inbox', '.done');
+    realDirs(dir, 'outbox', '.sent');
 
     // Resolve role BEFORE writing identity.md. A restart passes the floor
     // roster's `description`, which can be a status caption ("on standby").
@@ -743,7 +788,7 @@ export class HiveManager {
     meta = { ...meta, role };
 
     const identity = join(dir, 'identity.md');
-    writeFileSync(identity, this.identityText(meta), 'utf8'); // refresh on each spawn
+    writeFresh(identity, this.identityText(meta)); // refresh on each spawn
 
     // W3 — bundled read-only skills: refresh the agent's .claude/skills/ from the
     // app-resources skills/ dir on every spawn (same policy as identity.md), so an
@@ -751,10 +796,7 @@ export class HiveManager {
     // partial source dir is a no-op (Kevin populates the resource dir in lp-manifest).
     if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(dir, '.claude', 'skills'), dir);
 
-    const memory = join(dir, 'memory.md');
-    if (!existsSync(memory)) {
-      writeFileSync(memory, `# Memory — ${meta.name} (${meta.id})\n\n_Append durable facts, decisions, and context below._\n`, 'utf8');
-    }
+    createOnce(join(dir, 'memory.md'), `# Memory — ${meta.name} (${meta.id})\n\n_Append durable facts, decisions, and context below._\n`);
     ensureMineIgnore(dir); // keep settings.json / cursor / messages out of mempalace's index
     const cursor = join(dir, 'cursor.json');
     if (!existsSync(cursor)) this.writeJson(cursor, { lastProcessed: null });
@@ -1018,8 +1060,8 @@ export class HiveManager {
     });
     if (mcp.skipped.length) opts.onMcpSkipped?.(mcp.skipped);
     if (Object.keys(mcp.servers).length) {
-      writeFileSync(mcpPath, JSON.stringify({ mcpServers: mcp.servers }, null, 2), { encoding: 'utf8', mode: 0o600 });
-      try { chmodSync(mcpPath, 0o600); } catch { /* best-effort on filesystems without modes */ }
+      // Always a fresh file, so the 0600 creation mode always applies.
+      writeFresh(mcpPath, JSON.stringify({ mcpServers: mcp.servers }, null, 2), 0o600);
       args.push('--mcp-config', mcpPath);
     } else if (existsSync(mcpPath)) {
       // Nothing enabled any more: don't leave a stale key behind on disk.
@@ -1043,7 +1085,7 @@ export class HiveManager {
       agent.role = next;
       agent.lastSeen = Date.now();
       this.writeJson(join(root, 'registry.json'), reg);
-      writeFileSync(join(this.agentDir(id), 'identity.md'), this.identityText(agent), 'utf8');
+      writeFresh(join(realDirs(root, 'agents', id), 'identity.md'), this.identityText(agent));
       this.appendLog({ kind: 'role', agentId: id, role: next });
       this.commit(`hive: role ${id}`);
       return { ok: true };
@@ -1234,6 +1276,13 @@ export class HiveManager {
    * board and tasks.json for god; outbox delivery is done by main, not the agent).
    * This is what lets auto mode keep the OS sandbox on — the old full-bypass
    * posture existed only because these paths sit outside the project cwd.
+   *
+   * The root stays writable for now because workers update tasks.json and god
+   * writes board.md and spawn-requests/, all at the root. So every main write
+   * under the root goes through realDirs/writeFresh. Known gap, not closed by
+   * that: an agent can also edit root files main later RUNS or trusts (bin/
+   * hook shims, .git hooks/config run by commit). Closing it needs those moved
+   * out of the agent-writable tree.
    */
   private sandboxWritableDirs(meta: AgentMeta, dir: string, root: string, extra?: string[]): string[] {
     const out = [dir, root, ...(extra ?? [])].filter((d) => typeof d === 'string' && d.length > 0);
@@ -1306,25 +1355,14 @@ export class HiveManager {
    * (Kevin populates the resource dir in lp-manifest), and any IO error is swallowed
    * so skill provisioning can never block a spawn.
    *
-   * Agents can write their own folder (and the hive root holding every agent
-   * folder), but this copy runs unsandboxed in main, so a planted link must not
-   * redirect it. Node has no no-follow directory handles, so every step lstats
-   * the exact path right before acting: a link is removed as a link (rmSync
-   * without `recursive` never descends), a real directory is reused, and files
-   * are written with COPYFILE_EXCL after their old copy is removed. Nothing is
-   * ever deleted recursively, so a race won between two steps can at worst
+   * Link-safe like every other write into an agent folder (see realDirs): files
+   * are written with COPYFILE_EXCL after their old copy is removed, and nothing
+   * is ever deleted recursively, so a race won between two steps can at worst
    * replace one file with a bundled one, never wipe a folder.
    */
   private copyBundledSkills(srcDir: string, destDir: string, agentDir: string): void {
     try {
       if (!existsSync(srcDir)) return;
-      const ensureDir = (p: string): void => {
-        let st;
-        try { st = lstatSync(p); } catch { mkdirSync(p); return; }
-        if (st.isDirectory()) return;
-        rmSync(p, { force: true }); // a link or stray file, never what it points to
-        mkdirSync(p);
-      };
       const copyFile = (s: string, d: string): void => {
         rmSync(d, { force: true }); // throws on a real directory → copy aborts
         copyFileSync(s, d, fsConstants.COPYFILE_EXCL);
@@ -1332,7 +1370,7 @@ export class HiveManager {
       const copyTree = (from: string, to: string): void => {
         const entries = readdirSync(from, { withFileTypes: true });
         if (!entries.length) return;
-        ensureDir(to);
+        realDir(to);
         for (const ent of entries) {
           const s = join(from, ent.name);
           const d = join(to, ent.name);
@@ -1342,8 +1380,7 @@ export class HiveManager {
       };
       // Walk down from the agent folder one component at a time, so no part of
       // the path to destDir can be a link either.
-      let at = agentDir;
-      for (const part of relative(agentDir, destDir).split(/[\\/]/).filter(Boolean)) ensureDir(at = join(at, part));
+      realDirs(agentDir, relative(agentDir, destDir));
       copyTree(srcDir, destDir);
     } catch (e) { console.error('[hive] copyBundledSkills failed:', e); }
   }
@@ -1458,7 +1495,7 @@ export class HiveManager {
     if (fresh.length === 0) return { block: false };
 
     cursor.lastProcessed = fresh[fresh.length - 1].id;
-    this.atomicWriteJson(cursorPath, cursor);
+    this.atomicWriteJson(join(realDirs(this.root()!, 'agents', agentId), 'cursor.json'), cursor);
     this.appendLog({ kind: 'drain', agentId, count: fresh.length });
 
     const lines = fresh.map((m) => `- [from ${m.from}, ${m.act}] ${m.subject}: ${m.body}`).join('\n');
@@ -1636,10 +1673,10 @@ export class HiveManager {
     const inbox = join(this.agentDir(toId), 'inbox');
     if (!existsSync(inbox)) {
       if (!opts?.createInbox) return false; // unknown recipient — the caller reports it
-      try { mkdirSync(join(inbox, '.done'), { recursive: true }); }
+      try { realDirs(this.root()!, 'agents', toId, 'inbox', '.done'); }
       catch { return false; } // unwritable floor — the caller reports the drop
     }
-    this.atomicWriteJson(join(inbox, `${msg.id}.json`), msg);
+    this.atomicWriteJson(join(realDirs(this.root()!, 'agents', toId, 'inbox'), `${msg.id}.json`), msg);
     return true;
   }
 
@@ -1858,8 +1895,9 @@ export class HiveManager {
         if (total + lst.size > DELIVERY_LIMITS.maxTotalBytes) { skipped.push({ path: given, reason: 'total-too-large' }); continue; }
         const name = uniqueName(safeFileName(basename(real)), taken);
         taken.add(name.toLowerCase());
-        mkdirSync(dir, { recursive: true });
-        copyFileSync(real, join(dir, name));
+        const out = join(realDirs(this.root()!, 'deliveries', msg.id), name);
+        rmSync(out, { force: true });
+        copyFileSync(real, out, fsConstants.COPYFILE_EXCL);
         total += lst.size;
         files.push({ name, size: lst.size, kind: deliveryKind(name) });
       }
@@ -1923,7 +1961,7 @@ export class HiveManager {
       ...(status === 'seen' ? {} : { reviewedAt: new Date().toISOString() }),
       ...(typeof feedback === 'string' && feedback.trim() ? { feedback: feedback.trim().slice(0, 8000) } : {})
     };
-    this.atomicWriteJson(p, next);
+    this.atomicWriteJson(join(realDirs(this.root()!, 'deliveries', id), 'delivery.json'), next);
     if (status !== 'seen') this.appendLog({ kind: 'delivery-review', id, status });
     return next;
   }
@@ -1984,11 +2022,13 @@ export class HiveManager {
     const root = this.root();
     if (!root) return 0;
     const agentsDir = join(root, 'agents');
-    if (!existsSync(agentsDir)) return 0;
+    if (!isRealDir(agentsDir)) return 0;
     let routed = 0;
     for (const id of readdirSync(agentsDir)) {
       const outbox = join(agentsDir, id, 'outbox');
-      if (!existsSync(outbox)) continue;
+      // A linked agent folder or outbox would have main move files around
+      // wherever the link points.
+      if (!isRealDir(join(agentsDir, id)) || !isRealDir(outbox)) continue;
       for (const f of readdirSync(outbox)) {
         if (!f.endsWith('.json')) continue;
         const full = join(outbox, f);
@@ -2005,7 +2045,7 @@ export class HiveManager {
             if (!repaired.changed) {
               if (!settled()) continue;
               this.appendLog({ kind: 'drop', reason: 'malformed-json', from: id, file: f });
-              try { renameSync(full, join(outbox, '.sent', `bad-${f}`)); } catch { /* noop */ }
+              try { renameSync(full, join(realDirs(outbox, '.sent'), `bad-${f}`)); } catch { /* noop */ }
               continue;
             }
             try {
@@ -2013,7 +2053,7 @@ export class HiveManager {
             } catch {
               if (!settled()) continue;
               this.appendLog({ kind: 'drop', reason: 'malformed-json', from: id, file: f });
-              try { renameSync(full, join(outbox, '.sent', `bad-${f}`)); } catch { /* noop */ }
+              try { renameSync(full, join(realDirs(outbox, '.sent'), `bad-${f}`)); } catch { /* noop */ }
               continue;
             }
             this.appendLog({
@@ -2027,11 +2067,11 @@ export class HiveManager {
           msg.from = id; // sender is authoritative — the owning directory
           if (msg.attachments?.length) this.captureDelivery(msg);
           this.routeMessage(msg);
-          renameSync(full, join(outbox, '.sent', f)); // archive, don't reprocess
+          renameSync(full, join(realDirs(outbox, '.sent'), f)); // archive, don't reprocess
           routed++;
         } catch {
           // malformed file — quarantine so we don't spin on it
-          try { renameSync(full, join(outbox, '.sent', `bad-${f}`)); } catch { /* noop */ }
+          try { renameSync(full, join(realDirs(outbox, '.sent'), `bad-${f}`)); } catch { /* noop */ }
         }
       }
     }
@@ -2244,8 +2284,8 @@ export class HiveManager {
     const root = this.root();
     if (!root) return;
     const shim = join(root, 'bin', 'agy-hook.cjs');
-    mkdirSync(join(root, 'bin'), { recursive: true });
-    writeFileSync(shim, AGY_HOOK_SHIM, 'utf8');
+    realDirs(root, 'bin');
+    writeFresh(shim, AGY_HOOK_SHIM);
     // Bundled node, not bare `node` — agy's hooks run with a stripped PATH too.
     const command = (event: string) => process.platform === 'win32'
       ? this.nodeRunUnquoted(shim, event)
@@ -2289,9 +2329,9 @@ export class HiveManager {
     const home = join(dir, '.gemini-hive');
     const settingsPath = join(home, 'system-settings.json');
     try {
-      mkdirSync(home, { recursive: true });
+      realDirs(dir, '.gemini-hive');
       const shim = join(home, 'gemini-hook.cjs');
-      writeFileSync(shim, GEMINI_HOOK_SHIM, 'utf8');
+      writeFresh(shim, GEMINI_HOOK_SHIM);
       const hook = (name: string, matcher?: string) => ({
         ...(matcher ? { matcher } : {}),
         sequential: true,
@@ -2314,7 +2354,7 @@ export class HiveManager {
           AfterAgent: [hook('after-agent')]
         }
       };
-      writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+      writeFresh(settingsPath, JSON.stringify(settings, null, 2));
     } catch (e) { console.error('[hive] installGeminiHooks failed:', e); }
     return settingsPath;
   }
@@ -2341,7 +2381,10 @@ export class HiveManager {
   private installCodexHooks(dir: string, agentId: string): string {
     const home = join(dir, '.codex');
     try {
-      mkdirSync(home, { recursive: true });
+      realDirs(dir, '.codex');
+      // lstat, not existsSync: a planted dangling link must read as "taken",
+      // never as a free name to copy the user's login through.
+      const taken = (p: string): boolean => { try { lstatSync(p); return true; } catch { return false; } };
       const userHome = join(homedir(), '.codex');
       // Symlink the user's login so the isolated home authenticates as them.
       // (config.toml is NOT symlinked — we write our own below, seeded from theirs,
@@ -2349,16 +2392,16 @@ export class HiveManager {
       // need privilege (Windows). Idempotent — skip if already linked.
       const authSrc = join(userHome, 'auth.json');
       const authDest = join(home, 'auth.json');
-      if (existsSync(authSrc) && !existsSync(authDest)) {
+      if (existsSync(authSrc) && !taken(authDest)) {
         try { symlinkSync(authSrc, authDest); }
-        catch { try { copyFileSync(authSrc, authDest); } catch { /* best-effort */ } }
+        catch { try { copyFileSync(authSrc, authDest, fsConstants.COPYFILE_EXCL); } catch { /* best-effort */ } }
       }
       // The managed app-server daemon used by Codex Remote Control is launched
       // from the standalone install rooted at $CODEX_HOME/packages. Share the
       // user's installed binaries without duplicating them into every agent.
       const packagesSrc = join(userHome, 'packages');
       const packagesDest = join(home, 'packages');
-      if (existsSync(packagesSrc) && !existsSync(packagesDest)) {
+      if (existsSync(packagesSrc) && !taken(packagesDest)) {
         try {
           symlinkSync(packagesSrc, packagesDest, process.platform === 'win32' ? 'junction' : 'dir');
         } catch { /* remote integration falls back to a local TUI if unavailable */ }
@@ -2408,7 +2451,7 @@ export class HiveManager {
           config += `\n[[hooks.${ev}]]\n[[hooks.${ev}.hooks]]\ntype = "command"\ncommand = ${JSON.stringify(command)}\ntimeout = 30\n`;
         }
       }
-      writeFileSync(join(home, 'config.toml'), config, 'utf8');
+      writeFresh(join(home, 'config.toml'), config);
 
       // Keep each worker's CODEX_HOME isolated while putting its rollout data
       // below Codex's standard scan roots. External usage tools can then discover
@@ -2508,7 +2551,7 @@ export class HiveManager {
       for (const kind of ['sessions', 'archived_sessions'] as const) {
         const source = join(agents, entry.name, '.codex', kind);
         try {
-          if (!lstatSync(source).isSymbolicLink()) continue;
+          if (!isRealDir(join(agents, entry.name, '.codex')) || !lstatSync(source).isSymbolicLink()) continue;
           const target = realpathSync(source);
           const scanRoot = realpathSync(join(userHome, kind, 'atmt-labs'));
           const rel = relative(scanRoot, target);
@@ -2542,19 +2585,18 @@ export class HiveManager {
     try {
       // Pi discovers extensions under its agent dir; we write to the documented
       // `extensions/` location (and keep it isolated per agent).
-      const extDir = join(home, 'extensions');
-      mkdirSync(extDir, { recursive: true });
-      writeFileSync(join(extDir, 'hive-bridge.js'), PI_EXTENSION, 'utf8');
+      const extDir = realDirs(dir, '.pi-agent', 'extensions');
+      writeFresh(join(extDir, 'hive-bridge.js'), PI_EXTENSION);
       // A manifest so Pi auto-loads the extension on start (best-effort; harmless if
       // Pi ignores it). Kept minimal and hive-authored.
       const manifest = { name: 'atmt-hive-bridge', version: '0.3.1', main: 'extensions/hive-bridge.js', auto: true };
-      writeFileSync(join(home, 'extensions.json'), JSON.stringify(manifest, null, 2), 'utf8');
+      writeFresh(join(home, 'extensions.json'), JSON.stringify(manifest, null, 2));
 
       const userPiDir = join(homedir(), '.pi', 'agent');
       for (const fileName of ['models.json', 'models-store.json'] as const) {
         try {
           const data = readFileSync(join(userPiDir, fileName), 'utf8');
-          writeFileSync(join(home, fileName), data, 'utf8');
+          writeFresh(join(home, fileName), data);
         } catch (e) {
           if ((e as NodeJS.ErrnoException).code !== 'ENOENT') console.error(`[hive] installPiHooks copy ${fileName} failed:`, e);
         }
@@ -2584,10 +2626,10 @@ export class HiveManager {
       // there and migrate it; the migration skips when tui.json already exists).
       // Per-agent dir only, the user's ~/.config/opencode is never touched.
       if (theme) {
-        mkdirSync(home, { recursive: true });
+        realDirs(dir, '.opencode');
         const choice = { theme: 'system' };
-        writeFileSync(join(home, 'tui.json'), JSON.stringify({ $schema: 'https://opencode.ai/tui.json', ...choice }, null, 2), 'utf8');
-        writeFileSync(join(home, 'opencode.json'), JSON.stringify({ $schema: 'https://opencode.ai/config.json', ...choice }, null, 2), 'utf8');
+        writeFresh(join(home, 'tui.json'), JSON.stringify({ $schema: 'https://opencode.ai/tui.json', ...choice }, null, 2));
+        writeFresh(join(home, 'opencode.json'), JSON.stringify({ $schema: 'https://opencode.ai/config.json', ...choice }, null, 2));
       }
       // BOTH `plugin/` and `plugins/`. OpenCode's current docs specify `plugins/`
       // (plural); older builds — and the shape this bridge was originally written
@@ -2598,9 +2640,7 @@ export class HiveManager {
       // nudge. Writing the same ~2KB file twice costs nothing, is idempotent, and
       // is correct whichever directory the installed OpenCode actually scans.
       for (const name of ['plugin', 'plugins']) {
-        const pluginDir = join(home, name);
-        mkdirSync(pluginDir, { recursive: true });
-        writeFileSync(join(pluginDir, 'hive-bridge.js'), OPENCODE_PLUGIN, 'utf8');
+        writeFresh(join(realDirs(dir, '.opencode', name), 'hive-bridge.js'), OPENCODE_PLUGIN);
       }
     } catch (e) { console.error('[hive] installOpenCodePlugin failed:', e); }
     return home;
@@ -2625,7 +2665,7 @@ export class HiveManager {
     const config = join(dir, 'crush.json');
     const data = join(dir, '.crush-data');
     try {
-      mkdirSync(data, { recursive: true });
+      realDirs(dir, '.crush-data');
       // Override base_url → loopback for ONLY the provider whose wire-shape matches
       // the proxy (`api`): the single-upstream sidecar forwards bytes unchanged, so
       // routing a different-wire/host provider (e.g. anthropic when api='openai', or
@@ -2645,7 +2685,7 @@ export class HiveManager {
       // sits on xterm's, which follows the app theme. Set whenever the app
       // passes a theme, dark included, so both modes look the same way.
       const options = theme ? { tui: { transparent: true } } : undefined;
-      writeFileSync(config, JSON.stringify(options ? { providers, options } : { providers }, null, 2), 'utf8');
+      writeFresh(config, JSON.stringify(options ? { providers, options } : { providers }, null, 2));
     } catch (e) { console.error('[hive] installCrushConfig failed:', e); }
     return { config, data };
   }
@@ -2665,8 +2705,8 @@ export class HiveManager {
     if (!root) return;
     try {
       const shim = join(root, 'bin', 'grok-hook.cjs');
-      mkdirSync(join(root, 'bin'), { recursive: true });
-      writeFileSync(shim, GROK_HOOK_SHIM, 'utf8');
+      realDirs(root, 'bin');
+      writeFresh(shim, GROK_HOOK_SHIM);
       const tool = (matcher?: string) => ({
         ...(matcher ? { matcher } : {}),
         // Let Grok apply its event-aware defaults (5s normally, 600s for Stop).
@@ -2865,8 +2905,7 @@ export class HiveManager {
     let tailPath: string | null = null;
     if (tail && tail.length) {
       try {
-        const dir = join(root, 'crashes');
-        mkdirSync(dir, { recursive: true });
+        const dir = realDirs(root, 'crashes');
         // Colons are illegal in filenames on Windows and awkward everywhere.
         const stamp = new Date().toISOString().replace(/[:.]/g, '-');
         const safeId = agentId.replace(/[^A-Za-z0-9._-]/g, '_');
@@ -2880,7 +2919,7 @@ export class HiveManager {
           `--- last ${tail.length} bytes of pty output ---`,
           ''
         ].filter(Boolean).join('\n');
-        writeFileSync(p, header + tail, 'utf8');
+        writeFresh(p, header + tail);
         tailPath = p;
       } catch { /* a diagnostic must never break teardown */ }
     }
@@ -2900,7 +2939,7 @@ export class HiveManager {
     const root = this.root();
     if (!root) return;
     const line = JSON.stringify({ ts: Date.now(), ...event }) + '\n';
-    try { appendFileSync(join(root, 'log.jsonl'), line, 'utf8'); } catch { /* noop */ }
+    try { appendPlain(join(root, 'log.jsonl'), line); } catch { /* noop */ }
   }
 
   /**
@@ -2936,7 +2975,7 @@ export class HiveManager {
       model: sample.model,
       usd: sample.usd
     };
-    try { appendFileSync(join(root, 'cost-ledger.jsonl'), JSON.stringify(row) + '\n', 'utf8'); } catch { /* noop */ }
+    try { appendPlain(join(root, 'cost-ledger.jsonl'), JSON.stringify(row) + '\n'); } catch { /* noop */ }
   }
 
   // — json + atomic io —
@@ -2951,7 +2990,9 @@ export class HiveManager {
   private atomicWriteJson(p: string, data: unknown): void {
     const tmp = `${p}.tmp-${shortRand()}`;
     try {
-      writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
+      writeFileSync(tmp, JSON.stringify(data, null, 2), { encoding: 'utf8', flag: 'wx' });
+      // rename replaces a file link as a link, but not a junction on Windows.
+      try { if (lstatSync(p).isSymbolicLink()) rmSync(p, { force: true }); } catch { /* missing */ }
       renameSync(tmp, p);
     } catch (e) {
       try { rmSync(tmp, { force: true }); } catch { /* the tmp file is disposable */ }

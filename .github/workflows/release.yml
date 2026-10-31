@@ -97,6 +97,9 @@ jobs:
   build:
     name: Build (${{ matrix.os }})
     needs: prepare
+    # Without this, a manual dry build (preflight skipped) skips the builds too:
+    # a job's default condition requires every upstream job to have succeeded.
+    if: ${{ !cancelled() && needs.prepare.result == 'success' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

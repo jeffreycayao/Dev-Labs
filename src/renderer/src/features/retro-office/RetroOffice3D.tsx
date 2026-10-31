@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import {
   type ComponentProps,
-  memo,
   Suspense,
   useCallback,
   useEffect,
@@ -54,7 +53,6 @@ import type { OfficeDeskMonitor } from "@/lib/office/deskMonitor";
 import type { OfficeAnimationState } from "@/lib/office/eventTriggers";
 import type { StandupMeeting } from "@/lib/office/standup/types";
 import type { SkillStatusEntry } from "@/lib/skills/types";
-import type { StudioGatewayAdapterType } from "@/lib/studio/settings";
 import type {
   TaskBoardCard,
   TaskBoardStatus,
@@ -95,16 +93,10 @@ import {
   type OfficeLayoutPreset,
 } from "@/features/retro-office/core/furnitureDefaults";
 import {
-  clampPointToZone,
   DISTRICT_CAMERA_POSITION,
   DISTRICT_CAMERA_TARGET,
-  DISTRICT_CAMERA_ZOOM,
   LOCAL_OFFICE_CANVAS_HEIGHT,
-  isRemoteOfficeAgentId,
   LOCAL_OFFICE_CANVAS_WIDTH,
-  projectFurnitureIntoRemoteOfficeZone,
-  REMOTE_OFFICE_ZONE,
-  REMOTE_ROAM_POINTS,
 } from "@/features/retro-office/core/district";
 import {
   buildJanitorActorsForCue,
@@ -160,7 +152,6 @@ import type {
   SceneActor,
 } from "@/features/retro-office/core/types";
 import type { NavGrid } from "@/features/retro-office/core/navigation";
-import type { OfficeLayoutSnapshot } from "@/lib/office/layoutSnapshot";
 import { AgentModel as AgentObjectModel } from "@/features/retro-office/objects/agents";
 import { JukeboxModel as InteractiveJukeboxModel } from "@/features/retro-office/objects/Jukebox";
 import {
@@ -438,363 +429,6 @@ function CameraRig({ target }: { target: [number, number, number] }) {
   return null;
 }
 
-const NOOP_FURNITURE_UID_HANDLER = () => {};
-const NOOP_FURNITURE_HANDLER = () => {};
-const EMPTY_FURNITURE_ITEMS: FurnitureItem[] = [];
-
-const ReadOnlyFurnitureClone = memo(function ReadOnlyFurnitureClone({
-  furniture,
-}: {
-  furniture: FurnitureItem[];
-}) {
-  const deskItems = useMemo(
-    () => furniture.filter((item) => item.type === "desk_cubicle"),
-    [furniture],
-  );
-  const chairItems = useMemo(
-    () => furniture.filter((item) => item.type === "chair"),
-    [furniture],
-  );
-  const wallItems = useMemo(
-    () => furniture.filter((item) => item.type === "wall"),
-    [furniture],
-  );
-
-  return (
-    <Suspense fallback={null}>
-      <PrimitiveInstancedWallSegmentsModel items={wallItems} />
-      <InstancedFurnitureItemsModel itemType="desk_cubicle" items={deskItems} />
-      <InstancedFurnitureItemsModel itemType="chair" items={chairItems} />
-      {furniture.map((item) =>
-        item.type === "wall" ||
-        item.type === "desk_cubicle" ||
-        item.type === "chair" ? null : item.type === "door" ? (
-          <PrimitiveDoorModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "round_table" ? (
-          <PrimitiveRoundTableModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "keyboard" ? (
-          <PrimitiveKeyboardModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "mouse" ? (
-          <PrimitiveMouseModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "trash" ? (
-          <PrimitiveTrashCanModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "mug" ? (
-          <PrimitiveMugModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "clock" ? (
-          <PrimitiveClockModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "atm" ? (
-          <InteractiveAtmMachineModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "sms_booth" ? (
-          <InteractiveSmsBoothModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            doorOpen={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "phone_booth" ? (
-          <InteractivePhoneBoothModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            doorOpen={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "server_rack" ? (
-          <InteractiveServerRackModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "server_terminal" ? (
-          <InteractiveServerTerminalModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "vending" ? (
-          <KitchenVendingMachineModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "sink" ? (
-          <KitchenSinkModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "dishwasher" ? (
-          <KitchenDishwasherModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "pingpong" ? (
-          <MachinePingPongTableModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "qa_terminal" ? (
-          <InteractiveQaTerminalModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "device_rack" ? (
-          <InteractiveDeviceRackModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "test_bench" ? (
-          <InteractiveTestBenchModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "treadmill" ? (
-          <InteractiveTreadmillModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "weight_bench" ? (
-          <InteractiveWeightBenchModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "dumbbell_rack" ? (
-          <InteractiveDumbbellRackModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "exercise_bike" ? (
-          <InteractiveExerciseBikeModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "rowing_machine" ? (
-          <InteractiveRowingMachineModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "kettlebell_rack" ? (
-          <InteractiveKettlebellRackModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "punching_bag" ? (
-          <InteractivePunchingBagModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "yoga_mat" ? (
-          <InteractiveYogaMatModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "stove" ? (
-          <KitchenStoveModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "microwave" ? (
-          <KitchenMicrowaveModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : item.type === "wall_cabinet" ? (
-          <KitchenWallCabinetModel
-            key={item._uid}
-            item={item}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ) : (
-          <GenericFurnitureModel
-            key={item._uid}
-            item={item}
-            isSelected={false}
-            isHovered={false}
-            editMode={false}
-            onPointerDown={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOver={NOOP_FURNITURE_UID_HANDLER}
-            onPointerOut={NOOP_FURNITURE_HANDLER}
-          />
-        ),
-      )}
-    </Suspense>
-  );
-});
-
 function AdaptiveDprController() {
   const { gl, setDpr } = useThree();
   const currentDprRef = useRef(1.25);
@@ -904,20 +538,10 @@ function useAgentTick(
       astar(fx, fy, tx, ty, getNavGrid()),
     [getNavGrid],
   );
-  const pickRoamPoint = useCallback((agentId: string) => {
-    if (isRemoteOfficeAgentId(agentId)) {
-      return REMOTE_ROAM_POINTS[
-        Math.floor(Math.random() * REMOTE_ROAM_POINTS.length)
-      ];
-    }
+  const pickRoamPoint = useCallback(() => {
     return ROAM_POINTS[Math.floor(Math.random() * ROAM_POINTS.length)];
   }, []);
-  const pickSpawnPoint = useCallback((agentId: string) => {
-    if (isRemoteOfficeAgentId(agentId)) {
-      return REMOTE_ROAM_POINTS[
-        Math.floor(Math.random() * REMOTE_ROAM_POINTS.length)
-      ];
-    }
+  const pickSpawnPoint = useCallback(() => {
     return {
       x: Math.random() * 800 + 100,
       y: Math.random() * 500 + 100,
@@ -1596,7 +1220,7 @@ function useAgentTick(
             ns.qaLabStage = undefined;
             ns.qaLabStationType = undefined;
             ns.workoutStyle = undefined;
-            const r = pickRoamPoint(agent.id);
+            const r = pickRoamPoint();
             ns.targetX = r.x;
             ns.targetY = r.y;
             ns.path = planPath(existing.x, existing.y, r.x, r.y);
@@ -1605,7 +1229,7 @@ function useAgentTick(
         }
       } else {
         // New agent — spawn at a random position and plan path to first target.
-        const { x: sx, y: sy } = pickSpawnPoint(agent.id);
+        const { x: sx, y: sy } = pickSpawnPoint();
         const serverRoomRoute = resolveServerRoomRoute(sx, sy);
         const smsBoothRoute = resolveSmsBoothRoute(smsBoothItem, sx, sy);
         const phoneBoothRoute = resolvePhoneBoothRoute(phoneBoothItem, sx, sy);
@@ -2157,9 +1781,7 @@ function useAgentTick(
               // Idea 6: social spots instead of a random roam point. DevLabs raises
               // this from 15% to 70%, with coffee runs the most common errand.
               let target: { x: number; y: number } | null = null;
-              const socialCandidates = isRemoteOfficeAgentId(agent.id)
-                ? []
-                : socialFurniture;
+              const socialCandidates = socialFurniture;
               if (socialCandidates.length > 0 && Math.random() < 0.7) {
                 const f =
                   coffeeMachines.length > 0 && Math.random() < 0.4
@@ -2181,21 +1803,13 @@ function useAgentTick(
                   Math.round((f.x + off.dx * 30) / SNAP_GRID) * SNAP_GRID;
                 const ty =
                   Math.round((f.y + off.dy * 30) / SNAP_GRID) * SNAP_GRID;
-                target = isRemoteOfficeAgentId(agent.id)
-                  ? clampPointToZone(tx, ty, REMOTE_OFFICE_ZONE)
-                  : {
-                      x: Math.max(
-                        SNAP_GRID,
-                        Math.min(CANVAS_W - SNAP_GRID, tx),
-                      ),
-                      y: Math.max(
-                        SNAP_GRID,
-                        Math.min(CANVAS_H - SNAP_GRID, ty),
-                      ),
-                    };
+                target = {
+                  x: Math.max(SNAP_GRID, Math.min(CANVAS_W - SNAP_GRID, tx)),
+                  y: Math.max(SNAP_GRID, Math.min(CANVAS_H - SNAP_GRID, ty)),
+                };
               }
               if (!target) {
-                target = pickRoamPoint(agent.id);
+                target = pickRoamPoint();
               }
               return {
                 ...agent,
@@ -2324,43 +1938,12 @@ export function RetroOffice3D({
   taskManagerEnabled = false,
   soundclawEnabled = false,
   officeTitle = "Luke Headquarters",
-  officeTitleLoaded = false,
-  remoteOfficeEnabled = false,
-  remoteOfficeSourceKind = "presence_endpoint",
-  remoteOfficeLabel = "Remote Office",
-  remoteOfficePresenceUrl = "",
-  remoteOfficeGatewayUrl = "",
-  remoteOfficeStatusText = "Remote office disabled.",
-  remoteLayoutSnapshot = null,
-  remoteOfficeTokenConfigured = false,
   voiceRepliesEnabled = false,
   voiceRepliesVoiceId = null,
   voiceRepliesSpeed = 1,
   voiceRepliesLoaded = false,
-  onOfficeTitleChange,
-  onRemoteOfficeEnabledChange,
-  onRemoteOfficeSourceKindChange,
-  onRemoteOfficeLabelChange,
-  onRemoteOfficePresenceUrlChange,
-  onRemoteOfficeGatewayUrlChange,
-  onRemoteOfficeTokenChange,
-  onVoiceRepliesToggle,
-  onVoiceRepliesVoiceChange,
-  onVoiceRepliesSpeedChange,
-  onVoiceRepliesPreview,
-  onGatewayDisconnect,
-  onGatewayConnect,
-  onGatewayUrlChange,
-  onGatewayTokenChange,
-  onGatewayAdapterTypeChange,
-  onOpenOnboarding,
   atmAnalytics = null,
   feedEvents = EMPTY_FEED_EVENTS,
-  gatewayStatus = "disconnected",
-  gatewayUrl = "",
-  gatewayToken = "",
-  selectedAdapterType = "openclaw",
-  activeAdapterType = "openclaw",
   runCountByAgentId = EMPTY_NUMBER_RECORD,
   lastSeenByAgentId = EMPTY_NUMBER_RECORD,
   streamingTextByAgentId = {},
@@ -2443,45 +2026,12 @@ export function RetroOffice3D({
   taskManagerEnabled?: boolean;
   soundclawEnabled?: boolean;
   officeTitle?: string;
-  officeTitleLoaded?: boolean;
-  remoteOfficeEnabled?: boolean;
-  remoteOfficeSourceKind?: "presence_endpoint" | "openclaw_gateway";
-  remoteOfficeLabel?: string;
-  remoteOfficePresenceUrl?: string;
-  remoteOfficeGatewayUrl?: string;
-  remoteOfficeStatusText?: string;
-  remoteLayoutSnapshot?: OfficeLayoutSnapshot | null;
-  remoteOfficeTokenConfigured?: boolean;
   voiceRepliesEnabled?: boolean;
   voiceRepliesVoiceId?: string | null;
   voiceRepliesSpeed?: number;
   voiceRepliesLoaded?: boolean;
-  onOfficeTitleChange?: (title: string) => void;
-  onRemoteOfficeEnabledChange?: (enabled: boolean) => void;
-  onRemoteOfficeSourceKindChange?: (
-    kind: "presence_endpoint" | "openclaw_gateway",
-  ) => void;
-  onRemoteOfficeLabelChange?: (label: string) => void;
-  onRemoteOfficePresenceUrlChange?: (url: string) => void;
-  onRemoteOfficeGatewayUrlChange?: (url: string) => void;
-  onRemoteOfficeTokenChange?: (token: string) => void;
-  onVoiceRepliesToggle?: (enabled: boolean) => void;
-  onVoiceRepliesVoiceChange?: (voiceId: string | null) => void;
-  onVoiceRepliesSpeedChange?: (speed: number) => void;
-  onVoiceRepliesPreview?: (voiceId: string | null, voiceName: string) => void;
-  onGatewayDisconnect?: () => void;
-  onGatewayConnect?: () => void;
-  onGatewayUrlChange?: (value: string) => void;
-  onGatewayTokenChange?: (value: string) => void;
-  onGatewayAdapterTypeChange?: (value: StudioGatewayAdapterType) => void;
-  onOpenOnboarding?: () => void;
   atmAnalytics?: OfficeUsageAnalyticsParams | null;
   feedEvents?: FeedEvent[];
-  gatewayStatus?: string;
-  gatewayUrl?: string;
-  gatewayToken?: string;
-  selectedAdapterType?: StudioGatewayAdapterType;
-  activeAdapterType?: StudioGatewayAdapterType;
   runCountByAgentId?: Record<string, number>;
   lastSeenByAgentId?: Record<string, number>;
   streamingTextByAgentId?: Record<string, string | null>;
@@ -2577,30 +2127,6 @@ export function RetroOffice3D({
       (item) => !isRetiredPingPongLamp(item),
     ),
   );
-  const defaultRemoteLayoutFurniture = useMemo(
-    () =>
-      remoteOfficeEnabled
-        ? projectFurnitureIntoRemoteOfficeZone({
-            furniture: furniture.filter((item) => !isRetiredPingPongLamp(item)),
-            sourceWidth: LOCAL_OFFICE_CANVAS_WIDTH,
-            sourceHeight: LOCAL_OFFICE_CANVAS_HEIGHT,
-          })
-        : EMPTY_FURNITURE_ITEMS,
-    [furniture, remoteOfficeEnabled],
-  );
-  const remoteLayoutFurniture = useMemo(
-    () =>
-      !remoteOfficeEnabled
-        ? EMPTY_FURNITURE_ITEMS
-        : remoteLayoutSnapshot
-          ? projectFurnitureIntoRemoteOfficeZone({
-              furniture: remoteLayoutSnapshot.furniture,
-              sourceWidth: remoteLayoutSnapshot.width,
-              sourceHeight: remoteLayoutSnapshot.height,
-            })
-          : defaultRemoteLayoutFurniture,
-    [defaultRemoteLayoutFurniture, remoteLayoutSnapshot, remoteOfficeEnabled],
-  );
   useEffect(() => {
     setFurniture(
       buildInitialFurnitureLayout(storageNamespace, layoutPreset).filter(
@@ -2686,7 +2212,6 @@ export function RetroOffice3D({
     [],
   );
   const CAM_POS = useMemo<[number, number, number]>(() => {
-    if (remoteOfficeEnabled) return DISTRICT_CAMERA_POSITION;
     return [
       LOCAL_CAMERA_TARGET[0] +
         (DISTRICT_CAMERA_POSITION[0] - DISTRICT_CAMERA_TARGET[0]),
@@ -2695,10 +2220,8 @@ export function RetroOffice3D({
       LOCAL_CAMERA_TARGET[2] +
         (DISTRICT_CAMERA_POSITION[2] - DISTRICT_CAMERA_TARGET[2]),
     ];
-  }, [LOCAL_CAMERA_TARGET, remoteOfficeEnabled]);
-  const cameraTarget = remoteOfficeEnabled
-    ? DISTRICT_CAMERA_TARGET
-    : LOCAL_CAMERA_TARGET;
+  }, [LOCAL_CAMERA_TARGET]);
+  const cameraTarget = LOCAL_CAMERA_TARGET;
   // DevLabs: overview zoom fits the whole office to the panel instead of a
   // fixed 56, which cropped it in the narrower app layout.
   const officeViewportRef = useRef<HTMLDivElement>(null);
@@ -2715,7 +2238,7 @@ export function RetroOffice3D({
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const cameraZoom = remoteOfficeEnabled ? DISTRICT_CAMERA_ZOOM : fitZoom;
+  const cameraZoom = fitZoom;
   const overviewPreset = useMemo(
     () => ({ pos: CAM_POS, target: cameraTarget, zoom: cameraZoom }),
     [CAM_POS, cameraTarget, cameraZoom]
@@ -2723,22 +2246,12 @@ export function RetroOffice3D({
   // DevLabs: keep the orbit target over the office so panning can't lose it.
   const panBounds = useMemo(() => {
     const [minX, , minZ] = toWorld(0, 0);
-    const [maxX, , maxZ] = remoteOfficeEnabled
-      ? toWorld(CANVAS_W, CANVAS_H)
-      : toWorld(LOCAL_OFFICE_CANVAS_WIDTH, LOCAL_OFFICE_CANVAS_HEIGHT);
+    const [maxX, , maxZ] = toWorld(LOCAL_OFFICE_CANVAS_WIDTH, LOCAL_OFFICE_CANVAS_HEIGHT);
     return { minX, maxX, minZ, maxZ };
-  }, [remoteOfficeEnabled]);
-  const canvasResetKey = useMemo(
-    () =>
-      [
-        // DevLabs: not keyed on agent count. Remounting the canvas on every
-        // hire/fire reset the camera mid-use; agents are added to the live scene.
-        remoteOfficeEnabled ? "remote" : "local",
-        gatewayStatus ?? "unknown",
-        String(officeCenterSignal),
-      ].join(":"),
-    [gatewayStatus, officeCenterSignal, remoteOfficeEnabled],
-  );
+  }, []);
+  // DevLabs: not keyed on agent count. Remounting the canvas on every
+  // hire/fire reset the camera mid-use; agents are added to the live scene.
+  const canvasResetKey = String(officeCenterSignal);
   // New Idea 7: heatmap mode.
   const [heatmapMode, setHeatmapMode] = useState(false);
   const [trailMode, setTrailMode] = useState(false);
@@ -3061,7 +2574,6 @@ export function RetroOffice3D({
   );
   const handleAgentContextMenu = useCallback(
     (agentId: string, x: number, y: number) => {
-      if (isRemoteOfficeAgentId(agentId)) return;
       setContextMenu({ id: agentId, x, y });
     },
     [],
@@ -3285,34 +2797,6 @@ export function RetroOffice3D({
   }, [furniture, storageNamespace]);
 
   useEffect(() => {
-    if (readOnly || storageNamespace !== "default") return;
-    const gatewayUrl = atmAnalytics?.gatewayUrl?.trim() ?? "";
-    if (!gatewayUrl) return;
-    const timeoutId = window.setTimeout(() => {
-      void fetch("/api/office/layout", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          snapshot: {
-            gatewayUrl,
-            timestamp: new Date().toISOString(),
-            width: LOCAL_OFFICE_CANVAS_WIDTH,
-            height: LOCAL_OFFICE_CANVAS_HEIGHT,
-            furniture,
-          },
-        }),
-      }).catch((error) => {
-        console.error("Failed to sync office layout snapshot.", error);
-      });
-    }, 500);
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [atmAnalytics?.gatewayUrl, furniture, readOnly, storageNamespace]);
-
-  useEffect(() => {
     if (followAgentId && monitorAgentId) {
       const timer = window.setTimeout(() => {
         setFollowAgentId(null);
@@ -3476,6 +2960,14 @@ export function RetroOffice3D({
     }
     return boothAudioCtxRef.current;
   }, []);
+  // The office remounts on every floor switch; an unclosed context leaks.
+  useEffect(
+    () => () => {
+      void boothAudioCtxRef.current?.close().catch(() => {});
+      boothAudioCtxRef.current = null;
+    },
+    [],
+  );
 
   const playPhoneKeyTone = useCallback(async () => {
     const audioContext = await getBoothAudioContext();
@@ -5212,61 +4704,67 @@ export function RetroOffice3D({
     return () => window.removeEventListener("pointerdown", dismiss);
   }, [deskActionUid]);
 
-  // New Idea 3: show speech bubble based on reply length.
+  // New Idea 3: speech bubble sized to reply length, and E3 Idea 1: emoji mood
+  // reactions. One close timer per agent: a timer in an effect cleanup was
+  // cancelled by ANY later feed event, so bubbles never closed.
+  const seenFeedEventsRef = useRef(feedEvents);
+  const speechTimersRef = useRef(new Map<string, number>());
+  const moodTimersRef = useRef(new Map<string, number>());
   useEffect(() => {
-    if (feedEvents.length === 0) return;
-    const latest = feedEvents[0];
-    if (!latest) return;
-    if (latest.kind !== "reply") return;
-    const speechBubbleDurationMs = Math.min(
-      12_000,
-      Math.max(5_500, 2_500 + latest.text.trim().length * 42),
-    );
-    const addTimer = window.setTimeout(() => {
-      setSpeechAgentIds((prev) => new Set([...prev, latest.id]));
-    }, 0);
-    const timer = window.setTimeout(() => {
-      setSpeechAgentIds((prev) => {
-        const next = new Set(prev);
-        next.delete(latest.id);
-        return next;
-      });
-    }, speechBubbleDurationMs);
-    return () => {
-      window.clearTimeout(addTimer);
-      window.clearTimeout(timer);
-    };
+    const seen = new Set(seenFeedEventsRef.current);
+    seenFeedEventsRef.current = feedEvents;
+    // Every event new in this batch, oldest first so an agent's newest wins.
+    const fresh = feedEvents.filter((event) => !seen.has(event)).reverse();
+    for (const event of fresh) {
+      const id = event.id;
+      if (event.kind === "reply") {
+        const speechBubbleDurationMs = Math.min(
+          12_000,
+          Math.max(5_500, 2_500 + event.text.trim().length * 42),
+        );
+        setSpeechAgentIds((prev) => new Set([...prev, id]));
+        window.clearTimeout(speechTimersRef.current.get(id));
+        speechTimersRef.current.set(
+          id,
+          window.setTimeout(() => {
+            speechTimersRef.current.delete(id);
+            setSpeechAgentIds((prev) => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+          }, speechBubbleDurationMs),
+        );
+      }
+      const emoji =
+        event.kind === "reply"
+          ? "💬"
+          : event.text.includes("started")
+            ? "💻"
+            : "☕";
+      setMoodByAgentId((prev) => ({ ...prev, [id]: { emoji, ts: Date.now() } }));
+      window.clearTimeout(moodTimersRef.current.get(id));
+      moodTimersRef.current.set(
+        id,
+        window.setTimeout(() => {
+          moodTimersRef.current.delete(id);
+          setMoodByAgentId((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+        }, 2500),
+      );
+    }
   }, [feedEvents]);
-
-  // E3 Idea 1: emoji mood reactions on feed events.
   useEffect(() => {
-    if (feedEvents.length === 0) return;
-    const latest = feedEvents[0];
-    if (!latest) return;
-    const emoji =
-      latest.kind === "reply"
-        ? "💬"
-        : latest.text.includes("started")
-          ? "💻"
-          : "☕";
-    const addTimer = window.setTimeout(() => {
-      setMoodByAgentId((prev) => ({
-        ...prev,
-        [latest.id]: { emoji, ts: Date.now() },
-      }));
-    }, 0);
-    const timer = window.setTimeout(() => {
-      setMoodByAgentId((prev) => {
-        const next = { ...prev };
-        delete next[latest.id];
-        return next;
-      });
-    }, 2500);
+    const speechTimers = speechTimersRef.current;
+    const moodTimers = moodTimersRef.current;
     return () => {
-      window.clearTimeout(addTimer);
-      window.clearTimeout(timer);
+      speechTimers.forEach((timer) => window.clearTimeout(timer));
+      moodTimers.forEach((timer) => window.clearTimeout(timer));
     };
-  }, [feedEvents]);
+  }, []);
 
   // E3 Idea 3: auto-clear spotlight after 2s.
   useEffect(() => {
@@ -5425,10 +4923,10 @@ export function RetroOffice3D({
             />
 
             {/* Floor + walls — always visible, no async loading. */}
-            <SceneFloorAndWalls showRemoteOffice={remoteOfficeEnabled} />
+            <SceneFloorAndWalls />
 
             {/* Wall pictures — procedural, no async loading. */}
-            <SceneWallPictures showRemoteOffice={remoteOfficeEnabled} />
+            <SceneWallPictures />
 
             {/* Environment lighting — async, wrapped in its own Suspense so floor stays visible. */}
             <Suspense fallback={null}>
@@ -5866,10 +5364,6 @@ export function RetroOffice3D({
               )}
             </Suspense>
 
-            {remoteLayoutFurniture.length > 0 ? (
-              <ReadOnlyFurnitureClone furniture={remoteLayoutFurniture} />
-            ) : null}
-
             {/* Removed standalone Jukebox as it's now in the furniture loop */}
 
             {/* Agents — purely imperative, driven by renderAgentsRef inside useFrame. */}
@@ -6094,7 +5588,6 @@ export function RetroOffice3D({
                 const status = agentStatusLookup[agent.id];
                 const isError = status?.isError ?? agent.status === "error";
                 const working = status?.working ?? agent.status === "working";
-                const isRemoteAgent = isRemoteOfficeAgentId(agent.id);
                 const mood = moodByAgentId[agent.id];
                 const dotClass = isError
                   ? "bg-red-400"
@@ -6110,9 +5603,7 @@ export function RetroOffice3D({
                     onMouseLeave={handleAgentUnhover}
                     onClick={() => {
                       setSpotlightAgentId(agent.id);
-                      if (!isRemoteAgent) {
-                        onAgentEdit?.(agent.id);
-                      }
+                      onAgentEdit?.(agent.id);
                     }}
                     className={`relative flex h-8 w-8 items-center justify-center rounded-full border text-[9px] font-bold text-[var(--color-office-bg-1)] shadow transition-transform hover:-translate-y-0.5 ${
                       spotlightAgentId === agent.id
@@ -6188,7 +5679,6 @@ export function RetroOffice3D({
                   const status = agentStatusLookup[agent.id];
                   const isError = status?.isError ?? agent.status === "error";
                   const working = status?.working ?? agent.status === "working";
-                  const isRemoteAgent = isRemoteOfficeAgentId(agent.id);
                   const dotClass = isError
                     ? "bg-red-400"
                     : working
@@ -6204,9 +5694,7 @@ export function RetroOffice3D({
                         type="button"
                         onClick={() => {
                           setSpotlightAgentId(agent.id);
-                          if (!isRemoteAgent) {
-                            onAgentEdit?.(agent.id);
-                          }
+                          onAgentEdit?.(agent.id);
                           setAgentRosterOpen(false);
                         }}
                         className="flex min-w-0 flex-1 items-center gap-3 text-left"
@@ -6226,7 +5714,6 @@ export function RetroOffice3D({
                           </div>
                           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-amber-500/70">
                             {isError ? "error" : working ? "working" : "idle"}
-                            {isRemoteAgent ? " · remote" : ""}
                             {runCount > 0 ? ` · ${runCount} runs` : ""}
                           </div>
                         </div>
@@ -6254,31 +5741,24 @@ export function RetroOffice3D({
                       <button
                         type="button"
                         title={
-                          isRemoteAgent
-                            ? "Remote office is view only"
-                            : monitorAgentId === agent.id
-                              ? "Close desk monitor"
-                              : "Open desk monitor"
+                          monitorAgentId === agent.id
+                            ? "Close desk monitor"
+                            : "Open desk monitor"
                         }
-                        disabled={isRemoteAgent}
                         onClick={() => {
-                          if (!isRemoteAgent) {
-                            onMonitorSelect?.(
-                              monitorAgentId === agent.id ? null : agent.id,
-                            );
-                          }
+                          onMonitorSelect?.(
+                            monitorAgentId === agent.id ? null : agent.id,
+                          );
                         }}
                         className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
-                          isRemoteAgent
-                            ? "cursor-not-allowed border-white/10 text-white/25"
-                            : monitorAgentId === agent.id
-                              ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
-                              : "border-amber-900/20 text-white/60 hover:border-emerald-400/30 hover:text-emerald-200"
+                          monitorAgentId === agent.id
+                            ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
+                            : "border-amber-900/20 text-white/60 hover:border-emerald-400/30 hover:text-emerald-200"
                         }`}
                       >
                         <Monitor size={12} />
                       </button>
-                      {onAgentDelete && !isRemoteAgent ? (
+                      {onAgentDelete ? (
                         <button
                           type="button"
                           title="Delete agent"
@@ -7093,18 +6573,6 @@ export function RetroOffice3D({
       {/* Toolbar — top right. */}
       {!readOnly && !immersiveOverlayActive ? (
         <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
-          {remoteOfficeEnabled &&
-          (remoteOfficeSourceKind === "presence_endpoint"
-            ? remoteOfficePresenceUrl.trim().length > 0
-            : remoteOfficeGatewayUrl.trim().length > 0) ? (
-            <button
-              onClick={() => setSettingsModalOpen(true)}
-              title={remoteOfficeStatusText}
-              className="flex h-7 items-center justify-center gap-1 rounded-md border border-white/15 bg-[var(--color-office-bg-1)]/92 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/75 transition-all backdrop-blur-sm hover:border-cyan-400/45 hover:text-cyan-100"
-            >
-              <span>{remoteOfficeLabel}</span>
-            </button>
-          ) : null}
           {onAddAgent ? (
             <button
               onClick={onAddAgent}
@@ -7114,21 +6582,6 @@ export function RetroOffice3D({
               <UserPlus size={12} />
               <span>Add</span>
             </button>
-          ) : null}
-          {/* DevLabs: no OpenClaw gateway, so the runtime badge only shows when a host wires one. */}
-          {onGatewayConnect ? (
-          <div
-            className={`flex h-7 items-center rounded-md border px-2 text-[10px] font-mono uppercase tracking-[0.12em] ${
-              gatewayStatus === "connected"
-                ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-100"
-                : gatewayStatus === "connecting"
-                  ? "border-amber-400/25 bg-amber-500/10 text-amber-100"
-                  : "border-rose-400/25 bg-rose-500/10 text-rose-100"
-            }`}
-            title={`Runtime: ${activeAdapterType} (${gatewayStatus})`}
-          >
-            {activeAdapterType} • {gatewayStatus}
-          </div>
           ) : null}
           {/* New Idea 7: Heatmap toggle. */}
           <button
@@ -7235,72 +6688,7 @@ export function RetroOffice3D({
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
-              <SettingsPanel
-                gatewayStatus={gatewayStatus}
-                gatewayUrl={gatewayUrl}
-                gatewayToken={gatewayToken}
-                selectedAdapterType={selectedAdapterType}
-                activeAdapterType={activeAdapterType}
-                onGatewayDisconnect={() => {
-                  onGatewayDisconnect?.();
-                  setSettingsModalOpen(false);
-                }}
-                onGatewayConnect={() => {
-                  onGatewayConnect?.();
-                }}
-                onGatewayUrlChange={(value) => onGatewayUrlChange?.(value)}
-                onGatewayTokenChange={(value) => onGatewayTokenChange?.(value)}
-                onGatewayAdapterTypeChange={(value) =>
-                  onGatewayAdapterTypeChange?.(value)
-                }
-                onOpenOnboarding={() => {
-                  onOpenOnboarding?.();
-                  setSettingsModalOpen(false);
-                }}
-                officeTitle={officeTitle}
-                officeTitleLoaded={officeTitleLoaded}
-                onOfficeTitleChange={(title) => onOfficeTitleChange?.(title)}
-                remoteOfficeEnabled={remoteOfficeEnabled}
-                remoteOfficeSourceKind={remoteOfficeSourceKind}
-                remoteOfficeLabel={remoteOfficeLabel}
-                remoteOfficePresenceUrl={remoteOfficePresenceUrl}
-                remoteOfficeGatewayUrl={remoteOfficeGatewayUrl}
-                remoteOfficeTokenConfigured={remoteOfficeTokenConfigured}
-                onRemoteOfficeEnabledChange={(enabled) =>
-                  onRemoteOfficeEnabledChange?.(enabled)
-                }
-                onRemoteOfficeSourceKindChange={(kind) =>
-                  onRemoteOfficeSourceKindChange?.(kind)
-                }
-                onRemoteOfficeLabelChange={(label) =>
-                  onRemoteOfficeLabelChange?.(label)
-                }
-                onRemoteOfficePresenceUrlChange={(url) =>
-                  onRemoteOfficePresenceUrlChange?.(url)
-                }
-                onRemoteOfficeGatewayUrlChange={(url) =>
-                  onRemoteOfficeGatewayUrlChange?.(url)
-                }
-                onRemoteOfficeTokenChange={(token) =>
-                  onRemoteOfficeTokenChange?.(token)
-                }
-                voiceRepliesEnabled={voiceRepliesEnabled}
-                voiceRepliesVoiceId={voiceRepliesVoiceId}
-                voiceRepliesSpeed={voiceRepliesSpeed}
-                voiceRepliesLoaded={voiceRepliesLoaded}
-                onVoiceRepliesToggle={(enabled) =>
-                  onVoiceRepliesToggle?.(enabled)
-                }
-                onVoiceRepliesVoiceChange={(voiceId) =>
-                  onVoiceRepliesVoiceChange?.(voiceId)
-                }
-                onVoiceRepliesSpeedChange={(speed) =>
-                  onVoiceRepliesSpeedChange?.(speed)
-                }
-                onVoiceRepliesPreview={(voiceId, voiceName) =>
-                  onVoiceRepliesPreview?.(voiceId, voiceName)
-                }
-              />
+              <SettingsPanel />
             </div>
           </div>
         </div>

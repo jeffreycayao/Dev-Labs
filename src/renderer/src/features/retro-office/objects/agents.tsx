@@ -1,6 +1,6 @@
 import { Billboard, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { memo, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { createDefaultAgentAvatarProfile } from "@/lib/avatars/profile";
 import {
@@ -608,6 +608,8 @@ export const AgentModel = memo(function AgentModel({
     texture.needsUpdate = true;
     return texture;
   }, [skin]);
+  // r3f does not dispose a texture passed as `map`; free it with the agent.
+  useEffect(() => () => faceTexture.dispose(), [faceTexture]);
 
   const resolvedSpeechText =
     showSpeech && speechText?.trim()

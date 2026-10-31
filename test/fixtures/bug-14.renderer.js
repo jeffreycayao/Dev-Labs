@@ -131,7 +131,6 @@
     getContextRules: async () => [],
     githubIssues: async () => ({ ok: false, error: 'not configured' }),
     setAgentTokenCap: async () => ({ ok: true }),
-    historyAdd: async () => ({}),
     trackMessageSent: async () => ({}),
     attachFiles: async () => ({ ok: false, files: [] }),
     attachFilesPicker: async () => ({ ok: false, files: [] }),
@@ -235,7 +234,7 @@
   const repoRequire = createRequire(path.join(REPO, 'package.json'));
 
   function requireBare(request) {
-    if (request === 'pixi.js') return pixiStub;
+    if (/^(monaco-editor|@monaco-editor\/react)(\/|$)/.test(request)) return deepStub;
     if (request === 'react-markdown') return reactMarkdownStub;
     if (request === 'remark-gfm') return { default: function remarkGfmStub() { return {}; } };
     return repoRequire(request); // xterm, codemirror, react, zustand… all resolve from the repo
@@ -244,11 +243,13 @@
   // ESM-only under this Electron node — stubbed at the require boundary. They
   // are only module-loaded for tabs never mounted in this scenario, so the
   // stubs cannot change the behavior under test.
-  const pixiStub = new Proxy({}, {
-    get(_t, key) {
-      if (key === '__esModule') return false;
-      return function PixiStub() {};
-    }
+  // Monaco: setupMonaco() runs at module load (loader.config, defineTheme, worker
+  // imports), so every property and call has to keep returning something usable.
+  const deepStub = new Proxy(function DeepStub() {}, {
+    // __esModule: true so `import * as` and default imports use the proxy itself.
+    get(_t, key) { return key === '__esModule' ? true : deepStub; },
+    apply() { return deepStub; },
+    construct() { return deepStub; }
   });
   const reactMarkdownStub = function ReactMarkdownStub() { return null; };
 

@@ -214,3 +214,13 @@ test('just-updated is quiet on the badge and loses to a newer available release'
   );
   assert.equal(next.state, 'available');
 });
+
+test('only a Developer ID-signed Mac build takes the self-install path', () => {
+  const { hasDeveloperIdSignature } = loadTs('src/shared/updateState.ts');
+  const signed = 'Executable=/Applications/DevLabs.app/Contents/MacOS/DevLabs\nAuthority=Developer ID Application: Jane (ABCDE12345)\nTeamIdentifier=ABCDE12345\n';
+  const adhoc = 'Executable=/Applications/DevLabs.app/Contents/MacOS/DevLabs\nSignature=adhoc\nTeamIdentifier=not set\n';
+  assert.equal(hasDeveloperIdSignature(signed), true);
+  assert.equal(hasDeveloperIdSignature(adhoc), false);
+  assert.equal(hasDeveloperIdSignature(''), false, 'codesign missing or failed');
+  assert.equal(hasDeveloperIdSignature('code object is not signed at all'), false);
+});

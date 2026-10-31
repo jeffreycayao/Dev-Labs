@@ -1,12 +1,13 @@
 import { app, ipcMain, shell } from 'electron';
 import type { WebContents } from 'electron';
+import { execFile } from 'node:child_process';
 import { request as httpsRequest } from 'node:https';
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readConfig } from './config';
 import { GITHUB_REPO } from '../shared/brand';
 import { DEFAULT_DROP_HTML } from '../shared/releaseDrop';
-import { reduceStatus, clampPercent, isNewer, installerUrl, shouldShowReleaseDrop, type UpdateStatus } from '../shared/updateState';
+import { reduceStatus, clampPercent, isNewer, installerUrl, shouldShowReleaseDrop, hasDeveloperIdSignature, type UpdateStatus } from '../shared/updateState';
 
 /**
  * Auto-update from GitHub releases.
@@ -56,6 +57,8 @@ let started = false;
 let lastFallbackCheck = 0;
 /** Remembered so a status survives a renderer reload and can be re-served. */
 let lastStatus: UpdateStatus | null = null;
+/** False on a Mac build that can't install its own updates (see macCanSelfUpdate). */
+let nativeUpdates = true;
 /**
  * Resolved when a restart-to-install is CALLED OFF.
  *
@@ -218,50 +221,71 @@ function fetchReleaseBody(version: string, done: (notes: string | undefined) => 
   } catch { done(undefined); }
 }
 
-/** Notify-only check against releases/latest (no download). Never throws. */
-function fallbackCheck(reason: string | undefined, force = false): void {
-  if (!REPO) return;
+/** Squirrel.Mac installs only Developer ID-signed updates. A build made without
+ *  the signing secrets is ad-hoc signed, so the native path would download the
+ *  ~200 MB zip on every check and then fail; such builds go notify-only. */
+function macCanSelfUpdate(): Promise<boolean> {
+  if (process.platform !== 'darwin') return Promise.resolve(true);
+  const bundle = join(process.execPath, '..', '..', '..'); // …/DevLabs.app
+  return new Promise((resolve) => {
+    execFile('codesign', ['-dv', bundle], { timeout: 10_000 }, (_err, stdout, stderr) => {
+      resolve(hasDeveloperIdSignature(`${stdout ?? ''}\n${stderr ?? ''}`));
+    });
+  });
+}
+
+/** Notify-only check against releases/latest (no download). Never throws.
+ *  `force` skips the 1h cache and reports "up to date" too (a check the user asked for).
+ *  Resolves once the answer is in: false when GitHub couldn't be read. */
+function fallbackCheck(reason: string | undefined, force = false): Promise<boolean> {
+  if (!REPO) return Promise.resolve(true);
   const now = Date.now();
-  if (!force && now - lastFallbackCheck < FALLBACK_CACHE_MS) return;
+  if (!force && now - lastFallbackCheck < FALLBACK_CACHE_MS) return Promise.resolve(true);
   lastFallbackCheck = now;
-  try {
-    const req = httpsRequest(
-      {
-        hostname: 'api.github.com',
-        path: `/repos/${REPO}/releases/latest`,
-        method: 'GET',
-        headers: { 'User-Agent': 'devlabs-updater', Accept: 'application/vnd.github+json' },
-        timeout: 10_000
-      },
-      (res) => {
-        let body = '';
-        res.setEncoding('utf8');
-        res.on('data', (d) => { body += d; if (body.length > 262_144) req.destroy(); });
-        res.on('end', () => {
-          try {
-            const rel = JSON.parse(body) as { tag_name?: string; html_url?: string; body?: string; assets?: Array<{ name?: string; browser_download_url?: string }> };
-            const tag = rel.tag_name ?? '';
-            if (tag && isNewer(tag, app.getVersion())) {
-              emit({
-                state: 'available-manual',
-                version: tag.replace(/^v/, ''),
-                url: rel.html_url ?? `https://github.com/${REPO}/releases/latest`,
-                reason,
-                downloadUrl: pickDownloadAsset(rel.assets) ?? undefined,
-                // Already in the response we just parsed — carrying it costs
-                // nothing and lets the notify-only toast show "What's new" too.
-                // NOT a new request: see TELEMETRY.md, this app never adds one.
-                notes: typeof rel.body === 'string' ? rel.body : undefined
-              });
-            }
-          } catch { /* malformed body — try again next interval */ }
-        });
-      }
-    );
-    req.on('timeout', () => req.destroy());
-    req.on('error', () => { /* offline — try again next interval */ });
-    req.end();
-  } catch { /* never let the fallback take the app down */ }
+  return new Promise((resolve) => {
+    try {
+      const req = httpsRequest(
+        {
+          hostname: 'api.github.com',
+          path: `/repos/${REPO}/releases/latest`,
+          method: 'GET',
+          headers: { 'User-Agent': 'devlabs-updater', Accept: 'application/vnd.github+json' },
+          timeout: 10_000
+        },
+        (res) => {
+          let body = '';
+          res.setEncoding('utf8');
+          res.on('data', (d) => { body += d; if (body.length > 262_144) req.destroy(); });
+          res.on('end', () => {
+            try {
+              const rel = JSON.parse(body) as { tag_name?: string; html_url?: string; body?: string; assets?: Array<{ name?: string; browser_download_url?: string }> };
+              const tag = rel.tag_name ?? '';
+              if (tag && isNewer(tag, app.getVersion())) {
+                emit({
+                  state: 'available-manual',
+                  version: tag.replace(/^v/, ''),
+                  url: rel.html_url ?? `https://github.com/${REPO}/releases/latest`,
+                  reason,
+                  downloadUrl: pickDownloadAsset(rel.assets) ?? undefined,
+                  // Already in the response we just parsed — carrying it costs
+                  // nothing and lets the notify-only toast show "What's new" too.
+                  // NOT a new request: see TELEMETRY.md, this app never adds one.
+                  notes: typeof rel.body === 'string' ? rel.body : undefined
+                });
+              } else if (force && tag) {
+                emit({ state: 'not-available' });
+              }
+              resolve(Boolean(tag));
+            } catch { resolve(false); /* malformed body — try again next interval */ }
+          });
+        }
+      );
+      req.on('timeout', () => req.destroy());
+      req.on('error', () => resolve(false)); // offline — try again next interval
+      req.on('close', () => resolve(false)); // no-op once 'end' resolved
+      req.end();
+    } catch { resolve(false); /* never let the fallback take the app down */ }
+  });
 }
 
 /** electron-updater's checkForUpdates has no timeout of its own. If the feed
@@ -295,6 +319,13 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
  */
 async function runCheck(): Promise<{ ok: boolean; error?: string }> {
   if (!REPO) { emit({ state: 'not-available' }); return { ok: true }; }
+  if (!nativeUpdates) {
+    // Awaited: the badge reads the status back as soon as this returns.
+    if (await fallbackCheck(undefined, true)) return { ok: true };
+    const message = 'could not reach GitHub to check for updates';
+    emit({ state: 'error', message });
+    return { ok: false, error: message };
+  }
   emit({ state: 'checking' });
   try {
     // Hard-capped so a stalled feed request cannot leave the badge on 'checking'
@@ -514,7 +545,10 @@ export function initAutoUpdater(getWebContents: () => WebContents | null): void 
   started = true;
 
   void (async () => {
-    try {
+    // No native updater at all on an unsigned Mac build: runCheck goes straight to the release page.
+    nativeUpdates = await macCanSelfUpdate();
+    if (!nativeUpdates) logLine(`not Developer ID-signed: notify-only updates (current v${app.getVersion()})`);
+    else try {
       const autoUpdater = await loadAutoUpdater();
       autoUpdater.autoDownload = true;
       autoUpdater.autoInstallOnAppQuit = false; // install ONLY on explicit restart

@@ -260,3 +260,16 @@ test('a secretless endpoint is never served', async () => {
   });
   assert.equal(res.status, 401);
 });
+
+test('a message over 32 KB is refused with 413 before it reaches the handler', async () => {
+  const { server, seen } = makeServer();
+  const big = await request(server, {
+    url: '/alpha', headers: auth(SECRET_A), body: post({ message: 'x'.repeat(32 * 1024 + 1) })
+  });
+  assert.equal(big.status, 413);
+  assert.equal(seen.length, 0);
+  const fits = await request(server, {
+    url: '/alpha', headers: auth(SECRET_A), body: post({ message: 'x'.repeat(32 * 1024) })
+  });
+  assert.equal(fits.status, 200);
+});

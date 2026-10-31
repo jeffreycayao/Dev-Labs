@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore, type Agent } from '@/store/store';
 import { accentByName } from '@/design/tokens';
 import { RetroOffice3D } from '@/features/retro-office/RetroOffice3D';
@@ -93,7 +94,6 @@ const writeJson = (key: string, value: unknown) => {
  *  Each floor keeps its own furniture layout and desk assignments. */
 export function OfficeFloor3D() {
   const { t } = useTranslation();
-  const agents = useStore((s) => s.agents);
   const selectedId = useStore((s) => s.selectedId);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saved, setSaved] = useState<OfficeLevels>(() => {
@@ -102,28 +102,41 @@ export function OfficeFloor3D() {
   const [level, setLevel] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
 
+  // Subscriptions are narrow on purpose: an update to an agent on another floor
+  // (every tool call changes its action) must not re-render this office.
   // Ramon first so he takes the first workstation and is pinned to floor 1.
-  const ordered = useMemo(
-    () => [...agents.filter(isRamon), ...agents.filter((a) => !isRamon(a))],
-    [agents]
-  );
-  const pinned = useMemo(() => ordered.filter(isRamon).map((a) => a.id), [ordered]);
-  const levels = useMemo(
-    () => assignOfficeLevels(ordered.map((a) => a.id), saved, pinned),
-    [ordered, saved, pinned]
-  );
-  useEffect(() => writeJson(LS_LEVELS, levels), [levels]);
+  const orderedIds = useStore(useShallow((s) => [...s.agents.filter(isRamon), ...s.agents.filter((a) => !isRamon(a))].map((a) => a.id)));
+  const pinned = useStore(useShallow((s) => s.agents.filter(isRamon).map((a) => a.id)));
+  const levels = useMemo(() => assignOfficeLevels(orderedIds, saved, pinned), [orderedIds, saved, pinned]);
+  // Keep auto-placements too (merged over the saved ones), or an agent that
+  // overflowed to a higher floor jumps down the moment someone below leaves.
+  const levelsJson = JSON.stringify(levels);
+  useEffect(() => {
+    setSaved((p) => {
+      const next = { count: levels.count, byAgent: { ...p.byAgent, ...levels.byAgent } };
+      return JSON.stringify(next) === JSON.stringify(p) ? p : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the assignment changes
+  }, [levelsJson]);
+  useEffect(() => writeJson(LS_LEVELS, saved), [saved]);
   useEffect(() => { if (level >= levels.count) setLevel(levels.count - 1); }, [level, levels.count]);
 
-  const onLevel = useMemo(() => ordered.filter((a) => levels.byAgent[a.id] === level), [ordered, levels, level]);
-  const officeAgents = useMemo(() => onLevel.map(toOfficeAgent), [onLevel]);
+  const onLevel = useStore(useShallow((s) => {
+    const here = s.agents.filter((a) => levels.byAgent[a.id] === level);
+    return [...here.filter(isRamon), ...here.filter((a) => !isRamon(a))];
+  }));
+  // Rebuilt only when something the office draws changes, not on every action update.
+  const officeKey = JSON.stringify(onLevel.map(toOfficeAgent));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const officeAgents = useMemo(() => onLevel.map(toOfficeAgent), [officeKey]);
 
   const [desks, setDesks] = useState<Record<string, string>>(() => readJson(lsDesks(0), {}));
   useEffect(() => setDesks(readJson(lsDesks(level), {})), [level]);
 
-  const ramon = ordered.find(isRamon);
+  const ramonId = pinned[0] ?? null;
+  const ramonName = useStore((s) => s.agents.find(isRamon)?.name);
   const pickChatter = useMemo<PickChatter>(() => (kind, agentId, seed) => {
-    const character = agents.find((a) => a.id === agentId)?.character ?? 'michael';
+    const character = useStore.getState().agents.find((a) => a.id === agentId)?.character ?? 'michael';
     switch (kind) {
       case 'exchange': return [...pickExchange(character, seed)];
       case 'gossip': {
@@ -132,11 +145,11 @@ export function OfficeFloor3D() {
         const count = Array.isArray(pool) && pool.length > 0 ? pool.length : 1;
         return [t(`office.gossip.${seed % count}`)];
       }
-      case 'suckUp': return [t(`office.suckUp.${SUCKUP_LINES[seed % SUCKUP_LINES.length]}`, { godName: ramon?.name ?? 'boss' })];
+      case 'suckUp': return [t(`office.suckUp.${SUCKUP_LINES[seed % SUCKUP_LINES.length]}`, { godName: ramonName ?? 'boss' })];
       case 'cheer': return [t(`office.cheer.${seed % CHEER_COUNT}`)];
       default: return [pickSoloLine(character, kind, seed)];
     }
-  }, [agents, ramon?.name, t]);
+  }, [ramonName, t]);
 
   // Reply bubbles, emoji reactions and janitors, from live agent state.
   const { feedEvents, cleaningCues } = useOfficeFeed(onLevel);
@@ -160,9 +173,9 @@ export function OfficeFloor3D() {
     if (!latest || latest === spokenRef.current) return;
     spokenRef.current = latest;
     // The voice hook already speaks recentAssistantText; this covers hive messages.
-    const own = agents.find((a) => a.id === latest.id)?.recentAssistantText?.trim();
+    const own = useStore.getState().agents.find((a) => a.id === latest.id)?.recentAssistantText?.trim();
     if (latest.kind === 'reply' && latest.text !== own) voice.speak(latest.text);
-  }, [feedEvents, voice, agents]);
+  }, [feedEvents, voice]);
 
   // Focus mode and the IDE cover the office: no point drawing it.
   const coveredByOverlay = useStore((s) => Boolean(s.fullscreenAgentId) || s.ideOpen);
@@ -190,12 +203,13 @@ export function OfficeFloor3D() {
     };
   }, [fullscreen]);
 
-  const selected = agents.find((a) => a.id === selectedId);
-  const editing = editingId ? agents.find((a) => a.id === editingId) : undefined;
+  // The floor bar needs only the selected agent's name (Ramon can't be moved).
+  const selectedName = useStore((s) => s.agents.find((a) => a.id === s.selectedId && !isRamon(a))?.name);
+  const editing = useStore((s) => (editingId ? s.agents.find((a) => a.id === editingId) : undefined));
 
   const moveSelected = (to: number) => {
-    if (!selected) return;
-    const next = moveAgentToLevel(levels, selected.id, to, pinned);
+    if (!selectedId) return;
+    const next = moveAgentToLevel(levels, selectedId, to, pinned);
     if (!next) {
       setNotice(t('office.levels.full', { n: to + 1, max: AGENTS_PER_LEVEL }));
       return;
@@ -246,10 +260,9 @@ export function OfficeFloor3D() {
         // v4: desks fixed (agents sat inside them) and a boss office for Ramon.
         storageNamespace={levelNamespace(level)}
         officeTitle={t('office.levels.floor', { n: level + 1 })}
-        officeTitleLoaded
         taskManagerEnabled
         pickChatter={pickChatter}
-        bossAgentId={ramon?.id ?? null}
+        bossAgentId={ramonId}
         feedEvents={feedEvents}
         cleaningCues={cleaningCues}
         animationState={activity.animationState}
@@ -333,16 +346,16 @@ export function OfficeFloor3D() {
             − {t('office.levels.deleteFloor', { n: level + 1 })}
           </button>
         )}
-        {levels.count > 1 && selected && !isRamon(selected) && (
+        {levels.count > 1 && selectedId && selectedName !== undefined && (
           <label
-            title={t('office.levels.moveTo', { name: selected.name })}
+            title={t('office.levels.moveTo', { name: selectedName })}
             style={{ display: 'flex', alignItems: 'center', gap: 6, color: BRAND.muted, paddingLeft: 4, whiteSpace: 'nowrap', minWidth: 0 }}
           >
             <span style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {t('office.levels.moveTo', { name: selected.name })}
+              {t('office.levels.moveTo', { name: selectedName })}
             </span>
             <select
-              value={levels.byAgent[selected.id] ?? 0}
+              value={levels.byAgent[selectedId] ?? 0}
               onChange={(e) => moveSelected(Number(e.target.value))}
               style={{ background: BRAND.dark, color: BRAND.text, border: `1px solid ${BRAND.line}`, borderRadius: 4, font: 'inherit', padding: '3px 4px' }}
             >

@@ -3,7 +3,8 @@
  *
  * Phase A scope (the rest of the renderer state stays in localStorage for now):
  *   - kv:               scalar app state. Today: the main window's bounds.
- *   - command_history:  NET-NEW — every prompt the user submits to an agent.
+ *   (command_history was dropped in migration 2: it kept every prompt in
+ *   plaintext and nothing ever read it back.)
  *
  * Lives in the Electron MAIN process (better-sqlite3 is native + synchronous);
  * the renderer reaches it over IPC. The DB file sits next to config.json under
@@ -18,15 +19,6 @@
 import Database from 'better-sqlite3';
 import { app } from 'electron';
 import { join } from 'node:path';
-
-/** A captured user prompt, as returned to the renderer (camelCase columns). */
-export interface CommandHistoryRow {
-  id: number;
-  agentId: string;
-  cwd: string | null;
-  text: string;
-  ts: number;
-}
 
 /**
  * Ordered, append-only migrations. Index N takes the DB from user_version N to
@@ -64,6 +56,11 @@ const MIGRATIONS: Array<(db: Database.Database) => void> = [
       );
       CREATE INDEX IF NOT EXISTS idx_ch_agent_ts ON command_history(agent_id, ts DESC);
     `);
+  },
+  // → user_version 2: drop command_history and the plaintext prompts already in it.
+  (db) => {
+    db.pragma('secure_delete = ON'); // zero the freed pages instead of leaving the text on disk
+    db.exec('DROP TABLE IF EXISTS command_history;');
   }
 ];
 
@@ -127,49 +124,4 @@ export class PersistStore {
        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
     ).run(key, JSON.stringify(value), Date.now());
   }
-
-  // ─── command history (net-new) ─────────────────────────────────────────────
-
-  /** Record one submitted prompt. Empty text or missing agent id are ignored. */
-  addHistory(entry: { agentId: string; cwd?: string | null; text: string }): void {
-    if (!this.db) return;
-    const text = (entry.text ?? '').trim();
-    if (!text || !entry.agentId) return;
-    this.db.prepare('INSERT INTO command_history (agent_id, cwd, text, ts) VALUES (?, ?, ?, ?)')
-      .run(entry.agentId, entry.cwd ?? null, text, Date.now());
-  }
-
-  /** Most-recent-first history, optionally scoped to one agent. */
-  listHistory(agentId?: string, limit = 100): CommandHistoryRow[] {
-    if (!this.db) return [];
-    const lim = clampLimit(limit, 100);
-    const rows = agentId
-      ? this.db.prepare(
-          'SELECT id, agent_id AS agentId, cwd, text, ts FROM command_history WHERE agent_id = ? ORDER BY ts DESC, id DESC LIMIT ?'
-        ).all(agentId, lim)
-      : this.db.prepare(
-          'SELECT id, agent_id AS agentId, cwd, text, ts FROM command_history ORDER BY ts DESC, id DESC LIMIT ?'
-        ).all(lim);
-    return rows as CommandHistoryRow[];
-  }
-
-  /** Substring search over prompt text, most-recent-first. */
-  searchHistory(query: string, limit = 50): CommandHistoryRow[] {
-    if (!this.db) return [];
-    const q = (query ?? '').trim();
-    if (!q) return [];
-    const lim = clampLimit(limit, 50);
-    // Escape LIKE wildcards so a literal % or _ in the query isn't a metachar.
-    const needle = `%${q.replace(/[\\%_]/g, '\\$&')}%`;
-    return this.db.prepare(
-      "SELECT id, agent_id AS agentId, cwd, text, ts FROM command_history WHERE text LIKE ? ESCAPE '\\' ORDER BY ts DESC, id DESC LIMIT ?"
-    ).all(needle, lim) as CommandHistoryRow[];
-  }
-}
-
-/** Coerce an untrusted limit into [1, 1000] with a sane fallback. */
-function clampLimit(n: number, fallback: number): number {
-  const v = Math.floor(Number(n));
-  if (!Number.isFinite(v) || v <= 0) return fallback;
-  return Math.min(1000, v);
 }

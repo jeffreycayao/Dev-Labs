@@ -1302,6 +1302,7 @@
   "integrations": {
     "errLabel": "Give it a label.",
     "errId": "Could not derive a valid id from the label.",
+    "errIdTaken": "Another integration already uses this id. Change the label to make it different.",
     "errBaseUrl": "Base URL is required.",
     "errBaseUrlFormat": "Base URL must be https:// (or http://127.0.0.1 / localhost for a local target).",
     "errHeader": "Header name must be 1–64 chars of A–Z, 0–9, or \"-\".",

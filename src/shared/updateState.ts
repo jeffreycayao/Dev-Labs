@@ -82,6 +82,13 @@ export function parseVersion(v: string): [number, number, number] | null {
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
 }
 
+/** True when `codesign -dv` output shows a Developer ID (a real Team ID).
+ *  Squirrel.Mac installs only updates signed that way; ad-hoc builds (made
+ *  without the signing secrets) print `TeamIdentifier=not set`. */
+export function hasDeveloperIdSignature(codesignDetails: string): boolean {
+  return /^TeamIdentifier=(?!not set\s*$)[A-Z0-9]+\s*$/m.test(String(codesignDetails ?? ''));
+}
+
 export function isNewer(candidate: string, current: string): boolean {
   const a = parseVersion(candidate);
   const b = parseVersion(current);

@@ -97,12 +97,13 @@ test('an id is never allowed to carry a newline onto a command line', () => {
   assert.equal(model.id, 'gpt-6-astra --dangerously-skip-permissions');
 });
 
-test('ids and labels are length-capped', () => {
+test('labels are length-capped; an over-long id is refused, not cut into a different id', () => {
   const parsed = parseModelCatalog(ok({
-    claude: [{ id: 'x'.repeat(500), label: 'y'.repeat(500) }]
+    claude: [{ id: 'x'.repeat(500), label: 'too long' }, { id: 'claude-opus-5-5', label: 'y'.repeat(500) }]
   }));
-  const [model] = parsed.providers.claude;
-  assert.equal(model.id.length, 120);
+  const [model, ...rest] = parsed.providers.claude;
+  assert.equal(rest.length, 0, 'the 500-char id never reaches --model');
+  assert.equal(model.id, 'claude-opus-5-5');
   assert.equal(model.label.length, 60);
 });
 

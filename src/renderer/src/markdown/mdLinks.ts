@@ -26,8 +26,9 @@ export function resolveRel(baseRel: string | undefined, href: string): string {
   return parts.join('/');
 }
 
+/** Clickable only when main's `app:openExternal` will actually open it (https only). */
 export function isExternal(href: string): boolean {
-  return /^(https?:|mailto:)/i.test(href);
+  return /^https:\/\//.test(href);
 }
 
 /** True when `href` carries any URI scheme (http:, data:, file:, javascript:…). */

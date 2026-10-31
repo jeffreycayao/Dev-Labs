@@ -167,7 +167,7 @@ Mirrors the MemPalace / Slack wiring 1:1 so it composes with existing code and o
 | **Config mirror** | `src/renderer/src/store/config.ts`, `src/preload/index.d.ts` | Mirror the type (hand-mirrored, per repo convention). |
 | **Spawn** | `src/main/index.ts` (~1251), `src/main/hive.ts` (`ensureAgent`, `injectedPrompt`) | Pass `knowledgeGraph: knowledge.active()` into `ensureAgent`; merge `knowledge.env()` into spawn env; add the flag-gated `knowledgeLine`. |
 | **IPC** | `src/main/index.ts` | `kg:status`, `kg:list`, `kg:search`, `kg:ingestFiles`, `kg:get`, `kg:remove`. |
-| **Preload** | `src/preload/index.ts` (+`.d.ts`) | `window.cth.kgStatus/kgList/kgSearch/kgIngestFiles/kgGet/kgRemove`. |
+| **Preload** | `src/preload/index.ts` (+`.d.ts`) | `window.cth.kgStatus/kgAddFiles`. |
 | **Settings UI** | `src/renderer/src/components/SettingsModal.tsx` | A "Knowledge Graph" section: enable toggle + doc count + "Add files…" (OS dialog) — minimal, mirrors the Slack/webhook blocks. |
 | **Tests** | `test/kg-core.test.cjs` (NEW) | `node test/kg-core.test.cjs` — tokenize/chunk/score + ingest→search round-trip over text + image fixtures (matches `test/slack.test.cjs` convention). |
 

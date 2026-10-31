@@ -140,6 +140,8 @@ export function IntegrationsRegistry() {
   const validate = (d: Draft): string | null => {
     if (!d.label.trim()) return tr('integrations.errLabel');
     if (!slugify(d.id || d.label)) return tr('integrations.errId');
+    // Saving replaces by id, so a duplicate would silently overwrite the other one and its key.
+    if (d.isNew && records.some((r) => r.id === slugify(d.id || d.label))) return tr('integrations.errIdTaken');
     if (d.kind === 'custom-rest') {
       const u = d.baseUrl.trim();
       if (!u) return tr('integrations.errBaseUrl');

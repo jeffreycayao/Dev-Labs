@@ -34,6 +34,12 @@ function writeOutbox(outbox, filename, raw) {
   return file;
 }
 
+/** Age a file past the router's settle window, as if its writer finished long ago. */
+function settle(file) {
+  const old = new Date(Date.now() - 10_000);
+  fs.utimesSync(file, old, old);
+}
+
 function eventsFor(hive, filename) {
   return hive.logTail(500).filter((entry) => entry.file === filename);
 }
@@ -94,7 +100,7 @@ test('literal CRLF inside a JSON string is repaired and preserved', async (t) =>
 test('irreparable structural JSON is logged and quarantined', async (t) => {
   const { hive, outbox } = await floor(t);
   const filename = 'structural.json';
-  writeOutbox(outbox, filename, '{"to":"god","body":');
+  settle(writeOutbox(outbox, filename, '{"to":"god","body":'));
 
   assert.equal(hive.routeOnce(), 0);
   assert.equal(hive.inbox('god-1').length, 0);
@@ -123,7 +129,7 @@ test('escaped quotes and backslashes keep their JSON semantics', async (t) => {
 
 test('an irreparable poison file does not block a valid file in the same pass', async (t) => {
   const { hive, outbox } = await floor(t);
-  writeOutbox(outbox, 'a-poison.json', '{"to":"god","body":');
+  settle(writeOutbox(outbox, 'a-poison.json', '{"to":"god","body":'));
   writeOutbox(outbox, 'b-good.json', JSON.stringify({ to: 'god', act: 'inform', body: 'still routed' }));
 
   assert.equal(hive.routeOnce(), 1);
@@ -132,4 +138,18 @@ test('an irreparable poison file does not block a valid file in the same pass', 
   assert.equal(fs.existsSync(path.join(outbox, '.sent', 'bad-a-poison.json')), true);
   assert.equal(fs.existsSync(path.join(outbox, '.sent', 'b-good.json')), true);
   assert.equal(eventsFor(hive, 'a-poison.json')[0].reason, 'malformed-json');
+});
+
+test('an empty or half-written fresh file is retried next tick, not quarantined', async (t) => {
+  const { hive, outbox } = await floor(t);
+  for (const [filename, partial] of [['empty.json', ''], ['half.json', '{"to":"god","bo']]) {
+    const file = writeOutbox(outbox, filename, partial);
+    assert.equal(hive.routeOnce(), 0);
+    assert.equal(fs.existsSync(file), true, 'still in the outbox for the next tick');
+    assert.equal(fs.existsSync(path.join(outbox, '.sent', `bad-${filename}`)), false);
+
+    writeOutbox(outbox, filename, JSON.stringify({ to: 'god', act: 'inform', body: filename }));
+    assert.equal(hive.routeOnce(), 1, 'the finished write is delivered');
+  }
+  assert.deepEqual(hive.inbox('god-1').map((m) => m.body).sort(), ['empty.json', 'half.json']);
 });

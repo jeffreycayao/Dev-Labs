@@ -18,6 +18,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 jobs:
   typecheck:
     name: Typecheck
@@ -25,14 +28,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Typecheck (node + web)
         run: npm run typecheck
+      # The rules AGENTS.md calls "enforced by tests" (hire flag allowlist, i18n
+      # parity, update and release checks) only hold if the tests run here.
+      - name: Tests
+        run: npm run test:focused
       # Release gate: every advertised download link and docs version string must
       # match package.json. A version left behind in RELEASE.md / docs turns the
       # download buttons into 404s the moment the next release ships — this catches
@@ -49,9 +58,11 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run build

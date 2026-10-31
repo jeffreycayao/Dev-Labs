@@ -1,6 +1,6 @@
 import { app } from 'electron';
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import {
   autoModeFlagForProvider,
@@ -633,20 +633,33 @@ function migrateModelDefaultsV2(cfg: HarnessConfig, stored: Partial<HarnessConfi
  *  an external edit — is picked up, and an unchanged file is one stat. */
 let configCache: { mtimeMs: number; size: number; cfg: HarnessConfig } | null = null;
 
+/** Set while config.json exists but cannot be read. Reads fall back to defaults
+ *  so the app still boots; persistConfig refuses, so the user's file survives. */
+let configReadError: string | null = null;
+
+/** Copy a file that exists but cannot be read next to itself, so whatever is in
+ *  it can still be recovered. Returns the copy's path, or undefined if it failed. */
+export function copyAsideUnreadable(p: string): string | undefined {
+  const dest = `${p}.corrupt-${Date.now()}`;
+  try { copyFileSync(p, dest); return dest; } catch { return undefined; }
+}
+
 export function readConfig(): HarnessConfig {
   const p = configPath();
   // No file yet = a first run with nothing to migrate; the defaults ARE the
   // post-migration shape. Deliberately does not persist — a bare read must not
   // conjure a config.json before onboarding has written one.
-  if (!existsSync(p)) return withTriggerDefaults({ ...DEFAULTS });
+  if (!existsSync(p)) { configReadError = null; return withTriggerDefaults({ ...DEFAULTS }); }
   try {
     const st = statSync(p);
     // A clone: callers mutate what they read, and must not reach the cache.
     if (configCache && configCache.mtimeMs === st.mtimeMs && configCache.size === st.size) {
+      configReadError = null;
       return structuredClone(configCache.cfg);
     }
     const raw = readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
+    configReadError = null;
     const cfg = normalizeStoredHomes(migrateModelDefaultsV2(
       migrateUnsupportedCodexModel(migrateTriggersV1(withTriggerDefaults({ ...DEFAULTS, ...parsed }))), parsed
     ));
@@ -654,7 +667,15 @@ export function readConfig(): HarnessConfig {
     const after = statSync(p);
     configCache = { mtimeMs: after.mtimeMs, size: after.size, cfg: structuredClone(cfg) };
     return cfg;
-  } catch {
+  } catch (e) {
+    // Gone between the exists check and the read: same as no file yet.
+    if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') { configReadError = null; return withTriggerDefaults({ ...DEFAULTS }); }
+    if (!configReadError) {
+      const copy = copyAsideUnreadable(p);
+      configReadError = `Your settings file (config.json) could not be read: ${e instanceof Error ? e.message : String(e)}.`
+        + (copy ? ` A copy was saved as ${basename(copy)}.` : '')
+        + ' Settings were not saved, so nothing in it was overwritten. Fix or remove the file, then try again.';
+    }
     return withTriggerDefaults({ ...DEFAULTS });
   }
 }
@@ -708,6 +729,8 @@ function writeJsonAtomic(p: string, data: unknown): void {
 }
 
 function persistConfig(next: HarnessConfig): HarnessConfig {
+  // Every writer reads first; a failed read means `next` is defaults + patch.
+  if (configReadError) throw new Error(configReadError);
   const p = configPath();
   mkdirSync(dirname(p), { recursive: true });
   // Temp + rename: `rename` is atomic within a filesystem, so a crash mid-write
@@ -802,6 +825,8 @@ export function setAgentTokenCap(agentId: unknown, tokenCap: unknown): HarnessCo
 /** Wipe the persisted config back to first-run defaults so the app boots into
  *  onboarding again. Used by the "reset & start over" flow. */
 export function resetConfig(): HarnessConfig {
+  // Starting over is the one write meant to replace an unreadable file.
+  configReadError = null;
   // Saved like any other change, so a reset announces itself too.
   persistConfig({ ...DEFAULTS });
   // Drop the migration latch too: the file on disk is back to `triggersMigratedV1:

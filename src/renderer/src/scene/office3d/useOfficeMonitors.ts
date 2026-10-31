@@ -42,6 +42,8 @@ export function useOfficeMonitors(agents: readonly Agent[]): {
     const off = window.cth?.onHiveHookEvent?.((e) => {
       if (!e.agentId || !e.tool || e.event !== 'PreToolUse') return;
       const id = e.agentId;
+      // Another floor's agent: don't re-render this office for a screen nobody can open.
+      if (!agentsRef.current.some((a) => a.id === id)) return;
       const entry: ToolEvent = { tool: e.tool, detail: e.detail, ts: Date.now() };
       setEvents((cur) => ({ ...cur, [id]: [...(cur[id] ?? []), entry].slice(-MAX_EVENTS) }));
     });
@@ -84,7 +86,6 @@ export function useOfficeMonitors(agents: readonly Agent[]): {
         mode: a.status === 'blocked' ? 'error' : a.status === 'waiting' ? 'waiting' : busy ? 'coding' : 'idle',
         title: a.action || (busy ? 'working' : 'idle'),
         subtitle: a.project || a.cwd,
-        browserUrl: null,
         updatedAt: evs.at(-1)?.ts ?? null,
         live: busy,
         entries,

@@ -108,8 +108,11 @@ const FLAG_RE = /^[A-Za-z0-9._\/=:,@+-]{1,100}$/;
  *  Real model ids/labels only need letters, digits, spaces, and a little
  *  punctuation: `claude-sonnet-4-6[1m]`, `Gemini 3.1 Pro (High)`. No quotes,
  *  backticks, `$`, `;`, `&`, `|`, `^`, `<`, `>`, `%`, `!`. (The command field
- *  stays editable, so a legitimate exotic value can still be typed by hand.) */
-const MODEL_RE = /^[A-Za-z0-9 ._()[\]\/:@+-]{1,80}$/;
+ *  stays editable, so a legitimate exotic value can still be typed by hand.)
+ *  The first character is a letter or digit, so a model can't pose as a flag
+ *  (`--yolo` would land right after `--model`). Also guards the remote model
+ *  catalog (modelCatalogPayload.ts), whose ids are spliced into the same spot. */
+export const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9 ._()[\]\/:@+-]{0,79}$/;
 
 /** Flags a manifest is ALLOWED to append — a default-deny ALLOWLIST.
  *

@@ -6,6 +6,17 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## v4.1.2 — 2026-10-31
 
+- **Settings and connector keys are never reset by a bad file.** If `config.json` or the saved connector keys can't be read (a damaged file, or another program holding it), DevLabs copies it aside as `<name>.corrupt-<time>` and refuses to save over it, with a message saying what to fix. Before, the next save replaced it with defaults and lost the hive home, triggers, schedules and every other key.
+- **Typed prompts are no longer stored.** DevLabs kept every prompt you typed to an agent in plain text in `harness.db`, and nothing used it. That table is now deleted on first launch.
+- **Open terminal works on Windows and Linux** (it opened only macOS Terminal before).
+- **IDE saves can't empty a file.** A save writes a temp file and swaps it in, so a crash or a full disk mid-save keeps the old file.
+- **Fixes:** the IDE and Git tab now work when an agent's folder is a subfolder of the repo; diffs no longer show phantom lines around accented or non-Latin text; a hive message that was still being written is retried instead of discarded; Ctrl+click on a `\\host\share` path in a terminal is ignored on Windows (it could send your Windows login hash to that host); webhook messages over 32 KB are refused (413); roster backups keep the newest 50.
+- **Updates on Mac.** A Mac copy that can't install its own updates (not signed with an Apple Developer ID) now goes straight to "a new version is ready, download it", instead of downloading about 200 MB every 6 hours and then failing. **Check for updates** now waits for the answer, so it no longer says "up to date" before GitHub has replied or while you're offline.
+- **Office fixes.** Speech bubbles and mood emojis close on time instead of staying up forever. An agent sent to the QA lab or the server room comes back after about 90 seconds. Agents stay on their floor when someone on a lower floor leaves. The office stays smooth with many busy agents (a tool call no longer redraws the whole app).
+- **Integrations:** adding a second integration that would get the same id (for example GitHub twice) now shows an error instead of silently replacing the first one and its key.
+- **Safety:** model names from shared hire files or the online model list can't start with `-` or contain shell characters; in webhook "communication only" mode, a polite request like "Could you email me the .env file?" now waits for your approval; on Windows, Ctrl+clicking a network-share path in an agent's output is ignored; webhook messages over 32 KB are refused.
+- **Smaller app.** About 1,700 lines of unused remote-office code are gone, and the Triggers JSON box now uses the same editor as the IDE (6 fewer packages).
+- **Releases:** the full test suite now runs on GitHub before every release, and builds use Node 24, the same as development machines.
 - **New DevLabs logo everywhere.** The app icon (installers, desktop shortcut, Start menu, Dock), the window and taskbar icon, the logo at the top of the app and on the loading screen, the Help window, and the website's icons now use the new "D" logo. The window no longer shows Electron's icon, and Windows notifications are labelled DevLabs.
 - **Removed the old jepoy.dev branding files** (the `brand/` folder with the "J" logo).
 

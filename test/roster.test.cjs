@@ -190,3 +190,16 @@ test('queues and selection round-trip, and a bad queues field degrades to empty'
   assert.deepEqual(coerced.queues, {});
   assert.equal(coerced.selectedId, null);
 });
+
+test('backups are pruned to the newest ROSTER_BACKUP_KEEP', () => {
+  const { ROSTER_BACKUP_KEEP } = loadTs('src/main/roster.ts');
+  const home = tmpHome();
+  const store = storeAt(home);
+  for (let i = 0; i < ROSTER_BACKUP_KEEP + 5; i++) store.write(snapshot([{ id: 'a', name: `v${i}` }]));
+  const kept = backupsIn(home);
+  assert.equal(kept.length, ROSTER_BACKUP_KEEP);
+  // The newest backup holds the version just before the last write.
+  const newest = kept.sort().at(-1);
+  const body = JSON.parse(fs.readFileSync(path.join(rosterBackupDir(home), newest), 'utf8'));
+  assert.equal(body.agents[0].name, `v${ROSTER_BACKUP_KEEP + 3}`);
+});

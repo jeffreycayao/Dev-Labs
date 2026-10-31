@@ -16,9 +16,11 @@ test('stable releases fail if their changelog section is missing', () => {
   assert.throws(() => renderReleaseBody('v1.2.4', '1.2.4', '- New', changelog), /no section/);
 });
 
-test('prerelease can use its base changelog section', () => {
+test('prerelease can use its base changelog section, but only with a matching package.json', () => {
   assert.match(extractSection(changelog, 'v1.2.3-rc.1'), /Fixed updates/);
-  assert.match(renderReleaseBody('v1.2.3-rc.1', '1.2.3', '- Candidate', changelog), /Fixed updates/);
+  assert.match(renderReleaseBody('v1.2.3-rc.1', '1.2.3-rc.1', '- Candidate', changelog), /Fixed updates/);
+  // An rc tag on the final version would ship installers that say 1.2.3.
+  assert.throws(() => renderReleaseBody('v1.2.3-rc.1', '1.2.3', '- Candidate', changelog), /does not match/);
 });
 
 test('mismatched tag never publishes another version notes', () => {

@@ -24,20 +24,12 @@ interface KgMeta {
   origExt: string; bytes: number; tags: string[]; caption: string | null;
   chunkCount: number; addedAt: string; extractor: string; truncated: boolean;
 }
-interface KgHit {
-  docId: string; title: string; source: string; modality: string;
-  chunkIdx: number; score: number; snippet: string;
-}
 interface KgIngestInput {
   srcPath?: string; text?: string; title?: string; tags?: string[];
   caption?: string; modality?: string; source?: string;
 }
 interface KgCore {
   ingest(root: string, input: KgIngestInput): { docId: string; chunkCount: number; meta: KgMeta };
-  search(root: string, query: string, opts?: { limit?: number }): KgHit[];
-  list(root: string): KgMeta[];
-  getDoc(root: string, docId: string): { meta: KgMeta; text: string } | null;
-  removeDoc(root: string, docId: string): boolean;
   stats(root: string): { docCount: number; chunkCount: number; byModality: Record<string, number> };
 }
 
@@ -95,28 +87,5 @@ export class KnowledgeManager {
   /** Ingest a file from disk. No-op-safe when off (callers gate on status). */
   ingestFile(srcPath: string, opts: { title?: string; tags?: string[]; caption?: string } = {}) {
     return core.ingest(this.root(), { srcPath, ...opts });
-  }
-
-  /** Ingest inline text (e.g. pasted content). */
-  ingestText(text: string, opts: { title?: string; tags?: string[] } = {}) {
-    return core.ingest(this.root(), { text, ...opts });
-  }
-
-  search(query: string, limit?: number): KgHit[] {
-    if (!existsSync(this.root())) return [];
-    return core.search(this.root(), query, { limit });
-  }
-
-  list(): KgMeta[] {
-    if (!existsSync(this.root())) return [];
-    return core.list(this.root());
-  }
-
-  get(docId: string): { meta: KgMeta; text: string } | null {
-    return core.getDoc(this.root(), docId);
-  }
-
-  remove(docId: string): boolean {
-    return core.removeDoc(this.root(), docId);
   }
 }

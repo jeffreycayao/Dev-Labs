@@ -22,8 +22,10 @@ function renderReleaseBody(tag, version, highlights, changelog) {
   if (!/^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tag)) {
     throw new Error(`Invalid release tag: ${tag}`);
   }
+  // Exact: the installers report package.json's version, so an rc tag on a
+  // non-rc package.json would ship binaries that claim to be the final release.
   const taggedVersion = tag.slice(1);
-  if (taggedVersion !== version && !taggedVersion.startsWith(`${version}-`)) {
+  if (taggedVersion !== version) {
     throw new Error(`Release tag ${tag} does not match package.json ${version}`);
   }
   const notes = highlights.trim();

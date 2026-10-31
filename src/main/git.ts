@@ -12,8 +12,11 @@ function runGit(cwd: string, args: string[], timeoutMs = 8000): Promise<{
     const timer = setTimeout(() => {
       try { proc.kill('SIGKILL'); } catch { /* noop */ }
     }, timeoutMs);
-    proc.stdout.on('data', d => { stdout += d.toString(); });
-    proc.stderr.on('data', d => { stderr += d.toString(); });
+    // Decode on the stream: a per-chunk toString splits multi-byte UTF-8 characters.
+    proc.stdout.setEncoding('utf8');
+    proc.stderr.setEncoding('utf8');
+    proc.stdout.on('data', d => { stdout += d; });
+    proc.stderr.on('data', d => { stderr += d; });
     proc.on('error', e => {
       clearTimeout(timer);
       resolve({ ok: false, error: e.message });
@@ -63,7 +66,13 @@ export async function getBranch(cwd: string): Promise<GitBranchInfo | { error: s
   return { current: name, detached: false };
 }
 
-export async function getStatus(cwd: string): Promise<GitStatus | { error: string }> {
+/** Porcelain paths are repo-root-relative. `scopeToCwd` keeps only the entries
+ *  under `cwd` and makes their paths cwd-relative, so callers can hand them back
+ *  to readFile/getDiff with the same `cwd` when it is a repo subfolder. */
+export async function getStatus(cwd: string, scopeToCwd = false): Promise<GitStatus | { error: string }> {
+  const pre = scopeToCwd ? await runGit(cwd, ['rev-parse', '--show-prefix']) : null;
+  if (pre && !pre.ok) return { error: pre.error };
+  const prefix = pre ? pre.stdout.replace(/\r?\n$/, '') : '';
   const res = await runGit(cwd, ['status', '--porcelain=v1', '-z', '--untracked-files=all']);
   if (!res.ok) return { error: res.error };
   const entries: GitStatusEntry[] = [];
@@ -73,7 +82,11 @@ export async function getStatus(cwd: string): Promise<GitStatus | { error: strin
     if (token.length < 3) continue;
     const index = token[0];
     const worktree = token[1];
-    const path = token.slice(3);
+    let path = token.slice(3);
+    if (prefix) {
+      if (!path.startsWith(prefix)) continue;
+      path = path.slice(prefix.length);
+    }
     if (index === '?' && worktree === '?') untracked.push(path);
     else entries.push({ path, index, worktree });
   }
@@ -162,7 +175,7 @@ export interface GitDiff {
 
 /**
  * Diff a single file: its committed (HEAD) content vs its current working-tree
- * content. `relPath` MUST be repo-root-relative and is path-validated against
+ * content. `relPath` is relative to `cwd` (as getStatus(cwd, true) returns it) and is path-validated against
  * `cwd` with the shared fs guard (no escaping the workspace). All git/fs access
  * stays in the main process — the renderer only ever receives the two text sides.
  */
@@ -172,11 +185,17 @@ export async function getDiff(
   const abs = await safeResolve(cwd, relPath);
   if (!abs) return { ok: false, error: 'path escapes repository root' };
 
-  // HEAD side: `git show HEAD:<path>` — errors (untracked / new file) → no head version.
+  // HEAD side: `git show HEAD:./<path>` (`./` = relative to cwd, not the repo
+  // root) — errors (untracked / new file) → no head version.
   let head = '';
   let headExists = false;
-  const show = await runGit(cwd, ['show', `HEAD:${relPath}`]);
-  if (show.ok) { head = show.stdout; headExists = true; }
+  const spec = `HEAD:./${relPath}`;
+  const size = await runGit(cwd, ['cat-file', '-s', spec]);
+  if (size.ok && (parseInt(size.stdout.trim(), 10) || 0) > MAX_DIFF_BYTES) {
+    return { ok: false, error: 'file too large to diff (>2 MB)' };
+  }
+  const show = size.ok ? await runGit(cwd, ['show', spec]) : null;
+  if (show?.ok) { head = show.stdout; headExists = true; }
 
   // Working side: read the on-disk file through the same guarded open as the file
   // IPC, so the final component is re-checked by the kernel at open time rather

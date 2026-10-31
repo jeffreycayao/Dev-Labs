@@ -19,14 +19,14 @@
 import { app, safeStorage } from 'electron';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import {
   type IntegrationRecord,
   validateIntegrationRecord,
   authTypeNeedsSecret,
   secretRefFor
 } from '../shared/integrations';
-import { readConfig, writeConfig } from './config';
+import { copyAsideUnreadable, readConfig, writeConfig } from './config';
 
 // ─── Registry (config-backed) ────────────────────────────────────────────────
 
@@ -91,14 +91,21 @@ function secretsPath(): string {
   return join(app.getPath('userData'), 'integration-secrets.json');
 }
 
-function readSecretBlob(): Record<string, string> {
+let secretsCopy: string | undefined; // one copy per run, not one per refused write
+
+/** `forWrite` throws instead of returning {} when the file exists but cannot be
+ *  read: saving {} + one key would wipe every other stored key. */
+function readSecretBlob(forWrite = false): Record<string, string> {
   const p = secretsPath();
   if (!existsSync(p)) return {};
   try {
     const parsed = JSON.parse(readFileSync(p, 'utf8'));
     return parsed && typeof parsed === 'object' ? (parsed as Record<string, string>) : {};
-  } catch {
-    return {};
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException)?.code === 'ENOENT' || !forWrite) return {};
+    const copy = (secretsCopy ??= copyAsideUnreadable(p));
+    throw new Error('The saved connector keys file could not be read, so the key was not saved (nothing was overwritten).'
+      + (copy ? ` A copy was saved as ${basename(copy)}.` : '') + ' Fix or remove integration-secrets.json, then try again.');
   }
 }
 
@@ -126,7 +133,7 @@ export function setSecret(secretRef: string, plaintext: string): { ok: boolean; 
       return { ok: false, error: 'OS secret encryption is unavailable; refusing to store a secret in plaintext' };
     }
     const cipher = safeStorage.encryptString(plaintext).toString('base64');
-    const blob = readSecretBlob();
+    const blob = readSecretBlob(true);
     blob[secretRef] = cipher;
     writeSecretBlob(blob);
     return { ok: true };

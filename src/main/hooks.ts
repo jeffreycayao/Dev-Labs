@@ -284,7 +284,6 @@ export class HookServer {
     if (event === 'PreToolUse' && agentId && this.control) {
       const d = this.control.toolDecision(agentId, p.tool_name ?? '');
       if (d.deny) {
-        this.emitControl(agentId, p.tool_name, d.reason);
         this.emit(agentId, event, p);
         return {
           hookSpecificOutput: {
@@ -383,12 +382,6 @@ export class HookServer {
       if (!Notification.isSupported()) return;
       new Notification({ title, body }).show();
     } catch { /* notifications unsupported on this platform — ignore */ }
-  }
-
-  /** Tell the renderer a tool call was gated/denied (#7C.1) so it can surface it
-   *  (toast / control strip) — distinct from the avatar hook stream. */
-  private emitControl(agentId: string, tool: string | undefined, reason: string | undefined): void {
-    this.getWebContents()?.send('control:approvalRequest', { agentId, tool, reason });
   }
 
   private emit(agentId: string | undefined, event: string, p: HookPayload, blocked = false): void {

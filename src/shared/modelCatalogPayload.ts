@@ -27,6 +27,7 @@
  * `parseModelCatalog` never throws. It returns null for "nothing usable here,
  * keep what you have", never a partially-built catalog.
  */
+import { MODEL_RE } from './hire';
 
 /** One row of the catalog. `minAppVersion` / `maxAppVersion` are INCLUSIVE app
  *  version bounds; null (or an absent key) means unbounded in that direction.
@@ -90,6 +91,7 @@ function parseModel(raw: unknown): CatalogModel | null {
   // An absent OR empty id means "pass no --model flag", which is a real option
   // several providers carry. Only a non-empty string becomes an id.
   const id = str(o.id, MAX.id);
+  if (id && !MODEL_RE.test(id)) return null; // quotes, `&`, a leading `-`: never reaches --model
   if (id) model.id = id;
   const min = bound(o.minAppVersion);
   const max = bound(o.maxAppVersion);

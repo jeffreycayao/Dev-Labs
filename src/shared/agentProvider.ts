@@ -716,11 +716,6 @@ export function nonInteractiveEnvForProvider(provider: AgentProvider): Record<st
   return providerPreset(provider).nonInteractiveEnv ?? {};
 }
 
-/** Returns the command reference groups for the given provider. */
-export function commandGroupsForProvider(provider: AgentProvider): CmdGroup[] {
-  return providerPreset(provider).commandGroups ?? [];
-}
-
 /** Install metadata for a provider's engine CLI, consumed by the missing-CLI
  *  auto-install path. `command` is the (trusted, hardcoded) installer to run when
  *  present; when undefined the caller shows a manual hint and runs NOTHING. `label`

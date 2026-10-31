@@ -1,3 +1,4 @@
-- A fresh new DevLabs logo, on your desktop, taskbar and inside the app.
-- The app window no longer shows the Electron icon.
-- Windows notifications now say DevLabs.
+- A fresh new DevLabs logo on your desktop, taskbar and inside the app.
+- Speech bubbles close on time, and agents no longer get stuck in rooms.
+- Your settings and saved keys are never wiped by a damaged file.
+- Safer webhooks, shared hire files and model lists.

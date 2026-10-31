@@ -15,6 +15,9 @@ concurrency:
   group: app-version-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 jobs:
   check:
     name: Version increases on every source push
@@ -23,10 +26,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
       - name: Check app version
         env:
           EVENT_NAME: ${{ github.event_name }}

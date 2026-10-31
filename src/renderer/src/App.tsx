@@ -45,8 +45,10 @@ export function App() {
   // Let terminals that are ALREADY open follow a language switch too.
   useArabicTerminalSync();
   const agent = useStore(selectedAgent);
-  const agents = useStore(s => s.agents);
-  const agentCount = agents.length;
+  // Primitives only: subscribing to the whole array re-rendered the app (and the
+  // 3D office under it) on every tool call of every agent.
+  const agentCount = useStore(s => s.agents.length);
+  const ptyIds = useStore(s => s.agents.map((a) => a.ptyId ?? '').join('\n'));
   const bootingGodName = useResolvedGodName();
   const addAgentOpen = useStore(s => s.addAgentOpen);
   const setAddAgentOpen = useStore(s => s.setAddAgentOpen);
@@ -217,8 +219,8 @@ export function App() {
   // buffered from spawn. Switching agents then re-attaches an already-rendered
   // terminal instantly (with full history) instead of building a blank one.
   useEffect(() => {
-    for (const a of agents) if (a.ptyId) acquireTerminal(a.ptyId);
-  }, [agents]);
+    for (const ptyId of ptyIds.split('\n')) if (ptyId) acquireTerminal(ptyId);
+  }, [ptyIds]);
 
   // Synthetic demo loop — CAGED (#5B). It must never animate alongside a live
   // hive (it would fire fake envelope handoffs and step seeded agents). Run it
@@ -264,7 +266,7 @@ export function App() {
   useEffect(() => {
     if (!config?.onboardingComplete) return;
     useStore.getState().restoreFocusMode();
-  }, [config?.onboardingComplete, agents]);
+  }, [config?.onboardingComplete, ptyIds]);
 
   // Track viewport width for splitter clamping
   useEffect(() => {

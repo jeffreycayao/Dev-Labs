@@ -437,11 +437,4 @@ export class MemoryManager {
     if (opts.wing) args.push('--wing', opts.wing);
     return this.runCli(args, 'search');
   }
-
-  /** Session-start digest (~600-900 tokens). */
-  wakeUp(wing?: string): Promise<{ ok: boolean; output: string; error?: string }> {
-    const args = ['wake-up'];
-    if (wing) args.push('--wing', wing);
-    return this.runCli(args, 'wake-up');
-  }
 }

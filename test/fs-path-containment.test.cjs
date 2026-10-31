@@ -27,8 +27,9 @@ const os = require('node:os');
 const path = require('node:path');
 const loadTs = require('./load-ts.cjs');
 
-const { readFileText, readFileBinary, writeFileText, listDir } = loadTs('src/main/fs.ts');
-const { getDiff } = loadTs('src/main/git.ts');
+const { readFileText, readFileBinary, writeFileText, listDir, statAbs } = loadTs('src/main/fs.ts');
+const { getDiff, getStatus } = loadTs('src/main/git.ts');
+const { spawnSync } = require('node:child_process');
 
 const SECRET = 'external-secret-contents\n';
 
@@ -215,3 +216,53 @@ test('lexical traversal out of the root is still rejected', () => withWorkspace(
     assert.equal(res.error, 'path escapes root');
   }
 }));
+
+// ─── save is atomic; terminal paths never reach a UNC host; git from a subfolder ─
+
+test('a save replaces the file whole, keeps its mode and leaves no temp file', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'atomic-save-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const file = path.join(dir, 'script.sh');
+  fs.writeFileSync(file, 'old\n');
+  fs.chmodSync(file, 0o750);
+  const res = await writeFileText(dir, 'script.sh', 'new\n');
+  assert.equal(res.ok, true, res.ok ? '' : res.error);
+  assert.equal(fs.readFileSync(file, 'utf8'), 'new\n');
+  if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o750);
+  assert.deepEqual(fs.readdirSync(dir), ['script.sh']);
+});
+
+test('statAbs refuses a UNC path on Windows without touching the network', async () => {
+  const real = Object.getOwnPropertyDescriptor(process, 'platform');
+  Object.defineProperty(process, 'platform', { value: 'win32' });
+  try {
+    for (const p of ['//attacker.example/share/x', '\\\\attacker.example\\share\\x', '\\/attacker.example/x']) {
+      assert.deepEqual(await statAbs(p), { exists: false, isFile: false, path: p });
+    }
+  } finally {
+    Object.defineProperty(process, 'platform', real);
+  }
+});
+
+test('git status and diff from a repo subfolder use subfolder-relative paths, and UTF-8 survives', async (t) => {
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'git-sub-'));
+  t.after(() => fs.rmSync(repo, { recursive: true, force: true }));
+  const git = (...a) => spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { cwd: repo, encoding: 'utf8' });
+  if (git('init', '-q').status !== 0) return t.skip('git unavailable');
+  fs.mkdirSync(path.join(repo, 'app'));
+  const big = 'é'.repeat(70000) + '\n'; // multi-byte chars straddle pipe chunks
+  fs.writeFileSync(path.join(repo, 'app', 'a.txt'), big);
+  fs.writeFileSync(path.join(repo, 'top.txt'), 'x\n');
+  git('add', '.');
+  git('commit', '-q', '-m', 'init');
+  fs.writeFileSync(path.join(repo, 'app', 'a.txt'), big + 'more\n');
+  fs.writeFileSync(path.join(repo, 'top.txt'), 'y\n');
+
+  const sub = path.join(repo, 'app');
+  const st = await getStatus(sub, true);
+  assert.deepEqual(st.unstaged.map((e) => e.path), ['a.txt'], 'outside entries dropped, prefix stripped');
+  const d = await getDiff(sub, 'a.txt');
+  assert.equal(d.ok, true, d.ok ? '' : d.error);
+  assert.equal(d.head, big, 'no U+FFFD from a split character');
+  assert.equal(d.working, big + 'more\n');
+});

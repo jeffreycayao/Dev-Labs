@@ -3,10 +3,6 @@ import {
   BUMP_FREEZE_MS,
   SEPARATION_STRENGTH,
 } from "@/features/retro-office/core/constants";
-import {
-  isRemoteOfficeAgentId,
-  REMOTE_ROAM_POINTS,
-} from "@/features/retro-office/core/district";
 import { ROAM_POINTS } from "@/features/retro-office/core/navigation";
 import type { RenderAgent } from "@/features/retro-office/core/types";
 
@@ -86,11 +82,8 @@ export function applyAgentCollisionBumps({
     const pushMag = Math.hypot(sx, sy);
     const norm = pushMag || 1;
     let bestDot = -Infinity;
-    const roamCandidates = isRemoteOfficeAgentId(moved[i].id)
-      ? REMOTE_ROAM_POINTS
-      : ROAM_POINTS;
-    let escapeTarget = roamCandidates[0];
-    for (const rp of roamCandidates) {
+    let escapeTarget = ROAM_POINTS[0];
+    for (const rp of ROAM_POINTS) {
       const rdx = rp.x - moved[i].x,
         rdy = rp.y - moved[i].y;
       const rdist = Math.hypot(rdx, rdy) || 1;

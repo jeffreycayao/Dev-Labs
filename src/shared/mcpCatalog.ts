@@ -379,12 +379,6 @@ export function mcpCatalogEntry(id: string): McpCatalogEntry | undefined {
   return MCP_CATALOG.find((e) => e.id === id);
 }
 
-/** Whether an id is a known safe-readonly server (the only tier a hire manifest may
- *  request without surfacing for human consent — Workstream 3 validation). */
-export function isSafeReadonlyMcp(id: string): boolean {
-  return mcpCatalogEntry(id)?.tier === 'safe-readonly';
-}
-
 /** Seed for `DEFAULTS.mcpDefaults` — derived from the catalog so the two never
  *  drift (safe-readonly ON, write/secret OFF). */
 export function defaultMcpDefaults(): Record<string, { enabled: boolean }> {

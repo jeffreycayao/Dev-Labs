@@ -338,7 +338,6 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
                     if (t.trim().toLowerCase() === '/clear') {
                       updateAgent(agent.id, { contextTokens: 0, contextLimit: undefined, progress: 0 });
                     }
-                    void window.cth.historyAdd({ agentId: agent.id, cwd: agent.cwd, text: t });
                   }}
                   onToggleFullscreen={() => setFullscreen(fullscreen ? null : agent.id)}
                   fullscreen={fullscreen}
@@ -1262,7 +1261,10 @@ function MemoryTab({ godId, who: controlledWho, onWho }: { godId: string; who?: 
   const [textBusy, setTextBusy] = useState(false);
 
   useEffect(() => {
-    window.cth.hiveMemory(who).then(setMem).catch(() => setMem(''));
+    // Ignore a slow answer for an agent that is no longer selected.
+    let alive = true;
+    window.cth.hiveMemory(who).then((m) => { if (alive) setMem(m); }).catch(() => { if (alive) setMem(''); });
+    return () => { alive = false; };
   }, [who]);
 
   const search = async () => {

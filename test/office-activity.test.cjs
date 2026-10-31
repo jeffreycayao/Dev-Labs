@@ -36,3 +36,12 @@ test('test commands are recognised, other commands are not', () => {
     assert.equal(act.isTestCommand(cmd), false, String(cmd));
   }
 });
+
+test('room holds expire, and a release ends them early', () => {
+  const ids = new Set(['a', 'b', 'c']);
+  const now = 1_000;
+  const untils = { a: now + act.ROOM_HOLD_MS, b: 0, gone: now + act.ROOM_HOLD_MS };
+  assert.deepEqual(act.activeHolds(untils, now, ids), { a: true });
+  assert.deepEqual(act.activeHolds(untils, now + act.ROOM_HOLD_MS - 1, ids), { a: true });
+  assert.deepEqual(act.activeHolds(untils, now + act.ROOM_HOLD_MS, ids), {});
+});

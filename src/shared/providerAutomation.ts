@@ -1,14 +1,6 @@
 import type { AgentProvider } from './agentProvider';
 import { DEFAULT_COMPACTION_FOCUS } from './triggers';
 
-/**
- * Back-compat alias. The compaction focus used to be a private constant here;
- * it now lives in shared/triggers.ts as the DEFAULT VALUE of the user-editable
- * `ContextRule.message`, so the Triggers UI and this module cannot drift apart.
- * Kept exported under the old name for any consumer still reaching for it.
- */
-export const COMPACTION_FOCUS = DEFAULT_COMPACTION_FOCUS;
-
 /** What one provider's interactive TUI accepts for each context action. */
 export interface ProviderContextCommands {
   /** Summarise-in-place. `null` = no command we can type with confidence. */

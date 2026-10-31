@@ -22,13 +22,13 @@
  *
  * Durability rules, in order of how much they matter:
  *   1. Never lose a roster. Every write first copies the previous file into
- *      `roster-backups/`, which is append-only — nothing in it is ever pruned,
- *      overwritten or deleted.
+ *      `roster-backups/`, which keeps the newest ROSTER_BACKUP_KEEP copies;
+ *      nothing in it is ever overwritten.
  *   2. Never write a truncated file. Writes go to a temp file and are renamed
  *      into place, so a crash mid-write leaves the previous file untouched.
  *   3. Never let an empty renderer erase a full roster. See `write`.
  */
-import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** What the renderer mirrors to disk. The inner agent shape is deliberately
@@ -54,6 +54,9 @@ export interface RosterWriteResult {
 export function rosterPath(home: string): string {
   return join(home, 'roster.json');
 }
+
+/** How many roster backups survive pruning. */
+export const ROSTER_BACKUP_KEEP = 50;
 
 export function rosterBackupDir(home: string): string {
   return join(home, 'roster-backups');
@@ -188,9 +191,8 @@ export class RosterStore {
     } catch { /* a reset must never fail on this */ }
   }
 
-  /** Copy the current roster into the append-only backup folder. Never prunes:
-   *  these files are the last line of defence, and a few KB per write is a price
-   *  worth paying for that. */
+  /** Copy the current roster into the backup folder, then drop all but the
+   *  newest ROSTER_BACKUP_KEEP: one copy per write otherwise grows forever. */
   private backup(home: string, p: string, reason: string): void {
     try {
       if (!existsSync(p)) return;
@@ -199,6 +201,9 @@ export class RosterStore {
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
       this.backupSeq += 1;
       copyFileSync(p, join(dir, `roster-${stamp}-${this.backupSeq}-${reason}.json`));
+      // ISO stamps sort by name, oldest first.
+      const all = readdirSync(dir).filter((f) => f.startsWith('roster-') && f.endsWith('.json')).sort();
+      for (const f of all.slice(0, -ROSTER_BACKUP_KEEP)) rmSync(join(dir, f), { force: true });
     } catch { /* a failed backup must never block the write */ }
   }
 }

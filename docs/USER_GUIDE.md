@@ -427,7 +427,10 @@ Details: [Privacy Policy](https://devlabs.atmt.dev/privacy) · [MIT License](../
 
 ## 19. Updates
 
-When auto-update is on (**Settings → General**), DevLabs checks for new versions by itself. The version number at the top left tells you when an update is ready; **you choose when to restart** and install it. **What's New** shows the highlights and **full changelog** opens the full list of changes. No sign-in is needed.
+When auto-update is on (**Settings → General**, on by default), DevLabs checks for new versions by itself: about 30 seconds after you open it, then every 6 hours. It downloads the new version quietly in the background. The version number at the top left tells you when an update is ready; **you choose when to restart** and install it. DevLabs never restarts on its own. To check right away, click the version number. **What's New** shows the highlights and **full changelog** opens the full list of changes. No sign-in is needed.
+
+- **On a Mac**, if your copy can't install updates by itself, the version number says a new version is ready and offers a **download** button instead. Download it and drag it into Applications, like the first time.
+- **The portable Windows version** (the one you don't install) works the same way: it tells you about new versions and links to the download.
 
 ---
 

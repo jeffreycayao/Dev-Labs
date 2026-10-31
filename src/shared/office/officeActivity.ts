@@ -8,3 +8,14 @@ const TEST_COMMAND_RE =
 export function isTestCommand(text: string | undefined | null): boolean {
   return typeof text === 'string' && TEST_COMMAND_RE.test(text);
 }
+
+/** How long a "write tests" / "review the PRs" prompt keeps an agent in the QA
+ *  lab or server room. Without an end, "fix X and run tests" parked it forever. */
+export const ROOM_HOLD_MS = 90_000;
+
+/** The agents in `ids` whose timed hold is still running at `now` (0 = released). */
+export function activeHolds(untils: Record<string, number>, now: number, ids: ReadonlySet<string>): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  for (const [id, until] of Object.entries(untils)) if (ids.has(id) && until > now) out[id] = true;
+  return out;
+}

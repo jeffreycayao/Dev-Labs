@@ -121,6 +121,9 @@ export interface WebhookServerOptions {
 /** Reject bodies larger than this before buffering — callers send tiny JSON; the
  *  cap stops an unauthenticated peer forcing unbounded memory use pre-auth. */
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MB
+/** `message` is kept in the trigger history (and on a task card), so it gets a
+ *  much smaller cap than the body as a whole. */
+const MAX_MESSAGE_BYTES = 32 * 1024; // 32 KB
 /** Cap how long we wait for the public tunnel before giving up (server stays up). */
 const TUNNEL_START_TIMEOUT_MS = 10_000;
 /** Basic abuse guard: at most this many requests per fixed window, globally. */
@@ -343,6 +346,7 @@ export class WebhookServer {
       // it fails here rather than producing an empty card.
       const message = typeof body.message === 'string' ? body.message.trim() : '';
       if (!message) { json(res, 400, { ok: false, error: 'message required' }); return; }
+      if (Buffer.byteLength(message, 'utf8') > MAX_MESSAGE_BYTES) { json(res, 413, { ok: false, error: 'message too large (max 32 KB)' }); return; }
       const inbound: WebhookInbound = { message };
       const title = typeof body.title === 'string' ? body.title.trim() : '';
       if (title) inbound.title = title;

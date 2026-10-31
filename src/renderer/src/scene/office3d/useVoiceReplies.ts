@@ -5,7 +5,7 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useStore } from '@/store/store';
 import { DEFAULT_VOICE_PREFS, type VoicePrefs } from '@shared/office/voiceCatalog';
-import { pickNewReplies, speakableText } from '@shared/office/voiceText';
+import { pickNewReplies, speakableText, type ReplySource } from '@shared/office/voiceText';
 
 const MAX_QUEUE = 4; // drop new lines instead of falling minutes behind a busy office
 
@@ -112,7 +112,6 @@ const snapshot = () => prefs;
  *  prefs (for RetroOffice3D's voiceReplies* props) and `speak` for the phone booth. */
 export function useVoiceReplies() {
   const current = useSyncExternalStore(subscribe, snapshot);
-  const agents = useStore((s) => s.agents);
   const seenRef = useRef<ReturnType<typeof pickNewReplies>['seen'] | null>(null);
   const enabled = !!current?.enabled;
 
@@ -121,11 +120,17 @@ export function useVoiceReplies() {
     return () => stopVoice();
   }, []);
 
+  // A store subscription, not a selector: re-rendering the office on every
+  // agent update just to look for new replies was the main cost.
   useEffect(() => {
-    const { seen, fresh } = pickNewReplies(seenRef.current, agents);
-    seenRef.current = seen; // tracked even while off, so turning voice on never replays old text
-    if (enabled) fresh.forEach(speak);
-  }, [agents, enabled]);
+    const check = (agents: readonly ReplySource[]) => {
+      const { seen, fresh } = pickNewReplies(seenRef.current, agents);
+      seenRef.current = seen; // tracked even while off, so turning voice on never replays old text
+      if (enabled) fresh.forEach(speak);
+    };
+    check(useStore.getState().agents);
+    return useStore.subscribe((s, prev) => { if (s.agents !== prev.agents) check(s.agents); });
+  }, [enabled]);
 
   return {
     voiceRepliesLoaded: current !== null,

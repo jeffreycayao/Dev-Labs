@@ -19,6 +19,13 @@ successful release never touches.
 
 ## The proving hop (rehearse on prereleases, before the real release)
 
+> **Not runnable yet.** `tools/app-version.cjs` rejects `-rc` versions in
+> `package.json` (so the pre-push hook and the App version check fail), and an rc
+> tag must now match `package.json` exactly (`tools/render-release-body.cjs`).
+> Supporting rehearsals needs `app-version.cjs` to accept and order prerelease
+> versions, and `release-preflight.cjs` to allow unchanged notes when the previous
+> tag is an rc of the same version. Until then, ship stable releases only.
+
 `0.4.6` is delivered by `0.4.5`'s updater, so `0.4.6` arriving proves the OLD
 code worked. Only a hop that STARTS on our new code proves it. So rehearse on
 prereleases first: publish `0.4.6-rc.1`, then a no-op `0.4.7-rc.1`, and drive

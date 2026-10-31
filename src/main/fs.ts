@@ -1,4 +1,4 @@
-import { readdir, lstat, open, realpath, stat } from 'node:fs/promises';
+import { readdir, lstat, open, realpath, rename, rm, stat } from 'node:fs/promises';
 import type { FileHandle } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
@@ -123,8 +123,9 @@ export async function safeResolve(root: string, rel: string): Promise<string | n
  * own right and not merely a pre-filter.
  */
 const READ_FLAGS = constants.O_RDONLY | (constants.O_NOFOLLOW | 0) | (constants.O_NONBLOCK | 0);
+// O_EXCL: the temp file must be new, never something planted at that name.
 const WRITE_FLAGS =
-  constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | (constants.O_NOFOLLOW | 0);
+  constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW | 0);
 
 /**
  * Open a path that `safeResolve` has ALREADY cleared, for reading.
@@ -277,15 +278,27 @@ export async function writeFileText(root: string, rel: string, content: string):
 } | { ok: false; error: string }> {
   const abs = await safeResolve(root, rel);
   if (!abs) return { ok: false, error: 'path escapes root' };
+  // Write a temp file beside it, then rename over it: a crash or a full disk
+  // mid-save leaves the old file whole instead of truncated. rename replaces
+  // whatever sits at `abs` without following it, so a swapped-in symlink is
+  // overwritten, never written through.
+  const tmp = join(dirname(abs), `.${basename(abs)}.tmp-${Math.random().toString(36).slice(2, 10)}`);
   let fh;
   try {
-    fh = await open(abs, WRITE_FLAGS, 0o666);
+    let mode: number | undefined;
+    try { mode = (await stat(abs)).mode & 0o7777; } catch { /* a new file gets the default mode */ }
+    fh = await open(tmp, WRITE_FLAGS, 0o666);
     await fh.writeFile(content, 'utf8');
+    if (mode !== undefined) await fh.chmod(mode);
+    await fh.sync();
+    await fh.close();
+    fh = undefined;
+    await rename(tmp, abs);
     return { ok: true, path: abs };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  } finally {
     await fh?.close().catch(() => {});
+    await rm(tmp, { force: true }).catch(() => {});
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
@@ -355,6 +368,9 @@ export function normalizeHiveHome(
  *  the home dir). Read-only metadata: returns whether a regular file exists and
  *  the normalized absolute path; never file contents. */
 export async function statAbs(p: string): Promise<{ exists: boolean; isFile: boolean; path: string }> {
+  // A UNC path (\\host\share, //host/share) makes Windows connect to that host
+  // and send the user's NTLM hash; the path comes from agent output, so refuse it.
+  if (process.platform === 'win32' && /^[\\/]{2}/.test(p.trim())) return { exists: false, isFile: false, path: p };
   const abs = expandTilde(p);
   if (!isAbsolute(abs)) return { exists: false, isFile: false, path: p };
   try {

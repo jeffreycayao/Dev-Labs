@@ -391,30 +391,6 @@ export interface KnowledgeStatus {
   chunkCount: number;
   byModality: Record<string, number>;
 }
-export interface KnowledgeDoc {
-  id: string;
-  title: string;
-  source: string;
-  modality: string;
-  mime: string | null;
-  origExt: string;
-  bytes: number;
-  tags: string[];
-  caption: string | null;
-  chunkCount: number;
-  addedAt: string;
-  extractor: string;
-  truncated: boolean;
-}
-export interface KnowledgeHit {
-  docId: string;
-  title: string;
-  source: string;
-  modality: string;
-  chunkIdx: number;
-  score: number;
-  snippet: string;
-}
 export interface KnowledgeIngestResult {
   ok: boolean;
   results: Array<{ ok: boolean; srcPath: string; docId?: string; chunkCount?: number; error?: string }>;
@@ -465,19 +441,6 @@ export interface GitFileChange {
   path: string;
   status: string;
   oldPath?: string;
-}
-
-/** Real token usage + estimated USD cost summed from an agent's Claude Code
- *  transcripts under ~/.claude/projects. Reconciler/fallback path — now priced
- *  PER MODEL (not Sonnet-for-everyone). The live path uses AgentUsageSample. */
-export interface AgentUsage {
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-  cacheWriteTokens: number;
-  estimatedCostUsd: number;
-  /** Most-recently-seen model id (normalized), if any priced record was found. */
-  model?: string;
 }
 
 /** Live cumulative cost/token snapshot from the OTel collector (the locked
@@ -554,15 +517,6 @@ export interface TelemetrySnapshot {
   spans: Record<string, ToolSpan[]>;
 }
 
-/** One captured user prompt from the SQLite command_history table. */
-export interface CommandHistoryEntry {
-  id: number;
-  agentId: string;
-  cwd: string | null;
-  text: string;
-  ts: number;
-}
-
 /** A GitHub issue, normalized for the renderer (labels/assignees flattened to names). */
 export interface GHIssue {
   number: number;
@@ -571,14 +525,6 @@ export interface GHIssue {
   url: string;
   labels: string[];
   assignees: string[];
-}
-
-/** A CI (GitHub Actions) workflow run, normalized for the renderer. */
-export interface CIRun {
-  name: string;
-  status: string;
-  conclusion: string | null;
-  url: string;
 }
 
 /** One live god-triggered ephemeral worker, as shown in the Workers tab. */
@@ -791,10 +737,6 @@ const api = {
     ipcRenderer.invoke('git:compareRefs', cwd, base, head, mode ?? 'three') as Promise<
       { ahead: number; behind: number; mergeBase: string | null; files: GitFileChange[] } | { error: string }
     >,
-  gitWorktrees: (cwd: string) =>
-    ipcRenderer.invoke('git:worktrees', cwd) as Promise<
-      Array<{ path: string; head: string; branch: string | null }> | { error: string }
-    >,
   gitCheckout: (cwd: string, ref: string, detach?: boolean) =>
     ipcRenderer.invoke('git:checkout', cwd, ref, detach === true) as Promise<
       { ok: true; detached: boolean } | { ok: false; error: string }
@@ -869,28 +811,11 @@ const api = {
     ipcRenderer.invoke('skills:reveal', path),
   searchMemory: (query: string, wing?: string): Promise<{ ok: boolean; output: string; error?: string }> =>
     ipcRenderer.invoke('hive:searchMemory', query, wing),
-  memoryWakeUp: (wing?: string): Promise<{ ok: boolean; output: string; error?: string }> =>
-    ipcRenderer.invoke('hive:memoryWakeUp', wing),
-  mineNow: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('hive:mineNow'),
-  /** Condense agent memory.md files (the janitor's missing half). With an id,
-   *  condense that agent on demand; without, run a full threshold scan. Returns
-   *  the per-agent outcomes ({ id, condensed, reason, oldBytes?, newBytes? }). */
-  reflectNow: (id?: string): Promise<Array<{ id: string; condensed: boolean; reason: string; oldBytes?: number; newBytes?: number }>> =>
-    ipcRenderer.invoke('memory:reflectNow', id),
 
   // ─── Enterprise Knowledge Graph (multimodal context for agents) ───────────
   kgStatus: (): Promise<KnowledgeStatus> => ipcRenderer.invoke('kg:status'),
-  kgList: (): Promise<KnowledgeDoc[]> => ipcRenderer.invoke('kg:list'),
-  kgSearch: (query: string, limit?: number): Promise<KnowledgeHit[]> =>
-    ipcRenderer.invoke('kg:search', query, limit),
-  kgGet: (id: string): Promise<{ meta: KnowledgeDoc; text: string } | null> =>
-    ipcRenderer.invoke('kg:get', id),
-  kgRemove: (id: string): Promise<{ ok: boolean }> => ipcRenderer.invoke('kg:remove', id),
   /** Open an OS file picker and ingest the chosen artifacts in one round-trip. */
   kgAddFiles: (): Promise<KnowledgeIngestResult> => ipcRenderer.invoke('kg:addFiles'),
-  /** Ingest explicit file paths (e.g. drag-and-drop). */
-  kgIngestFiles: (paths: string[], tags?: string[]): Promise<KnowledgeIngestResult> =>
-    ipcRenderer.invoke('kg:ingestFiles', { paths, tags }),
 
   // ─── Composer attachments (images + files, sent to agents by PATH) ─────────
   /** Open an OS picker for images/files; returns chosen absolute paths + names. */
@@ -904,16 +829,6 @@ const api = {
     { ok: true; file: { path: string; name: string } } | { ok: false; error: string }
   > => ipcRenderer.invoke('clipboard:saveImage'),
 
-  // ─── Command history (SQLite — every prompt submitted to an agent) ─────────
-  /** Record one submitted prompt. Fire-and-forget from the prompt-detection hook. */
-  historyAdd: (entry: { agentId: string; cwd?: string; text: string }): Promise<{ ok: boolean; error?: string }> =>
-    ipcRenderer.invoke('history:add', entry),
-  /** Most-recent-first history, optionally scoped to one agent. */
-  historyList: (agentId?: string, limit?: number): Promise<CommandHistoryEntry[]> =>
-    ipcRenderer.invoke('history:list', agentId, limit),
-  /** Substring search over prompt text, most-recent-first. */
-  historySearch: (query: string, limit?: number): Promise<CommandHistoryEntry[]> =>
-    ipcRenderer.invoke('history:search', query, limit),
   hiveSend: (msg: Partial<HiveMessage>, from?: string): Promise<{ ok: boolean; error?: string; message?: HiveMessage }> =>
     ipcRenderer.invoke('hive:send', msg, from),
 
@@ -1075,11 +990,6 @@ const api = {
     return () => ipcRenderer.removeListener('power:resume', listener);
   },
 
-  // ─── Multi-window floors ───────────────────────────────────────────────────
-  /** Open a new floor (independent office window). No-op when the multiWindow
-   *  flag is off. Resolves { ok } indicating whether a window opened. */
-  newFloor: (): Promise<{ ok: boolean }> => ipcRenderer.invoke('window:newFloor'),
-
   // ─── Closing time (graceful shutdown via the hive) ─────────────────────────
   /** Start the closing-time protocol: the god broadcasts shutdown, every worker
    *  saves its memory and ACKs, the god concludes — then the app quits itself.
@@ -1109,10 +1019,6 @@ const api = {
     ipcRenderer.invoke('app:resetFloor', backupPath),
 
   // ─── Token telemetry (real usage + est. cost from CC transcripts) ──────────
-  /** Sum input/output/cache tokens + estimated USD cost for an agent from its
-   *  Claude Code transcripts (reconciler/fallback). Returns null for an invalid cwd. */
-  agentUsage: (cwd: string): Promise<AgentUsage | null> =>
-    ipcRenderer.invoke('hive:agentUsage', cwd),
   /** Current context size (tokens) of an agent's live session, read from the
    *  last assistant message of its transcript. Null until the agent's hooks
    *  have fired at least once (the transcript path is learned from them). */
@@ -1120,9 +1026,6 @@ const api = {
     ipcRenderer.invoke('hive:agentContext', agentId),
 
   // ─── Live telemetry (OTel collector — the usage-provider seam + spans) ──────
-  /** Live cumulative usage for an agent (OTel-preferred, transcript fallback). */
-  telemetryUsage: (agentId: string): Promise<AgentUsageSample | null> =>
-    ipcRenderer.invoke('telemetry:usage', agentId),
   /** Recent tool spans for an agent's waterfall (#7B.2). */
   telemetrySpans: (agentId: string): Promise<ToolSpan[]> =>
     ipcRenderer.invoke('telemetry:spans', agentId),
@@ -1143,9 +1046,6 @@ const api = {
     ipcRenderer.on('control:breakerState', listener);
     return () => ipcRenderer.removeListener('control:breakerState', listener);
   },
-  /** Push a breaker state to the renderer (Lane A's policy / interim glue calls this). */
-  setBreakerState: (state: BreakerState): Promise<{ ok: boolean }> =>
-    ipcRenderer.invoke('control:setBreakerState', state),
 
   // ─── Operator control over agents (#7C.1–7C.3) ──────────────────────────────
   /** Pause/unpause an agent — paused → its tool calls are denied at PreToolUse. */
@@ -1157,9 +1057,6 @@ const api = {
   /** Clear pause + halt so the agent can run again. */
   controlResume: (agentId: string): Promise<AgentControlSnapshot | null> =>
     ipcRenderer.invoke('control:resume', agentId),
-  /** Gate/ungate a specific tool for an agent (denied at PreToolUse). */
-  controlGateTool: (agentId: string, tool: string, on: boolean): Promise<AgentControlSnapshot | null> =>
-    ipcRenderer.invoke('control:gateTool', agentId, tool, on),
   /** Queue a steer note — injected as context on the agent's next hook (#7C.2). */
   controlSteer: (agentId: string, text: string): Promise<AgentControlSnapshot | null> =>
     ipcRenderer.invoke('control:steer', agentId, text),
@@ -1169,12 +1066,6 @@ const api = {
   /** Read an agent's current control snapshot. */
   controlSnapshot: (agentId: string): Promise<AgentControlSnapshot | null> =>
     ipcRenderer.invoke('control:snapshot', agentId),
-  /** Subscribe to gate/deny events (a tool was blocked); returns unsubscribe fn. */
-  onApprovalRequest: (cb: (e: { agentId: string; tool?: string; reason?: string }) => void): (() => void) => {
-    const listener = (_e: IpcRendererEvent, payload: { agentId: string; tool?: string; reason?: string }) => cb(payload);
-    ipcRenderer.on('control:approvalRequest', listener);
-    return () => ipcRenderer.removeListener('control:approvalRequest', listener);
-  },
 
   // ─── Task kanban (hive/tasks.json) ───────────────────────────────────────
   /** Atomically append one card against the latest main-process ledger. */
@@ -1217,13 +1108,6 @@ const api = {
    *  `{ ok: false, error }` if `gh` is missing/unauthenticated or `cwd` isn't a repo. */
   githubIssues: (cwd: string): Promise<{ ok: boolean; issues?: GHIssue[]; error?: string }> =>
     ipcRenderer.invoke('github:issues', cwd),
-
-  // ─── GitHub CI status watcher (gh CLI) ─────────────────────────────────────
-  /** List up to 5 recent CI (GitHub Actions) runs in the repo at `cwd` via the
-   *  `gh` CLI. Returns `{ ok: false, error }` if `gh` is missing/unauthenticated,
-   *  `cwd` isn't a repo, or the repo has no Actions. */
-  githubCIRuns: (cwd: string): Promise<{ ok: boolean; runs?: CIRun[]; error?: string }> =>
-    ipcRenderer.invoke('github:ciRuns', cwd),
 
   // ─── Desktop notifications ───────────────────────────────────────────────────
   /** Toggle native desktop notifications for agent lifecycle events. */
@@ -1268,10 +1152,6 @@ const api = {
    *  renderer's immediate "queued" ack. */
   slackReply: (m: { channel: string; thread_ts: string; text: string }): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('slack:reply', m),
-  /** Absolute path to the bundled reply helper, for the office worker's
-   *  end-of-run "post your summary back to Slack" instruction. */
-  slackReplyScriptPath: (): Promise<string> =>
-    ipcRenderer.invoke('slack:replyScriptPath'),
   /** Persist Slack settings (and stop the server if disabled / secret cleared). */
   slackSetConfig: (patch: {
     signingSecret?: string; botToken?: string; channelId?: string; port?: number; enabled?: boolean;
@@ -1301,26 +1181,6 @@ const api = {
   /** Set the vault folder (an existing absolute directory), or clear it with null. */
   obsidianSetVault: (path: string | null): Promise<ObsidianStatus & { ok: boolean; error?: string }> =>
     ipcRenderer.invoke('obsidian:setVault', path),
-
-  // ─── Generic webhook + status API (POST → work, GET → status) ────────────────
-  /** Start the generic webhook server; returns the public endpoint URL callers
-   *  POST to (secret-gated) and GET a token's status from. */
-  webhookStart: (): Promise<{ ok: boolean; url?: string; error?: string }> =>
-    ipcRenderer.invoke('webhook:start'),
-  /** Stop the generic webhook server + tunnel. */
-  webhookStop: (): Promise<{ ok: boolean }> =>
-    ipcRenderer.invoke('webhook:stop'),
-  /** Current state + last endpoint URL (so Settings can hydrate the badge/URL). */
-  webhookStatus: (): Promise<{ running: boolean; url?: string }> =>
-    ipcRenderer.invoke('webhook:status'),
-  /** Mint + persist a fresh secret and return it for the user to copy. */
-  webhookGenerateSecret: (): Promise<{ ok: boolean; secret?: string }> =>
-    ipcRenderer.invoke('webhook:generateSecret'),
-  /** Persist webhook settings (and stop the server if disabled / secret cleared). */
-  webhookSetConfig: (patch: {
-    secret?: string; port?: number; enabled?: boolean;
-  }): Promise<{ ok: boolean }> =>
-    ipcRenderer.invoke('webhook:setConfig', patch),
 
   // ─── Triggers: context (auto-compact / auto-clear) ──────────────────────────
   /** The two context rules (cadence + pressure gate + message), deep-filled. */

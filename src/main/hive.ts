@@ -236,6 +236,8 @@ const LOG_TAIL_BYTES = 256 * 1024;
 const ARCHIVE_SCAN_LIMIT = 200;
 /** Hive commits are coalesced: at most one `git add -A && commit` per window. */
 const COMMIT_COALESCE_MS = 10_000;
+/** An outbox file that fails to parse is quarantined only once it is this old. */
+const OUTBOX_SETTLE_MS = 2_000;
 
 /** Idempotently ensure `<agentDir>/.gitignore` excludes the non-memory files.
  *  Append-only: writes only the missing lines, leaving any existing entries. */
@@ -1956,6 +1958,9 @@ export class HiveManager {
       for (const f of readdirSync(outbox)) {
         if (!f.endsWith('.json')) continue;
         const full = join(outbox, f);
+        // An empty or half-written file fails to parse too. Only quarantine one
+        // that has sat unchanged for a while; a fresh one is retried next tick.
+        const settled = (): boolean => Date.now() - statSync(full).mtimeMs >= OUTBOX_SETTLE_MS;
         try {
           const raw = readFileSync(full, 'utf8');
           let partial: Partial<HiveMessage>;
@@ -1964,6 +1969,7 @@ export class HiveManager {
           } catch {
             const repaired = repairLiteralLineBreaksInJsonStrings(raw);
             if (!repaired.changed) {
+              if (!settled()) continue;
               this.appendLog({ kind: 'drop', reason: 'malformed-json', from: id, file: f });
               try { renameSync(full, join(outbox, '.sent', `bad-${f}`)); } catch { /* noop */ }
               continue;
@@ -1971,6 +1977,7 @@ export class HiveManager {
             try {
               partial = JSON.parse(repaired.text) as Partial<HiveMessage>;
             } catch {
+              if (!settled()) continue;
               this.appendLog({ kind: 'drop', reason: 'malformed-json', from: id, file: f });
               try { renameSync(full, join(outbox, '.sent', `bad-${f}`)); } catch { /* noop */ }
               continue;

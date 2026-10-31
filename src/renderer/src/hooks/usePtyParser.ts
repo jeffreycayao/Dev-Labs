@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useStore, type ToolKind, type StationKind } from '@/store/store';
+import { useStore, type ToolKind, type StationKind, type BlockReason } from '@/store/store';
 import { createAnsiStripper } from '@/components/ansiText';
 import { terminalShowsStartupPrompt } from '@/components/terminalPool';
 
@@ -34,6 +34,17 @@ const BLOCK_HINTS = [
   /\(y\/n\)/i,
   /\[y\/n\]/i,
 ];
+
+// One shared object: a fresh literal per terminal chunk would defeat the store's
+// Object.is no-op guard and re-render the app on every repaint at the prompt.
+const GOD_PROMPT_BLOCK: BlockReason = {
+  summary: 'Waiting for your reply',
+  detail: 'Claude is waiting for input. Check the terminal for the exact prompt.',
+  actions: [
+    { label: 'Approve', kind: 'approve', send: 'y\r' },
+    { label: 'Deny',    kind: 'deny',    send: 'n\r' }
+  ]
+};
 
 // The /context output prints "235.3k/1m tokens (24%)" — sniff the DENOMINATOR
 // to learn the session's true context-window size. This is the only reliable
@@ -158,14 +169,7 @@ export function usePtyParser(agentId: string) {
           status: 'blocked',
           action: 'waiting on you',
           currentStation: 'mailbox',
-          blockReason: {
-            summary: 'Waiting for your reply',
-            detail: 'Claude is waiting for input. Check the terminal for the exact prompt.',
-            actions: [
-              { label: 'Approve', kind: 'approve', send: 'y\r' },
-              { label: 'Deny',    kind: 'deny',    send: 'n\r' }
-            ]
-          }
+          blockReason: GOD_PROMPT_BLOCK
         });
       } else {
         updateAgent(agentId, {

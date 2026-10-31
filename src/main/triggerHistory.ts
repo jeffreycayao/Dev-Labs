@@ -19,7 +19,7 @@
  * (which carries `secret`) still gets only the ledger fields persisted.
  */
 import { app } from 'electron';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import {
@@ -61,11 +61,17 @@ function readAll(): TriggerHistoryEntry[] {
 }
 
 function writeAll(entries: TriggerHistoryEntry[]): void {
+  const p = historyPath();
+  // Temp + rename: a torn write would read back as an empty ledger.
+  const tmp = `${p}.tmp-${randomBytes(4).toString('hex')}`;
   try {
-    const p = historyPath();
     mkdirSync(dirname(p), { recursive: true });
-    writeFileSync(p, JSON.stringify(entries, null, 2), 'utf8');
-  } catch { /* best-effort; a ledger write must never fail the event it records */ }
+    writeFileSync(tmp, JSON.stringify(entries, null, 2), 'utf8');
+    renameSync(tmp, p);
+  } catch {
+    // best-effort; a ledger write must never fail the event it records
+    try { rmSync(tmp, { force: true }); } catch { /* the tmp file is disposable */ }
+  }
 }
 
 /** Structural guard for one persisted row. A hand-edited or partially-written

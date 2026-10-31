@@ -20,10 +20,11 @@ import {
 } from './config';
 import { listDir, readFileText, readFileBinary, writeFileText, statAbs, expandTilde } from './fs';
 import { normalizeWeekly, weeklyDelayMs } from '../shared/weeklySchedule';
+import { APP_ID } from '../shared/brand';
 import {
   getBranch, getStatus, getLog, getBranches, getAheadBehind, isRepo, getDiff, mainRepoRoot,
   addWorktree, removeWorktree, worktreeHasUnintegratedWork, worktreeIsGcSafe,
-  getLogGraph, getCommitFiles, getFileAtRev, compareRefs, listWorktrees, checkoutRef
+  getLogGraph, getCommitFiles, getFileAtRev, compareRefs, checkoutRef
 } from './git';
 import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';
 import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
@@ -34,8 +35,8 @@ import { MemoryManager } from './memory';
 import { KnowledgeManager } from './knowledge';
 import { MemoryReflector, type ReflectSettings } from './reflect';
 import { PersistStore } from './db';
-import { readAgentUsage, readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
-import { listIssues, listCIRuns } from './github';
+import { readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
+import { listIssues } from './github';
 import { SlackWebhookServer, SlackReplyServer, postSlackReply, type SlackEventFile } from './slack';
 import {
   WebhookServer,
@@ -3425,6 +3426,21 @@ ipcMain.handle('dialog:chooseFolder', async (evt) => {
 // ─── IPC: Terminal.app at a folder ──────────────────────────────────────────
 ipcMain.handle('terminal:openAtFolder', async (_evt, cwd: unknown) => {
   if (typeof cwd !== 'string' || cwd.length === 0) return { ok: false, error: 'invalid cwd' };
+  try { if (!statSync(cwd).isDirectory()) throw new Error(); } catch { return { ok: false, error: 'That folder does not exist.' }; }
+  if (process.platform !== 'darwin') {
+    // The folder goes in as the process cwd, never into a command line.
+    const [cmd, args]: [string, string[]] = process.platform === 'win32'
+      ? ['cmd.exe', ['/c', 'start', '', 'cmd.exe']]
+      : ['x-terminal-emulator', []];
+    return new Promise<{ ok: boolean; error?: string }>((resolve) => {
+      const p = spawn(cmd, args, { cwd, detached: true, stdio: 'ignore' });
+      p.on('spawn', () => { p.unref(); resolve({ ok: true }); });
+      p.on('error', (e) => resolve({
+        ok: false,
+        error: process.platform === 'win32' ? e.message : 'No terminal app found (x-terminal-emulator). Install one, or open the folder from your file manager.'
+      }));
+    });
+  }
   return new Promise<{ ok: boolean; error?: string }>((resolve) => {
     const p = spawn('open', ['-a', 'Terminal', cwd]);
     let err = '';
@@ -3776,7 +3792,7 @@ ipcMain.handle('git:branch', (_evt, cwd: unknown) => {
 });
 ipcMain.handle('git:status', (_evt, cwd: unknown) => {
   if (typeof cwd !== 'string') return { error: 'invalid cwd' };
-  return getStatus(cwd);
+  return getStatus(cwd, true);
 });
 ipcMain.handle('git:log', (_evt, cwd: unknown, n: unknown) => {
   if (typeof cwd !== 'string') return { error: 'invalid cwd' };
@@ -3819,10 +3835,6 @@ ipcMain.handle('git:compareRefs', (_evt, cwd: unknown, base: unknown, head: unkn
     return { error: 'invalid args' };
   }
   return compareRefs(cwd, base, head, mode === 'two' ? 'two' : 'three');
-});
-ipcMain.handle('git:worktrees', (_evt, cwd: unknown) => {
-  if (typeof cwd !== 'string') return { error: 'invalid args' };
-  return listWorktrees(cwd);
 });
 ipcMain.handle('git:checkout', async (_evt, cwd: unknown, ref: unknown, detach: unknown) => {
   if (typeof cwd !== 'string' || typeof ref !== 'string') return { ok: false, error: 'invalid args' };
@@ -4099,41 +4111,9 @@ ipcMain.handle('hive:searchMemory', (_evt, query: unknown, wing: unknown) => {
   if (typeof query !== 'string' || !query.trim()) return { ok: false, output: '', error: 'empty query' };
   return memory.search(query, { wing: typeof wing === 'string' ? wing : undefined });
 });
-ipcMain.handle('hive:memoryWakeUp', (_evt, wing: unknown) =>
-  memory.wakeUp(typeof wing === 'string' ? wing : undefined));
-ipcMain.handle('hive:mineNow', () => { memory.mineNow(); return { ok: true }; });
-// Condense memory.md on demand: an explicit id condenses that one agent (skips
-// the size trigger — a "condense now" button); no id runs a full threshold scan.
-ipcMain.handle('memory:reflectNow', (_evt, id: unknown) =>
-  reflector.reflectNow(typeof id === 'string' && id ? id : undefined));
 
 // ─── IPC: enterprise Knowledge Graph (multimodal context for agents) ─────────
 ipcMain.handle('kg:status', () => knowledge.status());
-ipcMain.handle('kg:list', () => knowledge.list());
-ipcMain.handle('kg:search', (_evt, query: unknown, limit: unknown) => {
-  if (typeof query !== 'string' || !query.trim()) return [];
-  return knowledge.search(query, typeof limit === 'number' ? limit : undefined);
-});
-ipcMain.handle('kg:get', (_evt, id: unknown) =>
-  (typeof id === 'string' && id ? knowledge.get(id) : null));
-ipcMain.handle('kg:remove', (_evt, id: unknown) =>
-  ({ ok: typeof id === 'string' && id ? knowledge.remove(id) : false }));
-// Ingest one or more files from disk. Best-effort per file; returns per-file
-// results so the UI can report partial success.
-ipcMain.handle('kg:ingestFiles', (_evt, payload: unknown) => {
-  const p = (payload ?? {}) as { paths?: unknown; tags?: unknown };
-  const paths = Array.isArray(p.paths) ? p.paths.filter((x): x is string => typeof x === 'string') : [];
-  const tags = Array.isArray(p.tags) ? p.tags.filter((x): x is string => typeof x === 'string') : undefined;
-  const results = paths.map((srcPath) => {
-    try {
-      const r = knowledge.ingestFile(srcPath, { tags });
-      return { ok: true as const, srcPath, docId: r.docId, chunkCount: r.chunkCount };
-    } catch (e) {
-      return { ok: false as const, srcPath, error: e instanceof Error ? e.message : String(e) };
-    }
-  });
-  return { results };
-});
 // Open a multi-file picker and ingest the chosen artifacts in one round-trip.
 ipcMain.handle('kg:addFiles', async (evt) => {
   const win = BrowserWindow.fromWebContents(evt.sender);
@@ -4191,23 +4171,6 @@ ipcMain.handle('clipboard:saveImage', async () => {
   }
 });
 
-// ─── IPC: command history (SQLite — every prompt submitted to an agent) ──────
-ipcMain.handle('history:add', (_evt, payload: unknown) => {
-  const p = (payload ?? {}) as { agentId?: unknown; cwd?: unknown; text?: unknown };
-  if (typeof p.agentId !== 'string' || typeof p.text !== 'string') return { ok: false, error: 'invalid args' };
-  try {
-    persist.addHistory({ agentId: p.agentId, cwd: typeof p.cwd === 'string' ? p.cwd : null, text: p.text });
-    return { ok: true };
-  } catch (e) { return { ok: false, error: e instanceof Error ? e.message : String(e) }; }
-});
-ipcMain.handle('history:list', (_evt, agentId: unknown, limit: unknown) =>
-  persist.listHistory(
-    typeof agentId === 'string' && agentId ? agentId : undefined,
-    typeof limit === 'number' ? limit : undefined
-  ));
-ipcMain.handle('history:search', (_evt, query: unknown, limit: unknown) =>
-  persist.searchHistory(typeof query === 'string' ? query : '', typeof limit === 'number' ? limit : undefined));
-
 // ─── IPC: quit confirmation ─────────────────────────────────────────────────
 /** Tear the harness down and quit. Shared by the hard "kill all & quit" path
  *  and the closing-time conclusion (after the god confirmed the floor saved). */
@@ -4243,14 +4206,6 @@ ipcMain.handle('app:cancelClose', () => {
   // been called off, and whoever is waiting on it needs to hear that rather than
   // sit disabled forever waiting for a process that is not going to die.
   abortPendingRestart();
-});
-
-// Open a new floor (independent office window). Gated by the multiWindow flag
-// inside openFloor(); returns whether a window opened so a renderer button can
-// reflect availability. The app-menu "New Floor" item calls openFloor() directly.
-ipcMain.handle('window:newFloor', () => {
-  const win = openFloor();
-  return { ok: win != null };
 });
 
 // ─── IPC: closing time (graceful, data-loss-free shutdown) ──────────────────
@@ -4408,10 +4363,6 @@ ipcMain.on('floor:resetEpochSync', (event) => {
 });
 
 // ─── IPC: token telemetry (real usage + est. cost from CC transcripts) ───────
-// Reconciler/fallback path: per-cwd transcript sum, now priced PER MODEL (cost
-// bug #1 fixed in pricing.ts). Kept for back-compat with the existing UsageRow.
-ipcMain.handle('hive:agentUsage', (_evt, cwd: unknown) =>
-  typeof cwd === 'string' ? readAgentUsage(cwd) : null);
 // Current context size (tokens) of an agent's LIVE session — the transcript
 // path is learned from the agent's hook payloads (SessionStart fires right at
 // spawn), so this works even when several agents share one cwd. Null until the
@@ -4475,21 +4426,9 @@ ipcMain.handle('hive:agentDirectory', () => {
 // ─── IPC: live telemetry (the OTel collector — the locked usage-provider seam) ─
 // The fleet grid + span waterfall (#7B) read these; Lane A's breaker (#6)
 // consumes getAgentUsage in-process via the provider, not over IPC.
-ipcMain.handle('telemetry:usage', (_evt, agentId: unknown) =>
-  typeof agentId === 'string' ? telemetry.getAgentUsage(agentId) : null);
 ipcMain.handle('telemetry:spans', (_evt, agentId: unknown) =>
   typeof agentId === 'string' ? telemetry.getSpans(agentId) : []);
 ipcMain.handle('telemetry:snapshot', () => telemetry.snapshot());
-
-// ─── IPC: circuit-breaker state (Lane A #6 policy → this lane's avatars/meter) ─
-// Lane A's breaker calls this with a BreakerState; we fan it out to the renderer
-// on `control:breakerState`, where the avatar adapter gives it precedence over
-// hook-derived status (#5C looping/zombie). Defined here so the channel exists
-// before Jim's policy lands; he produces, this lane consumes.
-ipcMain.handle('control:setBreakerState', (_evt, state: unknown) => {
-  try { liveWebContents()?.send('control:breakerState', state); } catch { /* window tore down */ }
-  return { ok: true };
-});
 
 // ─── IPC: operator control over agents (#7C.1–7C.3) ─────────────────────────
 // All return the agent's fresh control snapshot so the UI can reflect state.
@@ -4510,11 +4449,6 @@ ipcMain.handle('control:autoDelivery', (_evt, agentId: unknown, paused: unknown)
 ipcMain.handle('control:resume', (_evt, agentId: unknown) => {
   if (typeof agentId !== 'string') return null;
   control.resume(agentId);
-  return control.snapshot(agentId);
-});
-ipcMain.handle('control:gateTool', (_evt, agentId: unknown, tool: unknown, on: unknown) => {
-  if (typeof agentId !== 'string' || typeof tool !== 'string') return null;
-  control.gateTool(agentId, tool, on === true);
   return control.snapshot(agentId);
 });
 ipcMain.handle('control:steer', (_evt, agentId: unknown, text: unknown) => {
@@ -4597,11 +4531,6 @@ ipcMain.handle('github:issues', (_evt, cwd: unknown) =>
   typeof cwd === 'string' ? listIssues(cwd) : { ok: false, error: 'no cwd' }
 );
 
-// ─── IPC: GitHub CI status watcher (gh CLI) ──────────────────────────────────
-ipcMain.handle('github:ciRuns', (_evt, cwd: unknown) =>
-  typeof cwd === 'string' ? listCIRuns(cwd) : { ok: false, error: 'no cwd' }
-);
-
 // ─── IPC: desktop notifications toggle ──────────────────────────────────────
 ipcMain.handle('app:setNotifications', (_evt, val) => writeConfig({ notifications: val === true }));
 
@@ -4648,9 +4577,6 @@ ipcMain.handle('slack:stop', () => {
 /** Current connection state + last Request URL — lets Settings hydrate the
  *  "Connected" badge and re-show the persisted tunnel URL on reopen. */
 ipcMain.handle('slack:status', () => ({ running: slackServer != null, url: lastSlackUrl }));
-/** Absolute path to the bundled reply helper, for the prompt the office worker
- *  runs to post its summary back in-thread. No secret crosses this boundary. */
-ipcMain.handle('slack:replyScriptPath', () => slackReplyScriptPath());
 /** Renderer's immediate "queued" ack into the triggering Slack thread. The bot
  *  token stays in main — only channel/thread/text cross IPC. */
 ipcMain.handle('slack:reply', (_evt, arg: unknown) => {
@@ -4900,64 +4826,6 @@ ipcMain.handle('triggerHistory:decide', (_evt, arg: unknown) => {
   notifyTriggerHistoryUpdated();
   return next;
 });
-
-// ─── IPC: Generic webhook (LEGACY single-endpoint channels) ─────────────────
-// Kept alive for Settings → Webhook, which still speaks the one-secret shape.
-// They are now THIN SHIMS over the multi-endpoint engine: the legacy secret and
-// enabled flag map onto the `legacy` WebhookTrigger the config migration created,
-// so the two surfaces can never disagree about whether the endpoint is live.
-ipcMain.handle('webhook:start', () => startWebhookServer());
-ipcMain.handle('webhook:stop', () => { stopWebhookServer(); return { ok: true }; });
-/** Current state + last public endpoint URL, for the Settings badge/URL field. */
-ipcMain.handle('webhook:status', () => ({ running: webhookServer != null, url: lastWebhookUrl }));
-/** Mint a strong (256-bit) secret, persist it, and return it so Settings can show
- *  it for the user to copy into their client. The previous secret is replaced. */
-ipcMain.handle('webhook:generateSecret', () => {
-  const secret = randomBytes(32).toString('hex');
-  writeConfig({ webhookSecret: secret });
-  upsertLegacyWebhookTrigger({ secret });
-  return { ok: true, secret };
-});
-ipcMain.handle('webhook:setConfig', (_evt, patch: unknown) => {
-  const p = (patch ?? {}) as { secret?: unknown; port?: unknown; enabled?: unknown };
-  const next: Partial<HarnessConfig> = {};
-  if (typeof p.secret === 'string') next.webhookSecret = p.secret.trim() || undefined;
-  if (typeof p.port === 'number' && Number.isFinite(p.port)) next.webhookPort = p.port;
-  if (typeof p.enabled === 'boolean') next.webhookEnabled = p.enabled;
-  writeConfig(next);
-  upsertLegacyWebhookTrigger({
-    secret: typeof p.secret === 'string' ? p.secret.trim() : undefined,
-    enabled: typeof p.enabled === 'boolean' ? p.enabled : undefined
-  });
-  // Disabling (or clearing the secret) stops the public surface immediately; the
-  // reconcile also picks up the case where OTHER endpoints are still enabled, in
-  // which case the server stays up minus the legacy one.
-  reconcileWebhookServer();
-  return { ok: true };
-});
-
-/** Mirror a legacy `webhook:setConfig` / `webhook:generateSecret` edit onto the
- *  `legacy` WebhookTrigger. Creates the row only once a secret exists — an
- *  enabled endpoint without a secret would be an open door, so a bare "enable"
- *  against a never-configured webhook is deliberately a no-op. */
-function upsertLegacyWebhookTrigger(patch: { secret?: string; enabled?: boolean }): void {
-  const list = readConfig().webhookTriggers ?? [];
-  const prior = list.find((t) => t.id === 'legacy');
-  const secret = patch.secret !== undefined ? patch.secret : prior?.secret ?? '';
-  if (!secret) return;
-  const row: WebhookTrigger = {
-    id: 'legacy',
-    name: prior?.name ?? 'Default webhook',
-    secret,
-    enabled: patch.enabled !== undefined ? patch.enabled : prior?.enabled ?? false,
-    mode: prior?.mode ?? DEFAULT_TRIGGER_MODE,
-    schema: prior?.schema ?? DEFAULT_WEBHOOK_SCHEMA,
-    createdAt: prior?.createdAt ?? Date.now()
-  };
-  writeConfig({
-    webhookTriggers: prior ? list.map((t) => (t.id === 'legacy' ? row : t)) : [...list, row]
-  });
-}
 
 // ─── IPC: Free Flow (voice dictation → message queue) ────────────────────────
 // Entry point B is hold-Option-to-talk, handled entirely in the renderer
@@ -5891,7 +5759,7 @@ function onSystemResume(reason: string): void {
 app.whenReady().then(() => {
   // Same id as electron-builder's appId, so Windows groups the taskbar and shows
   // notifications as DevLabs, not "Electron"; dev runs get the logo in the Dock.
-  if (process.platform === 'win32') app.setAppUserModelId('dev.jepoy.devlabs');
+  if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
   if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(appIconPath());
   // Realtime Ramon mic-gate hygiene (rt-8 / Pam rt-10 nit): the voice session
   // opens the mic permission gate by persisting realtimeVoiceEnabled=true and

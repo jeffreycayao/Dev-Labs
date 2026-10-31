@@ -23,7 +23,7 @@ const loadTs = require('./load-ts.cjs');
 
 const { extensionOf, imageMimeForPath, isImagePath, isSvgPath, formatBytes } = loadTs('src/shared/imageTypes.ts');
 const { readFileBinary } = loadTs('src/main/fs.ts');
-const { resolveLocalImageRel, resolveRel } = loadTs('src/renderer/src/markdown/mdLinks.ts');
+const { resolveLocalImageRel, resolveRel, isExternal } = loadTs('src/renderer/src/markdown/mdLinks.ts');
 
 // ─── extension → mime ───────────────────────────────────────────────────────
 
@@ -106,6 +106,13 @@ test('anything with a URI scheme is refused', () => {
     'javascript:alert(1)'
   ]) {
     assert.equal(resolveLocalImageRel('docs/report.md', src), null, `${src} must not resolve`);
+  }
+});
+
+test('only https links are clickable — main opens nothing else', () => {
+  assert.equal(isExternal('https://example.com'), true);
+  for (const h of ['http://example.com', 'mailto:a@b.c', 'file:///etc/passwd', 'notes.md']) {
+    assert.equal(isExternal(h), false, `${h} must not be clickable`);
   }
 });
 

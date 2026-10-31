@@ -1,15 +1,12 @@
 // Office settings (ported from Claw3D's SettingsPanel, voice section only: DevLabs has no
-// OpenClaw gateway or remote office). Self-sufficient via window.cth; the props
-// RetroOffice3D passes are accepted and ignored.
+// OpenClaw gateway or remote office). Self-sufficient via window.cth.
 import { useEffect, useState } from "react";
 import { DEFAULT_VOICE_PREFS, MAX_SPEED, MIN_SPEED, VOICE_CATALOG, type VoicePrefs } from "@shared/office/voiceCatalog";
 import { previewVoice, setVoicePrefsCache } from "@/scene/office3d/useVoiceReplies";
 
-type AnyProps = { [key: `on${string}`]: ((...args: any[]) => unknown) | undefined } & Record<string, unknown>;
-
 const PREVIEW_TEXT = "Hi! This is how your agents will sound when they reply.";
 
-export function SettingsPanel(_props: AnyProps) {
+export function SettingsPanel() {
   const [prefs, setPrefs] = useState<VoicePrefs>(DEFAULT_VOICE_PREFS);
   const [hasKey, setHasKey] = useState(false);
   const [loaded, setLoaded] = useState(false);

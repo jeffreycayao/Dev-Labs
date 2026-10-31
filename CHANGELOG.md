@@ -4,6 +4,8 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.2.2 — 2026-10-31
+
 - **Activity bubbles are back.** A working agent's bubble shows what it's doing right now, the way the old 2D office did: `$ git push origin main` for a terminal command, `> App.tsx` when editing a file, `< SPEC.md` when reading, `?` for searches and `@` for the web. The bubble gently pulses while the agent works. It only shows animated dots when there's nothing concrete yet (thinking). The agent card shows the same line.
 - **New: the Kapihan, the office cafeteria.** Where the gym and QA lab used to stand there's now a cafeteria with Filipino machuca-style tiles and a neon KAPIHAN sign: a coffee bar (two coffee machines, microwave, two vending machines, water cooler), six round tables with 24 seats, and a lounge corner with a couch and beanbags. Free agents come here for coffee and chikahan.
 - **The gym and QA lab moved** to the empty space on the right side of the floor, gym on top and QA lab below, with their doors facing the Kapihan. Every piece of equipment and every QA station is still reachable. Your saved floors update by themselves: the two rooms move, and the Kapihan is added once if that area is empty (furniture you placed there yourself is kept, and a Kapihan you delete stays deleted).

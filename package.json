@@ -1,6 +1,6 @@
 {
   "name": "devlabs",
-  "version": "4.1.2",
+  "version": "4.1.3",
   "private": true,
   "description": "DevLabs — a local-first multi-agent harness that turns the CLI coding agents you already run into an office of agents on your machine.",
   "main": "out/main/index.js",
@@ -40,6 +40,9 @@
     "release:major": "node tools/bump-version.cjs major && npm run release:check",
     "release": "node tools/bump-version.cjs auto && npm run release:check",
     "release:check": "node tools/release-preflight.cjs"
+  },
+  "allowScripts": {
+    "better-sqlite3": false
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

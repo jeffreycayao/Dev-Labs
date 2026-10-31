@@ -4,7 +4,7 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
-## v4.1.2 — 2026-10-31
+## v4.1.3 — 2026-10-31
 
 - **Settings and connector keys are never reset by a bad file.** If `config.json` or the saved connector keys can't be read (a damaged file, or another program holding it), DevLabs copies it aside as `<name>.corrupt-<time>` and refuses to save over it, with a message saying what to fix. Before, the next save replaced it with defaults and lost the hive home, triggers, schedules and every other key.
 - **Typed prompts are no longer stored.** DevLabs kept every prompt you typed to an agent in plain text in `harness.db`, and nothing used it. That table is now deleted on first launch.

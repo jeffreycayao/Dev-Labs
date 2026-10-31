@@ -4,6 +4,8 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.1.2 — 2026-10-31
+
 - **New DevLabs logo everywhere.** The app icon (installers, desktop shortcut, Start menu, Dock), the window and taskbar icon, the logo at the top of the app and on the loading screen, the Help window, and the website's icons now use the new "D" logo. The window no longer shows Electron's icon, and Windows notifications are labelled DevLabs.
 - **Removed the old jepoy.dev branding files** (the `brand/` folder with the "J" logo).
 

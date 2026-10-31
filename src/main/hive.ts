@@ -287,11 +287,10 @@ function realDirs(base: string, ...parts: string[]): string {
   return at;
 }
 /** Move every plain file under `from` to the same place under `to` (made with
- *  plain mkdir: `to` is main-only). Each entry is lstat'ed before use, so links
- *  and anything that is not a file or folder are left behind, never followed.
- *  shortcut: an agent swapping a folder for a link between the lstat and the
- *  move could slip one file in; this runs once, at bootstrap, before any agent
- *  spawns. */
+ *  plain mkdir). Each entry is lstat'ed before use, so links and anything that
+ *  is not a file or folder are left behind, never followed. Both trees must be
+ *  main-only: in one an agent can write, a folder swapped for a link between
+ *  the lstat and the move would be walked. */
 function movePlainTree(from: string, to: string): void {
   mkdirSync(to, { recursive: true });
   for (const name of readdirSync(from)) {
@@ -769,14 +768,17 @@ export class HiveManager {
    *  `<root>/.git` once. That folder sat in an agent-writable tree, so it is not
    *  adopted whole: a planted link inside it (logs/HEAD, COMMIT_EDITMSG, objects/)
    *  would have git write through it, and its config/hooks would be trusted. The
-   *  new git dir is a fresh init; only plain files under objects/ and refs/, plus
-   *  HEAD and packed-refs, are moved in (movePlainTree). The rest stays behind,
-   *  inert: nothing reads `<root>/.git` any more. */
+   *  old folder is first renamed whole into `hive-internal/legacy-git` (one
+   *  rename, which moves a link as itself), so nothing in it can be swapped while
+   *  it is walked. The new git dir is a fresh init; only plain files under
+   *  objects/ and refs/, plus HEAD and packed-refs, are moved in (movePlainTree).
+   *  The rest stays in legacy-git, inert: nothing reads it. */
   private initGitDir(root: string, gitDir: string): void {
     this.git(['init', '-q'], root);
-    const legacy = join(root, '.git');
+    const legacy = join(dirname(gitDir), 'legacy-git');
     let adopted = false;
     try {
+      renameSync(join(root, '.git'), legacy);
       if (lstatSync(legacy).isDirectory() && lstatSync(join(legacy, 'objects')).isDirectory()) {
         for (const sub of ['objects', 'refs']) {
           if (lstatSync(join(legacy, sub)).isDirectory()) movePlainTree(join(legacy, sub), join(gitDir, sub));

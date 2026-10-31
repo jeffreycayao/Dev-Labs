@@ -138,6 +138,12 @@ if (!reduced && innerWidth >= 720 && webgl()) {
       import('./building3d.js').then((m) => { building = m.mountBuilding(holo); holo.classList.add('has-3d'); }).catch(() => {});
     }, { margin: '300px 0px' });
   }
+  const showcase = document.querySelector('.teamsim');
+  if (showcase) {
+    inView(showcase, () => {
+      import('./showcase3d.js').then((m) => { m.mountShowcase(showcase); showcase.classList.add('has-3d'); }).catch(() => {});
+    }, { margin: '300px 0px' });
+  }
   const core = document.querySelector('.core');
   if (core) {
     inView(core, () => {

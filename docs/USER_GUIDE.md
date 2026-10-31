@@ -10,6 +10,8 @@ The boss of the office is **Ramon**. Think of him as your office manager: you te
 
 Download: **https://devlabs.atmt.dev** · Ask for help: **https://github.com/jeffreycayao/Dev-Labs/issues** · Email: **hello@automatika.ph**
 
+Inside the app, **Help → How to use DevLabs** (F1) opens this guide, and **Help → Feature Manual** explains every feature and how to turn it on, starting with how DevLabs compares to running an AI tool on its own.
+
 ---
 
 ## Contents

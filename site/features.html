@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Features · DevLabs</title>
+<meta name="description" content="Every DevLabs feature in plain words: what it is, why you would use it and how to turn it on, plus how DevLabs compares to running an AI coding tool on its own.">
+<meta property="og:title" content="Features · DevLabs">
+<meta property="og:url" content="https://devlabs.atmt.dev/features">
+<meta name="theme-color" content="#181C17">
+<link rel="canonical" href="https://devlabs.atmt.dev/features">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/assets/site.css?v=20261101c">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="DevLabs home">
+      <img src="/assets/logo.png" alt="DevLabs" width="36" height="36">
+      <span class="app">DevLabs™</span>
+    </a>
+    <nav aria-label="Main">
+      <a class="hide-sm" href="/#building">How it works</a>
+      <a class="hide-sm" href="/features">Features</a>
+      <a class="hide-sm" href="/guide">User guide</a>
+      <a class="hide-sm" href="/#download">Download</a>
+      <a class="hide-sm" href="https://github.com/jeffreycayao/Dev-Labs">GitHub</a>
+      <a class="btn primary" href="/#download">Download free</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <article class="wrap doc features">
+    <div class="eyebrow"><span class="dot"></span>Features</div>
+    <h1>What DevLabs can do</h1>
+    <p class="lead"><strong>Every feature in plain words: what it is, why you'd use it, and how to turn it on.</strong></p>
+    <p>DevLabs runs the AI coding tools you already use (Claude Code, Codex, Gemini and more) as a team in a 3D office on your computer. Below, see the difference, compare it with running one AI tool on its own, then find any feature. The same manual is inside the app under <strong>Help → Feature Manual</strong>.</p>
+
+    <section class="teamsim" aria-label="Animation comparing one AI tool on its own with a DevLabs team"
+      data-caption-plain="One AI tool on its own: you write every prompt, wait, and carry results from one step to the next yourself. One job at a time."
+      data-caption-devlabs="DevLabs: you ask once. Ramon splits the work across twelve AI tools, agents message each other and save what they learn to shared memory, and finished files come back to you.">
+      <div class="sc-labels" aria-hidden="true"></div>
+      <div class="sc-top">
+        <div class="sc-modes" role="group" aria-label="Show">
+          <button type="button" data-mode="plain" aria-pressed="true">One AI tool</button>
+          <button type="button" data-mode="devlabs" aria-pressed="false">DevLabs</button>
+        </div>
+        <span class="sc-hint">drag to turn</span>
+      </div>
+      <p class="sc-caption" data-caption>DevLabs: you ask once. Ramon splits the work across twelve AI tools, agents message each other and save what they learn to shared memory, and finished files come back to you.</p>
+      <dl class="sc-stats">
+        <div><dt>Tasks handed out</dt><dd data-stat="tasks">0</dd></div>
+        <div><dt>Agent messages</dt><dd data-stat="messages">0</dd></div>
+        <div><dt>Files delivered</dt><dd data-stat="deliveries">0</dd></div>
+      </dl>
+    </section>
+
+    <nav class="toc" aria-label="Contents">
+      <h4>Contents</h4>
+      <ol>
+        <li><a href="#compare">DevLabs vs a plain AI tool</a></li>
+        <li><a href="#engines-compare">What each AI tool gets in DevLabs</a></li>
+        <li><a href="#reading">How to read this manual</a></li>
+        <li><a href="#team">Your team</a></li>
+        <li><a href="#work">Getting work done</a></li>
+        <li><a href="#abilities">Agent abilities</a></li>
+        <li><a href="#automation">Automation</a></li>
+        <li><a href="#control">Control &amp; safety</a></li>
+        <li><a href="#voice">Voice</a></li>
+        <li><a href="#office-h">The office</a></li>
+        <li><a href="#app">App settings</a></li>
+        <li><a href="#where">Where to turn things on</a></li>
+      </ol>
+    </nav>
+
+<h2 id="compare">DevLabs vs a plain AI tool</h2>
+<div class="searchable">
+<p>Every agent in DevLabs <b>is</b> a real AI coding tool (Claude Code, Codex, Gemini and others), running the same program you would run yourself in a terminal. DevLabs doesn't replace the tool. It runs many copies of it, connects them, and adds the things a single terminal window doesn't have.</p>
+<div class="tablewrap"><table class="compare">
+  <thead><tr><th>What you want</th><th>Plain tool in a terminal</th><th>The same tool inside DevLabs</th></tr></thead>
+  <tbody>
+    <tr><td>Several helpers at once</td><td>One window per session. You switch between them and keep track yourself.</td><td>Up to 15 agents per office floor, as many floors as you like, up to 200 windows. Each card shows whether that agent is <b>working</b>, <b>waiting</b> or <b>idle</b>.</td></tr>
+    <tr><td>Someone to split up the work</td><td>You write every prompt and decide who does what.</td><td><b>Ramon</b>, the manager agent, reads your request, writes clear tasks, gives each to the best agent (or hires one) and checks it's done.</td></tr>
+    <tr><td>Agents that talk to each other</td><td>Sessions can't see each other. You copy and paste between them.</td><td>Agents send each other messages. A message waits in line and arrives when the receiving agent finishes its current step.</td></tr>
+    <tr><td>Knowing what's in progress</td><td>Scroll back through the terminal.</td><td>A <b>task board</b> (to do, doing, blocked, done), a live <b>activity</b> feed, and the office itself: busy agents sit at their desks, free ones go to the Kapihan.</td></tr>
+    <tr><td>Getting finished files back</td><td>Find the file on disk yourself.</td><td><b>Deliveries</b>: a preview, Approve or Request changes, Save a copy. Each delivery is a snapshot, so later edits don't change what you approved.</td></tr>
+    <tr><td>Questions the AI has for you</td><td>The terminal waits until you notice.</td><td>Questions land in Ramon's <b>human</b> tab, and a desktop notification can ping you.</td></tr>
+    <tr><td>Memory between sessions</td><td>Each new session starts fresh unless you set up memory yourself.</td><td>Every agent keeps its own notes. Optional <b>MemPalace</b> search lets all agents look things up by meaning, and the <b>knowledge base</b> lets them read your own documents.</td></tr>
+    <tr><td>Picking up after a restart</td><td>You find the session id and resume it by hand.</td><td>DevLabs records each agent's session. <b>Restart &amp; Continue</b> or <b>restore team</b> brings agents back with the same name, memory and conversation (for the tools that support resuming).</td></tr>
+    <tr><td>Keeping spending under control</td><td>Watch the tool's own usage page.</td><td>Per-agent and team <b>token budgets</b>, a <b>circuit breaker</b> that steers, then slows, then stops a runaway agent, and the <b>ATM</b> showing cost per agent and per day.</td></tr>
+    <tr><td>Stopping safely</td><td>Close the window or press Ctrl+C.</td><td><b>stop after this step</b>, <b>block tools</b>, <b>pause</b> for the whole team, and <b>closing time</b>: everyone saves their work and notes before the app quits.</td></tr>
+    <tr><td>Work that starts by itself</td><td>Write your own cron jobs or scripts.</td><td><b>Schedules</b>, <b>Discord</b>, <b>Slack</b> and <b>webhook</b> triggers hand work to Ramon automatically.</td></tr>
+    <tr><td>Using your other apps</td><td>Find, install and configure each MCP server yourself.</td><td><b>Settings → Connections</b>: paste a key, switch it on. Keys are stored encrypted, and web connectors reach the vendor through DevLabs so the agent never sees the key.</td></tr>
+    <tr><td>Extra skills</td><td>Find and copy skill folders yourself.</td><td>Security-audit, skill-inspector and the ponytail skills come built in, and the <b>DevLabs Skills Library</b> installs more after checking every file.</td></tr>
+    <tr><td>Reviewing changes before you keep them</td><td>Set up git branches or worktrees yourself.</td><td>Tick <b>Git isolation</b> when hiring: the agent works on its own copy of the project.</td></tr>
+    <tr><td>Mixing AI companies</td><td>A different tool, a different window, a different way of working for each.</td><td>Claude, Codex, Gemini, Grok, Qwen and more on one floor, all getting the same identity, inbox and controls.</td></tr>
+    <tr><td>Sharing a team you built</td><td>Share your prompts and settings files by hand.</td><td><b>export floor…</b> saves the whole team as one file. Others import it in one click, with no paths, keys or memory inside.</td></tr>
+    <tr><td>No terminal skills needed</td><td>You type commands and read raw output.</td><td>Plain-language buttons, an office you can watch, and voice: dictate with <b>Free Flow</b> or talk to Ramon out loud.</td></tr>
+  </tbody>
+</table></div>
+
+<div class="note"><b>When a plain terminal is enough.</b> For one quick question or a small single change, the AI tool on its own is simpler and starts faster. DevLabs earns its keep when you have several jobs at once, long-running work, work that should start by itself, or people who don't want to use a terminal.</div>
+<div class="note warn"><b>What DevLabs adds on top, honestly.</b> It is another app running on your computer and uses some memory and processor time. It chooses some command-line options for each tool (for example the auto-mode option), so a few of your usual flags are set from <b>Settings</b> instead. Connectors work with Claude Code agents only today. Every agent costs AI usage, so ten agents can cost about ten times as much as one.</div>
+</div>
+
+<h2 id="engines-compare">What each AI tool gets in DevLabs</h2>
+<div class="searchable">
+<p>DevLabs works with each tool as deeply as that tool allows. <span class="yes">✓</span> means yes, <span class="part">~</span> means partly, <span class="no">—</span> means not yet.</p>
+<div class="tablewrap"><table>
+  <thead><tr><th>AI tool</th><th>Command</th><th>Live status</th><th>Gets work from Ramon</th><th>Resumes after restart</th><th>Built-in skills</th><th>Connectors</th></tr></thead>
+  <tbody>
+    <tr><td><b>Claude Code</b></td><td><code>claude</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    <tr><td><b>Codex · GPT</b></td><td><code>codex</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td></tr>
+    <tr><td><b>Gemini CLI</b></td><td><code>gemini</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>Antigravity · Gemini</b></td><td><code>agy</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>Grok · xAI</b></td><td><code>grok</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>Pi</b></td><td><code>pi</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>OpenCode</b></td><td><code>opencode</code></td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>Crush · Charm</b></td><td><code>crush</code></td><td class="part">~</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>Qwen</b></td><td><code>qwen</code></td><td class="part">~</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>Cursor</b></td><td><code>cursor-agent</code></td><td class="no">—</td><td class="part">~</td><td class="yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>Copilot</b></td><td><code>copilot</code></td><td class="no">—</td><td class="no">—</td><td class="part">~</td><td class="no">—</td><td class="no">—</td></tr>
+    <tr><td><b>Kimi Code</b></td><td><code>kimi</code></td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li><b>Live status</b>: the card and the office show working / idle the moment it changes. Crush and Qwen get it by DevLabs watching their AI traffic on your computer (<span class="part">~</span>: if that watcher can't start, the agent still runs, without live status).</li>
+  <li><b>Gets work from Ramon</b>: messages are delivered to the agent automatically. For Cursor they're typed into its terminal (<span class="part">~</span>). Copilot and Kimi can't receive them yet, so messages for them go back to Ramon; they work well as helpers you talk to directly.</li>
+  <li><b>Resumes after restart</b>: Restart &amp; Continue picks up the same conversation. Copilot resumes when a session id was recorded (<span class="part">~</span>).</li>
+  <li><b>Ramon's own engine</b>: pick one that can get work, such as Claude Code or Codex. Claude Code has the most features in DevLabs, so start there if you're unsure.</li>
+</ul>
+</div>
+
+<h2 id="reading">How to read this manual</h2>
+<div class="searchable">
+<ul>
+  <li><span class="where">Settings → General</span> means: click the <b>gear</b> at the top right of the window, then the <b>General</b> tab on the left.</li>
+  <li><b>Ramon's Command Center</b> opens when you click Ramon (his card is first in the bottom strip). Its tabs are the icons along the top; hover one to see its name.</li>
+  <li>Most settings apply to <b>agents you start after the change</b>. Agents already running keep what they started with. To apply a change to a running agent, use <b>Restart &amp; Continue</b>.</li>
+</ul>
+</div>
+
+<!-- ───────────────────────── TEAM ───────────────────────── -->
+<h2 id="team">Your team</h2>
+
+<section class="feat searchable" id="ramon">
+  <h3>Ramon, the manager <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>The one agent who is always there. He wears a red name tag and sits in the BOSS office on Floor 1. He reads your requests, plans the work, hands it to agents, hires new ones when nobody fits, and tells you when it's done.</p>
+  <div class="lbl">Why use it</div>
+  <p>You talk to one person instead of managing every agent. Ramon also checks who's already in the building before hiring, so you don't pay for duplicates.</p>
+  <div class="lbl">How to set it up</div>
+  <ol class="steps">
+    <li>Ramon is created on first start. In setup step 2 (<b>Ramon's engine</b>) pick the AI tool he uses.</li>
+    <li>To change his model later: click Ramon → <b>floor</b> tab → the manager model picker.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>There's one Ramon for all your windows. He can hand work to agents in any window.</li><li>Ramon can also hire <b>short-term helpers</b> for one job. They show in the <b>workers</b> tab and leave by themselves when finished.</li></ul>
+</section>
+
+<section class="feat searchable" id="hiring">
+  <h3>Hiring agents <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Adding an AI helper with its own name, look, project folder, AI tool, model and standing job.</p>
+  <div class="lbl">How to do it</div>
+  <ol class="steps">
+    <li>Click <b>add agent</b> (end of the bottom strip, or <b>add</b> at the top of the office).</li>
+    <li>Give it a <b>name</b> and pick a <b>character</b> and colour.</li>
+    <li>Choose its <b>project folder</b>: the folder it may work in.</li>
+    <li>Pick the <b>engine</b> (AI tool) and <b>model</b>.</li>
+    <li>Write its <b>goal</b> in plain words, for example "Writes friendly product descriptions for our online shop".</li>
+    <li>Optional: tick <b>Git isolation (own worktree)</b> (see <a href="#isolation">Git isolation</a>), or paste a session id to <b>resume</b> an earlier conversation.</li>
+    <li>Press <b>spawn</b>. Nothing starts until you do.</li>
+  </ol>
+  <div class="lbl">Faster ways</div>
+  <ul>
+    <li><b>Role templates</b>: pick a ready-made Technical or Non-technical role and everything is filled in.</li>
+    <li><b>Agent gallery</b>: pre-configured hires you can spawn in one click.</li>
+    <li><b>import hire…</b>: load one agent from a file someone shared.</li>
+    <li><b>generate one with AI…</b>: copy the given text into any AI chat, describe the agent, save the answer as a file and import it.</li>
+  </ul>
+  <div class="lbl">Good to know</div>
+  <ul><li>Agents stay until you fire them (the red ✕). A <b>stopped</b> agent keeps its name, memory and workspace.</li><li>To bring back a fired agent: Command Center → <b>Archived</b> → <b>show closed agents</b> → <b>return to floor</b>, then <b>restore team</b>.</li></ul>
+</section>
+
+<section class="feat searchable" id="builder">
+  <h3>Company builder <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Describe your business in a sentence and get a whole planned team (roles, goals, tools) to review.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps">
+    <li><b>add agent</b> → <b>company builder</b>.</li>
+    <li>Describe your business, for example "a small online plant shop that sells on Facebook".</li>
+    <li>Review the proposed team. Change or remove anyone.</li>
+    <li>Confirm to hire. Nobody is hired before you confirm.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Your company description is sent to Groq or Claude to plan the team.</li></ul>
+</section>
+
+<section class="feat searchable" id="floorfiles">
+  <h3>Floor files: whole teams in one file <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A <code>.floor.json</code> file holding a whole team: each agent's name, job, goal, look, engine, model and token budget.</p>
+  <div class="lbl">How to share your team</div>
+  <ol class="steps"><li><b>add agent</b> → <b>export floor…</b></li><li>Give it a name and press <b>save file…</b></li></ol>
+  <div class="lbl">How to use someone's team</div>
+  <ol class="steps">
+    <li><b>add agent</b> → <b>import floor…</b> (or open an <code>atmtlabs://floor?src=…</code> link).</li>
+    <li>Read the review screen: it lists every agent and the apps they need.</li>
+    <li>Press <b>hire all</b>, <b>review one by one</b>, or <b>cancel</b>.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>A floor file <b>never</b> includes your folders, keys, memory or conversations.</li><li>It can't run commands on its own: DevLabs builds every command from your own settings. It can still give an agent a goal you didn't expect, so read the review screen.</li></ul>
+</section>
+
+<section class="feat searchable" id="project-floors">
+  <h3>Project floors <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A completely separate team for a different project folder, with its own agents, history and memory.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li><span class="where">Settings → General</span> → <b>Project floors</b> → <b>new project floor…</b></li><li>Pick the project's folder and press <b>create floor &amp; restart</b>.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Your current team is kept. Go back to it from the start screen.</li></ul>
+</section>
+
+<section class="feat searchable" id="building">
+  <h3>Many windows: your building <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Each DevLabs window is its own team (say, research, coding and marketing). Together they make your <b>building</b>.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps"><li>App menu → <b>New Floor</b>, or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd> (Windows, Linux) / <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd> (Mac).</li><li>Hire the team for that window.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Up to 200 windows. Agents can message agents in other windows, and Ramon sees them all.</li><li>Closing a window stops its agents (the app asks first). Their history is kept.</li><li>Tip: put the team in the name, like <code>F2 Marketing - Liza</code>.</li></ul>
+</section>
+
+<!-- ───────────────────────── WORK ───────────────────────── -->
+<h2 id="work">Getting work done</h2>
+
+<section class="feat searchable" id="dispatch">
+  <h3>Dispatch through Ramon <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>The main way to give work: write what you want once, and Ramon turns it into tasks for the right agents.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps">
+    <li>Click Ramon → <b>floor</b> tab → <b>dispatch via Ramon</b>.</li>
+    <li>Describe the result in plain words, and <b>say the file type you want back</b> ("as an HTML file", "as a Word document").</li>
+    <li>Press <b>dispatch</b>, then watch the office and the <b>tasks</b> tab.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>The <b>floor</b> tab can also hand out GitHub issues: pick issues and Ramon assigns them.</li></ul>
+</section>
+
+<section class="feat searchable" id="one-agent">
+  <h3>Working with one agent <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Look over one agent's shoulder and guide it directly. Click its card or its character in the office.</p>
+  <div class="lbl">The controls</div>
+  <table>
+    <thead><tr><th>Control</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><b>queue</b> (bottom)</td><td>Type a message and press <b>send</b>. If the agent is busy, the message waits and arrives when it's free.</td></tr>
+      <tr><td><b>steer</b></td><td>A short note ("use the blue logo") that arrives at its next step, without interrupting or typing into its terminal.</td></tr>
+      <tr><td><b>1:1</b></td><td>Takes the agent aside for a one-on-one with you. It goes back to Ramon when you end the 1:1.</td></tr>
+      <tr><td><b>block tools</b></td><td>It can keep thinking but can't run commands or change files until you allow it again.</td></tr>
+      <tr><td><b>stop after this step</b></td><td>It finishes what it's doing now, then stops.</td></tr>
+      <tr><td><b>prompts</b> / <b>files</b> / <b>voice</b></td><td>Insert saved instructions, attach files, or dictate (see <a href="#freeflow">Free Flow</a>).</td></tr>
+      <tr><td><b>edit</b></td><td>Change name, look, engine, model, goal and personality.</td></tr>
+      <tr><td><b>open</b></td><td>Opens a normal terminal window in its project folder.</td></tr>
+    </tbody>
+  </table>
+  <div class="lbl">Good to know</div>
+  <ul><li>Tabs on the agent panel: <b>terminal</b>, <b>git</b>, <b>messages</b> and <b>traces</b>.</li><li><b>Focus mode</b> (expand icon, top bar) makes one terminal fill the window.</li></ul>
+</section>
+
+<section class="feat searchable" id="tasks">
+  <h3>Task board <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A Kanban board with <b>to do</b>, <b>doing</b>, <b>blocked</b> and <b>done</b>. Ramon and the agents keep it up to date.</p>
+  <div class="lbl">How to open it</div>
+  <ol class="steps"><li>Ramon → <b>tasks</b> tab, or the <b>Kanban</b> button at the top left of the office (or the board in the office).</li><li>Click a card for its full details.</li></ol>
+</section>
+
+<section class="feat searchable" id="deliveries">
+  <h3>Deliveries <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Finished files handed back to you for review: web pages, documents, PDFs, pictures.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps">
+    <li>Ask for a file and say the format.</li>
+    <li>Open Ramon → <b>deliveries</b> (a number shows how many are new).</li>
+    <li>Preview it, then <b>Approve</b>, or <b>Request changes</b> → type what to fix → <b>Send to agent</b>.</li>
+    <li>Use <b>Open</b>, <b>Save a copy…</b> or <b>Show in folder</b> as needed.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul>
+    <li>Previews: HTML (scripts off), Markdown, text, CSV, JSON and PNG/JPG/GIF/WebP/SVG. Office files and PDFs open in their own apps.</li>
+    <li>Agents can only deliver files from their own project folder. Programs (<code>.exe</code>, <code>.dmg</code>, <code>.sh</code>) are never opened, only shown in their folder.</li>
+    <li><b>Reset floor</b> removes deliveries unless you back up first.</li>
+  </ul>
+</section>
+
+<section class="feat searchable" id="askme">
+  <h3>Questions for you (Ask me) <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Ramon's <b>human</b> tab collects every question an agent needs you to answer.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps"><li>When a card says <b>waiting</b>, open Ramon → <b>human</b>.</li><li>Answer the question. The agent carries on.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Turn on <a href="#notifications">desktop notifications</a> to be pinged when a question arrives.</li></ul>
+</section>
+
+<section class="feat searchable" id="standup">
+  <h3>Stand-up meeting <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Agents walk to the meeting table and each reports what it's working on, what's blocking it and what it saved recently.</p>
+  <div class="lbl">How to start it</div>
+  <ol class="steps"><li>Click the <b>meeting table</b> in the office.</li></ol>
+</section>
+
+<section class="feat searchable" id="ide">
+  <h3>Code editor, git &amp; traces <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A built-in code editor with file tree, changes, history and compare views; a <b>git</b> tab per agent; and <b>traces</b>, a timeline of every tool an agent used.</p>
+  <div class="lbl">How to open it</div>
+  <ol class="steps"><li>Click an agent → <b>IDE</b> (or <b>IDE</b> at the top of Ramon's Command Center).</li><li>Edit and press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>S</kbd> to save. <kbd>Esc</kbd> closes it.</li></ol>
+  <div class="lbl">Related</div>
+  <ul><li><b>Server rack</b> in the office: review GitHub pull requests (approve, request changes, comment). Needs the GitHub CLI signed in with <code>gh auth login</code>.</li><li><b>An agent's computer</b> in the office: the tools it just used and the last file it touched.</li></ul>
+</section>
+
+<!-- ───────────────────────── ABILITIES ───────────────────────── -->
+<h2 id="abilities">Agent abilities</h2>
+
+<section class="feat searchable" id="engines">
+  <h3>AI engines &amp; models <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>The AI tool each agent runs on. DevLabs doesn't sell AI: you install and sign in to the tools you want, and each one bills your own account.</p>
+  <div class="lbl">How to set it up</div>
+  <ol class="steps">
+    <li>Open <span class="where">Settings → Prerequisites</span>. It checks what's installed and shows <b>READY</b>, <b>MISSING</b> or <b>NOT SET UP</b>.</li>
+    <li>Install the tools you'll use (not all of them), or press <b>ask Ramon to set up everything</b>. That only fills in his dispatch box; nothing runs until you press dispatch.</li>
+    <li>Sign in to each tool once, the way its own instructions say.</li>
+    <li>Pick default models in <span class="where">Settings → Agents &amp; Models</span>. New Claude agents start on Opus 5.5 and new Codex agents on GPT-6 Sol unless you change it.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li><b>Max turns per run</b> (Agents &amp; Models → Advanced) limits how long one run can go. Blank means unlimited.</li><li>See <a href="#engines-compare">What each AI tool gets</a> for which features each tool supports.</li></ul>
+</section>
+
+<section class="feat searchable" id="skills">
+  <h3>Skills <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Extra know-how an agent loads when a task needs it, such as how to run a security audit.</p>
+  <div class="lbl">Built in (no setup)</div>
+  <table>
+    <thead><tr><th>Skill</th><th>What it does</th><th>Try saying</th></tr></thead>
+    <tbody>
+      <tr><td><b>skill-inspector</b> (NVIDIA)</td><td>Checks whether a skill is safe before you install it.</td><td>"is this skill safe to install?"</td></tr>
+      <tr><td><b>ponytail</b> + review, audit, debt, gain, help</td><td>Keeps code changes small and simple.</td><td>"ponytail", "/ponytail-review"</td></tr>
+      <tr><td><b>security-audit</b> (Cloudflare)</td><td>Looks for security holes in a codebase.</td><td>"security audit this codebase"</td></tr>
+    </tbody>
+  </table>
+  <p>Claude Code and Codex agents get these on every start. They come with DevLabs and update when DevLabs updates.</p>
+  <div class="lbl">How to add more</div>
+  <ol class="steps"><li>Ramon → <b>skills</b> tab → <b>DevLabs Library</b>.</li><li>Read a skill's description, then install it. Every file is checked against its published fingerprint first.</li><li>Updates also need your approval.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Library skills install for Claude Code in your user account. The skills tab also lists skills you installed yourself.</li></ul>
+</section>
+
+<section class="feat searchable" id="connectors">
+  <h3>Connectors <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Links that let agents work inside other apps: Pancake POS, Webcake Landing, Obsidian, Discord, GitHub, databases, email &amp; calendar, web search.</p>
+  <div class="lbl">How to turn one on</div>
+  <ol class="steps">
+    <li><span class="where">Settings → Connections</span>. Each connector has a <b>How to set up</b> link with the exact steps.</li>
+    <li>Paste the key the other app gives you and press <b>Save</b>. It's stored encrypted and never shown again.</li>
+    <li>Switch the connector <b>On</b>.</li>
+    <li><b>Start a new agent.</b> Running agents keep the connectors they started with.</li>
+  </ol>
+  <div class="lbl">Special cases</div>
+  <ul>
+    <li><b>Obsidian</b> needs no key: press <b>choose folder</b>, pick your vault, switch it on. Agents never overwrite or delete a note.</li>
+    <li><b>Discord</b> needs your own bot: create it at discord.com/developers/applications, copy the bot token, turn on <i>Message Content Intent</i>, and invite it with View Channels, Send Messages and Read Message History.</li>
+  </ul>
+  <div class="lbl">Good to know</div>
+  <ul><li>Connectors change <b>real data</b> in those apps. Use keys with only the access you need.</li><li>Claude Code agents only, for now.</li></ul>
+</section>
+
+<section class="feat searchable" id="memory">
+  <h3>Long-term memory (MemPalace) <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Every agent always keeps plain notes. MemPalace adds <b>search by meaning</b> across all agents' notes, so one agent can find what another learned last week.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps">
+    <li><span class="where">Settings → Prerequisites</span> → <b>Memory layer</b>: install it.</li>
+    <li>Open the <b>🧠 memory</b> panel and press <b>Turn on</b>.</li>
+    <li>Pick a <b>search language</b>: <b>Fast</b> (English only, about 90 MB) or <b>Multilingual</b> (all languages, about 300 MB).</li>
+    <li>Make sure <span class="where">Settings → Memory &amp; Knowledge</span> → <b>Cross-session recall</b> is on.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Search it yourself in the memory panel or Ramon's <b>memory</b> / <b>graph</b> tabs.</li><li>Everything stays on your computer.</li></ul>
+</section>
+
+<section class="feat searchable" id="kg">
+  <h3>Knowledge base <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Your own documents, images and PDFs, indexed so agents can look things up in them when they need to.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li><span class="where">Settings → Memory &amp; Knowledge</span> → <b>Knowledge Graph</b>.</li><li>Press <b>add files…</b> and choose your documents. The count shows how many are indexed.</li><li>Start a new agent, or Restart &amp; Continue an existing one.</li></ol>
+</section>
+
+<section class="feat searchable" id="personality">
+  <h3>Personality, 3D look &amp; prompt library <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p><b>Personality</b> describes who an agent is and how it talks. <b>3D look</b> changes its character. The <b>prompt library</b> holds ready-made instructions for its role.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps">
+    <li>Click an agent → <b>edit</b> → <b>personality</b>. It's written as its own section in the agent's instruction file (<code>CLAUDE.md</code>, <code>AGENTS.md</code> or <code>GEMINI.md</code>) in its project folder; the rest of the file is left alone. It applies from the next session.</li>
+    <li><b>edit</b> → <b>3D look</b> → change hair, clothes, colours → <b>Save avatar</b>.</li>
+    <li>In the queue, press <b>prompts</b> to insert a saved instruction.</li>
+  </ol>
+</section>
+
+<!-- ───────────────────────── AUTOMATION ───────────────────────── -->
+<h2 id="automation">Automation</h2>
+
+<section class="feat searchable" id="schedules">
+  <h3>Schedules <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A request that repeats on a timetable, for example "every Monday at 9am, summarise last week's sales".</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li>Ramon → <b>triggers</b> tab → <b>Schedules</b>.</li><li>Write the request, set when it runs, and save.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Schedules only run while DevLabs is open. See <a href="#awake">Keep working while away</a>.</li></ul>
+</section>
+
+<section class="feat searchable" id="discord-trigger">
+  <h3>Discord trigger <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>@-mention your bot in a Discord channel and Ramon picks up the request; the answer is posted back in the channel.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps">
+    <li>Set up the <a href="#connectors">Discord connector</a> first and keep it on.</li>
+    <li>In Discord: Settings → Advanced → turn on <b>Developer Mode</b>, then right-click a channel → <b>Copy Channel ID</b>.</li>
+    <li>Ramon → <b>triggers</b> → <b>Discord</b>: paste the channel IDs and switch it on.</li>
+    <li>Optional: add other people's user IDs under <b>Who can start work</b>.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Only you (the bot's owner) can start work unless you add people, because these requests run without asking. Messages from anyone else are ignored.</li></ul>
+</section>
+
+<section class="feat searchable" id="slack">
+  <h3>Slack <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A Slack message starts a request. Ramon spins up a short-lived worker that replies in the thread, then closes.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps">
+    <li><span class="where">Settings → Connections</span> → <b>Slack</b> → <b>Show Slack connect steps</b> and follow them.</li>
+    <li>Paste the <b>Signing secret</b> and <b>Bot token</b> (channel id is optional) and press <b>start</b>.</li>
+    <li>Copy the <b>Request URL</b> it shows into Slack's Event Subscriptions.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li><b>Proactive posting</b> (DevLabs posting first) is off by default.</li><li>Running Slack workers show in Ramon's <b>workers</b> tab, where you can stop them.</li></ul>
+</section>
+
+<section class="feat searchable" id="webhooks">
+  <h3>Webhooks <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A web address another tool can send work to (a form, a store, an automation service).</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li><span class="where">Settings → Connections</span> → <b>Webhook triggers</b> → <b>add webhook</b>.</li><li>Copy its <b>URL</b> and <b>Secret</b> into the other tool. <b>Show webhook API format</b> shows what to send.</li><li>Switch it on.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>A webhook that's on is a public address anyone holding its secret can post to. New ones start off. Use <b>rotate</b> if a secret leaks.</li></ul>
+</section>
+
+<section class="feat searchable" id="autocompact">
+  <h3>Scheduled auto-compact <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Agents tidy their working memory on a schedule (every 2 hours by default), so long-running agents don't run out of room.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li><span class="where">Settings → General</span> → <b>Maintenance</b> → <b>Scheduled auto-compact</b>.</li><li>Change the interval in Ramon's <b>triggers</b> tab.</li></ol>
+</section>
+
+<section class="feat searchable" id="awake">
+  <h3>Keep working while away <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Settings that keep schedules and terminals running on time while you step away.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps">
+    <li><span class="where">Settings → General</span> → <b>Keep Mac awake while agents run</b> (also offered in setup as <b>Keep working while away</b>). Uses more battery; best plugged in.</li>
+    <li><b>Open at login</b> (setup step 4) relaunches DevLabs after a reboot so schedules resume.</li>
+    <li>Your system's own sleep setting: setup step 4 has an <b>open Power settings</b> / <b>open Battery settings</b> button.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>If your computer fully sleeps, timers pause and catch up when you're back. Nothing is lost; it may just run late.</li></ul>
+</section>
+
+<section class="feat searchable" id="closing">
+  <h3>Closing time <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>The safe way to quit. Ramon tells every agent to save its work and write down where it stopped; the app quits when everyone has confirmed.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps"><li>Quit DevLabs while agents are running.</li><li>In the dialog, choose <b>closing time</b>. A progress view shows who has packed up.</li><li>Cancel any time if you change your mind.</li></ol>
+</section>
+
+<!-- ───────────────────────── CONTROL ───────────────────────── -->
+<h2 id="control">Control &amp; safety</h2>
+
+<section class="feat searchable" id="autonomy">
+  <h3>Auto mode vs ask-first <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p><b>Autonomous</b>: agents act without asking. <b>Ask-first</b>: agents pause and ask before running commands or changing files.</p>
+  <div class="lbl">How to change it</div>
+  <ol class="steps"><li><span class="where">Settings → Autonomy &amp; Budgets</span> → <b>Autonomy</b>.</li><li>Pick <b>autonomous</b> or <b>ask-first</b>. It applies to agents started after the change.</li><li>You can override it for one agent in the Add Agent dialog.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Auto mode keeps each tool's own safety sandbox where it has one (Codex runs in workspace-write mode, not the full bypass).</li><li>Use ask-first on important projects you can't easily undo.</li></ul>
+</section>
+
+<section class="feat searchable" id="isolation">
+  <h3>Git isolation <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>The agent works on its own copy of the project (a git worktree), so you review its changes before they reach your main copy.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li>When hiring: tick <b>Git isolation (own worktree)</b> in the workspace section.</li><li>The project folder must be a git repository.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Not available when you resume an earlier session.</li></ul>
+</section>
+
+<section class="feat searchable" id="budgets">
+  <h3>Token budgets <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A ceiling on how much AI work the team, or one agent, may use. An agent that hits its limit stops.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li>Team: <span class="where">Settings → Autonomy &amp; Budgets</span> → <b>floor token budget</b> (total tokens across the floor).</li><li>One agent: Ramon → <b>floor</b> tab → set its token limit.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>See what's been used in the <a href="#atm">ATM</a> and the floor tab's usage bars.</li></ul>
+</section>
+
+<section class="feat searchable" id="breaker">
+  <h3>Circuit breaker <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A safety brake for runaway agents. When an agent burns tokens too fast, repeats the same tool over and over, or hits a storm of errors, the breaker first <b>steers</b> it, then <b>constrains</b> it, then <b>stops</b> it. Its card shows <b>looping</b>.</p>
+  <div class="lbl">How to tune it</div>
+  <ol class="steps"><li><span class="where">Settings → Autonomy &amp; Budgets</span> → <b>Circuit breaker</b>.</li><li>Set <b>token velocity</b> (tokens per minute), <b>repeated-tool limit</b> and <b>error-storm limit</b>.</li><li><b>Hard stop</b>: choose <b>steer first</b> (recommended) or <b>kill on trip</b>.</li></ol>
+</section>
+
+<section class="feat searchable" id="pause">
+  <h3>Pause everyone <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Stops messages being delivered to all agents until you turn it back on.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps"><li>Click the <b>auto</b> button at the top of Ramon's Command Center. It changes to <b>paused</b>.</li><li>Click again to resume.</li></ol>
+</section>
+
+<section class="feat searchable" id="restart">
+  <h3>Restart &amp; Continue / restore team <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Brings a stopped or stuck agent back with the same identity, memory and (where the tool supports it) the same conversation.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps"><li>One agent: Ramon → <b>floor</b> tab → <b>restart &amp; continue</b> next to it.</li><li>Everyone after reopening the app: <b>restore team</b> in the agent strip.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Also fixes a garbled terminal: it redraws without losing the conversation.</li></ul>
+</section>
+
+<section class="feat searchable" id="notifications">
+  <h3>Desktop notifications <span class="tag off">off</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A system notification when an agent finishes, needs your input, or a terminal needs reviving.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li><span class="where">Settings → General</span> → <b>Notifications</b> → <b>Desktop notifications</b>.</li><li>Allow notifications if your system asks the first time.</li></ol>
+</section>
+
+<!-- ───────────────────────── VOICE ───────────────────────── -->
+<h2 id="voice">Voice</h2>
+
+<section class="feat searchable" id="freeflow">
+  <h3>Free Flow dictation <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Speak instead of typing. Your words are turned into text in the queue box so you can check them before sending.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps">
+    <li>Get a Groq API key at console.groq.com.</li>
+    <li><span class="where">Settings → Voice</span> → <b>Free Flow</b>: paste the <b>Groq API key</b> and pick a model (<b>fast</b> or <b>accurate</b>).</li>
+    <li>Dictate: click the mic above <b>Send</b> (click again to finish), or hold <kbd>Option</kbd> (<kbd>⌥</kbd>) while viewing a terminal and release to finish.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Your recording is sent to Groq to be transcribed. Your system asks for microphone permission the first time.</li></ul>
+</section>
+
+<section class="feat searchable" id="talk">
+  <h3>Talk to Ramon <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A live voice conversation with Ramon: you speak, he answers out loud and can act on what you say.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps">
+    <li>Get an OpenAI API key (this is separate from any Claude subscription).</li>
+    <li><span class="where">Settings → Voice</span> → <b>OpenAI API key · voice</b> → paste → <b>Save</b>. Choose your microphone and speaker there too.</li>
+    <li>Press <b>talk</b> on Ramon's card. Press again to stop.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li><b>Idle auto-disconnect</b> (30 seconds to 10 minutes, or off) closes a silent session. A spending cap still stops a runaway session.</li><li>The key is encrypted on your computer; each session gets its own short-lived token.</li></ul>
+</section>
+
+<section class="feat searchable" id="voice-replies">
+  <h3>Spoken replies <span class="tag setup">setup</span></h3>
+  <div class="lbl">What it is</div>
+  <p>The first sentences of each agent reply are read out loud.</p>
+  <div class="lbl">How to turn it on</div>
+  <ol class="steps"><li>Press the <b>gear</b> at the top right of the office.</li><li>Switch <b>Voice replies</b> on and paste an ElevenLabs key (elevenlabs.io → Profile → API keys).</li><li>Pick a voice and speed and press <b>Preview</b>.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Reply text is sent to ElevenLabs to make the audio.</li></ul>
+</section>
+
+<!-- ───────────────────────── OFFICE ───────────────────────── -->
+<h2 id="office-h">The office</h2>
+
+<section class="feat searchable" id="office">
+  <h3>Moving around the 3D office <span class="tag on">on</span></h3>
+  <table>
+    <thead><tr><th>To</th><th>Do this</th></tr></thead>
+    <tbody>
+      <tr><td>Move</td><td>Drag with the left mouse button</td></tr>
+      <tr><td>Turn the view</td><td>Drag with the right mouse button</td></tr>
+      <tr><td>Zoom</td><td>Mouse wheel (zooms toward your pointer)</td></tr>
+      <tr><td>See everything</td><td>Double-click the floor, or <b>Overview</b> (top left)</td></tr>
+      <tr><td>Jump to a spot</td><td><b>Front desk</b> or <b>Lounge</b> (top left)</td></tr>
+      <tr><td>Full screen</td><td>The full-screen button (top right); <kbd>Esc</kbd> to leave</td></tr>
+    </tbody>
+  </table>
+  <div class="lbl">Good to know</div>
+  <ul><li>Tell an agent "go to the gym", "run tests" (QA lab) or "review PRs" (server room) and it walks there.</li><li>The <b>heat map</b> and <b>walking trails</b> buttons (top right) show where agents spend their time.</li></ul>
+</section>
+
+<section class="feat searchable" id="office-floors">
+  <h3>Floors inside the office <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Levels of the office that each hold up to 15 agents. Ramon always stays on Floor 1.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps">
+    <li>Use the floor bar (bottom right): click <b>Floor 2</b>, <b>Floor 3</b>… to look at another floor.</li>
+    <li><b>+ Add floor</b> adds an empty one. A new floor also opens by itself when every floor is full.</li>
+    <li>Move an agent: select it, then pick the floor in the <b>move … to</b> box.</li>
+    <li>Delete an empty floor: view it, press <b>− Delete floor N</b>, confirm.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Only empty floors can be deleted, and never Floor 1. Deleting a floor never deletes an agent or any work.</li></ul>
+</section>
+
+<section class="feat searchable" id="decorate">
+  <h3>Decorating <span class="tag on">on</span></h3>
+  <ol class="steps">
+    <li>Press the <b>pencil</b> (top right of the office).</li>
+    <li>Click an object in the list, then click the floor to place it.</li>
+    <li>Select an object to move it, rotate it (<kbd>[</kbd> <kbd>]</kbd>), nudge it (arrow keys), lift it (<kbd>Page Up</kbd>/<kbd>Page Down</kbd>) or remove it (<kbd>Delete</kbd>). Select a desk to choose who sits there.</li>
+    <li>Press the ✓ when you're done. <b>Reset</b> restores the original layout.</li>
+  </ol>
+</section>
+
+<section class="feat searchable" id="atm">
+  <h3>ATM: what it costs <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>The ATM in the office shows how much your agents have cost, per agent and per day.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps"><li>Click the ATM in the office.</li><li>Choose a PIN the first time.</li></ol>
+</section>
+
+<section class="feat searchable" id="jukebox">
+  <h3>Jukebox: radio &amp; Spotify <span class="tag on">on</span></h3>
+  <div class="lbl">Radio (no setup)</div>
+  <ol class="steps"><li>Click the jukebox in the office → <b>Radio</b> tab.</li><li>Search about 400 live Philippine stations by name, city or genre, press <b>Play</b>, set the volume.</li><li>A small player at the bottom of the office skips or stops.</li></ol>
+  <div class="lbl">Spotify (needs Premium)</div>
+  <ol class="steps"><li>Create a free app at developer.spotify.com and add <code>http://127.0.0.1:43821/callback</code> as its redirect address.</li><li>Jukebox → <b>Spotify</b> tab → paste the <b>Client ID</b> → <b>Connect</b>.</li><li>Have Spotify open on a device, then search and play.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>While music plays, free agents dance and wander. Agents with work keep working.</li></ul>
+</section>
+
+<!-- ───────────────────────── APP ───────────────────────── -->
+<h2 id="app">App settings</h2>
+
+<section class="feat searchable" id="language">
+  <h3>Language &amp; plain words <span class="tag on">on</span></h3>
+  <ol class="steps">
+    <li><span class="where">Settings → General</span> → <b>Language</b>: English, 简体中文 or العربية.</li>
+    <li><b>Explain things simply</b>: agents brief you in plain language instead of technical shorthand.</li>
+    <li><b>Arabic / RTL text in terminals</b>: makes Arabic join and read right to left in terminals (a little slower). It follows your app language unless you change it here.</li>
+  </ol>
+</section>
+
+<section class="feat searchable" id="updates">
+  <h3>Updates <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>DevLabs checks for a new version about 30 seconds after opening and every 6 hours, and downloads it in the background. It never restarts on its own.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps"><li>The version number at the top left says when an update is ready. Click it to check now or to restart into the new version.</li><li>Turn it off in <span class="where">Settings → General</span> → <b>Auto-update</b>.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>On some Macs and the portable Windows version you get a <b>download</b> button instead.</li></ul>
+</section>
+
+<section class="feat searchable" id="stats">
+  <h3>Anonymous usage stats <span class="tag on">on</span></h3>
+  <p>A handful of anonymous events (app opened, agent started, feature used). Never prompts, code, file paths or agent output. You choose in setup step 4; switch it off any time in <span class="where">Settings → General</span> → <b>Anonymous usage stats</b>. The full list is in <code>TELEMETRY.md</code>.</p>
+</section>
+
+<section class="feat searchable" id="reset">
+  <h3>Reset &amp; backups <span class="tag on">on</span></h3>
+  <div class="lbl">Reset this floor</div>
+  <ol class="steps"><li><span class="where">Settings → General</span> → <b>reset floor</b>.</li><li>Choose <b>back up ZIP &amp; reset</b> (recommended) or <b>reset without backup</b>.</li></ol>
+  <p>This stops all agents and clears the team, conversations, tasks, board and shared memory. Your settings, schedules and project folders stay. <code>RESTORE.txt</code> inside the ZIP explains how to put everything back. The ZIP can contain private messages; keep it private.</p>
+  <div class="lbl">Reset everything</div>
+  <p><span class="where">Settings → General</span> → <b>DANGER ZONE</b> → <b>reset &amp; start over</b> erases every agent, all memory and all settings and returns you to setup. It can't be undone.</p>
+</section>
+
+<section class="feat searchable" id="home">
+  <h3>Moving the home folder <span class="tag on">on</span></h3>
+  <ol class="steps"><li><span class="where">Settings → General</span> → <b>Home folder</b> → <b>change...</b></li><li>Pick the new folder. <b>Move existing data</b> (recommended) copies everything and leaves the old folder as a backup; <b>Start fresh</b> begins empty.</li><li>Press <b>move &amp; restart</b> (or <b>switch &amp; restart</b>).</li></ol>
+</section>
+
+<!-- ───────────────────────── REFERENCE ───────────────────────── -->
+<h2 id="where">Where to turn things on</h2>
+<div class="searchable">
+<div class="tablewrap"><table>
+  <thead><tr><th>Feature</th><th>Where</th><th>Starts</th></tr></thead>
+  <tbody>
+    <tr><td>AI tools installed?</td><td>Settings → Prerequisites</td><td>—</td></tr>
+    <tr><td>Default models, max turns</td><td>Settings → Agents &amp; Models</td><td>set</td></tr>
+    <tr><td>Auto mode / ask-first</td><td>Settings → Autonomy &amp; Budgets</td><td>your setup choice</td></tr>
+    <tr><td>Team token budget, circuit breaker</td><td>Settings → Autonomy &amp; Budgets</td><td>breaker on</td></tr>
+    <tr><td>Per-agent token limit</td><td>Ramon → floor tab</td><td>off</td></tr>
+    <tr><td>Connectors, Slack, webhooks</td><td>Settings → Connections</td><td>off</td></tr>
+    <tr><td>Free Flow, Talk to Ramon</td><td>Settings → Voice</td><td>needs a key</td></tr>
+    <tr><td>Memory search, knowledge base</td><td>Settings → Memory &amp; Knowledge (+ Prerequisites)</td><td>needs install</td></tr>
+    <tr><td>Notifications, keep awake, auto-compact</td><td>Settings → General</td><td>off</td></tr>
+    <tr><td>Language, plain words, Arabic terminals</td><td>Settings → General</td><td>English</td></tr>
+    <tr><td>Auto-update, usage stats</td><td>Settings → General</td><td>both on</td></tr>
+    <tr><td>Project floors, reset, home folder</td><td>Settings → General</td><td>—</td></tr>
+    <tr><td>Schedules, Discord trigger</td><td>Ramon → triggers tab</td><td>off</td></tr>
+    <tr><td>Skills Library</td><td>Ramon → skills tab</td><td>built-in skills on</td></tr>
+    <tr><td>Git isolation</td><td>Add agent → workspace</td><td>off</td></tr>
+    <tr><td>Spoken replies</td><td>Office gear (top right)</td><td>off</td></tr>
+    <tr><td>Pause everyone</td><td>Ramon → auto button</td><td>auto</td></tr>
+  </tbody>
+</table></div>
+</div>
+  </article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <img src="/assets/logo.png" alt="DevLabs" width="36" height="36">
+      <p class="fine">DevLabs: a harness that runs a whole building of AI agents on your own computer.</p>
+    </div>
+    <div><h4>Product</h4><a href="/#building">How it works</a><a href="/features">Features</a><a href="/#download">Download</a><a href="/guide">User guide</a></div>
+    <div><h4>Open source</h4><a href="https://github.com/jeffreycayao/Dev-Labs">Source code</a><a href="https://github.com/jeffreycayao/Dev-Labs/blob/main/LICENSE">MIT License</a><a href="https://github.com/chaitanyagiri/munder-difflin">Original project</a></div>
+    <div><h4>Company</h4><a href="https://jepoy.dev">Developer: jepoy.dev</a><a href="https://github.com/jeffreycayao/Dev-Labs/issues">Contact</a><a href="/privacy">Privacy Policy</a></div>
+    <div class="legal">© 2026 jepoy.dev. DevLabs™ is open source under the MIT License, built on <a href="https://github.com/chaitanyagiri/munder-difflin">Munder Difflin</a> by Chaitanya Giri. Claude, Codex, Gemini, Cursor and other names belong to their owners and are used only to describe compatibility.</div>
+  </div>
+</footer>
+
+<script type="module" src="/assets/js/site.js?v=20261101c"></script>
+</body>
+</html>

@@ -235,3 +235,53 @@ html.js .reveal{opacity:0}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}.hero-3d,.building-3d,.core-3d{display:none}}
 /* Framed product shot on the landing page (the 3D office GIF). */
 .showcase{margin:0 auto;max-width:960px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line-2);background:var(--panel-solid);box-shadow:var(--glow)}
+
+/* Page scrollbar: thin rounded thumb in the floor palette */
+::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background:#3A4436;border:3px solid transparent;background-clip:padding-box;border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:padding-box}::-webkit-scrollbar-thumb:active{background:var(--accent);background-clip:padding-box}
+@supports not selector(::-webkit-scrollbar){html{scrollbar-color:#3A4436 transparent;scrollbar-width:thin}}
+
+/* /features: the feature manual (generated from the app's Help → Feature Manual) */
+.features .feat{margin:16px 0;padding:6px 24px 18px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.features .feat h3{margin-top:20px;scroll-margin-top:100px}
+.features .lbl{margin:18px 0 6px;color:var(--muted);font:600 10px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+.features .tag{display:inline-block;margin-left:8px;padding:2px 9px;border:1px solid var(--line-2);border-radius:999px;color:var(--ink-2);font:600 10px/1.5 var(--mono);letter-spacing:.12em;text-transform:uppercase;vertical-align:middle}
+.features .tag.on{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
+.features .tag.setup{border-color:#D4AF37;background:#D4AF37;color:var(--on-accent)}
+.features .where{padding:1px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel-solid);color:var(--ink);font:600 .82em var(--mono);white-space:nowrap}
+.features .note{margin:18px 0;padding:14px 18px;border-left:3px solid var(--accent);border-radius:0 8px 8px 0;background:var(--panel);color:var(--ink-2)}
+.features .note.warn{border-left-color:var(--key)}
+.features .yes{color:var(--accent);font-weight:700}.features .no{color:var(--muted)}.features .part{color:#D4AF37;font-weight:700}
+.features .tablewrap{overflow-x:auto;margin:0 0 20px;border:1px solid var(--line);border-radius:8px}.features .tablewrap table{min-width:640px}
+.features .compare td:first-child{color:var(--ink);font-weight:700}
+.features ol.steps{counter-reset:s;list-style:none;padding:0}
+.features ol.steps>li{counter-increment:s;position:relative;min-height:28px;padding-left:42px}
+.features ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);font:700 13px var(--mono)}
+.features kbd{padding:1px 6px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel-solid);color:var(--ink);font:600 12px var(--mono)}
+
+/* Team simulation: one AI tool vs a DevLabs team (tools/site-bundle/src/showcase3d.js) */
+.teamsim{position:relative;height:clamp(400px,58vh,560px);margin:28px 0 12px;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:radial-gradient(ellipse at 50% 42%,rgba(205,242,82,.09),transparent 62%),var(--bg)}
+.teamsim.has-3d::after{content:"";position:absolute;left:0;right:0;bottom:0;height:150px;background:linear-gradient(transparent,rgba(24,28,23,.94) 70%);pointer-events:none}
+.teamsim-3d{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1.2s ease}.teamsim-3d.on{opacity:1}
+.teamsim.grab{cursor:grab}.teamsim.grab:active{cursor:grabbing}
+.sc-labels{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.sc-label{position:absolute;left:0;top:0;padding:1px 7px;border:1px solid var(--line);border-radius:999px;background:rgba(24,28,23,.72);color:var(--ink);font:500 10px/1.5 var(--mono);letter-spacing:.06em;white-space:nowrap;opacity:0;transition:opacity .3s;will-change:transform}
+.sc-label.you{border-color:var(--accent);background:var(--accent);color:var(--on-accent);font-weight:700}
+.sc-label.ramon{border-color:var(--key);background:var(--key);color:var(--ink);font-weight:700}
+.sc-label.memory{color:var(--accent)}
+.sc-top{position:absolute;top:14px;left:14px;right:14px;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.sc-modes{display:inline-flex;padding:3px;border:1px solid var(--line-2);border-radius:999px;background:rgba(24,28,23,.82)}
+.sc-modes button{padding:7px 15px;border:0;border-radius:999px;background:none;color:var(--muted);font:700 13px Manrope,system-ui,sans-serif;cursor:pointer;transition:background .25s ease,color .25s ease}
+.sc-modes button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.sc-modes button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sc-hint{padding-top:9px;color:var(--muted);font:11px var(--mono)}
+.sc-caption{position:absolute;left:18px;right:18px;bottom:78px;z-index:1;max-width:620px;margin:0;color:var(--ink);font-size:15px;text-shadow:0 1px 10px var(--bg),0 0 2px var(--bg)}
+.sc-stats{position:absolute;left:14px;right:14px;bottom:14px;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+.sc-stats div{padding:6px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(24,28,23,.82)}
+.sc-stats dt{color:var(--muted);font:600 10px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.sc-stats dd{margin:0;color:var(--accent);font:800 22px/1.3 var(--head);font-variant-numeric:tabular-nums}
+.teamsim:not(.has-3d) .sc-modes,.teamsim:not(.has-3d) .sc-stats,.teamsim:not(.has-3d) .sc-hint{display:none}
+.teamsim:not(.has-3d) .sc-caption{top:50%;bottom:auto;left:0;right:0;margin:0 auto;padding:0 24px;transform:translateY(-50%);text-align:center;font-size:18px}
+@media(max-width:620px){.teamsim{height:320px}.sc-stats dd{font-size:17px}.sc-stats dt{font-size:9px}.sc-caption{bottom:84px;font-size:13px}.sc-hint{display:none}}
+@media(prefers-reduced-motion:reduce){.teamsim-3d{display:none}}

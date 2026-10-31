@@ -106,6 +106,12 @@
   .about dl { display: grid; grid-template-columns: 180px 1fr; gap: 8px 16px; margin: 0; }
   .about dt { color: var(--muted); font: 500 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; padding-top: 3px; }
   .about dd { margin: 0; color: var(--light); }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #3A4436; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted-2); background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:active { background: var(--lime); background-clip: padding-box; }
+  .crumb { margin-left: 10px; font: 13px var(--font); color: var(--lime); text-decoration: none; white-space: nowrap; }
   .hidden { display: none !important; }
   .empty { display: none; color: var(--muted); padding: 20px 0; }
   footer { margin-top: 60px; color: var(--muted-2); font-size: 13px; border-top: 1px solid var(--border); padding-top: 18px; }
@@ -125,6 +131,7 @@
   <img src="logo.png" alt="">
   <div class="brand">DevLabs<small>User guide</small></div>
   <span class="ver" id="ver">v—</span>
+  <a class="crumb keep-v" href="features.html">Feature manual →</a>
   <div class="search"><input id="q" type="search" placeholder="Search the guide… (e.g. API key, Ramon, cost)" aria-label="Search the guide"></div>
 </header>
 
@@ -358,6 +365,8 @@
     document.getElementById('ver').textContent = label;
     document.getElementById('ver2').textContent = label;
     document.querySelectorAll('.v-live').forEach(function (el) { el.textContent = label; });
+    // Links to the other guide page keep ?v= so its version label stays right.
+    document.querySelectorAll('a.keep-v').forEach(function (a) { a.href = a.getAttribute('href') + location.search; });
     if (location.hash === '#about') document.getElementById('about').scrollIntoView();
   })();
 

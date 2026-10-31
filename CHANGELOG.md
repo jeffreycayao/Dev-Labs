@@ -4,6 +4,13 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **New: Help → Feature Manual.** A detailed, offline manual of every DevLabs feature: what it is, why you'd use it, step-by-step how to turn it on, and where the switch lives. It opens with a table comparing DevLabs to running an AI tool on its own, and a table of what each AI tool (Claude Code, Codex, Gemini, Grok and more) gets inside DevLabs. Searchable, and linked from the How to use guide.
+- **See the difference, in 3D.** The Feature Manual opens with an animation: switch between **One AI tool** (you feed a lone session by hand) and **DevLabs** (you ask once, Ramon hands tasks to twelve AI tools, agents message each other and save to shared memory, and finished files fly back to you), with live counters. It runs offline from the app, and is turned off when your system asks for reduced motion.
+- **New page on the website: devlabs.atmt.dev/features**, with the same animation and the whole feature manual. **Features** in the site menu now goes there.
+- **Nicer scrollbars** in the help guide, the Feature Manual and the website: thin and rounded, in the office colours.
+- **Fixed:** the Help menu showed "Security  FAQ" with a gap on Windows. It now reads **Security and FAQ**.
+- **For contributors:** `node tools/sync-site-features.cjs` rebuilds `site/features.html` from `resources/help/features.html` (a test fails if they drift). The showcase scene lives in `tools/site-bundle/src/showcase3d.js`; `npm run build` there writes both the site scripts and the app's offline `resources/help/showcase.js`.
+
 - **Three skills come built in.** Every Claude Code and Codex agent now starts with NVIDIA's **skill-inspector** (checks a skill is safe before you install it), the six **ponytail** skills (keep changes small) and Cloudflare's **security-audit**. No setup; they work offline and update with DevLabs.
 - **Bundled skills now really reach Claude Code agents.** They were copied into each agent's folder, but Claude Code only loads skills from a folder passed with `--add-dir`, so they never loaded. Codex agents now get them too, in their own isolated Codex home.
 - **Security: refreshing an agent's skills can no longer write outside its folder.** An agent could leave a link in its own skills folder so the next restart overwrote a file elsewhere on your computer. DevLabs now removes and rebuilds each bundled skill, and skips the copy when the folder leads through a link.

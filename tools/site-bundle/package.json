@@ -1,9 +1,10 @@
 {
   "name": "atmt-site-bundle",
   "private": true,
-  "description": "Builds site/assets/js/*.js from src/ (three.js hero + Lenis smooth scroll). Output is committed; Vercel serves it as static files.",
+  "description": "Builds site/assets/js/*.js from src/ (three.js hero + Lenis smooth scroll). Output is committed; Vercel serves it as static files. build:help also writes the offline showcase for the app's Help window (resources/help/showcase.js).",
   "scripts": {
-    "build": "rm -rf ../../site/assets/js && esbuild src/site.js --bundle --splitting --minify --format=esm --target=es2020 --legal-comments=linked --outdir=../../site/assets/js --chunk-names=[name]-[hash]"
+    "build": "rm -rf ../../site/assets/js && esbuild src/site.js --bundle --splitting --minify --format=esm --target=es2020 --legal-comments=linked --outdir=../../site/assets/js --chunk-names=[name]-[hash] && npm run build:help",
+    "build:help": "esbuild src/help-showcase.js --bundle --minify --format=iife --target=es2020 --legal-comments=eof --outfile=../../resources/help/showcase.js"
   },
   "devDependencies": {
     "@use-gesture/vanilla": "10.3.1",

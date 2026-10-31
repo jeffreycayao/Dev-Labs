@@ -1501,12 +1501,22 @@ function helpResourceDir(): string {
 }
 
 let helpWindow: BrowserWindow | null = null;
-/** Open the offline "How to use" guide. The running version is passed as ?v= so
- *  the page never hard-codes it. Locked down: no node, sandboxed, and any link
- *  leaves for the system browser instead of navigating the guide window. */
-function openHelpWindow(section?: string): void {
+/** Open an offline guide page (the "How to use" guide, or `features.html`, the
+ *  feature manual). The running version is passed as ?v= so the page never
+ *  hard-codes it. Locked down: no node, sandboxed, and any link leaves for the
+ *  system browser instead of navigating the guide window. */
+function openHelpWindow(section?: string, page = 'index.html'): void {
+  const load = (win: BrowserWindow): void => {
+    void win.loadFile(join(helpResourceDir(), page), {
+      query: { v: app.getVersion() },
+      ...(section ? { hash: section } : {})
+    });
+  };
   if (helpWindow && !helpWindow.isDestroyed()) {
     if (helpWindow.isMinimized()) helpWindow.restore();
+    // Same page and no section to jump to: keep the reader's place and search.
+    const open = helpWindow.webContents.getURL();
+    if (section || !open.split(/[?#]/)[0].endsWith(`/${page}`)) load(helpWindow);
     helpWindow.focus();
     return;
   }
@@ -1526,10 +1536,7 @@ function openHelpWindow(section?: string): void {
     if (!url.startsWith('file:')) { e.preventDefault(); openOutside(url); }
   });
   helpWindow.on('closed', () => { helpWindow = null; });
-  void helpWindow.loadFile(join(helpResourceDir(), 'index.html'), {
-    query: { v: app.getVersion() },
-    ...(section ? { hash: section } : {})
-  });
+  load(helpWindow);
 }
 
 /** Help → About: localized-edition notice with the live version. */
@@ -2805,7 +2812,9 @@ function installAppMenu(multiWindow: boolean): void {
       role: 'help',
       submenu: [
         { label: 'How to use DevLabs', accelerator: 'F1', click: () => openHelpWindow() },
-        { label: 'Security & FAQ', click: () => openHelpWindow('faq') },
+        { label: 'Feature Manual', click: () => openHelpWindow(undefined, 'features.html') },
+        // No '&': Windows menus read it as a shortcut-key marker and drop it.
+        { label: 'Security and FAQ', click: () => openHelpWindow('faq') },
         { type: 'separator' as const },
         { label: 'License Agreement', click: () => openBundledDoc('LICENSE') },
         { label: 'Third-Party Notices', click: () => openBundledDoc('THIRD_PARTY_NOTICES.md') },

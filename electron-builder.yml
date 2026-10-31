@@ -105,8 +105,11 @@ asarUnpack:
   # better-sqlite3 is native (bindings/prebuild need the .node on the real FS).
   - "**/node_modules/better-sqlite3/**"
 
-# Rebuild native deps (node-pty) for the target during packaging.
-npmRebuild: true
+# No native rebuild: node-pty and better-sqlite3 are N-API (one binary works in
+# any Node or Electron) and ship prebuilds for macOS and Windows (better-sqlite3
+# for Linux too). On Linux, node-pty's own install step compiles it. Rebuilding
+# from source here only added toolchain failures (Spectre libs, Clang on Node 24).
+npmRebuild: false
 
 # ---- macOS ----
 mac:

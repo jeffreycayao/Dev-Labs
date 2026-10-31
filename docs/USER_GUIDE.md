@@ -58,7 +58,7 @@ Download: **https://devlabs.atmt.dev** · Ask for help: **https://github.com/jef
 
 ## 2. What you need before you start
 
-1. **A computer** with Windows, macOS or Linux.
+1. **A computer** with Windows 10 or 11 (64-bit), macOS 13 Ventura or newer (Apple silicon or Intel), or a 64-bit Linux.
 2. **At least one AI tool, installed and signed in.** DevLabs doesn't sell AI; it uses the AI tool you already have. Each tool charges you through your own account with that company.
 
 | AI tool | What DevLabs runs |

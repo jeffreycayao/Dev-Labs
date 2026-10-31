@@ -1,4 +1,4 @@
-- A fresh new DevLabs logo on your desktop, taskbar and inside the app.
-- Speech bubbles close on time, and agents no longer get stuck in rooms.
-- Your settings and saved keys are never wiped by a damaged file.
-- Safer webhooks, shared hire files and model lists.
+- DevLabs now runs on Electron 45, with the latest security fixes.
+- Needs macOS 13 or newer, or 64-bit Windows 10 or 11.
+- Pasting screenshots works with the new clipboard.
+- Faster, simpler installs.

@@ -59,11 +59,12 @@ npm run dev        # live-reloading Electron build
 ```
 
 > [!IMPORTANT]
-> **The most common setup failure is the native `node-pty` rebuild.** The
-> `postinstall` script runs `electron-rebuild` so `node-pty` matches Electron's
-> ABI. If you see a "wrong ELF/Mach-O" or "NODE_MODULE_VERSION" error at launch,
-> re-run `npm install` (which re-triggers `postinstall`) after confirming your
-> C/C++ toolchain is installed.
+> **Native modules are not rebuilt for Electron.** `node-pty` and `better-sqlite3`
+> are N-API modules (one binary works in Node and in any Electron) and ship
+> prebuilt binaries for macOS and Windows, so `npm install` needs no compiler
+> there. On Linux, `node-pty`'s own install step compiles it, so a C/C++ toolchain
+> is needed. If a stale `node_modules/node-pty/build/` from an older setup causes a
+> load error, delete that folder: `node-pty` then uses its prebuilt binaries.
 
 ## Evidence is mandatory
 

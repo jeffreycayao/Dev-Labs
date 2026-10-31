@@ -4,6 +4,14 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.2.0 — 2026-11-01
+
+- **Built on Electron 45** (Chromium 156, Node 24), up from Electron 32, which stopped getting security fixes in March 2025. You get about 19 months of browser-engine security fixes.
+- **New minimum systems: macOS 13 Ventura or newer, and 64-bit Windows 10 or 11.** Electron 45 no longer runs on macOS 11 or 12. If your Mac is on one of those, keep DevLabs 4.1.3.
+- **Pasting a screenshot into a message still works.** Electron changed how the clipboard is read; DevLabs now reads images, and text pastes from dictation tools, the new way.
+- **Installs and releases no longer compile anything.** The terminal and database parts of DevLabs now use ready-made binaries that work with any Electron version, so `npm install` needs no C++ compiler on macOS or Windows, and the release build can't fail on a compiler mismatch again.
+- **For contributors:** `better-sqlite3` 13, `electron-builder` 26, `@electron/rebuild` removed; the release workflow's manual dry build now really builds the installers.
+
 ## v4.1.3 — 2026-10-31
 
 - **Settings and connector keys are never reset by a bad file.** If `config.json` or the saved connector keys can't be read (a damaged file, or another program holding it), DevLabs copies it aside as `<name>.corrupt-<time>` and refuses to save over it, with a message saying what to fix. Before, the next save replaced it with defaults and lost the hive home, triggers, schedules and every other key.

@@ -105,6 +105,36 @@ test('a Claude agent loads the bundled skills through --add-dir on its agent fol
   }
 });
 
+test('a link planted in the agent folder cannot redirect the unsandboxed skills copy', async (t) => {
+  const harness = isolatedHome(t);
+  const hive = new HiveManager(() => harness);
+  const meta = { id: 'eve-1', name: 'Eve', provider: 'claude', cwd: harness };
+  await hive.ensureAgent(meta, {});
+  const agentDir = path.join(harness, 'hive', 'agents', 'eve-1');
+  const victim = path.join(harness, 'victim');
+  fs.mkdirSync(victim, { recursive: true });
+  fs.writeFileSync(path.join(victim, 'SKILL.md'), 'precious');
+  const link = (target, at) => {
+    fs.mkdirSync(path.dirname(at), { recursive: true });
+    fs.symlinkSync(target, at, process.platform === 'win32' ? 'junction' : 'dir');
+  };
+
+  // A skill folder that is a link: replaced by a real folder, target untouched.
+  link(victim, path.join(agentDir, '.claude', 'skills', 'ponytail'));
+  await hive.ensureAgent(meta, { skillsDir: SKILLS });
+  assert.equal(fs.readFileSync(path.join(victim, 'SKILL.md'), 'utf8'), 'precious');
+  const skill = path.join(agentDir, '.claude', 'skills', 'ponytail');
+  assert.equal(fs.lstatSync(skill).isSymbolicLink(), false);
+  assert.ok(fs.readFileSync(path.join(skill, 'SKILL.md'), 'utf8').startsWith('---'));
+
+  // The skills root itself behind a link: nothing is copied through it.
+  fs.rmSync(path.join(agentDir, '.claude'), { recursive: true, force: true });
+  link(victim, path.join(agentDir, '.claude'));
+  await hive.ensureAgent(meta, { skillsDir: SKILLS });
+  assert.equal(fs.existsSync(path.join(victim, 'skills', 'ponytail')), false);
+  assert.equal(fs.readFileSync(path.join(victim, 'SKILL.md'), 'utf8'), 'precious');
+});
+
 test('a Codex agent gets the bundled skills in its isolated CODEX_HOME', async (t) => {
   const harness = isolatedHome(t);
   const hive = new HiveManager(() => harness);

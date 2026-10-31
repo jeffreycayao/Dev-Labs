@@ -6,6 +6,7 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 - **Three skills come built in.** Every Claude Code and Codex agent now starts with NVIDIA's **skill-inspector** (checks a skill is safe before you install it), the six **ponytail** skills (keep changes small) and Cloudflare's **security-audit**. No setup; they work offline and update with DevLabs.
 - **Bundled skills now really reach Claude Code agents.** They were copied into each agent's folder, but Claude Code only loads skills from a folder passed with `--add-dir`, so they never loaded. Codex agents now get them too, in their own isolated Codex home.
+- **Security: refreshing an agent's skills can no longer write outside its folder.** An agent could leave a link in its own skills folder so the next restart overwrote a file elsewhere on your computer. DevLabs now removes and rebuilds each bundled skill, and skips the copy when the folder leads through a link.
 - **For contributors:** `node tools/sync-third-party-skills.cjs` re-downloads the pinned skills listed in `tools/third-party-skills.json` and checks every file against the pinned commit's git hash; `--update` moves each pin to the latest release, `--check` verifies the committed copies offline. Nothing downloaded is run. Review `git diff resources/skills` before committing.
 
 ## v4.2.2 — 2026-10-31

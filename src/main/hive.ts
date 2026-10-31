@@ -21,7 +21,8 @@
 import {
   existsSync, mkdirSync, readFileSync, writeFileSync, renameSync,
   readdirSync, statSync, lstatSync, realpathSync, rmSync, appendFileSync,
-  symlinkSync, unlinkSync, copyFileSync, cpSync, chmodSync, openSync, readSync, closeSync
+  symlinkSync, unlinkSync, copyFileSync, cpSync, chmodSync, openSync, readSync, closeSync,
+  constants as fsConstants
 } from 'node:fs';
 import { join, dirname, basename, isAbsolute, relative } from 'node:path';
 import { homedir } from 'node:os';
@@ -748,7 +749,7 @@ export class HiveManager {
     // app-resources skills/ dir on every spawn (same policy as identity.md), so an
     // agent always rides with the shipped safe skill set. Tolerant: a missing or
     // partial source dir is a no-op (Kevin populates the resource dir in lp-manifest).
-    if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(dir, '.claude', 'skills'));
+    if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(dir, '.claude', 'skills'), dir);
 
     const memory = join(dir, 'memory.md');
     if (!existsSync(memory)) {
@@ -865,7 +866,7 @@ export class HiveManager {
               // Codex never reads .claude/skills; it still scans the (deprecated)
               // $CODEX_HOME/skills, and that home is per-agent, so the bundled set
               // goes there without touching the user's ~/.agents/skills.
-              if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(env.CODEX_HOME, 'skills'));
+              if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(env.CODEX_HOME, 'skills'), dir);
               // Codex refuses to run hooks from a config dir without persisted
               // "hook trust" (normally an interactive gate). Our hooks.json is
               // hive-authored inside an isolated CODEX_HOME, so we bypass that gate
@@ -1304,22 +1305,40 @@ export class HiveManager {
    * the app. Best-effort and fully tolerant — a missing/empty source dir is a no-op
    * (Kevin populates the resource dir in lp-manifest), and any IO error is swallowed
    * so skill provisioning can never block a spawn.
+   *
+   * Agents can write their own folder (and the hive root holding every agent
+   * folder), but this copy runs unsandboxed in main. So a link planted on the
+   * path must never redirect a write: destDir must resolve inside agentDir with
+   * no link on the way, each bundled skill is removed (rmSync deletes a link,
+   * never its target) and rebuilt, and COPYFILE_EXCL refuses any file that
+   * reappears in between.
    */
-  private copyBundledSkills(srcDir: string, destDir: string): void {
+  private copyBundledSkills(srcDir: string, destDir: string, agentDir: string): void {
     try {
       if (!existsSync(srcDir)) return;
+      mkdirSync(destDir, { recursive: true });
+      if (realpathSync(destDir) !== join(realpathSync(agentDir), relative(agentDir, destDir))) {
+        console.error(`[hive] ${destDir} passes through a link; bundled skills not copied`);
+        return;
+      }
       const copyTree = (from: string, to: string): void => {
         const entries = readdirSync(from, { withFileTypes: true });
         if (!entries.length) return;
-        mkdirSync(to, { recursive: true });
+        mkdirSync(to);
         for (const ent of entries) {
           const s = join(from, ent.name);
           const d = join(to, ent.name);
           if (ent.isDirectory()) copyTree(s, d);
-          else if (ent.isFile()) copyFileSync(s, d);
+          else if (ent.isFile()) copyFileSync(s, d, fsConstants.COPYFILE_EXCL);
         }
       };
-      copyTree(srcDir, destDir);
+      for (const ent of readdirSync(srcDir, { withFileTypes: true })) {
+        const s = join(srcDir, ent.name);
+        const d = join(destDir, ent.name);
+        rmSync(d, { recursive: true, force: true });
+        if (ent.isDirectory()) copyTree(s, d);
+        else if (ent.isFile()) copyFileSync(s, d, fsConstants.COPYFILE_EXCL);
+      }
     } catch (e) { console.error('[hive] copyBundledSkills failed:', e); }
   }
 

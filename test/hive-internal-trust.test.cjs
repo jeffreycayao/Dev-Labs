@@ -116,8 +116,7 @@ test('a hook, hooksPath or fsmonitor planted in an old in-tree .git is not run b
   assert.ok(ran(markers).includes('hooks-path'), 'control: the planted hooksPath hook should run under plain git');
   for (const m of ran(markers)) fs.rmSync(path.join(markers, m));
 
-  hive.ensureHive(); // adopts the old .git into hive-internal/
-  assert.equal(fs.existsSync(path.join(root, '.git')), false, 'the in-tree git dir is moved out');
+  hive.ensureHive(); // carries the history into hive-internal/; the rest of the old .git stays, unused
   fs.writeFileSync(path.join(root, 'board.md'), 'new board\n');
   hive.commit('after');
   hive.flushCommit();
@@ -148,4 +147,68 @@ test('an agent re-creating <root>/.git, or poisoning the private config, changes
   assert.deepEqual(ran(markers), []);
   assert.match(hiveGit(home, 'log', '-1', '--format=%s').stdout, /^changed/);
   assert.equal(hiveGit(home, 'ls-files', '--', '.git').stdout.trim(), '', 'a planted .git is never committed');
+});
+
+test('links planted inside an old in-tree .git are not written through after adoption', async (t) => {
+  const { home, root, markers: victim, hive } = setup(t);
+  fs.mkdirSync(root, { recursive: true });
+  fs.writeFileSync(path.join(root, 'board.md'), 'old board\n');
+  git(['init', '-q'], { cwd: root });
+  git(['add', '-A'], { cwd: root });
+  git(['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'old history'], { cwd: root });
+
+  // A linked logs/ (git appends the reflog there) — a junction needs no privilege.
+  fs.rmSync(path.join(root, '.git', 'logs'), { recursive: true });
+  fs.symlinkSync(victim, path.join(root, '.git', 'logs'), process.platform === 'win32' ? 'junction' : 'dir');
+  // A linked COMMIT_EDITMSG (git overwrites it on every commit), where file links are allowed.
+  const target = path.join(path.dirname(victim), 'precious.txt');
+  fs.writeFileSync(target, 'precious');
+  let fileLinked = true;
+  fs.rmSync(path.join(root, '.git', 'COMMIT_EDITMSG'), { force: true });
+  try { fs.symlinkSync(target, path.join(root, '.git', 'COMMIT_EDITMSG'), 'file'); }
+  catch (e) { if (e.code !== 'EPERM') throw e; fileLinked = false; }
+
+  hive.ensureHive();
+  fs.writeFileSync(path.join(root, 'board.md'), 'new board\n');
+  hive.commit('after');
+  hive.flushCommit();
+
+  assert.deepEqual(fs.readdirSync(victim), [], 'git wrote a reflog through the planted logs/ link');
+  if (fileLinked) assert.equal(fs.readFileSync(target, 'utf8'), 'precious', 'COMMIT_EDITMSG was written through');
+  const log = hiveGit(home, 'log', '--format=%s').stdout;
+  assert.match(log, /old history/, 'history still carried over');
+  assert.match(log, /^after/m);
+});
+
+test('a global grok/agy hook from an older build is re-pointed at hive-internal by bootstrap alone', async (t) => {
+  const { home, root, hive } = setup(t);
+  const user = process.env.HOME;
+  const grok = path.join(user, '.grok', 'hooks', 'atmt-hive.json');
+  const agy = path.join(user, '.gemini', 'config', 'hooks.json');
+  const old = (shim) => JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: 'command', command: `node "${path.join(root, 'bin', shim)}"` }] }] } });
+  fs.mkdirSync(path.dirname(grok), { recursive: true });
+  fs.mkdirSync(path.dirname(agy), { recursive: true });
+  fs.writeFileSync(grok, old('grok-hook.cjs'));
+  fs.writeFileSync(agy, JSON.stringify({ 'atmt-hive': JSON.parse(old('agy-hook.cjs')).hooks, mine: { keep: true } }));
+
+  hive.ensureHive();
+
+  const legacy = JSON.stringify(path.join(root, 'bin')).slice(1, -1);
+  const internal = JSON.stringify(path.join(home, 'hive-internal', 'bin')).slice(1, -1);
+  for (const f of [grok, agy]) {
+    const body = fs.readFileSync(f, 'utf8');
+    assert.ok(!body.includes(legacy), `${f} still points at the agent-writable bin/`);
+    assert.ok(body.includes(internal), `${f} should point at hive-internal/bin`);
+  }
+  assert.equal(JSON.parse(fs.readFileSync(agy, 'utf8')).mine.keep, true, 'the user\'s own agy hooks survive');
+});
+
+test('global hook files naming another hive are left alone', async (t) => {
+  const { hive } = setup(t);
+  const grok = path.join(process.env.HOME, '.grok', 'hooks', 'atmt-hive.json');
+  fs.mkdirSync(path.dirname(grok), { recursive: true });
+  const theirs = '{"hooks":{"Stop":[{"hooks":[{"command":"node /elsewhere/hive/bin/grok-hook.cjs"}]}]}}';
+  fs.writeFileSync(grok, theirs);
+  hive.ensureHive();
+  assert.equal(fs.readFileSync(grok, 'utf8'), theirs);
 });

@@ -4,6 +4,7 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **Security: agents can no longer plant code that DevLabs itself runs.** Agents may write the shared hive folder, which used to hold the hook helpers their CLIs run and the hive's git history, so an agent could edit a helper or plant a git hook that DevLabs ran outside the sandbox on its next save. Both now live in a separate `hive-internal` folder next to the hive that agents cannot write, an existing hive's history moves there on first start, and DevLabs' own git saves ignore any git hooks.
 - **Three skills come built in.** Every Claude Code and Codex agent now starts with NVIDIA's **skill-inspector** (checks a skill is safe before you install it), the six **ponytail** skills (keep changes small) and Cloudflare's **security-audit**. No setup; they work offline and update with DevLabs.
 - **Bundled skills now really reach Claude Code agents.** They were copied into each agent's folder, but Claude Code only loads skills from a folder passed with `--add-dir`, so they never loaded. Codex agents now get them too, in their own isolated Codex home.
 - **Security: refreshing an agent's skills can no longer write outside its folder.** An agent could leave a link in its own skills folder so the next restart overwrote a file elsewhere on your computer. DevLabs now removes and rebuilds each bundled skill, and skips the copy when the folder leads through a link.

@@ -54,7 +54,9 @@ async function freshHive(t) {
   return { home, root: path.join(home, 'hive'), hive };
 }
 
-const git = (cwd, ...args) => spawnSync('git', args, { cwd, encoding: 'utf8' });
+const git = (root, ...args) => spawnSync('git', [
+  `--git-dir=${path.join(path.dirname(root), 'hive-internal', 'git')}`, `--work-tree=${root}`, ...args
+], { cwd: root, encoding: 'utf8' });
 
 test('#1 an agent mcp.json is never committed, and an old committed copy is untracked', async (t) => {
   const { root, hive } = await freshHive(t);
@@ -78,7 +80,7 @@ test('#1 an agent mcp.json is never committed, and an old committed copy is untr
 
 test('#2 the hook shim shrinks an oversize payload so the gate still answers', async (t) => {
   const { root } = await freshHive(t);
-  const shim = path.join(root, 'bin', 'cth-hook.cjs');
+  const shim = path.join(path.dirname(root), 'hive-internal', 'bin', 'cth-hook.cjs');
   const sock = process.platform === 'win32'
     ? `\\\\.\\pipe\\md-audit-${process.pid}-${Date.now()}`
     : path.join(root, `t-${process.pid}.sock`);

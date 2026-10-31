@@ -2,7 +2,9 @@
  * The Hive — the on-disk multi-agent coordination layer.
  *
  * Lives under `<harnessHome>/hive/` as a single git repo that ONLY this main
- * process commits to (agents never call git — they just write files). See
+ * process commits to (agents never call git — they just write files). Its git
+ * dir and the hook shims sit in `<harnessHome>/hive-internal/`, out of agents'
+ * writable reach (see internalDir). See
  * HIVE.md for the full design. Responsibilities:
  *   - per-agent workspace (identity.md, memory.md, inbox/, outbox/, cursor.json)
  *   - hive identity (registry.json: id/role/cwd/session — what agents read),
@@ -490,6 +492,24 @@ export class HiveManager {
   enabled(): boolean {
     return this.root() !== null;
   }
+  /** `<harnessHome>/hive-internal/`: what main runs or trusts OUTSIDE any agent
+   *  sandbox — the hook shims (`bin/`, executed by agent CLIs as hooks) and the
+   *  hive's git dir (`git/`, where main runs `git commit`). A sibling of hive/,
+   *  never inside it: every sandboxed agent may write the whole hive root (see
+   *  sandboxWritableDirs), so a shim or `.git/hooks` there was agent-editable code
+   *  that ran unsandboxed. */
+  internalDir(): string | null {
+    const home = this.getHome();
+    return home ? join(home, 'hive-internal') : null;
+  }
+  private binDir(): string | null {
+    const dir = this.internalDir();
+    return dir ? join(dir, 'bin') : null;
+  }
+  private gitDir(): string | null {
+    const dir = this.internalDir();
+    return dir ? join(dir, 'git') : null;
+  }
   private agentDir(id: string): string {
     return join(this.root()!, 'agents', id);
   }
@@ -509,19 +529,19 @@ export class HiveManager {
     return join(root, 'hooks.sock');
   }
   private shimPath(): string | null {
-    const root = this.root();
-    return root ? join(root, 'bin', 'cth-hook.cjs') : null;
+    const bin = this.binDir();
+    return bin ? join(bin, 'cth-hook.cjs') : null;
   }
   /** The proxy-bridge sidecar (qwen). Pure-Node loopback reverse-proxy that
    *  observes a hookless CLI's LLM traffic and synthesizes the same HIVE_SOCK
    *  payloads the hook shims emit. Written in ensureHive alongside cth-hook.cjs. */
   private proxyShimPath(): string | null {
-    const root = this.root();
-    return root ? join(root, 'bin', 'hive-proxy.cjs') : null;
+    const bin = this.binDir();
+    return bin ? join(bin, 'hive-proxy.cjs') : null;
   }
 
   /**
-   * The BUNDLED-NODE launcher: `<root>/bin/hive-node` (POSIX) / `hive-node.cmd`
+   * The BUNDLED-NODE launcher: `<home>/hive-internal/bin/hive-node` (POSIX) / `hive-node.cmd`
    * (Windows). Every `.cjs` shim in the hive is executed through it.
    *
    * Why it exists: hooks are run by the agent CLI through a plain
@@ -541,9 +561,9 @@ export class HiveManager {
    * Rewritten on every bootstrap, so an app update/move re-bakes execPath.
    */
   private nodeLauncherPath(): string | null {
-    const root = this.root();
-    if (!root) return null;
-    return join(root, 'bin', process.platform === 'win32' ? 'hive-node.cmd' : 'hive-node');
+    const bin = this.binDir();
+    if (!bin) return null;
+    return join(bin, process.platform === 'win32' ? 'hive-node.cmd' : 'hive-node');
   }
 
   /** Write the launcher described above. Best-effort: on failure callers fall
@@ -583,7 +603,7 @@ export class HiveManager {
   }
 
   /**
-   * `<root>/bin/runtime` — the same bundled-node trick as `hive-node`, but the
+   * `<home>/hive-internal/bin/runtime` — the same bundled-node trick as `hive-node`, but the
    * wrapper is NAMED `node`, so anything that resolves `node` off PATH finds one.
    *
    * `hive-node` only covers commands WE generate. It does nothing for node that
@@ -606,8 +626,8 @@ export class HiveManager {
    * no official installer).
    */
   runtimeBinDir(): string | null {
-    const root = this.root();
-    return root ? join(root, 'bin', 'runtime') : null;
+    const bin = this.binDir();
+    return bin ? join(bin, 'runtime') : null;
   }
 
   /** Write the `node` shim described above. Best-effort: on failure the dir is
@@ -616,7 +636,7 @@ export class HiveManager {
     const dir = this.runtimeBinDir();
     if (!dir) return;
     try {
-      realDirs(this.root()!, 'bin', 'runtime');
+      mkdirSync(dir, { recursive: true });
       if (process.platform === 'win32') {
         writeFresh(join(dir, 'node.cmd'), `@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"${process.execPath}" %*\r\n`);
       } else {
@@ -699,7 +719,7 @@ export class HiveManager {
 
     // The hook shim: a dumb pipe between a `claude` hook and our UDS. Refreshed
     // on every bootstrap so it tracks code changes.
-    realDirs(root, 'bin');
+    mkdirSync(this.binDir()!, { recursive: true });
     writeFresh(this.shimPath()!, HOOK_SHIM);
     // The proxy-bridge sidecar for hookless CLIs (qwen). Same refresh policy.
     writeFresh(this.proxyShimPath()!, PROXY_BRIDGE_SHIM);
@@ -709,10 +729,34 @@ export class HiveManager {
     // …and the PATH-visible `node` fallback for the agent's OWN subprocesses.
     this.writeRuntimeShims();
 
-    if (!existsSync(join(root, '.git'))) {
-      this.git(['init', '-q'], root);
-      this.commit('hive: init');
-    }
+    // Empty on purpose: every main-side git call points core.hooksPath here.
+    mkdirSync(this.noHooksDir()!, { recursive: true });
+    if (!existsSync(this.gitDir()!)) this.initGitDir(root, this.gitDir()!);
+  }
+
+  private noHooksDir(): string | null {
+    const dir = this.internalDir();
+    return dir ? join(dir, 'no-hooks') : null;
+  }
+
+  /** Create the hive's git dir, adopting a pre-hive-internal `<root>/.git` once.
+   *  That copy sat in an agent-writable tree, so what git would LOAD from it is
+   *  dropped (config is regenerated by the re-init; commondir would redirect it;
+   *  hooks/ is never consulted, see git()) while objects and refs — the history —
+   *  are kept. Anything but a plain
+   *  directory (a planted link or gitfile) is left alone and history starts fresh. */
+  private initGitDir(root: string, gitDir: string): void {
+    const legacy = join(root, '.git');
+    let adopted = false;
+    try {
+      if (lstatSync(legacy).isDirectory()) {
+        renameSync(legacy, gitDir);
+        adopted = true;
+        for (const f of ['config', 'config.worktree', 'commondir', 'gitdir']) rmSync(join(gitDir, f), { force: true });
+      }
+    } catch { /* no legacy repo, or it cannot be moved: start a fresh history */ }
+    this.git(['init', '-q'], root);
+    if (!adopted) this.commit('hive: init');
   }
 
   /** Validate an agent's cwd the way a spawn does — it must be an ABSOLUTE path
@@ -1284,10 +1328,9 @@ export class HiveManager {
    *
    * The root stays writable for now because workers update tasks.json and god
    * writes board.md and spawn-requests/, all at the root. So every main write
-   * under the root goes through realDirs/writeFresh. Known gap, not closed by
-   * that: an agent can also edit root files main later RUNS or trusts (bin/
-   * hook shims, .git hooks/config run by commit). Closing it needs those moved
-   * out of the agent-writable tree.
+   * under the root goes through realDirs/writeFresh. What main later RUNS or
+   * trusts — the hook shims and the hive's git dir — lives in internalDir(),
+   * outside every path returned here.
    */
   private sandboxWritableDirs(meta: AgentMeta, dir: string, root: string, extra?: string[]): string[] {
     const out = [dir, root, ...(extra ?? [])].filter((d) => typeof d === 'string' && d.length > 0);
@@ -1392,7 +1435,7 @@ export class HiveManager {
 
   /**
    * W1 — start a proxy-bridge sidecar for a hookless proxy-tier agent (qwen).
-   * Spawns `<root>/bin/hive-proxy.cjs` under Node, which binds a loopback port and
+   * Spawns `<home>/hive-internal/bin/hive-proxy.cjs` under Node, which binds a loopback port and
    * reports it back as a one-line `{"port":N}` on stdout. Resolves the bound port
    * (or 0 on failure, so the caller degrades gracefully without redirecting the
    * CLI). Idempotent: any prior sidecar for the agent is killed first, so a respawn
@@ -2288,10 +2331,10 @@ export class HiveManager {
    *  this global config never disturbs the user's own `agy` usage. Best-effort,
    *  idempotent (only our own group is overwritten). */
   private installAgyHooks(): void {
-    const root = this.root();
-    if (!root) return;
-    const shim = join(root, 'bin', 'agy-hook.cjs');
-    realDirs(root, 'bin');
+    const bin = this.binDir();
+    if (!bin) return;
+    const shim = join(bin, 'agy-hook.cjs');
+    mkdirSync(bin, { recursive: true });
     writeFresh(shim, AGY_HOOK_SHIM);
     // Bundled node, not bare `node` — agy's hooks run with a stripped PATH too.
     const command = (event: string) => process.platform === 'win32'
@@ -2708,11 +2751,11 @@ export class HiveManager {
    *  strictly scoped by AGENT_ID, so ordinary Grok sessions exit without doing
    *  anything. Best-effort and idempotent. */
   private installGrokHooks(): void {
-    const root = this.root();
-    if (!root) return;
+    const bin = this.binDir();
+    if (!bin) return;
     try {
-      const shim = join(root, 'bin', 'grok-hook.cjs');
-      realDirs(root, 'bin');
+      const shim = join(bin, 'grok-hook.cjs');
+      mkdirSync(bin, { recursive: true });
       writeFresh(shim, GROK_HOOK_SHIM);
       const tool = (matcher?: string) => ({
         ...(matcher ? { matcher } : {}),
@@ -3026,9 +3069,18 @@ export class HiveManager {
   //
   // The gc still happens — this only stops it from outliving the command that
   // triggered it, which is what "single committer" was supposed to mean.
-  private git(args: string[], cwd: string): { ok: boolean; out: string; err: string } {
-    const res = spawnSync('git', ['-c', 'commit.gpgsign=false', '-c', 'gc.autoDetach=false', '-c', 'user.name=Hive', '-c', 'user.email=hive@local', ...args], {
-      cwd, encoding: 'utf8', timeout: 8000
+  //
+  // The git dir is passed explicitly (it lives in hive-internal, out of agents'
+  // reach) and the work tree is the hive root, which agents DO write. Hooks and
+  // fsmonitor are switched off on top: they are the config keys that make git run
+  // a program, and this process is not sandboxed.
+  private git(args: string[], root: string): { ok: boolean; out: string; err: string } {
+    const res = spawnSync('git', [
+      `--git-dir=${this.gitDir()}`, `--work-tree=${root}`,
+      '-c', `core.hooksPath=${this.noHooksDir()}`, '-c', 'core.fsmonitor=false',
+      '-c', 'commit.gpgsign=false', '-c', 'gc.autoDetach=false', '-c', 'user.name=Hive', '-c', 'user.email=hive@local', ...args
+    ], {
+      cwd: root, encoding: 'utf8', timeout: 8000
     });
     return { ok: res.status === 0, out: res.stdout ?? '', err: res.stderr ?? '' };
   }
@@ -3123,11 +3175,12 @@ export class HiveManager {
 
   private commitNow(message: string): void {
     const root = this.root();
-    if (!root || !existsSync(join(root, '.git'))) return;
+    const gitDir = this.gitDir();
+    if (!root || !gitDir || !existsSync(gitDir)) return;
     this.untrackCostLedger(root);
     this.untrackCodexHomes(root);
     for (let attempt = 0; attempt < 5; attempt++) {
-      this.clearStaleLock(root);
+      this.clearStaleLock(gitDir);
       const add = this.git(['add', '-A'], root);
       const commit = this.git(['commit', '-q', '-m', message], root);
       if (commit.ok) return;
@@ -3139,11 +3192,11 @@ export class HiveManager {
     console.warn('[hive] commit gave up after 5 attempts');
   }
 
-  private clearStaleLock(root: string): void {
+  private clearStaleLock(gitDir: string): void {
     const STALE_THRESHOLD_MS = 10_000;
     try {
       for (const lock of ['index.lock', 'HEAD.lock']) {
-        const path = join(root, '.git', lock);
+        const path = join(gitDir, lock);
         if (existsSync(path) && Date.now() - statSync(path).mtimeMs > STALE_THRESHOLD_MS) rmSync(path);
       }
     } catch { /* noop */ }
@@ -3354,7 +3407,7 @@ Your \`memory.md\` is mined into the palace automatically, so the durable facts 
 write there become searchable by every agent. You don't run \`mine\` yourself.
 `;
 
-// ─── cth-hook shim (written to <hive>/bin/cth-hook.cjs) ──────────────────────
+// ─── cth-hook shim (written to <home>/hive-internal/bin/cth-hook.cjs) ─────
 // A minimal pipe: read the hook payload on stdin, tag it with this agent's id,
 // forward it to the hive's UDS, and relay the response back to `claude`. All the
 // real logic lives in the main process (HookServer). Never blocks a stop on error.
@@ -3419,7 +3472,7 @@ process.stdin.on('end', () => {
 });
 `;
 
-// ─── agy-hook shim (written to <hive>/bin/agy-hook.cjs) ──────────────────────
+// ─── agy-hook shim (written to <home>/hive-internal/bin/agy-hook.cjs) ─────
 // Antigravity's `agy` CLI fires lifecycle hooks (PreToolUse/PostToolUse/Stop/
 // PreInvocation/PostInvocation) but with a DIFFERENT stdin shape than Claude
 // (conversationId / toolCall{name,args} / workspacePaths, and no hook_event_name
@@ -3558,7 +3611,7 @@ export const HiveBridge = async () => {
 export default HiveBridge;
 `;
 
-// ─── proxy-bridge sidecar (written to <hive>/bin/hive-proxy.cjs) ─────────────
+// ─── proxy-bridge sidecar (written to <home>/hive-internal/bin/hive-proxy.cjs)
 // One per proxy-tier agent (qwen). A dependency-free, loopback-only reverse
 // proxy: the agent's CLI is pointed at this (via ANTHROPIC_BASE_URL/OPENAI_BASE_URL),
 // and it forwards every request to the user's real upstream UNCHANGED (headers,
@@ -3838,7 +3891,7 @@ process.stdin.on('end', () => {
 });
 `;
 
-// ─── grok-hook shim (written to <hive>/bin/grok-hook.cjs) ───────────────────
+// ─── grok-hook shim (written to <home>/hive-internal/bin/grok-hook.cjs) ────
 // Grok's lifecycle events and decisions are Claude-compatible, but the wire
 // payload is camelCase and uses snake_case event values. Normalize the input for
 // HookServer and translate its Claude-style permission denial into Grok's direct

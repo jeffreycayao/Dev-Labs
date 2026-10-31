@@ -1,7 +1,7 @@
 import * as pty from 'node-pty';
 import type { WebContents } from 'electron';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { delimiter, join, win32 } from 'node:path';
+import { delimiter, dirname, join, win32 } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { ensureKilled, hardKillTree } from './procKill';
 import { expandTilde } from './fs';
@@ -13,7 +13,8 @@ import {
   windowsFallbackCandidates
 } from './shellEnv';
 
-/** APPEND the hive's bundled-node dir (`<HIVE_ROOT>/bin/runtime`, which holds a
+/** APPEND the hive's bundled-node dir (`<home>/hive-internal/bin/runtime`, a
+ *  sibling of HIVE_ROOT so agents cannot edit it, which holds a
  *  shim literally named `node`) to a child's PATH.
  *
  *  Layer 1 routed the commands WE generate through `hive-node`. This covers the
@@ -27,7 +28,7 @@ import {
  *  decision. No-ops when there is no hive root or the dir was never written. */
 export function withHiveRuntimeFallback(path: string, hiveRoot?: string): string {
   if (!hiveRoot) return path;
-  const dir = join(hiveRoot, 'bin', 'runtime');
+  const dir = join(dirname(hiveRoot), 'hive-internal', 'bin', 'runtime');
   if (!existsSync(dir)) return path;
   const entries = path.split(delimiter).filter(Boolean);
   if (entries.includes(dir)) return path; // re-spawn of a live agent

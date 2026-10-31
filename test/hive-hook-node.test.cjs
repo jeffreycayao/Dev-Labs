@@ -51,7 +51,7 @@ function isolatedHomes(t, prefix, root) {
 }
 
 const launcherIn = (home) =>
-  path.join(home, 'hive', 'bin', POSIX ? 'hive-node' : 'hive-node.cmd');
+  path.join(home, 'hive-internal', 'bin', POSIX ? 'hive-node' : 'hive-node.cmd');
 
 /** Every file under `dir`. */
 function walk(dir, out = []) {
@@ -190,7 +190,7 @@ test('Codex hook commands survive a hive path containing spaces', { skip: !POSIX
 
   assert.equal(commands.length, 8, 'every Codex lifecycle hook must be generated');
   const launcher = launcherIn(harness);
-  const shim = path.join(harness, 'hive', 'bin', 'cth-hook.cjs');
+  const shim = path.join(harness, 'hive-internal', 'bin', 'cth-hook.cjs');
   const sock = path.join(harness, 'hive', 'hooks.sock');
   const env = { PATH: STRIPPED_PATH, HIVE_SOCK: sock, AGENT_ID: 'a1', HOME: home };
 
@@ -440,7 +440,7 @@ test('a hook fires with NO node on PATH, and its payload reaches HIVE_SOCK', { s
   t.after(() => server.close());
 
   const env = { PATH: STRIPPED_PATH, HIVE_SOCK: sock, AGENT_ID: 'a1', HOME: home };
-  const shim = path.join(home, 'hive/bin/cth-hook.cjs');
+  const shim = path.join(home, 'hive-internal/bin/cth-hook.cjs');
 
   // Control: the command shape used before the fix. Only meaningful if node is
   // genuinely absent from the stripped PATH (it is on a dev machine using nvm,

@@ -129,14 +129,12 @@ test('a linked provider config folder gets no hive config written into it', asyn
   assert.ok(fs.existsSync(path.join(codexHome, 'config.toml')));
 });
 
-test('hive-root files and folders: a linked bin/ or log is replaced, not followed', async (t) => {
+test('hive-root files and folders: a planted bin/ is never written, a linked log is replaced', async (t) => {
   const { hive, victim, root } = setup(t);
   hive.ensureHive();
-  fs.rmSync(path.join(root, 'bin'), { recursive: true });
-  dirLink(victim, path.join(root, 'bin'));
+  dirLink(victim, path.join(root, 'bin')); // the shims moved to hive-internal/
   hive.ensureHive();
   untouched(victim);
-  assert.equal(isLink(path.join(root, 'bin')), false);
   assert.ok(fs.existsSync(hive.shimPath()));
 
   fs.rmSync(path.join(root, 'log.jsonl'));

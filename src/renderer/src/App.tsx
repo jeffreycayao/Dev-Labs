@@ -32,7 +32,7 @@ import { FullscreenTerminal } from '@/components/FullscreenTerminal';
 import { TaskDetailOverlay } from '@/components/TaskDetailOverlay';
 import { IdePanel } from '@/ide/IdePanel';
 import { useHoldOptionToTalk } from '@/freeflow/holdOption';
-import brandLogo from '@brand/Solid charcoal J monogram favicon.png?url';
+import brandLogo from '@/assets/devlabs-logo.png?url';
 
 // Injected at build time from package.json (see electron.vite.config.ts).
 declare const __APP_VERSION__: string;

@@ -1,4 +1,3 @@
-- Your office is now 3D: agents walk to their desks, grab coffee and swap chismis.
-- Delete empty office floors right from the floor bar.
-- A new step-by-step User Guide, written for people who don't code.
-- Safer and lighter: security fixes, and a smaller, faster app.
+- A fresh new DevLabs logo, on your desktop, taskbar and inside the app.
+- The app window no longer shows the Electron icon.
+- Windows notifications now say DevLabs.

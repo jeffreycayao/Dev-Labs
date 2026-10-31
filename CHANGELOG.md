@@ -4,6 +4,9 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **New DevLabs logo everywhere.** The app icon (installers, desktop shortcut, Start menu, Dock), the window and taskbar icon, the logo at the top of the app and on the loading screen, the Help window, and the website's icons now use the new "D" logo. The window no longer shows Electron's icon, and Windows notifications are labelled DevLabs.
+- **Removed the old jepoy.dev branding files** (the `brand/` folder with the "J" logo).
+
 ## v4.1.1 — 2026-10-31
 
 - **Delete empty office floors.** Open an empty floor in the floor bar and click **− Delete floor N**. After you confirm, the floor and its furniture layout are removed, and the floors above it move down one with their own layouts and agents. A floor that still has agents can't be deleted (the button is grey until you move them), and Floor 1, Ramon's floor, can't be deleted at all. Deleting a floor never deletes an agent or any work.

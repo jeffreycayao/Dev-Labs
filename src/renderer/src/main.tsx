@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
-import brandLogo from '@brand/Solid charcoal J monogram favicon.png?url';
+import brandLogo from '@/assets/devlabs-logo.png?url';
 import './design/global.css';
 import './i18n';
 

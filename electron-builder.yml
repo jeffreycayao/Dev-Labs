@@ -67,6 +67,9 @@ extraResources:
   # Offline user guide (Help → How to use) + the LICENSE shown by Help → View License.
   - from: resources/help
     to: help
+  # Window/taskbar icon (src/main/index.ts appIconPath).
+  - from: resources/icon.png
+    to: icon.png
   - from: LICENSE
     to: LICENSE
   - from: THIRD_PARTY_NOTICES.md

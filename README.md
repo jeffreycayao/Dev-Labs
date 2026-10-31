@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./brand/JEPOY.DEV%20charcoal%20lime%20logo%20lockup.png" alt="DevLabs by jepoy.dev" width="240">
+<img src="./docs/images/devlabs-logo.png" alt="DevLabs" width="128">
 
 # DevLabs™
 

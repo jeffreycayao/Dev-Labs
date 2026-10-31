@@ -1485,6 +1485,12 @@ function bundledResourcesDir(): string {
   return app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources');
 }
 
+/** The DevLabs logo for window, taskbar and (dev) dock icons. Without it, dev
+ *  runs and Linux show Electron's own icon; installers use build/icon.*. */
+function appIconPath(): string {
+  return join(bundledResourcesDir(), 'icon.png');
+}
+
 /** Bundled user guide (resources/help): extraResources when packaged, repo in dev. */
 function helpResourceDir(): string {
   return app.isPackaged
@@ -1505,6 +1511,7 @@ function openHelpWindow(section?: string): void {
   helpWindow = new BrowserWindow({
     width: 1100, height: 820, minWidth: 420, minHeight: 480,
     title: 'How to use DevLabs',
+    icon: appIconPath(),
     backgroundColor: '#181C17',
     autoHideMenuBar: true,
     webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false }
@@ -2569,6 +2576,7 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
     minWidth: MIN_WIN.width,
     minHeight: MIN_WIN.height,
     title: isFloor ? 'DevLabs — Floor' : 'DevLabs',
+    icon: appIconPath(),
     backgroundColor: '#FFF8E7',
     titleBarStyle: 'hiddenInset',
     show: false,
@@ -5881,6 +5889,10 @@ function onSystemResume(reason: string): void {
 }
 
 app.whenReady().then(() => {
+  // Same id as electron-builder's appId, so Windows groups the taskbar and shows
+  // notifications as DevLabs, not "Electron"; dev runs get the logo in the Dock.
+  if (process.platform === 'win32') app.setAppUserModelId('dev.jepoy.devlabs');
+  if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(appIconPath());
   // Realtime Ramon mic-gate hygiene (rt-8 / Pam rt-10 nit): the voice session
   // opens the mic permission gate by persisting realtimeVoiceEnabled=true and
   // closes it on disconnect — but a hard crash/reload mid-session skips that

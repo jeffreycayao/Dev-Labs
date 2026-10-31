@@ -862,6 +862,10 @@ export class HiveManager {
             if (desc.shim === 'agy') this.installAgyHooks();
             else if (desc.shim === 'codex') {
               env.CODEX_HOME = this.installCodexHooks(dir, meta.id);
+              // Codex never reads .claude/skills; it still scans the (deprecated)
+              // $CODEX_HOME/skills, and that home is per-agent, so the bundled set
+              // goes there without touching the user's ~/.agents/skills.
+              if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(env.CODEX_HOME, 'skills'));
               // Codex refuses to run hooks from a config dir without persisted
               // "hook trust" (normally an interactive gate). Our hooks.json is
               // hive-authored inside an isolated CODEX_HOME, so we bypass that gate
@@ -980,6 +984,11 @@ export class HiveManager {
     const args: string[] = [];
     if (!claudeProvider) return { args, env };
 
+    // The bundled skills sit in <agent dir>/.claude/skills. Claude Code loads that
+    // folder only for a directory passed with --add-dir; the settings file's
+    // permissions.additionalDirectories grants file access but loads no skills.
+    // --add-dir is variadic, so it goes first: the next token is always a flag.
+    if (opts.skillsDir) args.push('--add-dir', dir);
     args.push('--append-system-prompt', this.injectedPrompt(meta, dir, root, opts.semanticMemory ?? false, opts.knowledgeGraph ?? false, opts.kgCliPath));
 
     // Phase 1 — autonomy: attach lifecycle hooks via --settings (no edits to the

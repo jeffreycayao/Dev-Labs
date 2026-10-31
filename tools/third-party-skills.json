@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "repo": "NVIDIA/SkillSpector",
+      "ref": "v2.13.2",
+      "commit": "abd82935b67f765a9541013c0866c6349251dcdf",
+      "license": "Apache-2.0",
+      "licenseFile": "LICENSE",
+      "skills": [
+        {
+          "from": "skills/skill-inspector",
+          "to": "skill-inspector",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha": "48afca9e235dc4e1c05cf1aca7b111328ce6fa86"
+            },
+            {
+              "path": "SKILL.md",
+              "sha": "25f071e28b5e679da7d8deae1789dbbf8cec9ccf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repo": "DietrichGebert/ponytail",
+      "ref": "v5.3.3",
+      "commit": "7801d061243d7b753bad0e0b3c057cd250b11755",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "skills": [
+        {
+          "from": "skills/ponytail",
+          "to": "ponytail",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha": "715d483338cea4365f0d91a27799cf61226d6bcf"
+            },
+            {
+              "path": "SKILL.md",
+              "sha": "d64edd32265ba21cbf5270158f04e97d96925f27"
+            }
+          ]
+        },
+        {
+          "from": "skills/ponytail-audit",
+          "to": "ponytail-audit",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha": "715d483338cea4365f0d91a27799cf61226d6bcf"
+            },
+            {
+              "path": "SKILL.md",
+              "sha": "ff9a95480700600fe2664d2d0906a4d750b2da0b"
+            }
+          ]
+        },
+        {
+          "from": "skills/ponytail-debt",
+          "to": "ponytail-debt",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha": "715d483338cea4365f0d91a27799cf61226d6bcf"
+            },
+            {
+              "path": "SKILL.md",
+              "sha": "3124f520a65d2a4fa75a2f5db6225c38ebdb8620"
+            }
+          ]
+        },
+        {
+          "from": "skills/ponytail-gain",
+          "to": "ponytail-gain",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha": "715d483338cea4365f0d91a27799cf61226d6bcf"
+            },
+            {
+              "path": "SKILL.md",
+              "sha": "1edff0e461fad6b671733ea6796aea9e417e266b"
+            }
+          ]
+        },
+        {
+          "from": "skills/ponytail-help",
+          "to": "ponytail-help",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha": "715d483338cea4365f0d91a27799cf61226d6bcf"
+            },
+            {
+              "path": "SKILL.md",
+              "sha": "34fccb3ff542b3b8d4d131e6120a1812c9c4617a"
+            }
+          ]
+        },
+        {
+          "from": "skills/ponytail-review",
+          "to": "ponytail-review",
+          "files": [
+            {
+              "path": "LICENSE",
+              "sha": "715d483338cea4365f0d91a27799cf61226d6bcf"
+            },
+            {
+              "path": "SKILL.md",
+              "sha": "a50e3ac6ded6fccc9edae34ce37877bbce11e3fa"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "repo": "cloudflare/security-audit-skill",
+      "ref": "main",
+      "commit": "c1c8a8c1471069fb0e188eeaff69b8e8db6564a8",
+      "license": "MIT",
+      "licenseFile": "LICENSE",
+      "skills": [
+        {
+          "from": "skills/security-audit",
+          "to": "security-audit",
+          "files": [
+            {
+              "path": "AI-AND-LLM.md",
+              "sha": "02ba9039eca4cec811fefc77bce0d7349b379aae"
+            },
+            {
+              "path": "ATTACK-CLASSES.md",
+              "sha": "18a2beb4dbb554fb52b0a0293b8bd9108207f8fa"
+            },
+            {
+              "path": "CLIENT-SIDE.md",
+              "sha": "8ba673e9e7e3d02f5518aa0219bcbeec7957531b"
+            },
+            {
+              "path": "CLOUD-AND-DEPLOYMENT.md",
+              "sha": "5569f76c7740744aa3f60aaa89eaefe275f2e6c9"
+            },
+            {
+              "path": "DATA-ISOLATION-AND-LIFECYCLE.md",
+              "sha": "0cba1fa463b62c9b0caba710a201e29c1eecd0ec"
+            },
+            {
+              "path": "DESKTOP-MOBILE-AND-LOCAL-IPC.md",
+              "sha": "d6230098651bff6348d3868c11f566bfb1306e7f"
+            },
+            {
+              "path": "HUNTING.md",
+              "sha": "377d4dcfbe88a049379448cd7892717185401597"
+            },
+            {
+              "path": "LICENSE",
+              "sha": "6dbc9ecb3a5b9080e95b962869e8c7ab16cfdc20"
+            },
+            {
+              "path": "MEMORY-SAFETY-AND-BINARY.md",
+              "sha": "86ff4920752661fc4a31a35ca4f962ace5dd5f48"
+            },
+            {
+              "path": "PROTOCOLS-RPC-AND-MESSAGING.md",
+              "sha": "b04ab88f852224838fdc9683d9fcccd858b0778a"
+            },
+            {
+              "path": "RECONNAISSANCE.md",
+              "sha": "1a170a93ab76b93dc5ac268a5b690beb423a8aa9"
+            },
+            {
+              "path": "report-schema.json",
+              "sha": "55815a3687a45fff63d8ebf20068611bd6ad6d9a"
+            },
+            {
+              "path": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md",
+              "sha": "6cbbd1e2cfa482068c8279c2f7da9db43d3f54b8"
+            },
+            {
+              "path": "SKILL.md",
+              "sha": "92178dad304d3f63e37582a297026a7874e12c62"
+            },
+            {
+              "path": "SUPPLY-CHAIN-AND-RELEASE.md",
+              "sha": "bf96aed0803bc07471483ab129dea86759c3e305"
+            },
+            {
+              "path": "validate-coverage-ledger.cjs",
+              "sha": "0ef58657bef18b26a92321df6c8e3d31bc8e6659"
+            },
+            {
+              "path": "validate-coverage-ledger.test.cjs",
+              "sha": "b1444f57e1b021a61175733b8c356171861c8701"
+            },
+            {
+              "path": "validate-findings.cjs",
+              "sha": "2843feceddb7e30bf10d6e4f7bbe6640e4c57799"
+            },
+            {
+              "path": "validate-findings.test.cjs",
+              "sha": "8d245b226bbe2fdf28b46b3203b99c2824039d2d"
+            },
+            {
+              "path": "VALIDATION-AND-REPORTING.md",
+              "sha": "5e200d7387e665e53e0e4190fa4a5814c334c507"
+            },
+            {
+              "path": "WEB-PROTOCOL-AND-AUTH.md",
+              "sha": "1a099fa575cf52a61e9a627f91b61015120fa517"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

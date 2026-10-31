@@ -4,6 +4,10 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **Three skills come built in.** Every Claude Code and Codex agent now starts with NVIDIA's **skill-inspector** (checks a skill is safe before you install it), the six **ponytail** skills (keep changes small) and Cloudflare's **security-audit**. No setup; they work offline and update with DevLabs.
+- **Bundled skills now really reach Claude Code agents.** They were copied into each agent's folder, but Claude Code only loads skills from a folder passed with `--add-dir`, so they never loaded. Codex agents now get them too, in their own isolated Codex home.
+- **For contributors:** `node tools/sync-third-party-skills.cjs` re-downloads the pinned skills listed in `tools/third-party-skills.json` and checks every file against the pinned commit's git hash; `--update` moves each pin to the latest release, `--check` verifies the committed copies offline. Nothing downloaded is run. Review `git diff resources/skills` before committing.
+
 ## v4.2.2 — 2026-10-31
 
 - **Activity bubbles are back.** A working agent's bubble shows what it's doing right now, the way the old 2D office did: `$ git push origin main` for a terminal command, `> App.tsx` when editing a file, `< SPEC.md` when reading, `?` for searches and `@` for the web. The bubble gently pulses while the agent works. It only shows animated dots when there's nothing concrete yet (thinking). The agent card shows the same line.

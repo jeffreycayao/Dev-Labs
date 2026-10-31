@@ -86,6 +86,23 @@ with credit. See LICENSE-ASSETS.
 
 ---
 
+## Bundled agent skills
+
+These skills are copied unmodified, at the commits pinned in `tools/third-party-skills.json`,
+into `resources/skills/` and given to every agent. Each skill folder carries its project's
+full license text in a `LICENSE` file.
+
+- **skill-inspector** from NVIDIA SkillSpector (https://github.com/NVIDIA/SkillSpector),
+  Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES, Apache License 2.0.
+- **ponytail**, **ponytail-audit**, **ponytail-debt**, **ponytail-gain**, **ponytail-help**,
+  **ponytail-review** from ponytail (https://github.com/DietrichGebert/ponytail),
+  Copyright (c) 2026 DietrichGebert, MIT License.
+- **security-audit** from Cloudflare security-audit-skill
+  (https://github.com/cloudflare/security-audit-skill), Copyright (c) 2025-2026 Cloudflare, Inc.,
+  MIT License.
+
+---
+
 ## Other open-source components
 
 DevLabs is built with Electron, React, PixiJS, xterm.js, node-pty, better-sqlite3 and

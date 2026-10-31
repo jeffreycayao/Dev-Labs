@@ -1,0 +1,3 @@
+# Bundled skills ship byte-for-byte; vendored ones are hash-checked against
+# tools/third-party-skills.json, so no line-ending conversion on checkout.
+resources/skills/** -text

@@ -287,6 +287,16 @@ Click Ramon to open it. The tabs (hover an icon to see its name):
 
 At the top: **auto** (or **paused**) turns automatic message delivery to all agents on or off, and **IDE** opens the code editor.
 
+**Skills every agent already has.** Claude Code and Codex agents start with these, no setup needed. They show in the **skills** tab as *bundled*:
+
+| Skill | What it does | From |
+|---|---|---|
+| **skill-inspector** | Checks whether a skill is safe before you install it. Ask *"is this skill safe to install?"* | NVIDIA SkillSpector |
+| **ponytail** (+ review, audit, debt, gain, help) | Keeps code changes small and simple. Say *"ponytail"* or *"/ponytail-review"*. | ponytail |
+| **security-audit** | Looks for security holes in a codebase. Ask *"security audit this codebase"*. | Cloudflare |
+
+They come with DevLabs and update when DevLabs updates, so they work offline and nothing is downloaded while the app runs.
+
 ---
 
 ## 10. Getting finished files back (Deliveries)

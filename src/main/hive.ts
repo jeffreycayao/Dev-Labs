@@ -1307,38 +1307,44 @@ export class HiveManager {
    * so skill provisioning can never block a spawn.
    *
    * Agents can write their own folder (and the hive root holding every agent
-   * folder), but this copy runs unsandboxed in main. So a link planted on the
-   * path must never redirect a write: destDir must resolve inside agentDir with
-   * no link on the way, each bundled skill is removed (rmSync deletes a link,
-   * never its target) and rebuilt, and COPYFILE_EXCL refuses any file that
-   * reappears in between.
+   * folder), but this copy runs unsandboxed in main, so a planted link must not
+   * redirect it. Node has no no-follow directory handles, so every step lstats
+   * the exact path right before acting: a link is removed as a link (rmSync
+   * without `recursive` never descends), a real directory is reused, and files
+   * are written with COPYFILE_EXCL after their old copy is removed. Nothing is
+   * ever deleted recursively, so a race won between two steps can at worst
+   * replace one file with a bundled one, never wipe a folder.
    */
   private copyBundledSkills(srcDir: string, destDir: string, agentDir: string): void {
     try {
       if (!existsSync(srcDir)) return;
-      mkdirSync(destDir, { recursive: true });
-      if (realpathSync(destDir) !== join(realpathSync(agentDir), relative(agentDir, destDir))) {
-        console.error(`[hive] ${destDir} passes through a link; bundled skills not copied`);
-        return;
-      }
+      const ensureDir = (p: string): void => {
+        let st;
+        try { st = lstatSync(p); } catch { mkdirSync(p); return; }
+        if (st.isDirectory()) return;
+        rmSync(p, { force: true }); // a link or stray file, never what it points to
+        mkdirSync(p);
+      };
+      const copyFile = (s: string, d: string): void => {
+        rmSync(d, { force: true }); // throws on a real directory → copy aborts
+        copyFileSync(s, d, fsConstants.COPYFILE_EXCL);
+      };
       const copyTree = (from: string, to: string): void => {
         const entries = readdirSync(from, { withFileTypes: true });
         if (!entries.length) return;
-        mkdirSync(to);
+        ensureDir(to);
         for (const ent of entries) {
           const s = join(from, ent.name);
           const d = join(to, ent.name);
           if (ent.isDirectory()) copyTree(s, d);
-          else if (ent.isFile()) copyFileSync(s, d, fsConstants.COPYFILE_EXCL);
+          else if (ent.isFile()) copyFile(s, d);
         }
       };
-      for (const ent of readdirSync(srcDir, { withFileTypes: true })) {
-        const s = join(srcDir, ent.name);
-        const d = join(destDir, ent.name);
-        rmSync(d, { recursive: true, force: true });
-        if (ent.isDirectory()) copyTree(s, d);
-        else if (ent.isFile()) copyFileSync(s, d, fsConstants.COPYFILE_EXCL);
-      }
+      // Walk down from the agent folder one component at a time, so no part of
+      // the path to destDir can be a link either.
+      let at = agentDir;
+      for (const part of relative(agentDir, destDir).split(/[\\/]/).filter(Boolean)) ensureDir(at = join(at, part));
+      copyTree(srcDir, destDir);
     } catch (e) { console.error('[hive] copyBundledSkills failed:', e); }
   }
 

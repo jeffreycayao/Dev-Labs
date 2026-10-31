@@ -127,12 +127,15 @@ test('a link planted in the agent folder cannot redirect the unsandboxed skills 
   assert.equal(fs.lstatSync(skill).isSymbolicLink(), false);
   assert.ok(fs.readFileSync(path.join(skill, 'SKILL.md'), 'utf8').startsWith('---'));
 
-  // The skills root itself behind a link: nothing is copied through it.
+  // A link higher up the path: dropped as a link and rebuilt as a real folder,
+  // so nothing is copied through it.
   fs.rmSync(path.join(agentDir, '.claude'), { recursive: true, force: true });
   link(victim, path.join(agentDir, '.claude'));
   await hive.ensureAgent(meta, { skillsDir: SKILLS });
-  assert.equal(fs.existsSync(path.join(victim, 'skills', 'ponytail')), false);
+  assert.equal(fs.existsSync(path.join(victim, 'skills')), false);
   assert.equal(fs.readFileSync(path.join(victim, 'SKILL.md'), 'utf8'), 'precious');
+  assert.equal(fs.lstatSync(path.join(agentDir, '.claude')).isSymbolicLink(), false);
+  assert.ok(fs.existsSync(path.join(agentDir, '.claude', 'skills', 'ponytail', 'SKILL.md')));
 });
 
 test('a Codex agent gets the bundled skills in its isolated CODEX_HOME', async (t) => {

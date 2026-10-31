@@ -4,7 +4,7 @@ import type { TFunction } from 'i18next';
 import { useStore } from '@/store/store';
 import { PixelBadge } from './PixelBadge';
 import { Icon } from './Icon';
-import type { MessageAct } from '@/scene/office/MessageEnvelope';
+import type { MessageAct } from './memoryGraph/buildGraph';
 import {
   buildGraph,
   type GraphData,

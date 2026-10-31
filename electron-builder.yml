@@ -75,6 +75,14 @@ extraResources:
     to: LICENSE-ASSETS
   - from: resources/md-slack-reply.cjs
     to: md-slack-reply.cjs
+  # Bundled MCP connectors (Obsidian, Discord) + their shared stdio loop. Agents
+  # launch them with the app's own Node; they require each other as siblings.
+  - from: resources/md-mcp-stdio.cjs
+    to: md-mcp-stdio.cjs
+  - from: resources/md-obsidian-mcp.cjs
+    to: md-obsidian-mcp.cjs
+  - from: resources/md-discord-mcp.cjs
+    to: md-discord-mcp.cjs
   # Knowledge Graph agent CLI + its pure-JS core. Agents invoke `node
   # <resources>/kg.cjs` out-of-process; kg-core.cjs ships beside it so the CLI's
   # `require('./kg-core.cjs')` resolves outside the asar.

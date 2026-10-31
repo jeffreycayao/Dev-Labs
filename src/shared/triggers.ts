@@ -63,7 +63,7 @@ export function classifyInboundKind(text: string): InboundKind {
   // A leading question with no imperative reads as someone asking, not tasking.
   const asksOnly = /^(what|how|when|where|who|why|is|are|do|does|did|can|could|status|any)\b/.test(t)
     && t.endsWith('?')
-    && !/\b(fix|build|ship|deploy|run|write|create|add|remove|delete|refactor|implement|update|merge|revert)\b/.test(t);
+    && !/\b(fix|build|ship|deploy|run|write|create|add|remove|delete|refactor|implement|update|merge|revert|drop|push|force|reset|wipe|erase|destroy|truncate|overwrite|rebase|commit|publish|release|install|kill|restart)\b/.test(t);
   return asksOnly ? 'communication' : 'directive';
 }
 

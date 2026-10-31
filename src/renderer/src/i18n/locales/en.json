@@ -170,26 +170,6 @@
     "seeTheWall": "see the wall",
     "joinDiscord": "join Discord"
   },
-  "officeTheme": {
-    "title": "Office Theme",
-    "tvShow": "TV-show office themes",
-    "experimental": "experimental",
-    "desc": "Change the pixel office look. Your hired agents stay on the floor.",
-    "current": "current",
-    "soon": "soon",
-    "notBuiltYet": "{{label}} isn't built yet — showing the office for now.",
-    "switchAborted": "Could not switch the office theme: {{error}}",
-    "confirmTitle": "SWITCH OFFICE TO \"{{label}}\"?",
-    "startsFreshCast": "STARTS A FRESH CAST",
-    "deleteCount": "Your {{count}} current agent will be deleted — their terminals close and any in-progress work stops.",
-    "deleteCountPlural": "Your {{count}} current agents will be deleted — their terminals close and any in-progress work stops.",
-    "onlyCarries": "Only {{god}} carries over.",
-    "stillWorking": "⚠ {{count}} agent is still working.",
-    "stillWorkingPlural": "⚠ {{count}} agents are still working.",
-    "cantUndo": "This can't be undone.",
-    "switching": "switching…",
-    "deleteSwitch": "delete {{count}} & switch"
-  },
   "settings": {
     "title": "SETTINGS",
     "changeHomeTitle": "CHANGE HOME FOLDER",
@@ -781,13 +761,22 @@
       "best boss ever. genuinely."
     ],
     "gossip": [
-      "has he ever actually written code?",
-      "another 'quick sync' that took an hour…",
-      "'world's best boss' — he bought that mug himself",
-      "he pinned MY task as his idea",
-      "the cigar smell, honestly…",
-      "he watered the plant. ONE plant. his own.",
-      "did you hear him? 'I DECLARE… a break'"
+      "Mars, si boss nag-'quick sync' na naman. 2 hours. Quick daw.",
+      "Teh, yung PR kanina? 47 files. 'Minor fix' lang daw.",
+      "Friday deploy kagabi, Mars. FRIDAY. Lakas ng loob.",
+      "Sino nag-force push sa main? Walang aamin, sige lang.",
+      "'ASAP' daw. Eh lahat naman ASAP kay boss.",
+      "'Tapos na' daw. Tapos na ba talaga, o tapos-tapos lang?",
+      "Yung bug na 'fixed na'? Bumalik. Parang ex mo.",
+      "Chika: may nag-LGTM nang hindi binabasa. Hindi ako 'yon ha.",
+      "Shh… papalapit si boss. Kunwari sprint ang pinag-uusapan natin.",
+      "Daming meeting, bes. Kailan pa tayo magko-code?",
+      "'TODO: fix later' — 2019 pa. Ngayon na 'yung later, Mars.",
+      "Babalik daw yung legacy code. Huwag naman, Lord.",
+      "Kape sa pantry, pang-tatlong araw na. Parang deadline natin.",
+      "Mahabang kwento 'to, Mars. Mga tatlong standup ang haba.",
+      "May bagong framework na naman daw. Hindi pa nga tapos yung luma.",
+      "'It works on my machine' daw. Eh di sa machine mo i-deploy."
     ],
     "cheer": [
       "done! ✔",
@@ -810,6 +799,21 @@
       "looping": "looping — breaker armed",
       "runningFloor": "running the floor",
       "idle": "idle"
+    },
+    "levels": {
+      "floor": "Floor {{n}}",
+      "addFloor": "Add floor",
+      "moveTo": "Move {{name}} to",
+      "moveHint": "Pick an agent on the roster to move it to another floor.",
+      "full": "Floor {{n}} is full ({{max}} agents max).",
+      "count": "{{count}}/{{max}} agents",
+      "deleteFloor": "Delete floor {{n}}",
+      "deleteConfirm": "Delete Floor {{n}}? Its furniture layout is removed, and the floors above it move down one.",
+      "deleteBlocked": "Floor {{n}} still has agents. Move them to another floor first."
+    },
+    "avatar": {
+      "edit3d": "3D look",
+      "personality": "personality"
     }
   },
   "setupPanel": {
@@ -883,6 +887,35 @@
       "savedNote": "{{label}} key saved. New agents will connect.",
       "clearedNote": "{{label}} key removed.",
       "needsKey": "On, but agents won't connect until you save a key."
+    },
+    "setupShow": "How to set up",
+    "setupHide": "Hide steps",
+    "setup": {
+      "obsidian": [
+        "Open Obsidian and create or open the vault you want agents to use. Any folder works.",
+        "Press “choose folder” below and pick that vault’s folder.",
+        "Switch Obsidian on, then start a new agent. It can save notes, learnings and decisions, add to today’s daily note, and search and read the vault.",
+        "Agents only touch that folder. They never open the .obsidian settings folder and never overwrite or delete a note: saving to the same title adds an update.",
+        "Optional: for Obsidian’s own features, install the “Local REST API” community plugin and add it under Connected services with the Obsidian Local REST API template."
+      ],
+      "discord": [
+        "Go to discord.com/developers/applications and press New Application. Name it, for example DevLabs.",
+        "Open Bot, press Reset Token, copy the token, paste it in the field above and press save. It is stored encrypted.",
+        "On the same Bot page, turn on Message Content Intent so the bot can read messages in your channels.",
+        "Open OAuth2 → URL Generator. Tick “bot”, then View Channels, Send Messages and Read Message History. Open the link it makes and add the bot to your server.",
+        "Switch Discord on, then start a new agent. Agents can post to channels, read recent messages and list channels. Messages they post never ping anyone.",
+        "To let a Discord message start work, open the Triggers tab → Discord, add channel ids and turn it on. Then @-mention the bot in that channel."
+      ]
+    },
+    "vault": {
+      "none": "No vault chosen",
+      "choose": "choose folder",
+      "clear": "clear",
+      "savedNote": "Vault set. New agents will connect.",
+      "clearedNote": "Vault cleared.",
+      "missing": "This folder no longer exists. Choose it again.",
+      "notVault": "Obsidian hasn’t opened this folder yet. Notes are still saved; open it as a vault in Obsidian to browse them.",
+      "needsVault": "On, but agents won’t connect until you choose a vault."
     }
   },
   "devicePicker": {
@@ -944,7 +977,9 @@
     "webhooks": "WEBHOOKS",
     "webhooksBlurb": "Let an outside system post work in.",
     "organisation": "ORGANISATION",
-    "organisationBlurb": "Let a teammate's DevLabs message yours."
+    "organisationBlurb": "Let a teammate's DevLabs message yours.",
+    "discord": "DISCORD",
+    "discordBlurb": "Start work by @-mentioning your bot in Discord."
   },
   "orgSection": {
     "acceptMessages": "Accept messages from your organisation",
@@ -1548,5 +1583,57 @@
       "too-many": "too many files",
       "total-too-large": "delivery over 200 MB"
     }
+  },
+  "company": {
+    "openBtn": "Build a company",
+    "openBtnTitle": "Describe a company and get a whole team planned for you",
+    "title": "Build a company",
+    "intro": "Describe the company or project. A planner suggests a team with roles and personalities. You review everyone before anyone is hired.",
+    "describeLabel": "What does the company do?",
+    "describePlaceholder": "e.g. A small online bakery. We need help with the website, social posts and answering customer emails.",
+    "generate": "Plan my team",
+    "regenerate": "Plan again",
+    "generating": "Planning your team. This can take up to a minute.",
+    "teamCount": "Planned team: {{count}} agents",
+    "review": "Review & hire",
+    "errEmpty": "Describe the company first.",
+    "brainIntro": "Give this agent a personality. It is saved as its own section in {{file}} in the agent's folder; the rest of that file is left alone. The agent picks it up in its next session.",
+    "brainNoFolder": "This agent has no folder, so there is nowhere to save a personality.",
+    "brainReadError": "Couldn't read {{file}}: {{error}}. Nothing was changed. Check the file, then reopen this tab.",
+    "brainWriteError": "Couldn't save {{file}}: {{error}}. Check that the folder is writable and try again.",
+    "brainPreview": "Preview of the section in {{file}}",
+    "brainSave": "Save personality",
+    "brainSaved": "Saved to {{file}}.",
+    "brainField": {
+      "identity": "Who they are",
+      "vibe": "Vibe",
+      "coreTruths": "Core truths",
+      "boundaries": "Boundaries",
+      "communication": "How they communicate",
+      "userContext": "About you"
+    },
+    "brainHint": {
+      "identity": "e.g. You are the team's docs writer.",
+      "vibe": "e.g. Warm, calm, a little dry.",
+      "coreTruths": "Principles they work by, one per line.",
+      "boundaries": "What they must not do, and when to stop and ask.",
+      "communication": "e.g. Short updates, bullet points, no jargon.",
+      "userContext": "Who you are and what you care about."
+    }
+  },
+  "discordSection": {
+    "listen": "Listen for @-mentions of the bot",
+    "channels": "CHANNEL IDS",
+    "channelsPlaceholder": "paste channel ids or channel links, one per line",
+    "channelsHint": "In Discord: Settings → Advanced → Developer Mode on, then right-click a channel → Copy Channel ID. Up to 20 channels.",
+    "save": "save channels",
+    "howItWorks": "When an allowed person @-mentions the bot in one of these channels, the bot answers “Received” and the message goes to {{godName}}’s queue, which runs it without asking. DevLabs checks every 5 seconds. Switch on the Discord connector in Settings → Connections so agents can post the answer back.",
+    "noToken": "no token",
+    "noTokenWarning": "No bot token yet. Save it in Settings → Connections → Discord first.",
+    "listening": "Listening as {{name}}. Accepting requests from: {{users}}.",
+    "channelError": "Can’t read channel {{id}}: {{error}}. Check the bot was added to that server and can see the channel.",
+    "users": "WHO CAN START WORK (USER IDS)",
+    "usersPlaceholder": "leave empty for just the bot’s owner (you)",
+    "usersHint": "Only these Discord users can start work; everyone else is ignored. Empty means the owner of the bot application. Right-click a person → Copy User ID."
   }
 }

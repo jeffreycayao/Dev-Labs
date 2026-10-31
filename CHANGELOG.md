@@ -4,6 +4,57 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **Delete empty office floors.** Open an empty floor in the floor bar and click **− Delete floor N**. After you confirm, the floor and its furniture layout are removed, and the floors above it move down one with their own layouts and agents. A floor that still has agents can't be deleted (the button is grey until you move them), and Floor 1, Ramon's floor, can't be deleted at all. Deleting a floor never deletes an agent or any work.
+- **Website:** the landing page now shows the 3D office, and the online User Guide (devlabs.atmt.dev/guide) matches the new plain-language guide in the app's docs.
+
+- **Safety fixes from a full code audit.**
+  - Your connector keys can no longer end up in an agent's saved history. Each agent's `mcp.json` (which holds keys) is now kept out of the hive's git history, memory search and floor backups. If an older copy was already saved, it is removed from tracking. Copies in past history stay there.
+  - A shared "hire" file can no longer slip its own instructions to a new agent by hiding them after the `--verbose` option.
+  - A paused or stopped agent can no longer get around the pause with a very large tool request: the stop answer now always gets through.
+  - Webhook senders can no longer skip the approval check by labelling a message "just talk". Risky words like *reset*, *push*, *wipe* or *delete* are always held for your approval.
+  - If you change where an integration sends requests (its address or sign-in type), the saved key is deleted, so the old key never goes to the new address. Type the key again when you save.
+  - A new weekly mission no longer runs the moment you save it. It waits for its first scheduled time.
+  - Website previews on office screens open in a locked-down frame and only accept normal web links.
+- **Steadier and faster.**
+  - The 3D office pauses drawing while a full-screen terminal or the editor covers it. This saves power and keeps typing smooth.
+  - Terminal history keeps the last 10,000 lines per agent, so a busy agent's memory use doesn't grow forever. A removed agent's terminal is cleaned up too.
+  - Settings, keys and agent lists are saved in a way that can't leave a half-written file if the app closes mid-save.
+  - Agent activity is saved to the hive in batches of up to 10 seconds instead of on every action, and everything left over is saved when you quit.
+  - Qwen agents' costs are now added up correctly.
+  - The Discord trigger can't start twice if you switch it off and on quickly, and Spotify no longer refreshes its sign-in twice at once.
+- **Smaller app.** The old 2D office (and its `pixi.js` engine), the unused code editor and file tabs (and 6 `@codemirror` language packages), and the office theme picker are gone. The 3D office replaced all of them.
+
+- **More room on screen.** The office now fills almost the whole window (thin 6px frame instead of 16px), the agent cards strip at the bottom is about a third shorter, and the floor bar sits on one line at the bottom right of the office instead of wrapping and covering the status line.
+- **New plain-language User Guide** (`docs/USER_GUIDE.md`) for people who don't code: a word list, a tour of the screen, your first task step by step, every button explained, money and safety tips, troubleshooting and quick answers. The README now opens with a live GIF of the office, a screenshot of the full app and a 5-minute quick start.
+- **New 3D office.** The office floor is now a 3D scene ported from Claw3D (MIT): cartoon agents, desks, a kitchen, a gym, a server room and a QA lab. Click an agent to open it, or use its edit button to edit it.
+  - **Edit the office:** press the pencil button (top right) to add, move, rotate or delete walls, doors, desks and other furniture. Your layout is saved on this computer. **Reset** puts back the default layout.
+  - **Ramon's boss office:** the walled room by the ATM (marked BOSS) is Ramon's office. Whenever he has work he goes to his desk there; he only walks around and chats when he is idle.
+  - **Agents sit at their desks properly.** The desk model was drawn half a desk away from where the office thought it was, so agents ended up inside the desk and monitor. Desks, monitors and chairs now line up, and agents sit on the chair facing the screen. An agent with no route to its first spot now starts there instead of freezing in place.
+  - **Full screen:** the new full-screen button (top right) hides the header, the agent strip and the side panel and fills the screen with the office. Press it again or Esc to leave. The walking-trails button now has a footprints icon.
+  - **Office screens use the brand look.** The settings, jukebox, QA lab, server room, ATM, stand-up and avatar screens now use the DevLabs colours (lime, orange accent, dark) and lowercase Plus Jakarta Sans headings instead of Claw3D's amber, cyan and violet. Fixed the jukebox buttons showing as plain white circles.
+  - **Moving the camera:** drag to move around, right-drag to turn, scroll to zoom toward the pointer. Double-click or the overview button (top left) fits the whole office in view.
+  - **Floors:** up to 15 agents per floor, plus Ramon, who always stays on Floor 1. New hires go to the first floor with room, and a new floor opens when all are full. **Add floor** (bottom) adds an empty one. To move an agent, select it, then pick a floor next to **Move to**. Each floor has its own layout.
+  - **Desks and breaks:** every agent has its own desk (16 per floor; Ramon gets the one by the lounge). Working agents sit at their desk. Idle agents get coffee, hang around the kitchen and cafeteria tables, and stop to chat when they meet.
+  - **Kanban board:** opens the app's task board.
+  - **Neo-Manila look:** woven banig floor, narra walls, glowing capiz windows, jeepney stripes, neon trim, hanging parol lanterns, a MABUHAY sign and the Philippine flag.
+  - **Chatter bubbles are back:** idle agents trade Taglish chika at the coffee machine and tables, trade witty Pinoy chismis (Friday deploys, 'minor fix' PRs with 47 files, the bug that came back like an ex), suck up to Ramon when he's near, and cheer when they finish a task. An agent's latest reply also shows over their head for a few seconds.
+  - **Everything in the office works now:**
+    - **Server room:** GitHub pull requests for the selected agent's project: review, approve, request changes, comment on a line. Uses your `gh` sign-in.
+    - **ATM:** cost and token spend per agent and per day from your local cost ledger, behind a PIN.
+    - **Meeting table:** a stand-up. Agents walk to the table and read out their tasks, blockers and recent commits.
+    - **Computers:** click an agent's computer to see its recent tools, commands and the last file it touched.
+    - **Phone and text booths:** short scripted call and text scenes.
+    - **Jukebox:** Spotify (Premium) playback and search; agents dance while it plays.
+    - **Janitors** sweep the floor when an agent restarts or clears its context, and the roster shows 💬 💻 ☕ reactions.
+  - **Agents walk on their own:** tell an agent "go to the gym", "review PRs", "write tests", "call Maya and tell her …" or "text Joseph saying …" and it walks there. Agents that run tests go to the QA lab. Fixed an upstream bug that kept everyone out of the gym and QA lab.
+  - **3D look and personality:** **Edit agent** now has **3D look** (hair, clothes, hats, colours) and **personality** (a personality section in the agent's CLAUDE.md / AGENTS.md / GEMINI.md).
+  - **Company builder:** in **Add agent**, describe a company and get a planned team to review and hire.
+  - **Spoken replies:** optional, with your ElevenLabs key (office gear button).
+  - Office layouts start fresh with this version (the desk grid moved).
+- **New connector: Obsidian.** Agents and Ramon can save notes, learnings and decisions to your Obsidian vault and read them back. Notes get frontmatter, tags and [[links]]; there's a daily note log and search. Pick the vault folder in Settings → Connections → Obsidian, switch it on, and start a new agent. Agents only touch that folder, never the `.obsidian` settings, and never overwrite or delete a note. Obsidian doesn't need to be open. For Obsidian's own features, the **Obsidian Local REST API** plugin is now a template under Connected services.
+- **New connector: Discord.** Agents can post to your Discord channels, read recent messages and list channels, as your own bot. Paste the bot token in Settings → Connections → Discord (stored encrypted); agents reach Discord through the app's local proxy and never see the token. Their posts never ping anyone.
+- **New trigger: Discord.** @-mention your bot in a watched channel and the request goes to Ramon's queue, like Slack. The bot replies "Received", and the agent that does the work posts the answer back in the channel. Set it up in the Triggers tab → Discord. Only people you allow can start work (by default just the bot's owner, you); anyone else in the channel is ignored. Nothing listens on your computer: DevLabs checks the channels every 5 seconds.
+- **More room for agent replies.** In the side panel, Ramon's tabs are now one row of icons (hover for the name; the open tab shows its name). An agent's pause, stop and steer controls share one row. Focus mode is unchanged.
 - **Website moved to https://devlabs.atmt.dev.** Links in the app's Help and About, the README, guides and privacy policy now point there. jepoy.dev stays as the developer credit.
 - **Removed leftover sign-in data.** Versions with sign-in kept an encrypted account token in `license.json` in the app's data folder, and nothing deleted it after sign-in was removed. DevLabs now deletes it on start, from its own folder and from older Jepoy Floor AI / ATMT Labs folders, and never copies it forward. The account service it belonged to (auth.labs.atmt.dev / api.labs.atmt.dev) is already offline.
 

@@ -53,6 +53,13 @@ import {
 import { transcribeWithGroq, DEFAULT_GROQ_MODEL } from './freeflow';
 import { registerRealtimeIpc } from './realtime';
 import { registerRealtimeActionIpc } from './realtimeActions';
+// 3D office features ported from Claw3D (see src/main/office/).
+import { registerGithubPrIpc } from './office/githubPr';
+import { registerUsageAnalyticsIpc } from './office/usageAnalytics';
+import { registerStandupIpc } from './office/standup';
+import { registerVoiceReplyIpc } from './office/voiceReply';
+import { registerCompanyBuilderIpc } from './office/companyBuilder';
+import { registerSpotifyIpc } from './office/spotify';
 import { initCompletionWatcher } from './realtimeCompletionWatcher';
 import type { TaskCard, InboxMessage } from './realtimeCompletionWatcher';
 import { TelemetryCollector } from './telemetry';
@@ -61,7 +68,9 @@ import { analytics, isRendererMessageSurface } from './analytics';
 import type { SpawnFailReason } from './analytics';
 import { IntegrationBroker } from './integrationBroker';
 import * as integrations from './integrations';
-import { MCP_CATALOG, mcpCatalogEntry, mcpSecretRef, mcpBrokerId, mcpUpstream, isHttpSpec, enabledHttpEntries } from '../shared/mcpCatalog';
+import { MCP_CATALOG, mcpCatalogEntry, mcpSecretRef, mcpBrokerId, mcpBrokerTarget, enabledBrokeredEntries } from '../shared/mcpCatalog';
+import { DiscordPoller, postDiscordMessage } from './discord';
+import { normalizeDiscordTrigger, DEFAULT_DISCORD_TRIGGER, type DiscordTriggerConfig } from '../shared/discord';
 import type { IntegrationRecord } from '../shared/integrations';
 import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';
 import { RosterStore } from './roster';
@@ -406,8 +415,9 @@ const integrationBroker = new IntegrationBroker({
 });
 
 /**
- * Vendor-hosted MCP connectors (e.g. Pancake POS) are proxied through the broker
- * as SYNTHETIC integration records derived from the catalog, not from the user's
+ * Brokered MCP connectors (vendor-hosted ones like Pancake POS, and local ones
+ * with an `upstream` like Discord) are proxied through the broker as SYNTHETIC
+ * integration records derived from the catalog, not from the user's
  * integrations list: the vendor origin is fixed by the catalog (an agent can't
  * point it anywhere else), the key is the encrypted `mcp:<id>` secret, and the
  * record is enabled only while the user has the connector switched on.
@@ -415,15 +425,14 @@ const integrationBroker = new IntegrationBroker({
 function mcpBrokerRecord(brokerId: string): IntegrationRecord | undefined {
   if (!brokerId.startsWith('mcp-')) return undefined;
   const entry = MCP_CATALOG.find((e) => mcpBrokerId(e.id) === brokerId);
-  if (!entry || !isHttpSpec(entry.spec) || entry.secret?.kind !== 'header') return undefined;
+  const target = entry && mcpBrokerTarget(entry);
+  if (!entry || !target) return undefined;
   const now = Date.now();
   return {
     id: brokerId,
     label: entry.label,
     kind: 'custom-rest',
-    baseUrl: mcpUpstream(entry.spec).baseUrl,
-    authType: 'header',
-    authHeader: entry.secret.name,
+    ...target,
     secretRef: mcpSecretRef(entry.id),
     enabled: readConfig().mcpDefaults?.[entry.id]?.enabled === true,
     createdAt: now,
@@ -1471,6 +1480,11 @@ function slackReplyScriptPath(): string {
     : join(app.getAppPath(), 'resources', 'md-slack-reply.cjs');
 }
 
+/** Where bundled helper scripts live: extraResources when packaged, repo `resources/` in dev. */
+function bundledResourcesDir(): string {
+  return app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources');
+}
+
 /** Bundled user guide (resources/help): extraResources when packaged, repo in dev. */
 function helpResourceDir(): string {
   return app.isPackaged
@@ -1866,6 +1880,77 @@ function stopSlackServer(): void {
   try { if (existsSync(slackReplyConfigPath())) unlinkSync(slackReplyConfigPath()); } catch { /* noop */ }
 }
 
+// ─── Discord trigger (Discord @-mention → Ramon's queue) ────────────────────
+/** The running poller, or null when the trigger is off/stopped. */
+let discordPoller: DiscordPoller | null = null;
+/** Why the last start failed (bad token, no channels), for the Triggers tab. */
+let discordStartError: string | undefined;
+
+/** The bot token is the Discord CONNECTOR's key: one token for both directions. */
+const discordBotToken = (): string | undefined => integrations.getSecret(mcpSecretRef('discord'));
+
+/** Ramon's working instruction for a Discord-origin request: route it, and have
+ *  the result posted back as a reply through the Discord connector. */
+function buildDiscordRequestProtocol(channelId: string, messageId: string): string {
+  return `[AUTONOMOUS REQUEST PROTOCOL — this request arrived via Discord; no interactive human is watching] Handle it under this protocol:
+1. ROUTE FAST — check the live roster first and hand it to the single best-fit agent (an existing one if it fits, especially one the message names). Don't sit on it.
+2. REPLY IN DISCORD — the agent posts its substantive result (short **bold** headline + the actual outcome) with the Discord connector's send_message tool: channel_id ${channelId}, reply_to ${messageId}. If that agent has no Discord tool, it tells you and you post the result the same way.
+3. AUTONOMOUS EXECUTION — no interactive questions. Ask first (by posting the question with numbered options to that channel) ONLY before pushing to a remote, buying or starting paid services, or deleting anything it did not create.
+The user's message starts now: `;
+}
+
+/** Bumped by every stop. A start that was superseded while `poller.start()` was
+ *  in flight sees a changed value and stops its own poller instead of installing
+ *  it, so two quick toggles can never leave two pollers running. */
+let discordGeneration = 0;
+
+async function startDiscordTrigger(): Promise<{ ok: boolean; error?: string; botName?: string }> {
+  stopDiscordTrigger();
+  const generation = discordGeneration;
+  const cfg = normalizeDiscordTrigger(readConfig().discordTrigger);
+  if (!cfg.enabled) return { ok: false, error: 'The Discord trigger is off.' };
+  const poller = new DiscordPoller({
+    getToken: discordBotToken,
+    channelIds: cfg.channelIds,
+    allowedUserIds: cfg.allowedUserIds,
+    onMessage: (m) => {
+      // Ack in Discord right away, as a reply to the user's own message.
+      const token = discordBotToken();
+      if (token) void postDiscordMessage({ token, channelId: m.channelId, replyTo: m.messageId, content: '⏳ **Received.** Queued for the team; the answer will be posted here.' });
+      try {
+        liveWebContents()?.send('discord:incomingMessage', {
+          text: m.text, channelId: m.channelId, messageId: m.messageId, author: m.author,
+          autonomyPreamble: buildDiscordRequestProtocol(m.channelId, m.messageId)
+        });
+      } catch { /* window torn down */ }
+    }
+  });
+  const r = await poller.start();
+  if (generation !== discordGeneration) {
+    try { poller.stop(); } catch (e) { console.error('[discord] stop failed:', e); }
+    return { ok: false, error: 'The Discord trigger was restarted or turned off.' };
+  }
+  discordStartError = r.ok ? undefined : r.error;
+  if (r.ok) discordPoller = poller;
+  return r;
+}
+
+function stopDiscordTrigger(): void {
+  discordGeneration++;
+  try { discordPoller?.stop(); } catch (e) { console.error('[discord] stop failed:', e); }
+  discordPoller = null;
+}
+
+function discordStatus(): { running: boolean; botName?: string; allowedUserIds: string[]; error?: string; channelErrors: Record<string, string> } {
+  return {
+    running: !!discordPoller?.running(),
+    botName: discordPoller?.botName || undefined,
+    allowedUserIds: discordPoller?.allowed ?? [],
+    error: discordStartError,
+    channelErrors: Object.fromEntries(discordPoller?.errors ?? [])
+  };
+}
+
 // ─── Generic inbound webhook + status API (multi-endpoint) ───────────────────
 /** The running generic-webhook server, or null when disabled/stopped. A PUBLIC
  *  (tunnel-forwarded) surface — secret-gated, unlike the loopback /reply. ONE
@@ -2029,9 +2114,10 @@ function handleWebhookMessage(msg: WebhookInbound, endpoint: WebhookEndpointRef)
   // An endpoint that vanished between the request and this lookup falls back to
   // the STRICTEST mode, never the most permissive one.
   const mode: TriggerMode = trigger?.mode ?? DEFAULT_TRIGGER_MODE;
-  // The caller's own declaration wins; `classifyInboundKind` is the conservative
-  // guess for callers that don't declare (it leans 'directive' on purpose).
-  const kind: InboundKind = msg.kind ?? classifyInboundKind(msg.message);
+  // A sender may only make its message STRICTER: a self-declared 'communication'
+  // would let `{"kind":"communication","message":"delete the repo"}` through
+  // communication-only mode. Anything else goes to the conservative classifier.
+  const kind: InboundKind = msg.kind === 'directive' ? 'directive' : classifyInboundKind(msg.message);
   const peer = msg.from?.trim() || endpoint.name || endpoint.id;
   // Minted here, not derived from the task id, because a HELD message has no task
   // id yet and must still be pairable with the reply it eventually earns.
@@ -2983,11 +3069,18 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
           // revoked with the rest in teardownPty).
           mcpSecret: (id) => integrations.getSecret(mcpSecretRef(id)),
           mcpBroker: (() => {
-            const remote = enabledHttpEntries(readConfig().mcpDefaults);
+            const remote = enabledBrokeredEntries(readConfig().mcpDefaults);
             if (!remote.length || !integrationBroker.running()) return undefined;
             const token = integrationBroker.extend(opts.id, remote.map((e) => mcpBrokerId(e.id)));
             return { url: integrationBroker.url(), token };
           })(),
+          // Bundled connectors run on the app's own Node (ELECTRON_RUN_AS_NODE in
+          // their spec) from the resources dir; Obsidian also needs its vault.
+          mcpVars: {
+            node: process.execPath,
+            resources: bundledResourcesDir(),
+            ...(readConfig().obsidianVault ? { 'obsidian-vault': readConfig().obsidianVault! } : {})
+          },
           onMcpSkipped: (skipped) => {
             for (const s of skipped) console.warn(`[mcp] ${s.id} not attached to ${opts.id}: ${s.reason}`);
           },
@@ -3559,6 +3652,7 @@ ipcMain.handle('config:changeHome', async (_evt, payload: unknown) => {
   try { hive.stopRouter(); } catch (e) { console.error('[changeHome] stopRouter:', e); }
   try { hookServer.stop(); } catch (e) { console.error('[changeHome] hookServer.stop:', e); }
   try { stopSlackServer(); } catch (e) { console.error('[changeHome] slack.stop:', e); }
+  try { stopDiscordTrigger(); } catch (e) { console.error('[changeHome] discord.stop:', e); }
   try { stopWebhookServer(); } catch (e) { console.error('[changeHome] webhook.stop:', e); }
   try { memory.stop(); } catch (e) { console.error('[changeHome] memory.stop:', e); }
   try { reflector.stop(); } catch (e) { console.error('[changeHome] reflector.stop:', e); }
@@ -3583,6 +3677,7 @@ ipcMain.handle('config:changeHome', async (_evt, payload: unknown) => {
       bootstrapHiveServices();
       const cfg = readConfig();
       if (cfg.slackEnabled && cfg.slackSigningSecret) void startSlackServer();
+      if (normalizeDiscordTrigger(cfg.discordTrigger).enabled) void startDiscordTrigger();
       reconcileWebhookServer();
       return { ok: false, error: `Could not copy data: ${e instanceof Error ? e.message : String(e)}` };
     }
@@ -3728,10 +3823,12 @@ ipcMain.handle('git:checkout', async (_evt, cwd: unknown, ref: unknown, detach: 
   // in the last 10s is treated as mid-run. (Idle-but-open terminals are fine:
   // checkoutRef additionally requires a clean tree, and TUIs redraw on fs
   // changes gracefully.)
-  const busy = ptyManager.list().find((p) =>
-    (p.cwd === cwd || p.cwd.startsWith(cwd.endsWith('/') ? cwd : `${cwd}/`)) &&
-    Date.now() - p.lastOutputAt < 10_000
-  );
+  // path.relative, not a `cwd + '/'` prefix: Windows cwds use `\` and vary in case.
+  const busy = ptyManager.list().find((p) => {
+    const rel = relative(resolve(cwd), resolve(p.cwd));
+    const inside = rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
+    return inside && Date.now() - p.lastOutputAt < 10_000;
+  });
   if (busy) {
     return { ok: false, error: `an agent is actively working in this repo (${busy.id}) — try again when it goes quiet` };
   }
@@ -4119,6 +4216,7 @@ function teardownAndQuit(): void {
   try { hookServer.stop(); } catch (e) { console.error('[quit] hookServer.stop:', e); }
   try { telemetry.stop(); } catch (e) { console.error('[quit] telemetry.stop:', e); }
   try { stopSlackServer(); } catch (e) { console.error('[quit] slack.stop:', e); }
+  try { stopDiscordTrigger(); } catch (e) { console.error('[quit] discord.stop:', e); }
   try { stopWebhookServer(); } catch (e) { console.error('[quit] webhook.stop:', e); }
   try { memory.stop(); } catch (e) { console.error('[quit] memory.stop:', e); }
   try { reflector.stop(); } catch (e) { console.error('[quit] reflector.stop:', e); }
@@ -4180,6 +4278,7 @@ ipcMain.handle('app:resetAll', () => {
   try { hookServer.stop(); } catch (e) { console.error('[reset] hookServer.stop:', e); }
   try { telemetry.stop(); } catch (e) { console.error('[reset] telemetry.stop:', e); }
   try { stopSlackServer(); } catch (e) { console.error('[reset] slack.stop:', e); }
+  try { stopDiscordTrigger(); } catch (e) { console.error('[reset] discord.stop:', e); }
   try { memory.stop(); } catch (e) { console.error('[reset] memory.stop:', e); }
   try { reflector.stop(); } catch (e) { console.error('[reset] reflector.stop:', e); }
   try { persist.close(); } catch (e) { console.error('[reset] persist.close:', e); }
@@ -4249,6 +4348,7 @@ ipcMain.handle('app:resetFloor', async (_evt, backupPath: unknown) => {
   try { hookServer.stop(); } catch (e) { console.error('[floor-reset] hookServer.stop:', e); }
   try { telemetry.stop(); } catch (e) { console.error('[floor-reset] telemetry.stop:', e); }
   try { stopSlackServer(); } catch (e) { console.error('[floor-reset] slack.stop:', e); }
+  try { stopDiscordTrigger(); } catch (e) { console.error('[floor-reset] discord.stop:', e); }
   try { stopWebhookServer(); } catch (e) { console.error('[floor-reset] webhook.stop:', e); }
   try { memory.stop(); } catch (e) { console.error('[floor-reset] memory.stop:', e); }
   try { reflector.stop(); } catch (e) { console.error('[floor-reset] reflector.stop:', e); }
@@ -4438,8 +4538,11 @@ ipcMain.handle('missions:save', (_evt, missions) => {
     (readConfig().missions ?? []).map((m) => [m.id, m] as const)
   );
   const merged = incoming.map((m) => {
-    const prevLastFired = persistedById.get(m.id)?.lastFiredAt ?? 0;
-    const lastFiredAt = Math.max(m.lastFiredAt ?? 0, prevLastFired) || undefined;
+    const prev = persistedById.get(m.id);
+    // A NEW mission starts its clock now. Unstamped, the scheduler reads the slot
+    // that just passed (or a zero interval) as missed and fires it on save.
+    if (!prev) return { ...m, lastFiredAt: Date.now() };
+    const lastFiredAt = Math.max(m.lastFiredAt ?? 0, prev.lastFiredAt ?? 0) || undefined;
     return { ...m, lastFiredAt };
   });
   writeConfig({ missions: merged });
@@ -4584,6 +4687,41 @@ ipcMain.handle('slack:setConfig', (_evt, patch: unknown) => {
   const cfg = readConfig();
   if (!cfg.slackEnabled || !cfg.slackSigningSecret) stopSlackServer();
   return { ok: true };
+});
+
+// ─── IPC: Discord trigger ───────────────────────────────────────────────────
+ipcMain.handle('discord:getTrigger', (): DiscordTriggerConfig => normalizeDiscordTrigger(readConfig().discordTrigger ?? DEFAULT_DISCORD_TRIGGER));
+/** Persist the trigger, then start or stop the poller to match. Like Slack's
+ *  Stop, turning it off persists first so a restart doesn't bring it back. */
+ipcMain.handle('discord:setTrigger', async (_evt, arg: unknown) => {
+  const next = normalizeDiscordTrigger(arg);
+  writeConfig({ discordTrigger: next });
+  if (next.enabled) await startDiscordTrigger();
+  else { stopDiscordTrigger(); discordStartError = undefined; }
+  return discordStatus();
+});
+ipcMain.handle('discord:status', () => discordStatus());
+
+// ─── IPC: Obsidian vault ────────────────────────────────────────────────────
+function obsidianStatus(): { vault?: string; exists: boolean; isVault: boolean } {
+  const vault = readConfig().obsidianVault;
+  let exists = false;
+  try { exists = !!vault && statSync(vault).isDirectory(); } catch { /* missing */ }
+  return { vault, exists, isVault: exists && existsSync(join(vault!, '.obsidian')) };
+}
+ipcMain.handle('obsidian:status', () => obsidianStatus());
+/** Set (or clear, with null) the vault folder. Must be an existing absolute
+ *  directory; the connector is contained to it. */
+ipcMain.handle('obsidian:setVault', (_evt, p: unknown) => {
+  if (p === null) { writeConfig({ obsidianVault: undefined }); return { ok: true, ...obsidianStatus() }; }
+  if (typeof p !== 'string' || !isAbsolute(p)) return { ok: false, error: 'Choose a folder.', ...obsidianStatus() };
+  try {
+    if (!statSync(p).isDirectory()) return { ok: false, error: 'That is not a folder.', ...obsidianStatus() };
+  } catch {
+    return { ok: false, error: 'That folder does not exist.', ...obsidianStatus() };
+  }
+  writeConfig({ obsidianVault: p });
+  return { ok: true, ...obsidianStatus() };
 });
 
 // ─── IPC: Triggers — context (auto-compact / auto-clear) ────────────────────
@@ -4858,6 +4996,12 @@ ipcMain.handle('freeflow:transcribe', async (_evt, arg: unknown) => {
 // short-lived EPHEMERAL client secret; the real key never crosses IPC. All wiring
 // lives in ./realtime so this stays a single registration line.
 registerRealtimeIpc();
+registerGithubPrIpc();
+registerUsageAnalyticsIpc();
+registerStandupIpc();
+registerVoiceReplyIpc();
+registerCompanyBuilderIpc();
+registerSpotifyIpc();
 
 // ─── IPC: Realtime Ramon voice ACTIONS (rt-5, Phase 2) ─────────────────────
 // Thin adapters over the SAME main fns the god PTY already uses. ALL of the safety
@@ -5803,6 +5947,11 @@ app.whenReady().then(() => {
       else console.log('[slack] webhook listening', r.url ? `(tunnel: ${r.url})` : '(no tunnel)');
     });
   }
+  // Re-arm the Discord trigger when the user left it on (outbound polling only,
+  // nothing listens). A bad token is reported in the Triggers tab, not fatal.
+  if (normalizeDiscordTrigger(slackCfg.discordTrigger).enabled) {
+    void startDiscordTrigger().then((r) => { if (!r.ok) console.error('[discord] auto-start failed:', r.error); });
+  }
   // Auto-start the generic webhook only for endpoints the user has explicitly
   // enabled (each with its own secret) — never a default-on public surface.
   // Opt-in, like Slack; an install with no enabled endpoint opens no tunnel.
@@ -5867,6 +6016,8 @@ app.on('will-quit', (e) => {
   if (analyticsFlushed) return;
   analyticsFlushed = true;
   e.preventDefault();
+  // Hive commits are coalesced on a timer; land the last batch before exiting.
+  try { hive.flushCommit(); } catch (err) { console.error('[quit] hive.flushCommit:', err); }
   const finish = (): void => app.exit(0);
   Promise.race([
     analytics.endSession(),

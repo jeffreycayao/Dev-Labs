@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>User Guide · DevLabs</title>
-<meta name="description" content="How to install and use DevLabs: hire AI agents, build floors and a whole building, connect apps, and stay safe.">
+<meta name="description" content="A plain-language guide to DevLabs for people who don't code: install it, talk to your AI agents, use the 3D office and its floors, connect apps and stay safe.">
 <meta property="og:title" content="User Guide · DevLabs">
 <meta property="og:url" content="https://devlabs.atmt.dev/guide">
 <meta name="theme-color" content="#181C17">
@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="/assets/site.css?v=20261101">
+<link rel="stylesheet" href="/assets/site.css?v=20261101b">
 </head>
 <body>
 
@@ -37,172 +37,432 @@
   <article class="wrap doc">
     <div class="eyebrow"><span class="dot"></span>User guide</div>
     <h1>How to use DevLabs</h1>
-    <p class="lead">DevLabs turns the AI coding tools you already use into a team of agents in a virtual office. Each agent has its own desk, terminal, project folder, memory and inbox. <strong>Ramon</strong>, your orchestrator at the head desk, plans the work, hands it out and keeps the floor moving.</p>
+    <p class="lead"><strong>A plain-language guide for everyone. No coding knowledge needed.</strong></p>
+    <p>DevLabs is an app that gives you a <strong>team of AI helpers ("agents") working in a little 3D office on your computer</strong>. You tell the team what you want in normal words. The agents do the work: they write, research, build web pages, fix code, make documents. You watch them walk around the office, sit at their desks while they work, and chat at the coffee machine when they're free.</p>
+    <p>The boss of the office is <strong>Ramon</strong>. Think of him as your office manager: you tell Ramon what you need, and he decides which agent should do it, hands out the work, and checks it's done.</p>
+    <p><img src="/assets/img/devlabs-app.png" alt="The DevLabs office" width="1600" height="817" loading="lazy"></p>
+    <p>Download: <strong><a href="/#download">devlabs.atmt.dev</a></strong> · Ask for help: <strong><a href="https://github.com/jeffreycayao/Dev-Labs/issues">github.com/jeffreycayao/Dev-Labs/issues</a></strong> · Email: <strong><a href="mailto:hello@automatika.ph">hello@automatika.ph</a></strong></p>
 
     <nav class="toc" aria-label="Contents">
       <h4>Contents</h4>
       <ol>
-        <li><a href="#before">Before you start</a></li>
-        <li><a href="#license">It is free and open source</a></li>
-        <li><a href="#first-run">First run</a></li>
-        <li><a href="#hire">Hire agents</a></li>
-        <li><a href="#floors">Floors: hire a whole team</a></li>
-        <li><a href="#building">Your building: many floors</a></li>
-        <li><a href="#deliveries">Deliveries</a></li>
-        <li><a href="#connectors">Connections</a></li>
-        <li><a href="#safety">Staying safe</a></li>
-        <li><a href="#privacy">Privacy</a></li>
-        <li><a href="#updates">Updates and What's New</a></li>
-        <li><a href="#help">Troubleshooting</a></li>
+        <li><a href="#1-words-youll-see">Words you'll see</a></li>
+        <li><a href="#2-what-you-need-before-you-start">What you need before you start</a></li>
+        <li><a href="#3-installing-and-the-first-start">Installing and the first start</a></li>
+        <li><a href="#4-a-tour-of-the-screen">A tour of the screen</a></li>
+        <li><a href="#5-your-first-task-step-by-step">Your first task, step by step</a></li>
+        <li><a href="#6-talking-to-one-agent">Talking to one agent</a></li>
+        <li><a href="#7-hiring-agents">Hiring agents</a></li>
+        <li><a href="#8-the-3d-office">The 3D office</a></li>
+        <li><a href="#9-ramons-command-center">Ramon's Command Center</a></li>
+        <li><a href="#10-getting-finished-files-back-deliveries">Getting finished files back (Deliveries)</a></li>
+        <li><a href="#11-whole-teams-in-one-file-floor-files">Whole teams in one file (floor files)</a></li>
+        <li><a href="#12-many-windows-your-building">Many windows: your building</a></li>
+        <li><a href="#13-connecting-other-apps-connections">Connecting other apps (Connections)</a></li>
+        <li><a href="#14-starting-work-from-outside-triggers">Starting work from outside (Triggers)</a></li>
+        <li><a href="#15-extras-looks-personality-voice-music">Extras: looks, personality, voice, music</a></li>
+        <li><a href="#16-money-limits-and-staying-in-control">Money, limits and staying in control</a></li>
+        <li><a href="#17-staying-safe">Staying safe</a></li>
+        <li><a href="#18-privacy">Privacy</a></li>
+        <li><a href="#19-updates">Updates</a></li>
+        <li><a href="#20-when-something-goes-wrong">When something goes wrong</a></li>
+        <li><a href="#21-quick-answers-faq">Quick answers (FAQ)</a></li>
       </ol>
     </nav>
 
-    <h2 id="before">1. Before you start</h2>
-    <p>You need <strong>at least one AI coding tool</strong> installed and signed in on your computer:</p>
+    <h2 id="1-words-youll-see">1. Words you'll see</h2>
     <div class="table"><table>
-      <thead><tr><th>Tool</th><th>Command it runs</th></tr></thead>
+      <thead><tr><th>Word</th><th>What it means, in everyday terms</th></tr></thead>
       <tbody>
-        <tr><td>Claude Code</td><td><code>claude</code></td></tr>
-        <tr><td>OpenAI Codex</td><td><code>codex</code></td></tr>
-        <tr><td>Gemini CLI / Antigravity</td><td><code>gemini</code> / <code>agy</code></td></tr>
-        <tr><td>Cursor</td><td><code>cursor-agent</code></td></tr>
-        <tr><td>Others: Grok, Kimi, Qwen, Copilot, OpenCode, Crush, pi, or any command</td><td>see Settings → Agents &amp; Models</td></tr>
+        <tr><td><strong>Agent</strong></td><td>One AI helper. Each agent has a name, a face, a desk in the office and a job (for example "writes product descriptions").</td></tr>
+        <tr><td><strong>Ramon</strong></td><td>The manager agent. He's always there, wears a <strong>red name tag</strong>, and has his own room marked <strong>BOSS</strong>. Give him your requests.</td></tr>
+        <tr><td><strong>AI tool / engine</strong></td><td>The AI program that actually does the thinking for an agent, such as Claude Code or Codex. You install and sign in to it yourself. DevLabs runs it for you.</td></tr>
+        <tr><td><strong>Terminal</strong></td><td>The black text window where you can see exactly what an agent is typing and doing. You don't have to use it, but it's always there if you're curious.</td></tr>
+        <tr><td><strong>Project folder</strong></td><td>The folder on your computer an agent works in, for example the folder with your website files.</td></tr>
+        <tr><td><strong>Task</strong></td><td>One piece of work, like "write the About page". Tasks appear on the task board (Kanban).</td></tr>
+        <tr><td><strong>Delivery</strong></td><td>A finished file an agent hands back to you (a web page, a document, a picture).</td></tr>
+        <tr><td><strong>Floor</strong></td><td>Inside the office: a level of the building that holds up to 15 agents. Also: a <strong>floor file</strong>, a whole team saved as one file you can share.</td></tr>
+        <tr><td><strong>Connector</strong></td><td>A link that lets agents work inside another app you use, like your online shop, Obsidian notes or Discord.</td></tr>
+        <tr><td><strong>Trigger</strong></td><td>Something that starts work automatically, like a schedule ("every Monday at 9") or a Discord message.</td></tr>
+        <tr><td><strong>Token</strong></td><td>The unit AI companies use to count and charge for AI work. More tokens = more cost.</td></tr>
       </tbody>
     </table></div>
-    <p>DevLabs doesn't include AI usage. <strong>Each tool bills you through your own account with that company.</strong></p>
 
-    <h2 id="license">2. Free and open source</h2>
-    <p>DevLabs has no account and no sign-in. Every feature works as soon as it is installed, on as many computers as you like. The source is on <a href="https://github.com/jeffreycayao/Dev-Labs">GitHub</a> under the MIT License.</p>
-
-    <h2 id="first-run">3. First run</h2>
+    <h2 id="2-what-you-need-before-you-start">2. What you need before you start</h2>
     <ol>
-      <li><strong>Pick a harness config.</strong> This is the folder where DevLabs keeps one workspace: settings, agents, memory and history. Choose <strong>create new config…</strong> the first time.</li>
-      <li><strong>Set up, in 4 steps:</strong> a home for the app, Ramon's engine, your projects, and permissions.</li>
-      <li><strong>You land on the office floor.</strong> Ramon boots at the head desk.</li>
+      <li><strong>A computer</strong> with Windows, macOS or Linux.</li>
+      <li><strong>At least one AI tool, installed and signed in.</strong> DevLabs doesn't sell AI; it uses the AI tool you already have. Each tool charges you through your own account with that company.</li>
     </ol>
-
-    <h2 id="hire">4. Hire agents</h2>
-    <p>Click <strong>add agent</strong>. Give the agent a name, a look, a project folder, an engine and model, and a standing goal. Then press <strong>spawn</strong>.</p>
     <div class="table"><table>
-      <thead><tr><th>Shortcut</th><th>How</th></tr></thead>
+      <thead><tr><th>AI tool</th><th>What DevLabs runs</th></tr></thead>
       <tbody>
-        <tr><td><strong>Role templates</strong></td><td>Pick a ready-made role (Technical or Non-technical) to fill in everything.</td></tr>
-        <tr><td><strong>import hire…</strong></td><td>Load one agent from a <code>.json</code> file someone shared.</td></tr>
-        <tr><td><strong>generate one with AI…</strong></td><td>Copy the prompt into any AI chat, describe the agent you want, and save its reply as a <code>.json</code> file to import.</td></tr>
+        <tr><td>Claude Code (Anthropic)</td><td><code>claude</code></td></tr>
+        <tr><td>OpenAI Codex</td><td><code>codex</code></td></tr>
+        <tr><td>Gemini CLI / Antigravity (Google)</td><td><code>gemini</code> / <code>agy</code></td></tr>
+        <tr><td>Cursor</td><td><code>cursor-agent</code></td></tr>
+        <tr><td>Others: Grok, Kimi, Qwen, Copilot, OpenCode, Crush, pi</td><td>see <strong>Settings → Agents &amp; Models</strong></td></tr>
       </tbody>
     </table></div>
-    <p>Nothing starts until you press <strong>spawn</strong>.</p>
+    <p>If you're not sure which to pick, start with <strong>Claude Code</strong>. It's the one with the most features in DevLabs (for example, connectors only work with Claude Code agents today).</p>
+    <p>DevLabs itself is <strong>free and open source</strong>. There's no DevLabs account, no sign-in and no subscription. Install it on as many computers as you like.</p>
 
-    <h2 id="floors">5. Floors: hire a whole team at once</h2>
-    <p>A <strong>floor</strong> is a whole team saved in one file (<code>.floor.json</code>).</p>
-    <p><strong>Import a floor:</strong> <strong>add agent</strong> → <strong>import floor…</strong>, or open an <code>atmtlabs://floor?src=https://…</code> link. The review screen shows every agent and the tools they need. Then:</p>
-    <ul>
-      <li><strong>hire all:</strong> hires everyone into the project folder you pick;</li>
-      <li><strong>review one by one:</strong> opens each agent in the normal form, so you can change or skip it;</li>
-      <li><strong>cancel:</strong> hires nobody.</li>
-    </ul>
-    <p><strong>Export your floor:</strong> <strong>add agent</strong> → <strong>export floor…</strong> → name it → <strong>save file…</strong> The file includes each agent's name, role, goal, look, engine, model and token budget. It never includes your folders, keys, memory or conversations.</p>
-    <p><strong>Reset your floor:</strong> <strong>Settings → General → reset floor</strong>. Confirm with <strong>back up ZIP &amp; reset</strong> or <strong>reset without backup</strong>. This ends running agents and removes the floor's roster, messages, tasks, board and shared memory across all floor windows. Your app settings (including schedules) and project source folders remain. If you choose a backup, cancelling the file picker changes nothing; the app verifies the ZIP before resetting.</p>
-    <p>The ZIP contains <code>floor/</code> (roster, hive and shared memory), matching Claude session transcripts under <code>claude-projects/</code>, a manifest and <code>RESTORE.txt</code>. It can contain private prompts and messages, so keep it in a private place. To restore, quit DevLabs, extract <code>floor/</code> into the original home folder named in the manifest and <code>claude-projects/</code> into your Claude projects folder, then reopen the app. Restore into an empty floor. Project source folders and connector keys are not bundled.</p>
-    <p><strong>Try it:</strong> the <em>Online Seller Team</em> is a shop manager, a landing-page designer and a product copywriter. It's built for Pancake POS and Webcake.</p>
+    <h2 id="3-installing-and-the-first-start">3. Installing and the first start</h2>
+    <ol>
+      <li><strong>Download</strong> DevLabs from <strong><a href="/#download">devlabs.atmt.dev</a></strong> and install it like any other app.</li>
+      <li><strong>Open it.</strong> The first time, it asks where to keep its workspace (a folder for settings, agents, memory and history). Choose <strong>create new config…</strong>. One workspace is enough for most people.</li>
+      <li><strong>Answer the 4 setup steps:</strong>
+        <ul>
+          <li><strong>Home:</strong> where DevLabs keeps its files. The suggested place is fine.</li>
+          <li><strong>Ramon's engine:</strong> which AI tool Ramon uses. Pick the one you installed.</li>
+          <li><strong>Your projects:</strong> the folders you want the team to work on. You can add more later.</li>
+          <li><strong>Permissions:</strong> how freely agents may act. <strong>Auto mode</strong> lets them work without asking; <strong>ask first</strong> makes them check with you before running commands or changing files. If you're nervous, choose <strong>ask first</strong>. You can change it later.</li>
+        </ul>
+      </li>
+      <li><strong>The office opens</strong> and Ramon walks to his desk. You're ready.</li>
+    </ol>
+    <p class="note"><strong>Tip:</strong> to work on a different project with a completely fresh team, open <strong>Settings → General → new project floor…</strong> and pick that project's folder. DevLabs restarts with a new, empty team for it. Your old team is kept and you can go back to it from the start screen.</p>
 
-    <h2 id="building">6. Your building: many floors at once</h2>
-    <p>A <strong>building</strong> is every floor you have open at the same time. Each floor is its own office window with its own agents. Use floors to split your business into teams, for example:</p>
+    <h2 id="4-a-tour-of-the-screen">4. A tour of the screen</h2>
+    <p>The window has four areas:</p>
     <div class="table"><table>
-      <thead><tr><th>Floor</th><th>Team</th></tr></thead>
+      <thead><tr><th>Area</th><th>Where</th><th>What it's for</th></tr></thead>
       <tbody>
-        <tr><td>Floor 0</td><td>Product research and economics (5 agents)</td></tr>
-        <tr><td>Floor 1</td><td>Coding and infrastructure (15 agents)</td></tr>
-        <tr><td>Floor 2</td><td>Marketing and social media research (5 agents)</td></tr>
-        <tr><td>Floor 3</td><td>Product improvement (2 agents)</td></tr>
+        <tr><td><strong>Top bar</strong></td><td>very top</td><td>The app version (click it to check for updates), whether <strong>auto mode</strong> is on, the light/dark switch (☾/☀), <strong>Settings</strong> (gear) and <strong>Focus mode</strong> (expand icon: one agent's terminal fills the window).</td></tr>
+        <tr><td><strong>The office</strong></td><td>big area on the left</td><td>Your team in 3D. Watch who's working, click things, open the task board. See <a href="#8-the-3d-office">section 8</a>.</td></tr>
+        <tr><td><strong>Side panel</strong></td><td>right</td><td>Whoever you selected. For Ramon it's the <strong>Command Center</strong>; for any other agent it's that agent's <strong>terminal and controls</strong>. Drag its left edge to make it wider or narrower.</td></tr>
+        <tr><td><strong>Agent cards</strong></td><td>bottom strip</td><td>One card per agent with its face, name, job and status (<strong>idle</strong>, <strong>working</strong>, <strong>waiting</strong>, <strong>blocked</strong>…). Click a card to select that agent. Drag cards to change the order. <strong>add agent</strong> is at the end.</td></tr>
       </tbody>
     </table></div>
-    <p><strong>Open a new floor:</strong> app menu → <strong>New Floor</strong>, or press <strong>Cmd+Shift+N</strong> (Mac) / <strong>Ctrl+Shift+N</strong> (Windows, Linux). You can have up to <strong>200 floors</strong> open at once. If you try to open more, the app says your building is full; close a floor you no longer need first.</p>
-    <h3>How floors work together</h3>
-    <ul>
-      <li><strong>Ramon runs the whole building.</strong> There is one Ramon, at the head desk of your first window. He sees every agent on every floor and can hand work to any of them.</li>
-      <li><strong>Agents can reach agents on other floors.</strong> Floors don't wall agents off. Any agent can message any other agent in the building, and Ramon can send a Floor 1 task to an agent on Floor 2. If a floor doesn't have the skill you need, ask Ramon to use the agent on the floor that does.</li>
-      <li><strong>Before hiring someone new, Ramon checks who is already in the building.</strong> He reuses an agent who fits instead of hiring a duplicate.</li>
-      <li><strong>Closing a floor stops its agents.</strong> The app asks first. Other floors keep running. The agents' history and memory are kept, but they don't answer messages until you hire them again.</li>
-    </ul>
-    <h3>Tips</h3>
-    <ul>
-      <li>Agents don't know which floor they're on. Put the team in the name, like <code>F2 Marketing - Liza</code>, so you and Ramon can tell who belongs where.</li>
-      <li>Save each team as a floor file (<strong>export floor…</strong>) so you can set up the same building again in a few clicks.</li>
-      <li>Every running agent uses your AI tool's account. A big building costs more; keep open only the floors you need, and set token budgets in <strong>Settings → Autonomy &amp; Budgets</strong>.</li>
-    </ul>
-    <p class="note"><strong>Not available yet:</strong> a separate manager for each floor. Today every floor reports to Ramon.</p>
+    <p><strong>What the status words mean:</strong></p>
+    <div class="table"><table>
+      <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>idle</td><td>Free, waiting for work.</td></tr>
+        <tr><td>thinking / working</td><td>Busy on something right now.</td></tr>
+        <tr><td>waiting</td><td>Needs something before it can carry on (often you).</td></tr>
+        <tr><td>blocked</td><td>Stuck. Click it and read what it says.</td></tr>
+        <tr><td>compacting</td><td>Tidying its memory to make room. Wait a moment.</td></tr>
+        <tr><td>looping</td><td>The safety brake caught it repeating itself. Check on it.</td></tr>
+        <tr><td>stopped</td><td>Its AI tool isn't running. Use <strong>Restart &amp; Continue</strong> to bring it back.</td></tr>
+      </tbody>
+    </table></div>
 
-    <h2 id="deliveries">7. Deliveries: getting finished files back</h2>
-    <p>When you want a <strong>file</strong> (a web page, a document, a PDF, an image), ask Ramon for it and say the format, for example: <em>"Have Pam make a landing page for the spring sale, as HTML"</em> or <em>"I need the Q3 research as a Word document."</em></p>
-    <p>The agent who does the work <strong>delivers</strong> the file. You'll find it in the Command Center under <strong>Deliveries</strong>; a number on the tab shows how many are new.</p>
+    <h2 id="5-your-first-task-step-by-step">5. Your first task, step by step</h2>
+    <p>Let's ask the team for something real.</p>
+    <ol>
+      <li><strong>Click Ramon</strong> (his card is first in the strip, or click him in the office). The right panel shows his <strong>Command Center</strong>.</li>
+      <li>Open the <strong>floor</strong> tab and find <strong>dispatch via Ramon</strong>. Type what you want in plain words, for example:
+        <p class="note"><em>Make a one-page website for my bakery "Sweet Loaf" in Manila. Friendly tone, our opening hours are 7am–7pm, and add a section for our best-selling ensaymada. I want it as an HTML file.</em></p>
+      </li>
+      <li>Press <strong>dispatch</strong>. Ramon reads it, writes a clear task, and gives it to the best agent (or hires one if nobody fits).</li>
+      <li><strong>Watch the office.</strong> The chosen agent walks to its desk and sits down; its card turns <strong>working</strong>. Short messages pop up over agents' heads as they talk to each other.</li>
+      <li><strong>Follow progress</strong> on the <strong>tasks</strong> tab (the task board) or by clicking the agent and reading its terminal.</li>
+      <li><strong>Get the file.</strong> When it's done, the agent <strong>delivers</strong> it. Open Ramon's <strong>deliveries</strong> tab (a number shows how many are new) and preview it right there. Press <strong>Approve</strong> if you're happy, or <strong>Request changes</strong> and say what to fix.</li>
+    </ol>
+    <p>That's the whole loop: <strong>ask Ramon → watch → review the delivery</strong>.</p>
+    <p class="note"><strong>Tip:</strong> always say what kind of file you want back ("as a Word document", "as a PDF", "as a picture"). Agents are much better when you're specific about the result.</p>
+
+    <h2 id="6-talking-to-one-agent">6. Talking to one agent</h2>
+    <p>Click any agent (its card or its character in the office). The right panel shows:</p>
+    <ul>
+      <li><strong>Top row:</strong> its name (click to rename), status, and buttons:
+        <ul>
+          <li><strong>edit</strong>: change its name, look, engine, model and briefing (see <a href="#15-extras-looks-personality-voice-music">section 15</a> for <strong>3D look</strong> and <strong>personality</strong>);</li>
+          <li><strong>IDE</strong>: a full code editor opened on its project folder;</li>
+          <li><strong>open</strong>: opens a normal terminal window in its project folder;</li>
+          <li><strong>✕ (red)</strong>: fires the agent. It leaves the office, but its history is kept.</li>
+        </ul>
+      </li>
+      <li><strong>Control row</strong> (for running agents):
+        <ul>
+          <li><strong>block tools</strong>: the agent can keep thinking but can't run commands or change files until you allow it again;</li>
+          <li><strong>stop after this step</strong>: lets it finish what it's doing right now, then stops;</li>
+          <li><strong>1:1</strong>: take this agent aside for a one-on-one with you; it's released back to Ramon when you end the 1:1;</li>
+          <li><strong>send this agent a note… / steer</strong>: slip a short instruction into what it's doing ("use the blue logo, not the red one").</li>
+        </ul>
+      </li>
+      <li><strong>Tabs:</strong> <strong>terminal</strong> (what it's doing), <strong>git</strong> (file changes in its project), <strong>messages</strong> (what it said to other agents), <strong>traces</strong> (a timeline of the tools it used).</li>
+      <li><strong>queue</strong> (bottom): type a message to this agent and press <strong>send</strong>. If it's busy, your message waits in line and is delivered when it's free. <strong>prompts</strong> inserts saved instructions, <strong>files</strong> attaches files, <strong>voice</strong> lets you speak instead of type.</li>
+    </ul>
+    <p class="note"><strong>Usually you only need Ramon.</strong> Talk to individual agents when you want to look over their shoulder or give one of them a quick correction.</p>
+
+    <h2 id="7-hiring-agents">7. Hiring agents</h2>
+    <p>Click <strong>add agent</strong> (end of the bottom strip, or <strong>add</strong> at the top of the office).</p>
+    <ol>
+      <li><strong>Name and look:</strong> give it a name and pick a character and colour.</li>
+      <li><strong>Project folder:</strong> where it works.</li>
+      <li><strong>Engine and model:</strong> which AI tool it uses. New Claude agents start on <strong>Opus 5.5</strong> and new Codex agents on <strong>GPT-6 Sol</strong>; change the defaults in <strong>Settings → Agents &amp; Models / AI Engines</strong>.</li>
+      <li><strong>Goal:</strong> its standing job, in plain words ("Writes friendly product descriptions for our online shop").</li>
+      <li>Press <strong>spawn</strong>. Nothing starts until you do.</li>
+    </ol>
+    <p><strong>Faster ways to hire:</strong></p>
+    <div class="table"><table>
+      <thead><tr><th>Option</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Role templates</strong></td><td>Pick a ready-made role (Technical or Non-technical) and everything is filled in for you.</td></tr>
+        <tr><td><strong>company builder</strong></td><td>Describe your business ("a small online plant shop that sells on Facebook") and get a whole planned team to review. Nobody is hired until you confirm.</td></tr>
+        <tr><td><strong>import hire…</strong></td><td>Load one agent from a file someone shared.</td></tr>
+        <tr><td><strong>import floor…</strong></td><td>Load a whole team from a floor file (<a href="#11-whole-teams-in-one-file-floor-files">section 11</a>).</td></tr>
+        <tr><td><strong>generate one with AI…</strong></td><td>Copy the given text into any AI chat, describe the agent you want, and save its answer as a file to import.</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>Agents stay until you let them go.</strong> If an agent's AI tool stops, its card shows <strong>stopped</strong> but the agent keeps its name, memory and workspace. Use <strong>Restart &amp; Continue</strong> (Command Center → floor tab) or <strong>restore team</strong> to bring it back. An agent only leaves when you (or Ramon) <strong>fire</strong> it. Ramon can also hire short-term helpers for one quick job; those leave by themselves when they finish.</p>
+    <p><strong>Bringing back a fired agent:</strong> Command Center → <strong>Archived</strong> → <strong>show closed agents</strong> → <strong>return to floor</strong>, then <strong>Restore Team</strong>. It comes back with the same identity and memory.</p>
+
+    <h2 id="8-the-3d-office">8. The 3D office</h2>
+    <p><img src="/assets/img/devlabs-office.gif" alt="The office" width="960" height="577" loading="lazy"></p>
+
+    <h3 id="moving-around">Moving around</h3>
+    <div class="table"><table>
+      <thead><tr><th>To</th><th>Do this</th></tr></thead>
+      <tbody>
+        <tr><td>Move around</td><td>Drag with the left mouse button</td></tr>
+        <tr><td>Turn the view</td><td>Drag with the right mouse button</td></tr>
+        <tr><td>Zoom</td><td>Scroll the mouse wheel (it zooms toward where your pointer is)</td></tr>
+        <tr><td>See the whole office again</td><td>Double-click the floor, or press <strong>Overview</strong> (top-left corner)</td></tr>
+        <tr><td>Jump to a spot</td><td>The other top-left buttons: <strong>Front desk</strong> and <strong>Lounge</strong></td></tr>
+        <tr><td>Fill the whole screen</td><td>The <strong>full screen</strong> button (top right). Press it again or <strong>Esc</strong> to go back.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 id="what-the-agents-do-on-their-own">What the agents do on their own</h3>
+    <ul>
+      <li><strong>Working agents walk to their own desk</strong> and sit facing their computer.</li>
+      <li><strong>Ramon works in his own BOSS office</strong> whenever he has a task. He only walks around and chats when he's free.</li>
+      <li><strong>Free (idle) agents</strong> get coffee, hang around the kitchen and the café tables, and <strong>chismis</strong>: little speech bubbles with office gossip pop up over their heads. When Ramon walks by, they suddenly get very polite.</li>
+      <li><strong>When an agent finishes a job</strong>, it cheers ("tapos na!"-style messages).</li>
+      <li><strong>When agents message each other</strong>, the message title pops up over the sender's head.</li>
+      <li><strong>Cleaners</strong> sweep the floor after an agent restarts or clears its memory.</li>
+    </ul>
+    <p>You can also <strong>send an agent somewhere</strong> just by telling it (in its queue or terminal):</p>
+    <div class="table"><table>
+      <thead><tr><th>Say</th><th>It goes to</th></tr></thead>
+      <tbody>
+        <tr><td>"go to the gym"</td><td>the gym, for a minute</td></tr>
+        <tr><td>"review PRs" or "check github"</td><td>the server room</td></tr>
+        <tr><td>"write tests" or "run tests"</td><td>the QA lab</td></tr>
+        <tr><td>"call Maya and tell her the build is green"</td><td>the phone booth</td></tr>
+        <tr><td>"text Joseph saying I'll be late"</td><td>the text booth</td></tr>
+        <tr><td>"go to your desk"</td><td>its desk</td></tr>
+      </tbody>
+    </table></div>
+    <p>An agent that starts running tests also walks to the QA lab on its own.</p>
+
+    <h3 id="things-you-can-click">Things you can click</h3>
+    <div class="table"><table>
+      <thead><tr><th>Object</th><th>What opens</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Kanban board</strong> (button top-left, or the board in the office)</td><td>Your task board: to do, doing, blocked, done.</td></tr>
+        <tr><td><strong>Server rack / server terminal</strong></td><td>GitHub pull requests (code changes waiting for review) for the selected agent's project: read them, approve, request changes, comment. Needs the free GitHub command-line tool, signed in with <code>gh auth login</code>.</td></tr>
+        <tr><td><strong>ATM</strong></td><td>How much your agents have cost, per agent and per day. You choose a PIN the first time you use it.</td></tr>
+        <tr><td><strong>Meeting table</strong></td><td>A stand-up meeting: agents walk to the table and each reads out what they're working on, what's blocking them and what they've recently saved.</td></tr>
+        <tr><td><strong>An agent's computer</strong></td><td>That agent's screen: the tools it just used, the commands it ran and the last file it touched.</td></tr>
+        <tr><td><strong>Phone booth / text booth</strong></td><td>A short call or text-message scene.</td></tr>
+        <tr><td><strong>Jukebox</strong></td><td>Spotify music for the office (see <a href="#15-extras-looks-personality-voice-music">section 15</a>). Everyone dances while music plays.</td></tr>
+        <tr><td><strong>Ping-pong table</strong></td><td>Two free agents play a match.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The small buttons at the top right of the office also include <strong>add</strong> (hire an agent), a <strong>heat map</strong> (where agents spend time), <strong>walking trails</strong> (footprints showing where agents walked), <strong>full screen</strong>, the <strong>pencil</strong> (edit the office) and the <strong>gear</strong> (office settings: spoken replies).</p>
+
+    <h3 id="floors-inside-the-office">Floors inside the office</h3>
+    <p>The office holds <strong>up to 15 agents per floor, plus Ramon</strong>, who always stays on Floor 1. The floor bar is at the bottom right of the office:</p>
+    <ul>
+      <li>Click <strong>Floor 1</strong>, <strong>Floor 2</strong>… to look at another floor. Each shows how many agents it has (for example <strong>4/15</strong>).</li>
+      <li>New agents go to the first floor with room. When every floor is full, a new floor opens automatically.</li>
+      <li><strong>+ Add floor</strong> adds an empty floor.</li>
+      <li><strong>To move an agent to another floor:</strong> select the agent, then choose the floor in the <strong>move … to</strong> box.</li>
+      <li>Each floor has its own furniture layout.</li>
+    </ul>
+    <p><strong>To delete a floor you don't need:</strong></p>
+    <ol>
+      <li>Click the floor in the floor bar (for example <strong>Floor 3 · 0/15</strong>) so you are looking at it.</li>
+      <li>Click <strong>− Delete floor 3</strong> (the orange button next to <strong>+ Add floor</strong>).</li>
+      <li>Click <strong>OK</strong> in the box that asks "Delete Floor 3?".</li>
+    </ol>
+    <p>The floor and its furniture layout are gone, and the floors above it move down one (Floor 4 becomes Floor 3, and so on), keeping their own layouts and agents.</p>
+    <ul>
+      <li><strong>Only empty floors can be deleted.</strong> If the button is grey, the floor still has agents: move them to another floor first (see above), then delete it.</li>
+      <li><strong>Floor 1 can't be deleted.</strong> It's Ramon's floor, with his boss office.</li>
+      <li>Deleting a floor never deletes an agent, a file or any work.</li>
+    </ul>
+
+    <h3 id="decorating-the-office">Decorating the office</h3>
+    <p>Press the <strong>pencil</strong> (top right) to edit:</p>
+    <ol>
+      <li>A list of objects appears: walls, doors, desks, chairs, plants, kitchen things, gym machines and more. Click one, then click the floor to place it.</li>
+      <li>Click any object to select it. Then drag it to move it, use the <strong>rotate</strong> buttons (or the <code>[</code> and <code>]</code> keys) to turn it, the arrow keys to nudge it, <strong>Page Up / Page Down</strong> to lift it, or <strong>Delete</strong> to remove it.</li>
+      <li>Select a desk to choose <strong>which agent sits there</strong>.</li>
+      <li><strong>Reset</strong> puts back the original layout. Press the pencil (now a ✓) again when you're done.</li>
+    </ol>
+    <p>Your layout is saved on your computer automatically.</p>
+
+    <h2 id="9-ramons-command-center">9. Ramon's Command Center</h2>
+    <p>Click Ramon to open it. The tabs (hover an icon to see its name):</p>
+    <div class="table"><table>
+      <thead><tr><th>Tab</th><th>What it's for</th></tr></thead>
+      <tbody>
+        <tr><td><strong>terminal</strong></td><td>Ramon's own terminal, plus a message box to talk to him directly.</td></tr>
+        <tr><td><strong>floor</strong></td><td>Send work through Ramon (<strong>dispatch</strong>), see every agent with its cost, change an agent's model, <strong>Restart &amp; Continue</strong> a stuck agent, set token limits, pick GitHub issues to hand out.</td></tr>
+        <tr><td><strong>tasks</strong></td><td>The task board. Click a card to see its full details.</td></tr>
+        <tr><td><strong>human</strong> ("Ask me")</td><td>Questions agents need <strong>you</strong> to answer. Check this when someone is <strong>waiting</strong>.</td></tr>
+        <tr><td><strong>deliveries</strong></td><td>Finished files (<a href="#10-getting-finished-files-back-deliveries">section 10</a>).</td></tr>
+        <tr><td><strong>triggers</strong></td><td>Schedules and outside requests (<a href="#14-starting-work-from-outside-triggers">section 14</a>).</td></tr>
+        <tr><td><strong>memory</strong> / <strong>graph</strong></td><td>What the team remembers about you and your projects, as notes and as a map.</td></tr>
+        <tr><td><strong>activity</strong></td><td>A live feed of what's happening.</td></tr>
+        <tr><td><strong>skills</strong></td><td>Extra abilities you can add to agents.</td></tr>
+        <tr><td><strong>workers</strong></td><td>Short-term helpers Ramon hired.</td></tr>
+      </tbody>
+    </table></div>
+    <p>At the top: <strong>auto</strong> (or <strong>paused</strong>) turns automatic message delivery to all agents on or off, and <strong>IDE</strong> opens the code editor.</p>
+
+    <h2 id="10-getting-finished-files-back-deliveries">10. Getting finished files back (Deliveries)</h2>
+    <p>When you want a <strong>file</strong> (a web page, document, PDF, picture), ask Ramon and say the format: <em>"Have Pam make a landing page for the spring sale, as HTML"</em> or <em>"I need the Q3 research as a Word document."</em></p>
+    <p>The agent who did the work <strong>delivers</strong> it to Ramon's <strong>deliveries</strong> tab. A number on the tab shows how many are new.</p>
     <div class="table"><table>
       <thead><tr><th>You can</th><th>How</th></tr></thead>
       <tbody>
-        <tr><td>Preview it</td><td>HTML pages, Markdown, text and images show right in the tab. HTML previews with scripts turned off.</td></tr>
+        <tr><td>Look at it</td><td>HTML pages, Markdown, text and pictures show right in the tab. Web pages preview with scripts turned off, for safety.</td></tr>
         <tr><td>Open it</td><td><strong>Open</strong> shows it in its normal app (browser, Word, PDF viewer…).</td></tr>
-        <tr><td>Find the file</td><td><strong>Show in folder</strong></td></tr>
-        <tr><td>Accept it</td><td><strong>Approve</strong>. The agent is told it's done.</td></tr>
-        <tr><td>Send it back</td><td><strong>Request changes</strong>, type what should change, <strong>Send to agent</strong>. The agent fixes it and delivers a new version.</td></tr>
+        <tr><td>Keep your own copy</td><td><strong>Save a copy…</strong> and pick a folder and name.</td></tr>
+        <tr><td>Find the file</td><td><strong>Show in folder</strong>.</td></tr>
+        <tr><td>Say yes</td><td><strong>Approve</strong>. The agent is told it's done.</td></tr>
+        <tr><td>Send it back</td><td><strong>Request changes</strong>, type what should change, <strong>Send to agent</strong>. It fixes it and delivers a new version.</td></tr>
       </tbody>
     </table></div>
+    <p><strong>Good to know:</strong></p>
     <ul>
-      <li>Each delivery is a <strong>copy</strong> taken when the agent sent it, so later edits by the agent don't change what you approved.</li>
-      <li>Agents can only deliver files from their own project folder or workspace. Anything else is refused and listed as "Not delivered".</li>
-      <li>For your safety, programs and scripts (for example <code>.exe</code>, <code>.dmg</code>, <code>.sh</code>) are never opened directly, only shown in their folder.</li>
-      <li>Preview works for HTML, Markdown, text/CSV/JSON and PNG/JPG/GIF/WebP/SVG. PDF, Word, Excel and PowerPoint files open in their own apps.</li>
+      <li>Each delivery is a <strong>snapshot</strong> taken when it was sent, so later edits don't change what you approved.</li>
+      <li>Agents can only deliver files from their own project folder. Anything else is refused and listed as "Not delivered".</li>
+      <li>For safety, programs (like <code>.exe</code>, <code>.dmg</code>, <code>.sh</code>) are never opened, only shown in their folder.</li>
+      <li>Previews work for HTML, Markdown, text/CSV/JSON and PNG/JPG/GIF/WebP/SVG pictures. PDF, Word, Excel and PowerPoint files open in their own apps.</li>
+      <li>Deliveries are kept in the team's folder on your computer. <strong>Reset floor</strong> removes them unless you make a backup first, so save copies of anything important.</li>
     </ul>
 
-    <h2 id="connectors">8. Connections (connectors)</h2>
-    <p>Connectors let agents work inside other apps. Set them up in <strong>Settings → Connections</strong>:</p>
+    <h2 id="11-whole-teams-in-one-file-floor-files">11. Whole teams in one file (floor files)</h2>
+    <p>A <strong>floor file</strong> (<code>.floor.json</code>) is a whole team saved in one file. Share it, and anyone can hire the same team in one click.</p>
+    <p><strong>To use someone's team:</strong> <strong>add agent → import floor…</strong> (or open an <code>atmtlabs://floor?src=https://…</code> link). A review screen lists every agent and the apps they need. Then:</p>
+    <ul>
+      <li><strong>hire all</strong> hires everyone into the project folder you choose;</li>
+      <li><strong>review one by one</strong> lets you change or skip each agent;</li>
+      <li><strong>cancel</strong> hires nobody.</li>
+    </ul>
+    <p><strong>To share your team:</strong> <strong>add agent → export floor…</strong>, give it a name, <strong>save file…</strong>. The file has each agent's name, job, goal, look, engine, model and token budget. It <strong>never</strong> includes your folders, keys, memory or conversations.</p>
+    <p><strong>To start over:</strong> <strong>Settings → General → reset floor</strong>. Choose <strong>back up ZIP &amp; reset</strong> (recommended) or <strong>reset without backup</strong>. This stops all agents and clears the team, messages, tasks and shared memory. Your settings, schedules and project folders stay. The backup ZIP can contain private messages, so keep it somewhere private. <code>RESTORE.txt</code> inside it explains how to put everything back.</p>
+    <p><strong>Try one:</strong> the <em>Online Seller Team</em> (a shop manager, a landing-page designer and a product copywriter) is built for Pancake POS and Webcake.</p>
+
+    <h2 id="12-many-windows-your-building">12. Many windows: your building</h2>
+    <p>A <strong>building</strong> is every DevLabs window you have open, each with its own team. For example: one window for research, one for coding, one for marketing.</p>
+    <ul>
+      <li><strong>Open another window:</strong> app menu → <strong>New Floor</strong>, or <strong>Ctrl+Shift+N</strong> (Windows, Linux) / <strong>Cmd+Shift+N</strong> (Mac). Up to <strong>200</strong> at once.</li>
+      <li><strong>Ramon runs the whole building.</strong> There's one Ramon (in your first window). He can see and hand work to any agent in any window.</li>
+      <li><strong>Agents can message agents in other windows.</strong> If one team lacks a skill, ask Ramon to use the agent who has it.</li>
+      <li><strong>Before hiring, Ramon checks who's already in the building</strong> and reuses a good fit.</li>
+      <li><strong>Closing a window stops its agents</strong> (the app asks first). Their history is kept.</li>
+    </ul>
+    <p><strong>Tips:</strong> put the team in the agent's name (like <code>F2 Marketing - Liza</code>) so everyone can tell who belongs where, and save each team as a floor file.</p>
+    <p class="note">These <strong>windows</strong> are different from the <strong>floors inside the 3D office</strong> (<a href="#floors-inside-the-office">section 8</a>), which just spread one window's agents over several levels.</p>
+
+    <h2 id="13-connecting-other-apps-connections">13. Connecting other apps (Connections)</h2>
+    <p>Connectors let agents work <strong>inside other apps you use</strong>. Set them up in <strong>Settings → Connections</strong>:</p>
     <ol>
-      <li>Paste your key and press <strong>Save</strong>. The key is stored encrypted on your computer and never shown again.</li>
+      <li>Paste your key (a password the other app gives you for this) and press <strong>Save</strong>. It's stored encrypted on your computer and never shown again.</li>
       <li>Switch the connector <strong>On</strong>.</li>
       <li><strong>Start a new agent.</strong> Agents already running keep the connectors they started with.</li>
     </ol>
     <div class="table"><table>
-      <thead><tr><th>Connector</th><th>Agents can</th></tr></thead>
+      <thead><tr><th>Connector</th><th>What agents can do</th></tr></thead>
       <tbody>
         <tr><td><strong>Pancake POS</strong></td><td>read and change orders, products, stock and sales</td></tr>
         <tr><td><strong>Webcake Landing</strong></td><td>design, edit and publish landing pages</td></tr>
+        <tr><td><strong>Obsidian</strong></td><td>save notes, lessons and decisions in your Obsidian vault, keep a daily note, search and read notes</td></tr>
+        <tr><td><strong>Discord</strong></td><td>post in your channels, read recent messages, list channels</td></tr>
         <tr><td>GitHub, Database, Email &amp; Calendar, Web Search</td><td>as described in Settings</td></tr>
       </tbody>
     </table></div>
-    <p><strong>Connectors can change real data.</strong> Use keys with the least access you need. Today, connectors only reach <strong>Claude Code</strong> agents.</p>
+    <p>Each connector has a <strong>How to set up</strong> link in Settings with the exact steps.</p>
+    <p><strong>Obsidian</strong> needs no key: press <strong>choose folder</strong>, pick your vault, switch it on. Agents only work inside that folder, never touch Obsidian's own settings, and never overwrite or delete a note. Saving to an existing title adds an update at the end.</p>
+    <p><strong>Discord</strong> needs a bot of your own: create an application at discord.com/developers/applications, copy the bot token into Settings, turn on <em>Message Content Intent</em>, and invite the bot to your server with View Channels, Send Messages and Read Message History.</p>
+    <p class="note"><strong>Connectors change real data</strong> in those apps. Use keys with only the access you need. Today connectors work with <strong>Claude Code</strong> agents only.</p>
 
-    <h2 id="safety">9. Staying safe</h2>
+    <h2 id="14-starting-work-from-outside-triggers">14. Starting work from outside (Triggers)</h2>
+    <p>Ramon's <strong>triggers</strong> tab lets work start without you typing it:</p>
     <ul>
-      <li>Agents run <strong>with your permissions</strong> on your computer. In <strong>auto mode</strong> they don't ask before running commands or editing files. Switch Settings → Autonomy &amp; Budgets to <strong>ask first</strong> if you want them to ask before acting.</li>
-      <li>Give each agent only the project folder it needs. Use <strong>git isolation</strong> (its own worktree) when you want to review changes before merging.</li>
-      <li><strong>Review shared hires and floors before hiring them.</strong> A shared file can't run commands of its own, and the app builds every command from your settings, but it can still give an agent a goal you didn't expect.</li>
+      <li><strong>Schedules:</strong> repeat a request on a timetable ("every Monday at 9am, summarise last week's sales").</li>
+      <li><strong>Slack / webhooks / Discord:</strong> a message from outside starts a request for Ramon.</li>
+    </ul>
+    <p><strong>Discord example:</strong> open <strong>Triggers → Discord</strong>, paste the IDs of the channels to watch (in Discord: Settings → Advanced → turn on Developer Mode, then right-click a channel → <strong>Copy Channel ID</strong>), and switch it on. Only you (the bot's owner) can start work, unless you add other people's user IDs under <strong>Who can start work</strong>. Messages from anyone else are ignored, because these requests run without asking. @-mention the bot in a watched channel: it replies "Received", Ramon picks it up, and the answer is posted back in the channel. Keep the Discord connector on so agents can post the answer.</p>
+
+    <h2 id="15-extras-looks-personality-voice-music">15. Extras: looks, personality, voice, music</h2>
+    <ul>
+      <li><strong>3D look:</strong> click an agent → <strong>edit</strong> → <strong>3D look</strong>. Change hair, hats, clothes, glasses and colours, then press <strong>Save avatar</strong>. The office character changes right away.</li>
+      <li><strong>Personality:</strong> <strong>edit</strong> → <strong>personality</strong>. Describe who the agent is, its vibe, its rules and how it talks. This is written into the agent's instruction file in its project folder (<code>CLAUDE.md</code>, <code>AGENTS.md</code> or <code>GEMINI.md</code>), as its own section; the rest of the file is left alone. The agent uses it from its next session.</li>
+      <li><strong>Company builder:</strong> <strong>add agent → company builder</strong>. Describe your business, get a planned team, review and hire.</li>
+      <li><strong>Spoken replies:</strong> press the <strong>gear</strong> at the top right of the office, switch <strong>Voice replies</strong> on, paste an <strong>ElevenLabs</strong> key (from elevenlabs.io → Profile → API keys), pick a voice and speed, and press <strong>Preview</strong>. The first sentences of each agent reply are then read out loud. Reply text is sent to ElevenLabs to make the audio.</li>
+      <li><strong>Jukebox (Spotify):</strong> click the jukebox in the office. You need <strong>Spotify Premium</strong> and Spotify open on one of your devices (phone, computer or speaker). The first time: create a free app at <strong>developer.spotify.com</strong>, add <code>http://127.0.0.1:43821/callback</code> as its redirect address, paste its <strong>Client ID</strong> into the jukebox, and press <strong>Connect</strong>. Then search songs, play, pause and skip.</li>
     </ul>
 
-    <h2 id="privacy">10. Privacy</h2>
+    <h2 id="16-money-limits-and-staying-in-control">16. Money, limits and staying in control</h2>
+    <p>DevLabs is free, but <strong>the AI tools charge you for the work agents do</strong>. Ways to keep costs in check:</p>
     <ul>
-      <li>Your code, prompts, agent output and connector keys stay on your computer.</li>
-      <li>There is no account: no email or sign-in is sent anywhere.</li>
-      <li>Anonymous usage stats are optional: Settings → General → <strong>Anonymous usage stats</strong>.</li>
+      <li><strong>See spending:</strong> the <strong>ATM</strong> in the office (per agent and per day) and the <strong>floor</strong> tab in Ramon's Command Center (each agent's tokens and a usage bar).</li>
+      <li><strong>Set limits:</strong> <strong>Settings → Autonomy &amp; Budgets</strong> for a team-wide token budget, and the <strong>floor</strong> tab for a limit per agent. An agent that hits its limit stops.</li>
+      <li><strong>Safety brake:</strong> if an agent keeps repeating itself, it's marked <strong>looping</strong> and slowed down. Check what it's doing.</li>
+      <li><strong>Pause everything:</strong> the <strong>auto</strong> button at the top of Ramon's Command Center stops messages being delivered to all agents until you turn it back on.</li>
+      <li><strong>Stop one agent:</strong> <strong>stop after this step</strong> or <strong>block tools</strong> in its control row.</li>
     </ul>
-    <p>Details: <a href="/privacy">Privacy Policy</a> · <a href="https://github.com/jeffreycayao/Dev-Labs/blob/main/LICENSE">MIT License</a>.</p>
 
-    <h2 id="updates">11. Updates and What's New</h2>
-    <p>Packaged builds check the public DevLabs release feed while auto-update is enabled in <strong>Settings → General</strong>. When a newer version is ready, the update badge tells you; you choose when to restart and install it. <strong>What's New</strong> shows the release highlights, and <strong>full changelog</strong> opens the public Releases page. The app does not need a GitHub sign-in or token for updates.</p>
+    <h2 id="17-staying-safe">17. Staying safe</h2>
+    <ul>
+      <li><strong>Agents act with your permissions on your computer.</strong> In <strong>auto mode</strong> they don't ask before running commands or changing files. Switch <strong>Settings → Autonomy &amp; Budgets</strong> to <strong>ask first</strong> if you'd rather approve things.</li>
+      <li><strong>Give each agent only the folder it needs.</strong> Turn on <strong>git isolation</strong> (its own copy of the project) when you want to review changes before keeping them.</li>
+      <li><strong>Check shared teams before hiring.</strong> A shared floor or hire file can't run commands by itself (DevLabs builds every command from your own settings), but it can give an agent a goal you didn't expect.</li>
+      <li><strong>Questions for you</strong> show up in Ramon's <strong>human</strong> tab. Answer them so agents aren't left waiting.</li>
+    </ul>
 
-    <h2 id="help">12. Troubleshooting</h2>
+    <h2 id="18-privacy">18. Privacy</h2>
+    <ul>
+      <li>Your files, requests, agent output and keys <strong>stay on your computer</strong>.</li>
+      <li>There's <strong>no account</strong>: nothing about you is sent to us.</li>
+      <li>Your AI tools send your requests to their own companies (Anthropic, OpenAI, Google…), under their terms.</li>
+      <li><strong>Optional extras send data only when you turn them on:</strong> Discord (messages to and from your server), ElevenLabs (text of replies, for voice), Spotify (searches and playback), GitHub (pull-request reviews, through your own sign-in), and the company builder (your company description, to Groq or Claude).</li>
+      <li><strong>Anonymous usage stats</strong> are optional: <strong>Settings → General → Anonymous usage stats</strong>.</li>
+    </ul>
+    <p>Details: <a href="/privacy">Privacy Policy</a> · <a href="https://github.com/jeffreycayao/Dev-Labs/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/jeffreycayao/Dev-Labs/blob/main/TELEMETRY.md">Telemetry</a>.</p>
+
+    <h2 id="19-updates">19. Updates</h2>
+    <p>When auto-update is on (<strong>Settings → General</strong>), DevLabs checks for new versions by itself. The version number at the top left tells you when an update is ready; <strong>you choose when to restart</strong> and install it. <strong>What's New</strong> shows the highlights and <strong>full changelog</strong> opens the full list of changes. No sign-in is needed.</p>
+
+    <h2 id="20-when-something-goes-wrong">20. When something goes wrong</h2>
     <div class="table"><table>
-      <thead><tr><th>You see</th><th>Do this</th></tr></thead>
+      <thead><tr><th>You see</th><th>Try this</th></tr></thead>
       <tbody>
-        <tr><td>An agent exits right away</td><td>Open its terminal. The tool is usually not installed or not signed in, or it doesn't accept the model name.</td></tr>
-        <tr><td>Codex says "Set up Agent sandbox to continue" on Windows</td><td>Open the agent's terminal, choose <strong>Set up</strong>, and approve the Windows administrator prompt if your computer allows it. If setup is blocked by company policy, ask IT or use Codex's <code>unelevated</code> sandbox fallback (below).</td></tr>
-        <tr><td>A delivery says "Not delivered: … (outside the agent's folders)"</td><td>Ask the agent to save the file inside its project folder and deliver again.</td></tr>
-        <tr><td>A connector doesn't work</td><td>Check it's <strong>On</strong> with a key saved, start a <strong>new</strong> agent, and use a Claude Code agent.</td></tr>
-        <tr><td>"Your building is full"</td><td>You have 200 floors open. Close a floor you no longer need, then open a new one.</td></tr>
+        <tr><td>An agent stops right after it starts</td><td>Click it and read its terminal. Usually its AI tool isn't installed, isn't signed in, or doesn't accept the chosen model. Sign in to the tool, then <strong>Restart &amp; Continue</strong>.</td></tr>
+        <tr><td>An agent is <strong>waiting</strong></td><td>Look in Ramon's <strong>human</strong> tab for a question, or read the agent's terminal.</td></tr>
+        <tr><td>An agent is <strong>stopped</strong></td><td>Ramon's <strong>floor</strong> tab → <strong>Restart &amp; Continue</strong> next to it.</td></tr>
+        <tr><td>The terminal looks garbled</td><td><strong>Restart &amp; Continue</strong>. It redraws without losing the conversation.</td></tr>
+        <tr><td>Codex says "Set up Agent sandbox to continue" (Windows)</td><td>Open the agent's terminal, choose <strong>Set up</strong>, and approve the Windows administrator prompt. If your company blocks that, see the fallback below.</td></tr>
+        <tr><td>"Not delivered: … (outside the agent's folders)"</td><td>Ask the agent to save the file inside its project folder and deliver again.</td></tr>
+        <tr><td>A connector doesn't work</td><td>Check it's <strong>On</strong> with a key saved, start a <strong>new</strong> agent, and make sure it's a Claude Code agent.</td></tr>
+        <tr><td>The server room says to install GitHub CLI</td><td>Install it from cli.github.com, then run <code>gh auth login</code> once.</td></tr>
+        <tr><td>The jukebox says Premium or "no active device"</td><td>Spotify needs Premium, and Spotify must be playing or open on a device.</td></tr>
+        <tr><td>The office looks empty or frozen</td><td>Press <strong>Overview</strong> (top left) or double-click the floor. If it's still blank, press <strong>Ctrl+R</strong> to reload the window.</td></tr>
+        <tr><td>"Your building is full"</td><td>You have 200 windows open. Close one you don't need.</td></tr>
       </tbody>
     </table></div>
-    <p>For the Windows fallback, add the following to <code>%USERPROFILE%\.codex\config.toml</code>, then restart the Codex agent. DevLabs copies that setting into each agent's Codex configuration when it starts. The fallback keeps a sandbox but has weaker isolation than administrator-approved setup. Company policy may disallow it.</p>
+    <p><strong>Windows Codex fallback:</strong> add this to <code>%USERPROFILE%\.codex\config.toml</code>, then restart the Codex agent. It keeps a sandbox but with weaker protection than the administrator setup, and your company may not allow it.</p>
     <pre><code>[windows]
 sandbox = "unelevated"</code></pre>
-    <p>Still stuck? Email <a href="mailto:hello@automatika.ph">hello@automatika.ph</a> with your app version (Settings → General → Updates).</p>
+    <p>Still stuck? Email <strong><a href="mailto:hello@automatika.ph">hello@automatika.ph</a></strong> with your app version (shown at the top left), or open an issue at <strong><a href="https://github.com/jeffreycayao/Dev-Labs/issues">github.com/jeffreycayao/Dev-Labs/issues</a></strong>.</p>
+
+    <h2 id="21-quick-answers-faq">21. Quick answers (FAQ)</h2>
+    <p><strong>Do I need to know how to code?</strong> No. Ask Ramon in normal words and review the files you get back. The terminals are there if you want to look, not because you have to.</p>
+    <p><strong>Does DevLabs cost money?</strong> DevLabs is free. The AI tools you connect charge you for their use, through your own accounts.</p>
+    <p><strong>Can I use it without internet?</strong> The app opens offline, but agents need internet to reach their AI tools.</p>
+    <p><strong>Will agents change my files?</strong> Yes, inside the project folders you give them; that's their job. Use <strong>ask first</strong> mode or <strong>git isolation</strong> if you want to approve changes.</p>
+    <p><strong>How many agents can I have?</strong> Up to 15 per office floor (plus Ramon), as many office floors as you like, and up to 200 windows. Every running agent costs AI usage, so start small.</p>
+    <p><strong>Can I share my team?</strong> Yes: <strong>add agent → export floor…</strong> saves it as a file anyone can import.</p>
+    <p><strong>Where is my data?</strong> In the workspace folder you chose on first start, on your own computer.</p>
+    <p>This guide is also online at <strong><a href="/guide">devlabs.atmt.dev/guide</a></strong>.</p>
   </article>
 </main>
 

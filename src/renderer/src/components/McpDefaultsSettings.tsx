@@ -98,6 +98,79 @@ function ConnectorKey({ entry, hasKey, onChanged }: { entry: McpCatalogEntry; ha
   );
 }
 
+const smallButton: React.CSSProperties = {
+  padding: '3px 8px 1px', border: 'none', cursor: 'pointer',
+  fontFamily: 'var(--cth-font-display)', fontSize: 8, lineHeight: '14px', textTransform: 'uppercase',
+  background: 'var(--cth-cream-200)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-700)', color: 'var(--cth-ink-900)'
+};
+
+/** Plain-language setup steps (`mcpDefaults.setup.<id>`), behind a toggle. */
+function SetupSteps({ id }: { id: string }) {
+  const { t, i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const key = `mcpDefaults.setup.${id}`;
+  if (!i18n.exists(key)) return null;
+  const steps = t(key, { returnObjects: true }) as string[];
+  return (
+    <div style={{ marginTop: 4 }}>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        style={{ ...smallButton, background: 'transparent', boxShadow: 'none', textDecoration: 'underline', padding: 0 }}
+      >
+        {open ? t('mcpDefaults.setupHide') : t('mcpDefaults.setupShow')}
+      </button>
+      {open && (
+        <ol style={{ margin: '4px 0 0', paddingInlineStart: 18, fontSize: 12, lineHeight: '17px', color: 'var(--cth-ink-700)' }}>
+          {steps.map((s, i) => <li key={i}>{s}</li>)}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+/** The Obsidian connector's folder. The connector is contained to it, so the
+ *  only setting it needs is this path (no key). */
+function ObsidianVault({ vault, onChanged }: { vault?: string; onChanged: (msg: string) => void }) {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState<{ exists: boolean; isVault: boolean } | null>(null);
+  useEffect(() => {
+    void window.cth.obsidianStatus?.().then(setStatus).catch(() => { /* older main */ });
+  }, [vault]);
+  const choose = async () => {
+    const pick = await window.cth.chooseFolder();
+    if (!pick.ok) return;
+    const r = await window.cth.obsidianSetVault(pick.path);
+    setStatus(r);
+    onChanged(r.ok ? t('mcpDefaults.vault.savedNote') : (r.error ?? t('mcpDefaults.couldNotSave')));
+  };
+  const clear = async () => {
+    setStatus(await window.cth.obsidianSetVault(null));
+    onChanged(t('mcpDefaults.vault.clearedNote'));
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <code style={{
+          flex: '1 1 180px', minWidth: 0, fontFamily: 'var(--cth-font-mono)', fontSize: 11, wordBreak: 'break-all',
+          color: vault ? 'var(--cth-ink-900)' : 'var(--cth-coral)'
+        }}>
+          {vault ?? t('mcpDefaults.vault.none')}
+        </code>
+        <button type="button" onClick={() => { void choose(); }} style={smallButton}>{t('mcpDefaults.vault.choose')}</button>
+        {vault && <button type="button" onClick={() => { void clear(); }} style={smallButton}>{t('mcpDefaults.vault.clear')}</button>}
+      </div>
+      {vault && status && !status.exists && (
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--cth-coral)' }}>{t('mcpDefaults.vault.missing')}</span>
+      )}
+      {vault && status?.exists && !status.isVault && (
+        <span style={{ fontSize: 11, color: 'var(--cth-ink-500)' }}>{t('mcpDefaults.vault.notVault')}</span>
+      )}
+    </div>
+  );
+}
+
 export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
   const { t } = useTranslation();
   const [note, setNote] = useState('');
@@ -192,6 +265,11 @@ export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
                       {entry.secret && on && !keys[entry.id] && (
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--cth-coral)' }}>{t('mcpDefaults.key.needsKey')}</span>
                       )}
+                      {entry.id === 'obsidian' && <ObsidianVault vault={config.obsidianVault} onChanged={flash} />}
+                      {entry.id === 'obsidian' && on && !config.obsidianVault && (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--cth-coral)' }}>{t('mcpDefaults.vault.needsVault')}</span>
+                      )}
+                      <SetupSteps id={entry.id} />
                     </div>
                     <button
                       type="button"

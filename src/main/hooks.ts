@@ -18,7 +18,7 @@ import type { HarnessConfig } from './config';
 import type { ControlRegistry } from './control';
 import type { CircuitBreaker } from './breaker';
 import { estimateCostUsd } from './pricing';
-import { validateHookEvent } from '../shared/hookEvents';
+import { toolDetail, validateHookEvent } from '../shared/hookEvents';
 
 /** Maximum JSON payload bytes in one newline-delimited hook frame. */
 const MAX_HOOK_FRAME_BYTES = 256 * 1024;
@@ -67,6 +67,10 @@ export class HookServer {
    *  prompt only bloats the transcript. One entry per agent is sufficient: an
    *  agent has one live session, and a new session id replaces the old entry. */
   private deliveredGoalByAgent = new Map<string, { sessionId: string | null; goal: string | null }>();
+  /** `${agentId}\t${sessionId}` → running CostSample totals. The proxy sends one
+   *  sample per response, but every ledger reader treats rows as CUMULATIVE per
+   *  agent+session, so the row written is the running total, not the sample. */
+  private costTotals = new Map<string, { input: number; output: number; cacheRead: number; cacheCreation: number; usd: number }>();
 
   constructor(
     private hive: HiveManager,
@@ -210,21 +214,27 @@ export class HookServer {
         const output = p.output ?? 0;
         const cacheRead = p.cache_read ?? 0;
         const cacheCreation = p.cache_creation ?? 0;
+        const key = `${agentId}\t${p.session_id}`;
+        const t = this.costTotals.get(key) ?? { input: 0, output: 0, cacheRead: 0, cacheCreation: 0, usd: 0 };
+        t.input += input;
+        t.output += output;
+        t.cacheRead += cacheRead;
+        t.cacheCreation += cacheCreation;
+        t.usd += estimateCostUsd(p.model, {
+          inputTokens: input,
+          outputTokens: output,
+          cacheReadTokens: cacheRead,
+          cacheWriteTokens: cacheCreation
+        });
+        this.costTotals.set(key, t);
+        // After an app restart the total starts over at 0 under the same session;
+        // the ledger readers already treat a decrease as a reset.
         this.hive.appendCostLedger({
           agentId,
           sessionId: p.session_id,
           ts: Date.now(),
-          input,
-          output,
-          cacheRead,
-          cacheCreation,
-          model: p.model ?? '',
-          usd: estimateCostUsd(p.model, {
-            inputTokens: input,
-            outputTokens: output,
-            cacheReadTokens: cacheRead,
-            cacheWriteTokens: cacheCreation
-          })
+          ...t,
+          model: p.model ?? ''
         });
       }
       return {};
@@ -389,6 +399,7 @@ export class HookServer {
       notificationType: p.notification_type,
       source: p.source,
       message: p.message,
+      detail: toolDetail(p.tool_input),
       blocked
     };
     if (!validateHookEvent(payload)) {

@@ -9,7 +9,7 @@ const { checkContents } = require('../tools/release-preflight.cjs');
 const good = {
   tag: 'v1.2.3',
   version: '1.2.3',
-  notes: '- New thing.\n- Fixed thing.\n',
+  notes: '- New thing.\n- Fixed thing.\n- Faster thing.\n',
   changelog: '# Changelog\n\n## Unreleased\n\n## v1.2.3 — 2026-09-28\n\n- New thing.\n',
   prevNotes: '- Old thing.\n'
 };
@@ -38,7 +38,7 @@ test('empty or unchanged "What\'s new" notes fail', () => {
 
 test('more than five bullets fails', () => {
   const notes = Array.from({ length: 6 }, (_, i) => `- Item ${i}`).join('\n');
-  assert.match(checkContents({ ...good, notes }).join('\n'), /1-5 bullets/);
+  assert.match(checkContents({ ...good, notes }).join('\n'), /3-5 bullets/);
 });
 
 test('first release (no previous notes) is allowed', () => {

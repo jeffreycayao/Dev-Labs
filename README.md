@@ -17,12 +17,12 @@ Wraps [Claude Code](https://claude.com/claude-code), OpenAI Codex, Antigravity a
 **Pancake POS** and **Webcake**.
 
 <p>
-  <em>Electron · React · TypeScript · Pixi.js · xterm.js · node-pty</em>
+  <em>Electron · React · TypeScript · Three.js (React Three Fiber) · xterm.js · node-pty</em>
 </p>
 
 <p>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
-  <a href="./CHANGELOG.md"><img alt="Version: 3.0.4" src="https://img.shields.io/badge/version-3.0.4-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
+  <a href="./CHANGELOG.md"><img alt="Version: 4.0.5" src="https://img.shields.io/badge/version-4.0.5-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
   <img alt="Platform: macOS | Windows | Linux" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-F4F1EA.svg?style=flat-square&labelColor=0B0A06">
   <img alt="No account needed" src="https://img.shields.io/badge/account-not%20needed-F4F1EA.svg?style=flat-square&labelColor=0B0A06">
   <a href="./CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-C7FD11.svg?style=flat-square&labelColor=0B0A06"></a>
@@ -41,14 +41,32 @@ Wraps [Claude Code](https://claude.com/claude-code), OpenAI Codex, Antigravity a
 
 </div>
 
+<p align="center">
+  <img src="./docs/images/devlabs-office.gif" alt="The DevLabs 3D office: agents walking to their desks, chatting at the coffee machine and working" width="900">
+</p>
+
+<p align="center">
+  <img src="./docs/images/devlabs-app.png" alt="The full DevLabs window: the office on the left, an agent's terminal and controls on the right, the team's cards along the bottom" width="900">
+</p>
+
+## Use it in 5 minutes (no coding needed)
+
+1. **Install an AI tool you like and sign in to it.** Claude Code is the easiest start. DevLabs uses your own AI account; it doesn't sell AI.
+2. **Download DevLabs** from **[devlabs.atmt.dev](https://devlabs.atmt.dev/#download)** and open it.
+3. **Answer the 4 quick setup questions.** The suggested answers are fine. Choose **ask first** if you want agents to check with you before they change anything.
+4. **Click Ramon** (the manager with the red name tag) and type what you want in plain words, for example *"Make a one-page website for my bakery, as an HTML file."*
+5. **Watch the office.** An agent walks to its desk and gets to work. When it's done, your file appears in Ramon's **deliveries** tab. Approve it, or ask for changes.
+
+Everything else is in the **[plain-language User Guide](./docs/USER_GUIDE.md)**.
+
 ---
 
 > [!NOTE]
 > **Your agents, one office, one manager.**
 > DevLabs takes the terminal-agent CLIs you already run (`claude`, `codex`, `agy`, `gemini`,
 > `grok`, `kimi`, `qwen`, `opencode`, `crush`, `pi`, `copilot` and `cursor-agent`) and turns them into
-> a self-coordinating team: each agent gets long-term memory, a mailbox and a desk on a pixel-art
-> office floor, and **Ramon** at the head desk plans the work and hands it out while you watch.
+> a self-coordinating team: each agent gets long-term memory, a mailbox and a desk in a 3D
+> office, and **Ramon** at the head desk plans the work and hands it out while you watch.
 > He runs the floor; you still run him.
 
 ## Contents
@@ -97,8 +115,8 @@ is the one agent *you* brief to get things done.
 
 - **Every terminal is an agent.** Each `claude`, `codex`, `agy`, `grok`, `opencode` or custom session
   runs as a real process in a pseudo-terminal (`node-pty`), rendered with xterm.js.
-- **Every agent is an avatar.** Sessions appear as characters on a Pixi.js office floor, with a
-  Philippine flag and Pinoy office banter.
+- **Every agent is an avatar.** Sessions appear as characters in a 3D office (Three.js), with a
+  Philippine flag, a BOSS office for Ramon and Pinoy office chismis.
 - **The hive coordinates them.** Agents read their memory and drain a mailbox; the router moves
   messages between inboxes; Ramon assigns, adjudicates and escalates only what needs you.
 - **Memory that lasts.** Markdown memory per agent, mined into a shared, searchable store, so agents
@@ -221,7 +239,8 @@ CLI shows as an **Install** card in the agent's terminal instead of an error.
 
 **The floor**
 - **Every terminal is a real agent.** Twelve engines or a custom command, each in its own PTY, rendered with xterm.js.
-- **Every agent is an avatar** on a Pixi.js office floor, with stations, desks and a head desk for Ramon.
+- **Every agent is an avatar** in a 3D office, with desks, a kitchen, a gym, a QA lab, a server room and a BOSS office for Ramon.
+- **Office floors you can add and delete.** Up to 15 agents per office floor; **+ Add floor** opens a new one and **− Delete floor** removes an empty one (the floors above move down, keeping their layouts).
 - **Per-agent git worktrees.** Optional isolation so parallel agents never collide on a branch; the base checkout's `node_modules` is linked in.
 - **New project floor.** Settings → General opens a clean floor for an existing repo or folder.
 - **Reset with backup.** Clear a floor's agents, tasks and memory, with an optional restorable ZIP.
@@ -370,4 +389,4 @@ other names belong to their owners and are used only to describe compatibility.
 - [**Munder Difflin**](https://github.com/HarnessMD/munder-difflin) by [Chaitanya Giri](https://github.com/chaitanyagiri) and its [contributors](./CONTRIBUTORS.md): the open-source harness this app is forked from.
 - [LimeZu](https://limezu.itch.io/) for the *Modern Interiors* pixel-art tilesets (Complete Version licence).
 - [`shahar061/the-office`](https://github.com/shahar061/the-office) for the office tileset and map vendoring.
-- [Pixi.js](https://pixijs.com/) · [xterm.js](https://xtermjs.org/) · [node-pty](https://github.com/microsoft/node-pty) · [electron-vite](https://electron-vite.org/) · [Monaco](https://microsoft.github.io/monaco-editor/) · [CodeMirror](https://codemirror.net/) for the libraries this is built on.
+- Claw3D by Luke The Dev (MIT) for the 3D office this one is built from · [Three.js](https://threejs.org/) · [React Three Fiber](https://r3f.docs.pmnd.rs/) · [Pixi.js](https://pixijs.com/) · [xterm.js](https://xtermjs.org/) · [node-pty](https://github.com/microsoft/node-pty) · [electron-vite](https://electron-vite.org/) · [Monaco](https://microsoft.github.io/monaco-editor/) · [CodeMirror](https://codemirror.net/) for the libraries this is built on.

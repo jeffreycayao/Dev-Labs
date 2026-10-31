@@ -273,21 +273,22 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
           stops applying the moment there is only ever one row. */}
       <div className="cth-tabbar" style={{
         display: 'flex', gap: 4,
-        // Docked in the sidebar the panel is narrow, so tabs WRAP: a second row
-        // costs a few pixels of a tall column, while a horizontal scroll there
-        // would hide half the tabs behind a gesture with no affordance.
-        // In focus mode the panel is wide and vertical space is the scarce
-        // resource, so it stays ONE row and scrolls instead. `.cth-tabbar` in
-        // global.css already hides that scrollbar.
-        flexWrap: fullscreen ? 'nowrap' : 'wrap',
-        overflowX: fullscreen ? 'auto' : 'visible',
-        padding: '6px 8px', background: 'var(--cth-cream-100)',
+        // Docked in the sidebar the panel is narrow. Wrapping took three or four
+        // rows of labels off the terminal, so docked tabs are icons (label on
+        // hover; the active tab keeps its label) and fit ONE row. In focus mode
+        // the panel is wide, so every tab shows its label on one scrolling row.
+        // `.cth-tabbar` in global.css hides that scrollbar.
+        flexWrap: 'nowrap',
+        overflowX: 'auto',
+        padding: fullscreen ? '6px 8px' : '4px 6px', background: 'var(--cth-cream-100)',
         borderBottom: '1px solid var(--cth-ink-700)', flexShrink: 0
       }}>
         {visibleTabs.map((tabDef) => (
           <button
             key={tabDef.key}
             onClick={() => setTab(tabDef.key)}
+            title={t(tabDef.labelKey)}
+            aria-label={t(tabDef.labelKey)}
             style={{
               whiteSpace: 'nowrap',
               // grow to share any spare width (so the strip still spans the panel
@@ -295,7 +296,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
               // squashed tab is unreadable — overflow into the scroll instead).
               flex: '1 0 auto',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-              padding: '4px 8px 3px', border: 'none', cursor: 'pointer',
+              padding: fullscreen ? '4px 8px 3px' : '3px 6px', border: 'none', cursor: 'pointer',
               background: tab === tabDef.key ? `var(--cth-${agent.accent})` : 'var(--cth-cream-200)',
               // The selected tab is filled with the agent's accent, which is a
               // LIGHT colour in both themes. ink-900 flips to near-white in dark
@@ -308,7 +309,8 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
               fontFamily: 'var(--cth-font-ui)', fontSize: 13
             }}
           >
-            <Icon name={tabDef.icon} /> {t(tabDef.labelKey)}
+            <Icon name={tabDef.icon} />
+            {(fullscreen || tab === tabDef.key) && <> {t(tabDef.labelKey)}</>}
             {tabDef.key === 'deliveries' && newDeliveries > 0 && (
               <span aria-label={t('deliveries.newCount', { count: newDeliveries })} style={{
                 marginInlineStart: 2, minWidth: 16, padding: '0 4px', lineHeight: '15px', fontSize: 11,

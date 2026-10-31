@@ -1,2 +1,4 @@
-- Updates and downloads now come straight from the open-source repo, github.com/jeffreycayao/Dev-Labs.
-- DevLabs is free and open source (MIT). No account, no sign-in.
+- Your office is now 3D: agents walk to their desks, grab coffee and swap chismis.
+- Delete empty office floors right from the floor bar.
+- A new step-by-step User Guide, written for people who don't code.
+- Safer and lighter: security fixes, and a smaller, faster app.

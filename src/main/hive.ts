@@ -21,7 +21,7 @@
 import {
   existsSync, mkdirSync, readFileSync, writeFileSync, renameSync,
   readdirSync, statSync, lstatSync, realpathSync, rmSync, appendFileSync,
-  symlinkSync, unlinkSync, copyFileSync, cpSync, chmodSync
+  symlinkSync, unlinkSync, copyFileSync, cpSync, chmodSync, openSync, readSync, closeSync
 } from 'node:fs';
 import { join, dirname, basename, isAbsolute, relative } from 'node:path';
 import { homedir } from 'node:os';
@@ -227,7 +227,15 @@ function shortRand(): string {
 const PROXY_BIND_ATTEMPTS = 3;
 const PROXY_BIND_BACKOFF_MS = [250, 750];
 
-const MINE_IGNORE_LINES = ['settings.json', 'cursor.json', 'inbox/', 'outbox/', '.codex/'];
+// `mcp.json` carries stdio connector keys in its env (see buildArgs): never mined, committed or backed up.
+const MINE_IGNORE_LINES = ['settings.json', 'cursor.json', 'inbox/', 'outbox/', '.codex/', 'mcp.json'];
+
+/** logTail reads at most this much of log.jsonl, which grows without bound. */
+const LOG_TAIL_BYTES = 256 * 1024;
+/** voiceMessages reads only the newest N files of each archive folder. */
+const ARCHIVE_SCAN_LIMIT = 200;
+/** Hive commits are coalesced: at most one `git add -A && commit` per window. */
+const COMMIT_COALESCE_MS = 10_000;
 
 /** Idempotently ensure `<agentDir>/.gitignore` excludes the non-memory files.
  *  Append-only: writes only the missing lines, leaving any existing entries. */
@@ -630,7 +638,7 @@ export class HiveManager {
     // log.jsonl gets the structured, non-sensitive fields; the dump stays local.
     // `deliveries/` holds finished files agents hand back (HTML, PDFs, images…):
     // potentially large binaries that would bloat a repo committed on every change.
-    const want = ['fleet.json', 'hooks.sock', 'cost-ledger.jsonl', 'crashes/', 'deliveries/', '.DS_Store'];
+    const want = ['fleet.json', 'hooks.sock', 'cost-ledger.jsonl', 'crashes/', 'deliveries/', '.DS_Store', 'agents/*/mcp.json'];
     let lines: string[] = [];
     if (existsSync(gitignore)) { try { lines = readFileSync(gitignore, 'utf8').split('\n'); } catch { lines = []; } }
     const missing = want.filter((w) => !lines.includes(w));
@@ -699,6 +707,9 @@ export class HiveManager {
       /** Loopback broker URL + this agent's capability token, for vendor-hosted
        *  (http) MCP servers. Undefined → those servers are skipped. */
       mcpBroker?: { url: string; token: string };
+      /** Values for `<name>` placeholders in catalog specs (app Node, resources
+       *  dir, Obsidian vault). Missing → servers that need them are skipped. */
+      mcpVars?: Record<string, string>;
       /** Told which enabled servers were left out and why (no key, broker down). */
       onMcpSkipped?: (skipped: { id: string; reason: McpSkipReason }[]) => void;
       /** App-resources `skills/` source dir (W3). The bundled read-only skills are
@@ -990,7 +1001,8 @@ export class HiveManager {
       cwd: meta.cwd,
       consent: opts.mcpDefaults,
       getSecret: (id) => opts.mcpSecret?.(id),
-      broker: opts.mcpBroker
+      broker: opts.mcpBroker,
+      vars: opts.mcpVars
     });
     if (mcp.skipped.length) opts.onMcpSkipped?.(mcp.skipped);
     if (Object.keys(mcp.servers).length) {
@@ -1928,6 +1940,8 @@ export class HiveManager {
   }
   stopRouter(): void {
     if (this.routerTimer) { clearInterval(this.routerTimer); this.routerTimer = null; }
+    // Quit, home switch and reset all stop the router first: land pending commits in this hive.
+    this.flushCommit();
   }
 
   routeOnce(): number {
@@ -2136,7 +2150,8 @@ export class HiveManager {
         folders.push({ dir: join(base, 'outbox', '.sent'), direction: 'outbox', archived: true });
       }
       for (const f of folders) {
-        for (const m of this.listMessages(f.dir)) {
+        // Archives grow forever; a recent-messages read only needs their newest files.
+        for (const m of this.listMessages(f.dir, f.archived && !wantId ? ARCHIVE_SCAN_LIMIT : undefined)) {
           if (!m || typeof m.id !== 'string' || seen.has(m.id)) continue;
           seen.add(m.id);
           if (wantId && m.id !== wantId) continue;
@@ -2643,7 +2658,7 @@ export class HiveManager {
   writeFleetSnapshot(snapshot: unknown): void {
     const root = this.root();
     if (!root) return;
-    try { writeFileSync(join(root, 'fleet.json'), JSON.stringify(snapshot, null, 2), 'utf8'); } catch { /* noop */ }
+    try { this.atomicWriteJson(join(root, 'fleet.json'), snapshot); } catch { /* noop */ }
   }
 
   /** Is this agent the hive's god/orchestrator? */
@@ -2757,16 +2772,24 @@ export class HiveManager {
   }
   logTail(n = 200): unknown[] {
     const root = this.root();
-    if (!root || !existsSync(join(root, 'log.jsonl'))) return [];
-    const lines = readFileSync(join(root, 'log.jsonl'), 'utf8').trim().split('\n').filter(Boolean);
+    const p = root ? join(root, 'log.jsonl') : '';
+    if (!p || !existsSync(p)) return [];
+    // Polled every few seconds against a file that only grows: read the tail only.
+    const size = statSync(p).size;
+    const len = Math.min(size, LOG_TAIL_BYTES);
+    const buf = Buffer.alloc(len);
+    const fd = openSync(p, 'r');
+    try { readSync(fd, buf, 0, len, size - len); } finally { closeSync(fd); }
+    let lines = buf.toString('utf8').split('\n');
+    if (len < size) lines = lines.slice(1); // the first line is cut mid-record
+    lines = lines.filter((l) => l.trim());
     return lines.slice(-n).map((l) => { try { return JSON.parse(l); } catch { return { raw: l }; } });
   }
 
-  private listMessages(dir: string): HiveMessage[] {
+  private listMessages(dir: string, newest?: number): HiveMessage[] {
     if (!existsSync(dir)) return [];
-    return readdirSync(dir)
-      .filter((f) => f.endsWith('.json'))
-      .sort()
+    const files = readdirSync(dir).filter((f) => f.endsWith('.json')).sort();
+    return (newest ? files.slice(-newest) : files)
       .map((f) => { try { return JSON.parse(readFileSync(join(dir, f), 'utf8')) as HiveMessage; } catch { return null; } })
       .filter((m): m is HiveMessage => m !== null);
   }
@@ -2879,13 +2902,20 @@ export class HiveManager {
   private readJson<T>(p: string, fallback: T): T {
     try { return JSON.parse(readFileSync(p, 'utf8')) as T; } catch { return fallback; }
   }
+  // registry.json / tasks.json / fleet.json are read back on every beat; a torn
+  // write would read as empty, so every JSON write goes through temp + rename.
   private writeJson(p: string, data: unknown): void {
-    writeFileSync(p, JSON.stringify(data, null, 2), 'utf8');
+    this.atomicWriteJson(p, data);
   }
   private atomicWriteJson(p: string, data: unknown): void {
     const tmp = `${p}.tmp-${shortRand()}`;
-    writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
-    renameSync(tmp, p);
+    try {
+      writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
+      renameSync(tmp, p);
+    } catch (e) {
+      try { rmSync(tmp, { force: true }); } catch { /* the tmp file is disposable */ }
+      throw e;
+    }
   }
 
   // — git (single committer, retry + stale-lock recovery) —
@@ -2968,14 +2998,41 @@ export class HiveManager {
     } catch { /* best-effort */ }
     // Probe before mutating: `rm --cached` on a clean repo would still rewrite
     // the index on every launch, and this runs inside the commit retry path.
-    const tracked = this.git(['ls-files', '--', 'agents/*/.codex'], root);
-    if (!tracked.ok || !tracked.out.trim()) return;
-    this.git(['rm', '-r', '--cached', '-q', '--ignore-unmatch', '--', 'agents/*/.codex'], root);
-    console.warn('[hive] untracked previously-committed Codex homes from the hive repo');
+    // `agents/*/mcp.json` gets the same treatment: it holds stdio connector keys,
+    // and older hives committed it before the ignore line existed.
+    for (const spec of ['agents/*/.codex', 'agents/*/mcp.json']) {
+      const tracked = this.git(['ls-files', '--', spec], root);
+      if (!tracked.ok || !tracked.out.trim()) continue;
+      this.git(['rm', '-r', '--cached', '-q', '--ignore-unmatch', '--', spec], root);
+      console.warn(`[hive] untracked previously-committed ${spec} from the hive repo`);
+    }
   }
 
-  /** Commit all hive changes. No-op if there is nothing staged. */
+  private commitTimer: NodeJS.Timeout | null = null;
+  private pendingCommits: string[] = [];
+
+  /**
+   * Record that the hive changed. The actual `git add -A && commit` (two
+   * synchronous git spawns) runs at most once per COMMIT_COALESCE_MS from a
+   * timer, so the router tick and hook path never block on git.
+   */
   commit(message: string): void {
+    this.pendingCommits.push(message);
+    if (this.commitTimer) return;
+    this.commitTimer = setTimeout(() => this.flushCommit(), COMMIT_COALESCE_MS);
+    this.commitTimer.unref?.();
+  }
+
+  /** Commit whatever is pending now. Called by the timer, stopRouter and quit. */
+  flushCommit(): void {
+    if (this.commitTimer) { clearTimeout(this.commitTimer); this.commitTimer = null; }
+    const msgs = this.pendingCommits;
+    if (!msgs.length) return;
+    this.pendingCommits = [];
+    this.commitNow(msgs.length === 1 ? msgs[0] : `${msgs[0]} (+${msgs.length - 1} more)`);
+  }
+
+  private commitNow(message: string): void {
     const root = this.root();
     if (!root || !existsSync(join(root, '.git'))) return;
     this.untrackCostLedger(root);
@@ -3212,9 +3269,21 @@ write there become searchable by every agent. You don't run \`mine\` yourself.
 // A minimal pipe: read the hook payload on stdin, tag it with this agent's id,
 // forward it to the hive's UDS, and relay the response back to `claude`. All the
 // real logic lives in the main process (HookServer). Never blocks a stop on error.
+//
+// FIT_FRAME is shared by every gating shim below. HookServer drops frames over
+// 256 KB without replying, and a shim with no reply exits 0 = ALLOW, so a large
+// Write/Edit used to run straight past a pause or halt. Over the limit, send a
+// stub: the gate only needs the event, agent and tool name.
+const FIT_FRAME = `function fitFrame(p) {
+  const f = JSON.stringify(p);
+  if (Buffer.byteLength(f) <= 200000) return f;
+  return JSON.stringify({ hook_event_name: p.hook_event_name, agent_id: p.agent_id, session_id: p.session_id,
+    transcript_path: p.transcript_path, cwd: p.cwd, tool_name: p.tool_name, tool_input: { truncated: true } });
+}`;
 const HOOK_SHIM = `#!/usr/bin/env node
 'use strict';
 const net = require('net');
+${FIT_FRAME}
 const isStatus = process.argv.includes('--status');
 let data = '';
 process.stdin.setEncoding('utf8');
@@ -3252,7 +3321,7 @@ process.stdin.on('end', () => {
   if (!sock) { process.exit(0); }
   let resp = '';
   const done = (code) => { if (resp) process.stdout.write(resp); process.exit(code); };
-  const c = net.createConnection(sock, () => c.write(JSON.stringify(payload) + '\\n'));
+  const c = net.createConnection(sock, () => c.write(fitFrame(payload) + '\\n'));
   c.setEncoding('utf8');
   c.on('data', (d) => { resp += d; });
   c.on('end', () => done(0));
@@ -3277,6 +3346,7 @@ process.stdin.on('end', () => {
 const AGY_HOOK_SHIM = `#!/usr/bin/env node
 'use strict';
 const net = require('net');
+${FIT_FRAME}
 const event = process.argv[2] || 'Unknown';
 const agentId = process.env.AGENT_ID || null;
 let data = '';
@@ -3315,7 +3385,7 @@ process.stdin.on('end', () => {
     process.exit(0);
   };
   try {
-    const c = net.createConnection(sock, () => c.write(JSON.stringify(payload) + '\\n'));
+    const c = net.createConnection(sock, () => c.write(fitFrame(payload) + '\\n'));
     c.setEncoding('utf8');
     c.on('data', (d) => { resp += d; });
     c.on('end', done);
@@ -3630,6 +3700,7 @@ server.listen(0, '127.0.0.1', function () {
 const GEMINI_HOOK_SHIM = `#!/usr/bin/env node
 'use strict';
 const net = require('net');
+${FIT_FRAME}
 const agentId = process.env.AGENT_ID || null;
 let data = '';
 process.stdin.setEncoding('utf8');
@@ -3668,7 +3739,7 @@ process.stdin.on('end', () => {
     process.exit(0);
   };
   try {
-    const c = net.createConnection(sock, () => c.write(JSON.stringify(payload) + '\\n'));
+    const c = net.createConnection(sock, () => c.write(fitFrame(payload) + '\\n'));
     c.setEncoding('utf8');
     c.on('data', (d) => { resp += d; });
     c.on('end', done);
@@ -3687,6 +3758,7 @@ process.stdin.on('end', () => {
 const GROK_HOOK_SHIM = `#!/usr/bin/env node
 'use strict';
 const net = require('net');
+${FIT_FRAME}
 const agentId = process.env.AGENT_ID || null;
 let data = '';
 process.stdin.setEncoding('utf8');
@@ -3742,7 +3814,7 @@ process.stdin.on('end', () => {
     process.exit(0);
   };
   try {
-    const c = net.createConnection(sock, () => c.write(JSON.stringify(payload) + '\\n'));
+    const c = net.createConnection(sock, () => c.write(fitFrame(payload) + '\\n'));
     c.setEncoding('utf8');
     c.on('data', (d) => { resp += d; });
     c.on('end', done);

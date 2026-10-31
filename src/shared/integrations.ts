@@ -30,7 +30,8 @@ export type IntegrationAuthType =
   | 'none'    // public API — inject nothing
   | 'bearer'  // Authorization: Bearer <secret>
   | 'header'  // <authHeader>: <secret>   (authHeader required)
-  | 'github'; // Authorization: Bearer <secret> + GitHub API headers
+  | 'github'   // Authorization: Bearer <secret> + GitHub API headers
+  | 'discord'; // Authorization: Bot <secret>
 
 /** A registered integration. METADATA ONLY — carries NO secret value, only a
  *  `secretRef` handle. Safe to persist in config.json and cross IPC to the renderer. */
@@ -84,7 +85,7 @@ export interface IntegrationTemplate {
 export const INTEGRATION_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
 /** A header name the broker may inject under (authType 'header'). */
 export const HEADER_NAME_RE = /^[A-Za-z0-9-]{1,64}$/;
-export const ALL_AUTH_TYPES: readonly IntegrationAuthType[] = ['none', 'bearer', 'header', 'github'];
+export const ALL_AUTH_TYPES: readonly IntegrationAuthType[] = ['none', 'bearer', 'header', 'github', 'discord'];
 export const ALL_KINDS: readonly IntegrationKind[] = ['github', 'custom-rest'];
 
 /** The secretRef handle for an integration id (1:1). */
@@ -190,6 +191,8 @@ export function buildAuthHeaders(
         accept: 'application/vnd.github+json',
         'x-github-api-version': '2022-11-28'
       };
+    case 'discord':
+      return secret ? { authorization: `Bot ${secret}` } : {};
     default:
       return {};
   }
@@ -334,5 +337,18 @@ export const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
     secretHelp: 'HubSpot → Settings → Integrations → Private Apps → create app → Access token (scopes crm.objects.*).',
     docsUrl: 'https://developers.hubspot.com/docs/api/crm/understanding-the-crm',
     idSuggestion: 'hubspot'
+  },
+  {
+    // The Obsidian connector (mcpCatalog) writes the vault as plain files; this
+    // adds the community "Local REST API" plugin for what files can't do (open a
+    // note in Obsidian, run a command, search with Obsidian's own index).
+    kind: 'custom-rest',
+    label: 'Obsidian Local REST API',
+    baseUrl: 'http://127.0.0.1:27123',
+    authType: 'bearer',
+    secretLabel: 'Local REST API key',
+    secretHelp: 'Install the "Local REST API" community plugin in Obsidian, turn on "Enable Non-encrypted (HTTP) Server", then copy its API key. Obsidian must be open.',
+    docsUrl: 'https://github.com/coddingtonbear/obsidian-local-rest-api',
+    idSuggestion: 'obsidian'
   }
 ];

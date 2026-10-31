@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
 import { SpritePortrait } from './SpritePortrait';
@@ -6,6 +7,8 @@ import { ProviderLogo } from './ProviderLogo';
 import { useStore, type Agent } from '@/store/store';
 import { OFFICE_CAST, type OfficeCharacterName } from '@/scene/office/cast';
 import { type AccentColorName } from '@/design/tokens';
+import { AgentAvatarModal } from '@/features/office/avatar/AgentAvatarModal';
+import { AgentPersonalityPanel } from './AgentPersonalityPanel';
 import {
   type AgentProvider,
   type HarnessConfig,
@@ -30,7 +33,12 @@ export interface EditAgentModalProps {
  * via updateAgent (engine changes apply on the next restart).
  */
 export function EditAgentModal({ agent, onClose }: EditAgentModalProps) {
+  const { t } = useTranslation();
   const updateAgent = useStore((s) => s.updateAgent);
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const [personalityOpen, setPersonalityOpen] = useState(false);
+  // Read live so a just-saved 3D look shows when the editor reopens.
+  const liveAgent = useStore((s) => s.agents.find((a) => a.id === agent.id)) ?? agent;
   const [config, setConfig] = useState<HarnessConfig | null>(null);
 
   const [name, setName] = useState(agent.name);
@@ -280,14 +288,24 @@ export function EditAgentModal({ agent, onClose }: EditAgentModalProps) {
               </div>
             </div>
 
+            {/* Personality section written into the agent's instruction file (own Save). */}
+            {personalityOpen && <AgentPersonalityPanel agent={liveAgent} />}
+
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
               <PixelButton variant="ghost" size="md" onClick={onClose}>cancel</PixelButton>
+              <PixelButton variant="secondary" size="md" onClick={() => setAvatarOpen(true)}>
+                {t('office.avatar.edit3d')}
+              </PixelButton>
+              <PixelButton variant={personalityOpen ? 'primary' : 'secondary'} size="md" onClick={() => setPersonalityOpen((v) => !v)}>
+                {t('office.avatar.personality')}
+              </PixelButton>
               <div style={{ flex: 1 }} />
               <PixelButton variant="primary" size="md" onClick={save}>save changes</PixelButton>
             </div>
           </div>
         </PixelPanel>
       </div>
+      {avatarOpen && <AgentAvatarModal agent={liveAgent} onClose={() => setAvatarOpen(false)} />}
     </div>
   );
 }

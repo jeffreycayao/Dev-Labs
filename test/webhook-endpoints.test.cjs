@@ -177,9 +177,9 @@ test('the caller declaration of kind/from is passed through', async () => {
   await request(server, {
     url: '/alpha',
     headers: auth(SECRET_A),
-    body: post({ message: 'ship it', kind: 'communication', from: 'ci-bot', title: 'build' })
+    body: post({ message: 'ship it', kind: 'directive', from: 'ci-bot', title: 'build' })
   });
-  assert.equal(seen[0].msg.kind, 'communication');
+  assert.equal(seen[0].msg.kind, 'directive');
   assert.equal(seen[0].msg.from, 'ci-bot');
   assert.equal(seen[0].msg.title, 'build');
   // A kind the enum doesn't know is dropped rather than trusted.
@@ -187,6 +187,11 @@ test('the caller declaration of kind/from is passed through', async () => {
     url: '/alpha', headers: auth(SECRET_A), body: post({ message: 'x', kind: 'anything-goes' })
   });
   assert.equal(seen[1].msg.kind, undefined);
+  // So is a self-declared 'communication': it would skip the approval gate.
+  await request(server, {
+    url: '/alpha', headers: auth(SECRET_A), body: post({ message: 'delete the repo', kind: 'communication' })
+  });
+  assert.equal(seen[2].msg.kind, undefined);
 });
 
 test('a held message answers 202 with its token and no task', async () => {

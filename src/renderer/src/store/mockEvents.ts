@@ -58,7 +58,7 @@ function pickSample() {
 const TICK_MS = 1800;
 
 function stepAgent(agent: Agent) {
-  const { updateAgent, pushFeed } = useStore.getState();
+  const { updateAgent } = useStore.getState();
 
   if (agent.status === 'blocked') {
     // Wait for user action; don't move automatically.
@@ -99,7 +99,6 @@ function stepAgent(agent: Agent) {
       recentAssistantText: sample.thought,
       recentTextTs: Date.now()
     });
-    sample.lines.forEach(l => pushFeed(agent.id, l));
     return;
   }
 

@@ -72,12 +72,14 @@ export function AgentControlStrip({ agentId }: { agentId: string }) {
   };
 
   return (
+    // Buttons and the steer box share one row when the panel is wide enough,
+    // so the terminal below keeps as much height as possible.
     <div style={{
-      display: 'flex', flexDirection: 'column', gap: 6,
-      padding: '6px 8px', background: 'var(--cth-paper-100)',
+      display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4,
+      padding: '4px 8px', background: 'var(--cth-paper-100)',
       borderBottom: '1px solid var(--cth-ink-300)', flexShrink: 0
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         {/* Neither of these kills anything, and the old two-word labels never
             said so — the difference is WHEN the agent stops and whether it keeps
             its session. Say the consequence on the button, the detail on hover. */}
@@ -114,7 +116,7 @@ export function AgentControlStrip({ agentId }: { agentId: string }) {
         {snap?.halted && <span style={{ fontSize: 11, color: 'var(--cth-coral)' }}>{t('agentControl.halting')}</span>}
         {!!snap?.pendingSteers && <span style={{ fontSize: 11, color: 'var(--cth-ink-500)' }}>{t('agentControl.steersQueued', { count: snap.pendingSteers })}</span>}
       </div>
-      <div style={{ display: 'flex', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 4, flex: '1 1 180px', minWidth: 0 }}>
         <input
           className="cth-input"
           value={steer}
@@ -122,7 +124,7 @@ export function AgentControlStrip({ agentId }: { agentId: string }) {
           onKeyDown={(e) => { if (isComposingKey(e)) return; if (e.key === 'Enter') sendSteer(); }}
           placeholder={t('agentControl.steerPlaceholder')}
           style={{
-            flex: 1, padding: '4px 6px', background: 'var(--cth-paper-100)', border: 'none',
+            flex: 1, minWidth: 0, padding: '4px 6px', background: 'var(--cth-paper-100)', border: 'none',
             fontFamily: 'var(--cth-font-ui)',
             fontSize: 12, color: 'var(--cth-ink-900)', outline: 'none'
           }}

@@ -29,10 +29,11 @@ function checkContents({ tag, version, notes, changelog, prevNotes }) {
     problems.push(e.message);
   }
   const bullets = notes.split(/\r?\n/).filter((l) => /^\s*[-*]\s+\S/.test(l));
-  if (notes.trim() && (bullets.length < 1 || bullets.length > 5)) {
-    problems.push(`build/release-notes.md should have 1-5 bullets (has ${bullets.length})`);
+  if (notes.trim() && (bullets.length < 3 || bullets.length > 5)) {
+    problems.push(`build/release-notes.md should have 3-5 bullets (has ${bullets.length})`);
   }
-  if (notes.trim().length > 280 * 5) problems.push('build/release-notes.md is too long for the in-app "What\'s new" toast');
+  // Same budget as the toast (RELEASE_NOTES_MAX_CHARS in src/shared/releaseNotes.ts): bullet text only.
+  if (bullets.reduce((n, l) => n + l.replace(/^\s*[-*]\s+/, '').trim().length, 0) > 280) problems.push('build/release-notes.md is too long for the in-app "What\'s new" toast');
   if (prevNotes != null && prevNotes.trim() === notes.trim()) {
     problems.push("build/release-notes.md is unchanged since the previous release; update the \"What's new\" bullets");
   }

@@ -44,10 +44,12 @@ function inside(parent: string, child: string): boolean {
   return rel === '' || (rel !== '..' && !rel.startsWith(`..${sep}`));
 }
 
-/** Never follow links out to global CLI installs or account credentials. */
+/** Never follow links out to global CLI installs or account credentials. An
+ *  agent's mcp.json holds stdio connector keys and is rebuilt on every spawn. */
 function runtimeOnly(rel: string): boolean {
   return /(?:^|\/)\.codex\/(?:auth\.json|config\.toml|packages)(?:\/|$)/i.test(rel)
-    || /(?:^|\/)\.sandbox-secrets(?:\/|$)/i.test(rel);
+    || /(?:^|\/)\.sandbox-secrets(?:\/|$)/i.test(rel)
+    || /(?:^|\/)agents\/[^/]+\/mcp\.json$/i.test(rel);
 }
 
 function claudeSessionIds(hiveRoot: string): string[] {

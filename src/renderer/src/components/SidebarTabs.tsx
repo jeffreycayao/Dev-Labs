@@ -36,7 +36,7 @@ export function SidebarTabs({ current, accent, onChange }: SidebarTabsProps) {
             onClick={() => onChange(tab.key)}
             style={{
               flex: 1,
-              height: 36,
+              height: 28,
               padding: '0 10px',
               border: 'none',
               cursor: 'pointer',

@@ -346,7 +346,9 @@ export class WebhookServer {
       const inbound: WebhookInbound = { message };
       const title = typeof body.title === 'string' ? body.title.trim() : '';
       if (title) inbound.title = title;
-      if (body.kind === 'directive' || body.kind === 'communication') inbound.kind = body.kind;
+      // Only 'directive' is trusted from the sender: a self-declared 'communication'
+      // would skip the approval gate in communication-only mode.
+      if (body.kind === 'directive') inbound.kind = body.kind;
       const from = typeof body.from === 'string' ? body.from.trim() : '';
       if (from) inbound.from = from;
 

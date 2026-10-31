@@ -20,7 +20,7 @@ import { bridgeOf, providerPreset } from '../../../shared/agentProvider';
 import { isDurableRole, preferredAgentRole, roleForHiveSpawn } from '../../../shared/agentRole';
 import { inboxNudgeText } from '../../../shared/hiveNudge';
 import { resolveGodName } from '../../../shared/godIdentity';
-import { acquireTerminal, armTerminalStartupGuard, resetTerminal, isTerminalAutomationSafe } from '@/components/terminalPool';
+import { acquireTerminal, armTerminalStartupGuard, disposeTerminal, resetTerminal, isTerminalAutomationSafe } from '@/components/terminalPool';
 import { spawnAndObservePty } from '@/components/ptyStartup';
 import { canDeliverToAgent, deliverWithAcknowledgement, checkPrecondition } from './queueDelivery';
 import { OFFICE_CAST, DEFAULT_CHARACTER } from '@/scene/office/cast';
@@ -1059,6 +1059,18 @@ export function useHive(config: HarnessConfig | null): void {
     });
   }, [config?.onboardingComplete]);
 
+  // 5a) Same for Discord @-mentions. Main already acked in Discord (the bot token
+  //     stays there); the preamble tells Ramon how to reply in that channel.
+  useEffect(() => {
+    if (!config?.onboardingComplete) return;
+    return window.cth.onDiscordMessage?.((msg) => {
+      const text = msg?.text?.trim();
+      if (!text) return;
+      const instruction = msg.autonomyPreamble ? `${msg.autonomyPreamble}${text}` : undefined;
+      useStore.getState().enqueueMessage(GOD_ID, text, { instruction });
+    });
+  }, [config?.onboardingComplete]);
+
   // 5b) Pipe hive tasks addressed to non-Claude agents (e.g. Codex) into their
   //     terminal queues. When main routes a message to a non-claude provider it
   //     emits 'hive:enqueueToAgent' instead of bouncing; we enqueue the raw
@@ -1137,7 +1149,12 @@ export function useHive(config: HarnessConfig | null): void {
       }).catch(() => { /* retain the hire on a transient query failure */ });
     });
     const offArchive = window.cth.onHiveAgentArchived?.((e) => {
-      if (e?.id) useStore.getState().archiveAgent(e.id);
+      if (!e?.id) return;
+      // Same as the UI fire buttons: free the pooled xterm and its PTY listeners,
+      // or every hire Ramon fires leaks its terminal for the life of the window.
+      const ptyId = useStore.getState().agents.find((a) => a.id === e.id)?.ptyId;
+      if (ptyId) disposeTerminal(ptyId);
+      useStore.getState().archiveAgent(e.id);
     });
     const offOffline = window.cth.onHiveAgentOffline?.((e) => {
       if (!e?.id) return;

@@ -114,6 +114,10 @@ Saturated and warm. Each avatar gets one — the strip badge, the agent's chat s
 | `path` | `#E8D8B0` | Pathways between rooms |
 | `wall` | `#8B6F47` | Room walls (3px stroke) |
 
+### 3.5a The 3D office
+
+The ported 3D office (`src/renderer/src/features/retro-office`, `features/office`) is styled with Tailwind utilities. Its palette lives in ONE file, `features/retro-office/retro-office.css`: every Tailwind colour family the office uses is remapped onto the brand (lime `#CDF252` for fills and highlights, key orange `#E1642D` for the accent and alerts, a green for success, and the `#181C17` dark ramp for surfaces). Write office UI with those families or the `office-*` tokens, never raw hex. Headings and `uppercase` labels inside `.devlabs-office` render as brand labels (Plus Jakarta Sans ExtraBold, lowercase, tight tracking), the same rule as `global.css`.
+
 ### 3.6 Gradient bans
 
 No gradients except: vertical 2-stop on title bars (`cream-100` → `cream-200`). That's it. Every other surface is flat.

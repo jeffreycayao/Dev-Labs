@@ -22,6 +22,8 @@
  * makes a server that fails to resolve non-fatal to the agent.
  */
 
+import type { IntegrationAuthType } from './integrations';
+
 export type McpTier = 'safe-readonly' | 'write' | 'secret';
 
 /** A local server the agent CLI launches (stdio). */
@@ -31,6 +33,13 @@ export interface McpStdioSpec {
   args: string[];
   /** Fixed, non-secret env. Secrets never live here — see `McpCatalogEntry.secret`. */
   env?: Record<string, string>;
+  /**
+   * A vendor REST API this local server calls THROUGH the loopback broker. The
+   * server gets `MD_UPSTREAM_URL` (the broker path for this entry) and
+   * `MD_UPSTREAM_TOKEN` (the agent's capability token) in env, never the key;
+   * the broker adds the key on the way out, the same as for an http entry.
+   */
+  upstream?: { url: string; authType: IntegrationAuthType };
 }
 
 /**
@@ -51,7 +60,8 @@ export type McpSpec = McpStdioSpec | McpHttpSpec;
  * (`mcpSecretRef(id)`), set through a write-only IPC, never returned to the
  * renderer.
  *   - 'env'    → stdio: exported to the server process as `name`.
- *   - 'header' → http: injected by the broker as request header `name`.
+ *   - 'header' → http, or stdio with `upstream`: injected by the broker as
+ *                request header `name`.
  */
 export interface McpSecret {
   kind: 'env' | 'header';
@@ -71,8 +81,8 @@ export interface McpCatalogEntry {
   label: string;
   /** One-line description for the consent UI / hire import preview. */
   description: string;
-  /** How to reach the server. Stdio `filesystem`/`git` carry a placeholder cwd arg
-   *  replaced with the agent cwd at merge time. */
+  /** How to reach the server. `<name>` placeholders in a stdio spec are filled at
+   *  merge time: `<cwd>` with the agent cwd, the rest from `BuildMcpServersInput.vars`. */
   spec: McpSpec;
   /** The credential this server needs, if any (write/secret tiers only). */
   secret?: McpSecret;
@@ -205,6 +215,38 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     secret: { kind: 'env', name: 'WEBCAKE_JWT', label: 'Webcake token', helpUrl: 'https://docs.pancake.biz/landing/st-f7/st-p3?lang=en' },
     tier: 'secret',
     defaultEnabled: false
+  },
+
+  // ─── Bundled connectors (resources/md-*-mcp.cjs, run on the app's own Node) ─
+  {
+    // Plain files in the folder the user picked (Settings → Connections), never
+    // outside it. Skipped until a vault is chosen.
+    id: 'obsidian',
+    label: 'Obsidian',
+    description: 'Save notes, learnings and decisions to your Obsidian vault and read them back: tagged notes, daily notes and [[links]].',
+    spec: {
+      command: '<node>',
+      args: ['<resources>/md-obsidian-mcp.cjs'],
+      env: { ELECTRON_RUN_AS_NODE: '1', OBSIDIAN_VAULT: '<obsidian-vault>' }
+    },
+    tier: 'write',
+    defaultEnabled: false
+  },
+  {
+    // Discord's REST API through the broker: the server holds a capability token,
+    // the broker adds "Authorization: Bot <token>".
+    id: 'discord',
+    label: 'Discord',
+    description: 'Post messages to your Discord channels and read recent ones, as your own bot.',
+    spec: {
+      command: '<node>',
+      args: ['<resources>/md-discord-mcp.cjs'],
+      env: { ELECTRON_RUN_AS_NODE: '1' },
+      upstream: { url: 'https://discord.com/api/v10', authType: 'discord' }
+    },
+    secret: { kind: 'header', name: 'Authorization', label: 'Discord bot token', helpUrl: 'https://discord.com/developers/applications' },
+    tier: 'secret',
+    defaultEnabled: false
   }
 ];
 
@@ -229,12 +271,25 @@ export function mcpUpstream(spec: McpHttpSpec): { baseUrl: string; path: string 
   return { baseUrl: u.origin, path: `${u.pathname.replace(/^\/+/, '')}${u.search}` };
 }
 
+/** True when the broker carries this entry's traffic (http, or stdio with `upstream`). */
+export function isBrokered(e: McpCatalogEntry): boolean {
+  return isHttpSpec(e.spec) || !!e.spec.upstream;
+}
+
+/** Where the broker forwards a brokered entry, and how it adds the key. */
+export function mcpBrokerTarget(e: McpCatalogEntry): { baseUrl: string; authType: IntegrationAuthType; authHeader?: string } | undefined {
+  if (e.secret?.kind !== 'header') return undefined;
+  if (isHttpSpec(e.spec)) return { baseUrl: mcpUpstream(e.spec).baseUrl, authType: 'header', authHeader: e.secret.name };
+  if (e.spec.upstream) return { baseUrl: e.spec.upstream.url, authType: e.spec.upstream.authType };
+  return undefined;
+}
+
 /** One server as written into the agent's `--mcp-config` file. */
 export type McpServerConfig =
   | { command: string; args: string[]; env?: Record<string, string> }
   | { type: 'http'; url: string; headers: Record<string, string> };
 
-export type McpSkipReason = 'no_secret' | 'broker_offline';
+export type McpSkipReason = 'no_secret' | 'broker_offline' | 'not_configured';
 
 export interface BuildMcpServersInput {
   cwd: string;
@@ -243,6 +298,9 @@ export interface BuildMcpServersInput {
   getSecret: (id: string) => string | undefined;
   /** The loopback broker + this agent's capability token, when the broker is up. */
   broker?: { url: string; token: string };
+  /** Values for `<name>` placeholders in stdio specs (`node`, `resources`,
+   *  `obsidian-vault`, …). An entry needing one that is missing is skipped. */
+  vars?: Record<string, string>;
   catalog?: readonly McpCatalogEntry[];
 }
 
@@ -255,7 +313,10 @@ export interface BuildMcpServersInput {
  *   - a server whose credential is missing is SKIPPED (reported), never launched
  *     half-configured;
  *   - an http server is written as the BROKER url + capability token, never the
- *     vendor URL + key; with the broker down it is skipped, not exposed.
+ *     vendor URL + key; with the broker down it is skipped, not exposed;
+ *   - a stdio server with `upstream` gets the same broker url + token in env;
+ *   - a stdio server whose `<placeholder>` has no value is skipped
+ *     ('not_configured'), never launched with a literal `<obsidian-vault>`.
  */
 export function buildMcpServers(input: BuildMcpServersInput): {
   servers: Record<string, McpServerConfig>;
@@ -284,16 +345,33 @@ export function buildMcpServers(input: BuildMcpServersInput): {
       brokerIds.push(mcpBrokerId(e.id));
       continue;
     }
-    const args = e.spec.args.map((a) => (a === '<cwd>' ? input.cwd : a));
-    const env = { ...(e.spec.env ?? {}), ...(e.secret?.kind === 'env' && secret ? { [e.secret.name]: secret } : {}) };
-    servers[key] = { command: e.spec.command, args, ...(Object.keys(env).length ? { env } : {}) };
+    const vars: Record<string, string> = { ...input.vars, cwd: input.cwd };
+    let missing = false;
+    const fill = (s: string): string => s.replace(/<([a-z-]+)>/g, (m, name: string) => {
+      if (vars[name]) return vars[name];
+      missing = true;
+      return m;
+    });
+    const command = fill(e.spec.command);
+    const args = e.spec.args.map(fill);
+    const env: Record<string, string> = {};
+    for (const [k, v] of Object.entries(e.spec.env ?? {})) env[k] = fill(v);
+    if (missing) { skipped.push({ id: e.id, reason: 'not_configured' }); continue; }
+    if (e.secret?.kind === 'env' && secret) env[e.secret.name] = secret;
+    if (e.spec.upstream) {
+      if (!input.broker) { skipped.push({ id: e.id, reason: 'broker_offline' }); continue; }
+      env.MD_UPSTREAM_URL = `${input.broker.url}/i/${encodeURIComponent(mcpBrokerId(e.id))}`;
+      env.MD_UPSTREAM_TOKEN = input.broker.token;
+      brokerIds.push(mcpBrokerId(e.id));
+    }
+    servers[key] = { command, args, ...(Object.keys(env).length ? { env } : {}) };
   }
   return { servers, skipped, brokerIds };
 }
 
-/** Remote entries the given consent map enables (for the broker grant). */
-export function enabledHttpEntries(consent: BuildMcpServersInput['consent'], catalog: readonly McpCatalogEntry[] = MCP_CATALOG): McpCatalogEntry[] {
-  return catalog.filter((e) => isHttpSpec(e.spec) && consent?.[e.id]?.enabled === true);
+/** Brokered entries the given consent map enables (for the broker grant). */
+export function enabledBrokeredEntries(consent: BuildMcpServersInput['consent'], catalog: readonly McpCatalogEntry[] = MCP_CATALOG): McpCatalogEntry[] {
+  return catalog.filter((e) => isBrokered(e) && consent?.[e.id]?.enabled === true);
 }
 
 /** Look up a catalog entry by id. */

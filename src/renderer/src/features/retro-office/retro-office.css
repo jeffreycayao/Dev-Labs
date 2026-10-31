@@ -1,0 +1,386 @@
+/* Tailwind utilities for the ported Claw3D office only. No preflight, so the
+   rest of DevLabs keeps its own base styles; sources limited to the port.
+   Explicit layer order: the scoped reset (base) must lose to utilities. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities) source(none);
+@source "./";
+@source "../office";
+
+/* ── DevLabs brand palette for the whole office (ONE place) ─────────────────
+   Brand (design/tokens.css): main lime #CDF252, key orange #E1642D, dark #181C17.
+   Claw3D styled its screens with Tailwind families (amber, cyan, sky, violet,
+   rose, slate…). Instead of rewriting ~550 class names, every family it uses
+   is remapped here onto a brand scale:
+     lime  ← amber yellow cyan sky teal lime blue indigo   (fills, highlights)
+     key   ← rose red orange fuchsia pink violet purple    (the key accent, alerts)
+     ok    ← emerald green                                 (success / online)
+     dark  ← slate gray zinc neutral stone                 (#181C17 ramp)
+   Change a brand value here and every office screen follows. */
+@theme {
+  /* lime */
+  --color-office-lime-50: #F7FDE4;
+  --color-office-lime-100: #EFFBC8;
+  --color-office-lime-200: #E3F79F;
+  --color-office-lime-300: #D8F579;
+  --color-office-lime-400: #CDF252;
+  --color-office-lime-500: #BEE53A;
+  --color-office-lime-600: #9DBB2E;
+  --color-office-lime-700: #7A9223;
+  --color-office-lime-800: #56671A;
+  --color-office-lime-900: #3A4512;
+  --color-office-lime-950: #232A0C;
+  /* key */
+  --color-office-key-50: #FDF0EA;
+  --color-office-key-100: #FADCCD;
+  --color-office-key-200: #F4B79A;
+  --color-office-key-300: #EE9468;
+  --color-office-key-400: #E7783F;
+  --color-office-key-500: #E1642D;
+  --color-office-key-600: #C04F1F;
+  --color-office-key-700: #983E19;
+  --color-office-key-800: #6F2E13;
+  --color-office-key-900: #4A1F0D;
+  --color-office-key-950: #2D1308;
+  /* ok */
+  --color-office-ok-50: #EEF7E9;
+  --color-office-ok-100: #DCEFD2;
+  --color-office-ok-200: #BFE2AC;
+  --color-office-ok-300: #A2D486;
+  --color-office-ok-400: #8CC56F;
+  --color-office-ok-500: #74AD57;
+  --color-office-ok-600: #5E9A4E;
+  --color-office-ok-700: #487A3B;
+  --color-office-ok-800: #335A2A;
+  --color-office-ok-900: #213B1B;
+  --color-office-ok-950: #14240F;
+  /* dark */
+  --color-office-dark-50: #F4F7EF;
+  --color-office-dark-100: #E6ECDD;
+  --color-office-dark-200: #C1C9B6;
+  --color-office-dark-300: #9AA38F;
+  --color-office-dark-400: #828C78;
+  --color-office-dark-500: #596254;
+  --color-office-dark-600: #444C40;
+  --color-office-dark-700: #363D32;
+  --color-office-dark-800: #2A3128;
+  --color-office-dark-900: #232922;
+  --color-office-dark-950: #181C17;
+  --color-amber-50: var(--color-office-lime-50);
+  --color-amber-100: var(--color-office-lime-100);
+  --color-amber-200: var(--color-office-lime-200);
+  --color-amber-300: var(--color-office-lime-300);
+  --color-amber-400: var(--color-office-lime-400);
+  --color-amber-500: var(--color-office-lime-500);
+  --color-amber-600: var(--color-office-lime-600);
+  --color-amber-700: var(--color-office-lime-700);
+  --color-amber-800: var(--color-office-lime-800);
+  --color-amber-900: var(--color-office-lime-900);
+  --color-amber-950: var(--color-office-lime-950);
+  --color-yellow-50: var(--color-office-lime-50);
+  --color-yellow-100: var(--color-office-lime-100);
+  --color-yellow-200: var(--color-office-lime-200);
+  --color-yellow-300: var(--color-office-lime-300);
+  --color-yellow-400: var(--color-office-lime-400);
+  --color-yellow-500: var(--color-office-lime-500);
+  --color-yellow-600: var(--color-office-lime-600);
+  --color-yellow-700: var(--color-office-lime-700);
+  --color-yellow-800: var(--color-office-lime-800);
+  --color-yellow-900: var(--color-office-lime-900);
+  --color-yellow-950: var(--color-office-lime-950);
+  --color-cyan-50: var(--color-office-lime-50);
+  --color-cyan-100: var(--color-office-lime-100);
+  --color-cyan-200: var(--color-office-lime-200);
+  --color-cyan-300: var(--color-office-lime-300);
+  --color-cyan-400: var(--color-office-lime-400);
+  --color-cyan-500: var(--color-office-lime-500);
+  --color-cyan-600: var(--color-office-lime-600);
+  --color-cyan-700: var(--color-office-lime-700);
+  --color-cyan-800: var(--color-office-lime-800);
+  --color-cyan-900: var(--color-office-lime-900);
+  --color-cyan-950: var(--color-office-lime-950);
+  --color-sky-50: var(--color-office-lime-50);
+  --color-sky-100: var(--color-office-lime-100);
+  --color-sky-200: var(--color-office-lime-200);
+  --color-sky-300: var(--color-office-lime-300);
+  --color-sky-400: var(--color-office-lime-400);
+  --color-sky-500: var(--color-office-lime-500);
+  --color-sky-600: var(--color-office-lime-600);
+  --color-sky-700: var(--color-office-lime-700);
+  --color-sky-800: var(--color-office-lime-800);
+  --color-sky-900: var(--color-office-lime-900);
+  --color-sky-950: var(--color-office-lime-950);
+  --color-teal-50: var(--color-office-lime-50);
+  --color-teal-100: var(--color-office-lime-100);
+  --color-teal-200: var(--color-office-lime-200);
+  --color-teal-300: var(--color-office-lime-300);
+  --color-teal-400: var(--color-office-lime-400);
+  --color-teal-500: var(--color-office-lime-500);
+  --color-teal-600: var(--color-office-lime-600);
+  --color-teal-700: var(--color-office-lime-700);
+  --color-teal-800: var(--color-office-lime-800);
+  --color-teal-900: var(--color-office-lime-900);
+  --color-teal-950: var(--color-office-lime-950);
+  --color-lime-50: var(--color-office-lime-50);
+  --color-lime-100: var(--color-office-lime-100);
+  --color-lime-200: var(--color-office-lime-200);
+  --color-lime-300: var(--color-office-lime-300);
+  --color-lime-400: var(--color-office-lime-400);
+  --color-lime-500: var(--color-office-lime-500);
+  --color-lime-600: var(--color-office-lime-600);
+  --color-lime-700: var(--color-office-lime-700);
+  --color-lime-800: var(--color-office-lime-800);
+  --color-lime-900: var(--color-office-lime-900);
+  --color-lime-950: var(--color-office-lime-950);
+  --color-blue-50: var(--color-office-lime-50);
+  --color-blue-100: var(--color-office-lime-100);
+  --color-blue-200: var(--color-office-lime-200);
+  --color-blue-300: var(--color-office-lime-300);
+  --color-blue-400: var(--color-office-lime-400);
+  --color-blue-500: var(--color-office-lime-500);
+  --color-blue-600: var(--color-office-lime-600);
+  --color-blue-700: var(--color-office-lime-700);
+  --color-blue-800: var(--color-office-lime-800);
+  --color-blue-900: var(--color-office-lime-900);
+  --color-blue-950: var(--color-office-lime-950);
+  --color-indigo-50: var(--color-office-lime-50);
+  --color-indigo-100: var(--color-office-lime-100);
+  --color-indigo-200: var(--color-office-lime-200);
+  --color-indigo-300: var(--color-office-lime-300);
+  --color-indigo-400: var(--color-office-lime-400);
+  --color-indigo-500: var(--color-office-lime-500);
+  --color-indigo-600: var(--color-office-lime-600);
+  --color-indigo-700: var(--color-office-lime-700);
+  --color-indigo-800: var(--color-office-lime-800);
+  --color-indigo-900: var(--color-office-lime-900);
+  --color-indigo-950: var(--color-office-lime-950);
+  --color-rose-50: var(--color-office-key-50);
+  --color-rose-100: var(--color-office-key-100);
+  --color-rose-200: var(--color-office-key-200);
+  --color-rose-300: var(--color-office-key-300);
+  --color-rose-400: var(--color-office-key-400);
+  --color-rose-500: var(--color-office-key-500);
+  --color-rose-600: var(--color-office-key-600);
+  --color-rose-700: var(--color-office-key-700);
+  --color-rose-800: var(--color-office-key-800);
+  --color-rose-900: var(--color-office-key-900);
+  --color-rose-950: var(--color-office-key-950);
+  --color-red-50: var(--color-office-key-50);
+  --color-red-100: var(--color-office-key-100);
+  --color-red-200: var(--color-office-key-200);
+  --color-red-300: var(--color-office-key-300);
+  --color-red-400: var(--color-office-key-400);
+  --color-red-500: var(--color-office-key-500);
+  --color-red-600: var(--color-office-key-600);
+  --color-red-700: var(--color-office-key-700);
+  --color-red-800: var(--color-office-key-800);
+  --color-red-900: var(--color-office-key-900);
+  --color-red-950: var(--color-office-key-950);
+  --color-orange-50: var(--color-office-key-50);
+  --color-orange-100: var(--color-office-key-100);
+  --color-orange-200: var(--color-office-key-200);
+  --color-orange-300: var(--color-office-key-300);
+  --color-orange-400: var(--color-office-key-400);
+  --color-orange-500: var(--color-office-key-500);
+  --color-orange-600: var(--color-office-key-600);
+  --color-orange-700: var(--color-office-key-700);
+  --color-orange-800: var(--color-office-key-800);
+  --color-orange-900: var(--color-office-key-900);
+  --color-orange-950: var(--color-office-key-950);
+  --color-fuchsia-50: var(--color-office-key-50);
+  --color-fuchsia-100: var(--color-office-key-100);
+  --color-fuchsia-200: var(--color-office-key-200);
+  --color-fuchsia-300: var(--color-office-key-300);
+  --color-fuchsia-400: var(--color-office-key-400);
+  --color-fuchsia-500: var(--color-office-key-500);
+  --color-fuchsia-600: var(--color-office-key-600);
+  --color-fuchsia-700: var(--color-office-key-700);
+  --color-fuchsia-800: var(--color-office-key-800);
+  --color-fuchsia-900: var(--color-office-key-900);
+  --color-fuchsia-950: var(--color-office-key-950);
+  --color-pink-50: var(--color-office-key-50);
+  --color-pink-100: var(--color-office-key-100);
+  --color-pink-200: var(--color-office-key-200);
+  --color-pink-300: var(--color-office-key-300);
+  --color-pink-400: var(--color-office-key-400);
+  --color-pink-500: var(--color-office-key-500);
+  --color-pink-600: var(--color-office-key-600);
+  --color-pink-700: var(--color-office-key-700);
+  --color-pink-800: var(--color-office-key-800);
+  --color-pink-900: var(--color-office-key-900);
+  --color-pink-950: var(--color-office-key-950);
+  --color-violet-50: var(--color-office-key-50);
+  --color-violet-100: var(--color-office-key-100);
+  --color-violet-200: var(--color-office-key-200);
+  --color-violet-300: var(--color-office-key-300);
+  --color-violet-400: var(--color-office-key-400);
+  --color-violet-500: var(--color-office-key-500);
+  --color-violet-600: var(--color-office-key-600);
+  --color-violet-700: var(--color-office-key-700);
+  --color-violet-800: var(--color-office-key-800);
+  --color-violet-900: var(--color-office-key-900);
+  --color-violet-950: var(--color-office-key-950);
+  --color-purple-50: var(--color-office-key-50);
+  --color-purple-100: var(--color-office-key-100);
+  --color-purple-200: var(--color-office-key-200);
+  --color-purple-300: var(--color-office-key-300);
+  --color-purple-400: var(--color-office-key-400);
+  --color-purple-500: var(--color-office-key-500);
+  --color-purple-600: var(--color-office-key-600);
+  --color-purple-700: var(--color-office-key-700);
+  --color-purple-800: var(--color-office-key-800);
+  --color-purple-900: var(--color-office-key-900);
+  --color-purple-950: var(--color-office-key-950);
+  --color-emerald-50: var(--color-office-ok-50);
+  --color-emerald-100: var(--color-office-ok-100);
+  --color-emerald-200: var(--color-office-ok-200);
+  --color-emerald-300: var(--color-office-ok-300);
+  --color-emerald-400: var(--color-office-ok-400);
+  --color-emerald-500: var(--color-office-ok-500);
+  --color-emerald-600: var(--color-office-ok-600);
+  --color-emerald-700: var(--color-office-ok-700);
+  --color-emerald-800: var(--color-office-ok-800);
+  --color-emerald-900: var(--color-office-ok-900);
+  --color-emerald-950: var(--color-office-ok-950);
+  --color-green-50: var(--color-office-ok-50);
+  --color-green-100: var(--color-office-ok-100);
+  --color-green-200: var(--color-office-ok-200);
+  --color-green-300: var(--color-office-ok-300);
+  --color-green-400: var(--color-office-ok-400);
+  --color-green-500: var(--color-office-ok-500);
+  --color-green-600: var(--color-office-ok-600);
+  --color-green-700: var(--color-office-ok-700);
+  --color-green-800: var(--color-office-ok-800);
+  --color-green-900: var(--color-office-ok-900);
+  --color-green-950: var(--color-office-ok-950);
+  --color-slate-50: var(--color-office-dark-50);
+  --color-slate-100: var(--color-office-dark-100);
+  --color-slate-200: var(--color-office-dark-200);
+  --color-slate-300: var(--color-office-dark-300);
+  --color-slate-400: var(--color-office-dark-400);
+  --color-slate-500: var(--color-office-dark-500);
+  --color-slate-600: var(--color-office-dark-600);
+  --color-slate-700: var(--color-office-dark-700);
+  --color-slate-800: var(--color-office-dark-800);
+  --color-slate-900: var(--color-office-dark-900);
+  --color-slate-950: var(--color-office-dark-950);
+  --color-gray-50: var(--color-office-dark-50);
+  --color-gray-100: var(--color-office-dark-100);
+  --color-gray-200: var(--color-office-dark-200);
+  --color-gray-300: var(--color-office-dark-300);
+  --color-gray-400: var(--color-office-dark-400);
+  --color-gray-500: var(--color-office-dark-500);
+  --color-gray-600: var(--color-office-dark-600);
+  --color-gray-700: var(--color-office-dark-700);
+  --color-gray-800: var(--color-office-dark-800);
+  --color-gray-900: var(--color-office-dark-900);
+  --color-gray-950: var(--color-office-dark-950);
+  --color-zinc-50: var(--color-office-dark-50);
+  --color-zinc-100: var(--color-office-dark-100);
+  --color-zinc-200: var(--color-office-dark-200);
+  --color-zinc-300: var(--color-office-dark-300);
+  --color-zinc-400: var(--color-office-dark-400);
+  --color-zinc-500: var(--color-office-dark-500);
+  --color-zinc-600: var(--color-office-dark-600);
+  --color-zinc-700: var(--color-office-dark-700);
+  --color-zinc-800: var(--color-office-dark-800);
+  --color-zinc-900: var(--color-office-dark-900);
+  --color-zinc-950: var(--color-office-dark-950);
+  --color-neutral-50: var(--color-office-dark-50);
+  --color-neutral-100: var(--color-office-dark-100);
+  --color-neutral-200: var(--color-office-dark-200);
+  --color-neutral-300: var(--color-office-dark-300);
+  --color-neutral-400: var(--color-office-dark-400);
+  --color-neutral-500: var(--color-office-dark-500);
+  --color-neutral-600: var(--color-office-dark-600);
+  --color-neutral-700: var(--color-office-dark-700);
+  --color-neutral-800: var(--color-office-dark-800);
+  --color-neutral-900: var(--color-office-dark-900);
+  --color-neutral-950: var(--color-office-dark-950);
+  --color-stone-50: var(--color-office-dark-50);
+  --color-stone-100: var(--color-office-dark-100);
+  --color-stone-200: var(--color-office-dark-200);
+  --color-stone-300: var(--color-office-dark-300);
+  --color-stone-400: var(--color-office-dark-400);
+  --color-stone-500: var(--color-office-dark-500);
+  --color-stone-600: var(--color-office-dark-600);
+  --color-stone-700: var(--color-office-dark-700);
+  --color-stone-800: var(--color-office-dark-800);
+  --color-stone-900: var(--color-office-dark-900);
+  --color-stone-950: var(--color-office-dark-950);
+  --color-black: #0e110d;
+  --color-white: #f4f7ef;
+
+  /* Surfaces from the brand dark, deepest first (replaces Claw3D's browns/navies). */
+  --color-office-bg-0: #0e110d;
+  --color-office-bg-1: #141812;
+  --color-office-bg-2: #181c17;
+  --color-office-bg-3: #1d221c;
+  --color-office-bg-4: #232922;
+  --color-office-bg-5: #2f362d;
+
+  /* Claw3D theme tokens the ported avatar editor uses. */
+  --color-foreground: #e6ecdd;
+  --color-muted-foreground: #9aa38f;
+  --color-border: #2f362d;
+  --color-primary: #cdf252;
+
+  /* Type: same faces as the app (design/tokens.css). */
+  --font-sans: var(--cth-font-ui);
+  --font-mono: var(--cth-font-mono);
+  --font-display: var(--cth-font-display);
+}
+
+/* Scoped reset. Claw3D relied on Tailwind's preflight, which DevLabs keeps
+   off so the rest of the app is untouched; without it buttons got the browser's
+   white default. Only inside .devlabs-office, and in the base layer so any
+   utility class still wins. */
+@layer base {
+  .devlabs-office :where(button) {
+    background: transparent;
+    border: 0 solid;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .devlabs-office :where(input, select, textarea) {
+    background: transparent;
+    border: 0 solid;
+    color: inherit;
+    font: inherit;
+  }
+  .devlabs-office :where(h1, h2, h3, h4, p) { margin: 0; }
+  .devlabs-office :where(*, ::before, ::after) { border-color: var(--color-office-bg-5); }
+}
+
+/* Brand headlines and labels, matching design/global.css: Plus Jakarta Sans
+   ExtraBold, lowercase, tight tracking. Claw3D's headings and its uppercase,
+   wide-tracked labels both become brand labels. !important beats the
+   tracking-[…] utilities those labels carry. */
+.devlabs-office :where(h1, h2, h3),
+.devlabs-office .uppercase {
+  font-family: var(--cth-font-display) !important;
+  font-weight: 800 !important;
+  text-transform: lowercase !important;
+  letter-spacing: -0.01em !important;
+}
+
+@layer components {
+  .ui-btn-primary,
+  .ui-btn-secondary,
+  .ui-btn-ghost {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background-color 180ms ease, border-color 180ms ease;
+  }
+  .ui-btn-primary { border: 1px solid #cdf252; background: #cdf252; color: #181c17; font-weight: 700; }
+  .ui-btn-primary:hover { background: #d8f579; }
+  .ui-btn-secondary { border: 1px solid #2f362d; background: #1d221c; color: #e6ecdd; }
+  .ui-btn-secondary:hover { border-color: #828c78; background: #232922; }
+  .ui-btn-ghost { border: 0; background: transparent; color: #c1c9b6; }
+  .ui-btn-ghost:hover { background: #232922; }
+}

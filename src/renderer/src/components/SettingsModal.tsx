@@ -17,7 +17,6 @@ import { UpdatesSection } from './UpdatesSection';
 import { SettingsHeroCard } from './SettingsHeroCard';
 import { SetupPanel } from './SetupPanel';
 import { Icon } from './Icon';
-import { OfficeThemePicker } from './OfficeThemePicker';
 import { McpDefaultsSettings } from './McpDefaultsSettings';
 import { IntegrationsRegistry } from './IntegrationsRegistry';
 import { AiEnginesSettings } from './AiEnginesSettings';
@@ -1294,8 +1293,6 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                         </div>
                       </div>
 
-                      {/* Office Theme — TV-show office maps (experimental; flag tvShowOffices, default off) */}
-                      <OfficeThemePicker config={config} />
                     </>
                   )}
 

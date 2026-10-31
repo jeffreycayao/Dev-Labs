@@ -233,3 +233,5 @@ html.js .reveal{opacity:0}
 .eyebrow .dot{animation:pulse 2.4s ease-in-out infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(225,100,45,.6)}50%{box-shadow:0 0 0 5px rgba(225,100,45,0)}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}.hero-3d,.building-3d,.core-3d{display:none}}
+/* Framed product shot on the landing page (the 3D office GIF). */
+.showcase{margin:0 auto;max-width:960px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line-2);background:var(--panel-solid);box-shadow:var(--glow)}

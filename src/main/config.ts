@@ -1,5 +1,5 @@
 import { app } from 'electron';
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import {
@@ -13,6 +13,7 @@ import { defaultMcpDefaults } from '../shared/mcpCatalog';
 import { MAX_AGENT_TOKEN_CAP } from '../shared/tokenCaps';
 import { expandTilde, normalizeHiveHome } from './fs';
 import type { IntegrationRecord } from '../shared/integrations';
+import type { DiscordTriggerConfig } from '../shared/discord';
 import {
   DEFAULT_CONTEXT_TRIGGER,
   DEFAULT_ORG_TRIGGER,
@@ -354,6 +355,12 @@ export interface HarnessConfig {
    *  done-reply round-trip (a user @-mention → task → result posted back to that
    *  thread) or an agent's own direct in-thread reply — those always stay on. */
   slackProactivePosting?: boolean;
+  /** Absolute path of the Obsidian vault the `obsidian` connector writes to.
+   *  The connector is skipped at spawn until this is set. */
+  obsidianVault?: string;
+  /** Discord @-mention → Ramon's queue (Triggers tab). The bot token is the
+   *  Discord connector's key in the encrypted secret store, never here. */
+  discordTrigger?: DiscordTriggerConfig;
 
   // ─── Free Flow (voice dictation → message queue) ───────────────────────────
   /** Master toggle for Free Flow push-to-talk dictation. Default OFF: with it off
@@ -621,6 +628,11 @@ function migrateModelDefaultsV2(cfg: HarnessConfig, stored: Partial<HarnessConfi
   return next;
 }
 
+/** readConfig runs on every hook event (via hive.root()). Keep the parsed result
+ *  keyed on the file's mtime + size, so a write from anywhere — persistConfig or
+ *  an external edit — is picked up, and an unchanged file is one stat. */
+let configCache: { mtimeMs: number; size: number; cfg: HarnessConfig } | null = null;
+
 export function readConfig(): HarnessConfig {
   const p = configPath();
   // No file yet = a first run with nothing to migrate; the defaults ARE the
@@ -628,11 +640,20 @@ export function readConfig(): HarnessConfig {
   // conjure a config.json before onboarding has written one.
   if (!existsSync(p)) return withTriggerDefaults({ ...DEFAULTS });
   try {
+    const st = statSync(p);
+    // A clone: callers mutate what they read, and must not reach the cache.
+    if (configCache && configCache.mtimeMs === st.mtimeMs && configCache.size === st.size) {
+      return structuredClone(configCache.cfg);
+    }
     const raw = readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
-    return normalizeStoredHomes(migrateModelDefaultsV2(
+    const cfg = normalizeStoredHomes(migrateModelDefaultsV2(
       migrateUnsupportedCodexModel(migrateTriggersV1(withTriggerDefaults({ ...DEFAULTS, ...parsed }))), parsed
     ));
+    // Stat again: a migration above may have rewritten the file.
+    const after = statSync(p);
+    configCache = { mtimeMs: after.mtimeMs, size: after.size, cfg: structuredClone(cfg) };
+    return cfg;
   } catch {
     return withTriggerDefaults({ ...DEFAULTS });
   }
@@ -674,6 +695,18 @@ export function onConfigWritten(listener: ConfigWriteListener): () => void {
   return () => { configWriteListeners.delete(listener); };
 }
 
+/** Temp + rename, so a crash mid-write leaves the old file or the new one, never half. */
+function writeJsonAtomic(p: string, data: unknown): void {
+  const tmp = `${p}.tmp-${Math.random().toString(36).slice(2, 10)}`;
+  try {
+    writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
+    renameSync(tmp, p);
+  } catch (e) {
+    try { rmSync(tmp, { force: true }); } catch { /* the tmp file is disposable */ }
+    throw e;
+  }
+}
+
 function persistConfig(next: HarnessConfig): HarnessConfig {
   const p = configPath();
   mkdirSync(dirname(p), { recursive: true });
@@ -683,14 +716,8 @@ function persistConfig(next: HarnessConfig): HarnessConfig {
   // unparseable config.json to factory defaults — one torn write would wipe
   // harnessHome, the Slack/webhook secrets and every saved setting. Same
   // discipline as roster.ts and hive.ts atomicWriteJson.
-  const tmp = `${p}.tmp-${Math.random().toString(36).slice(2, 10)}`;
-  try {
-    writeFileSync(tmp, JSON.stringify(next, null, 2), 'utf8');
-    renameSync(tmp, p);
-  } catch (e) {
-    try { rmSync(tmp, { force: true }); } catch { /* the tmp file is disposable */ }
-    throw e;
-  }
+  configCache = null; // mtime alone can miss two same-size writes in one tick
+  writeJsonAtomic(p, next);
   // Saving one setting stores only that setting, so fill the rest back in first:
   // subscribers must see the same complete config a read gives them, never a
   // half-filled one. Skip the migration — it saves in its own right, and has
@@ -853,7 +880,7 @@ function ensureClaudeGlobalPermissions(home: string): void {
       s.skipDangerousModePermissionPrompt = true;
       s.skipAutoPermissionPrompt = true;
       mkdirSync(dir, { recursive: true });
-      writeFileSync(p, JSON.stringify(s, null, 2), 'utf8');
+      writeJsonAtomic(p, s);
     }
   } catch (error) {
     console.warn(
@@ -892,7 +919,7 @@ function ensureClaudeProjectTrust(home: string, cwd: string): void {
       for (const k of keys) {
         c.projects[k] = { ...(c.projects[k] ?? {}), hasTrustDialogAccepted: true };
       }
-      writeFileSync(p, JSON.stringify(c, null, 2), 'utf8');
+      writeJsonAtomic(p, c);
     }
   } catch (error) {
     console.warn(

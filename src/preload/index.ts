@@ -1,4 +1,10 @@
 import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron';
+import { githubPrApi } from './office/githubPr';
+import { usageAnalyticsApi } from './office/usageAnalytics';
+import { standupApi } from './office/standup';
+import { voiceReplyApi } from './office/voiceReply';
+import { companyBuilderApi } from './office/companyBuilder';
+import { spotifyApi } from './office/spotify';
 import type { AgentProvider } from '../shared/agentProvider';
 import type { HireManifest } from '../shared/hire';
 export type { HireManifest } from '../shared/hire';
@@ -271,6 +277,23 @@ export interface CircuitBreakerConfig {
   tokenVelocityPerMin?: number;
 }
 
+export interface DiscordStatus {
+  running: boolean;
+  botName?: string;
+  /** Who may start work right now (the saved list, or the resolved bot owner). */
+  allowedUserIds: string[];
+  error?: string;
+  /** channel id → last error reading it (no access, deleted, …). */
+  channelErrors: Record<string, string>;
+}
+
+export interface ObsidianStatus {
+  vault?: string;
+  exists: boolean;
+  /** The folder has a `.obsidian` settings dir, i.e. Obsidian has opened it. */
+  isVault: boolean;
+}
+
 export interface HarnessConfig {
   onboardingComplete: boolean;
   /** Onboarding audience ('technical' | 'non-technical'); drives onboarding copy.
@@ -312,6 +335,7 @@ export interface HarnessConfig {
   slackChannelId?: string;
   slackPort?: number;
   slackProactivePosting?: boolean;
+  obsidianVault?: string;
   webhookEnabled?: boolean;
   webhookSecret?: string;
   webhookPort?: number;
@@ -581,6 +605,13 @@ export interface PreservedWorktreeSnapshot {
 }
 
 const api = {
+  // 3D office features ported from Claw3D (see ./office/).
+  ...githubPrApi,
+  ...usageAnalyticsApi,
+  ...standupApi,
+  ...voiceReplyApi,
+  ...companyBuilderApi,
+  ...spotifyApi,
   version: __APP_VERSION__,
 
   // ─── Analytics ───────────────────────────────────────────────────────────
@@ -1247,6 +1278,29 @@ const api = {
     proactivePosting?: boolean;
   }): Promise<{ ok: boolean }> =>
     ipcRenderer.invoke('slack:setConfig', patch),
+
+  // ─── Discord trigger (Discord @-mention → Ramon's queue) ─────────────────────
+  /** Inbound Discord requests; returns an unsubscribe fn. The bot token never
+   *  crosses this bridge: main acks in Discord itself. */
+  onDiscordMessage: (cb: (msg: { text: string; channelId: string; messageId: string; author: string; autonomyPreamble?: string }) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, msg: { text: string; channelId: string; messageId: string; author: string; autonomyPreamble?: string }) => cb(msg);
+    ipcRenderer.on('discord:incomingMessage', listener);
+    return () => ipcRenderer.removeListener('discord:incomingMessage', listener);
+  },
+  discordGetTrigger: (): Promise<{ enabled: boolean; channelIds: string[]; allowedUserIds: string[] }> =>
+    ipcRenderer.invoke('discord:getTrigger'),
+  /** Save the trigger and start/stop the poller to match; resolves the new status. */
+  discordSetTrigger: (cfg: { enabled: boolean; channelIds: string[]; allowedUserIds: string[] }): Promise<DiscordStatus> =>
+    ipcRenderer.invoke('discord:setTrigger', cfg),
+  discordStatus: (): Promise<DiscordStatus> =>
+    ipcRenderer.invoke('discord:status'),
+
+  // ─── Obsidian vault (the `obsidian` connector's folder) ──────────────────────
+  obsidianStatus: (): Promise<ObsidianStatus> =>
+    ipcRenderer.invoke('obsidian:status'),
+  /** Set the vault folder (an existing absolute directory), or clear it with null. */
+  obsidianSetVault: (path: string | null): Promise<ObsidianStatus & { ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('obsidian:setVault', path),
 
   // ─── Generic webhook + status API (POST → work, GET → status) ────────────────
   /** Start the generic webhook server; returns the public endpoint URL callers

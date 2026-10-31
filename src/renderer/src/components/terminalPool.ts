@@ -145,7 +145,9 @@ export function acquireTerminal(ptyId: string, theme?: ThemeMap, fontSize = 14):
     lineHeight: 1.0,
     cursorBlink: true,
     cursorStyle: 'block',
-    scrollback: 100000,
+    // ~1.4 KB per line at 120 cols: 100k lines could reach ~140 MB per agent
+    // across 15–50 pooled terminals. 10k keeps a long session readable.
+    scrollback: 10000,
     // Guarantee legible text no matter what colors a running program sets.
     // When a program paints a coloured cell background (e.g. a git-diff add line
     // with a green bg, or a yellow-highlighted line) while leaving the default

@@ -84,16 +84,17 @@ export function AgentStrip({ config }: AgentStripProps) {
   return (
     <div style={{
       display: 'flex',
-      gap: 12,
-      padding: '14px 16px',
+      gap: 8,
+      padding: '6px 12px',
       overflowX: 'auto',
       overflowY: 'hidden',
       borderTop: '1px solid var(--cth-ink-300)',
       background: 'var(--cth-cream-200)',
       // Tall enough for the god card to stand proud of the row (it's taller and
       // rides a drop shadow) plus the hover-lift on every card, without clipping.
-      height: 112,
-      minHeight: 112,
+      // 78px cards + room for the lift and shadow; was 112 with 14px padding.
+      height: 92,
+      minHeight: 92,
       alignItems: 'center'
     }}>
       {agents.map(a => (

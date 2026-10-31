@@ -48,3 +48,14 @@ test('main and preload share the hook event contract', () => {
   assert.match(preload, /HookEvent.*shared\/hookEvents|shared\/hookEvents.*HookEvent/s);
   assert.match(preload, /payload: HookEvent/);
 });
+
+test('tool detail: the Bash command or file path, single-line and capped', () => {
+  const { toolDetail, validateHookEvent, TOOL_DETAIL_MAX } = loadTs('src/shared/hookEvents.ts');
+  assert.equal(toolDetail({ command: 'npm   test\n  -- --watch' }), 'npm test -- --watch');
+  assert.equal(toolDetail({ file_path: '/repo/src/a.ts', old_string: 'x' }), '/repo/src/a.ts');
+  assert.equal(toolDetail({ command: 'x'.repeat(500) }).length, TOOL_DETAIL_MAX);
+  assert.equal(toolDetail(null), undefined);
+  assert.equal(toolDetail({ query: 'nope' }), undefined);
+  assert.equal(validateHookEvent({ event: 'PreToolUse', detail: 'npm test' }), true);
+  assert.equal(validateHookEvent({ event: 'PreToolUse', detail: 42 }), false);
+});

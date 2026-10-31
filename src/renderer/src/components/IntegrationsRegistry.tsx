@@ -46,7 +46,8 @@ const AUTH_LABEL: Record<IntegrationAuthType, string> = {
   none: 'None (public API)',
   bearer: 'Bearer token',
   header: 'Custom header',
-  github: 'GitHub'
+  github: 'GitHub',
+  discord: 'Discord bot'
 };
 // Auth types a user may pick for a custom-REST integration.
 const CUSTOM_AUTH: IntegrationAuthType[] = ['none', 'bearer', 'header'];

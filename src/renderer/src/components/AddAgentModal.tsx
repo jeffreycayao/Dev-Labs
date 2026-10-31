@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react';
+import { CompanyBuilderModal } from './CompanyBuilderModal';
 import { useTranslation } from 'react-i18next';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
@@ -151,6 +152,7 @@ export interface AddAgentModalProps {
 
 export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, onExportFloor }: AddAgentModalProps) {
   const { t: tr } = useTranslation();
+  const [showCompany, setShowCompany] = useState(false);
   const rtl = useRtl();
   const addAgent = useStore(s => s.addAgent);
   // Deep links and file batches share one FIFO. The head alone seeds the form;
@@ -1234,6 +1236,15 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
                 <PixelButton variant="secondary" size="md" onClick={importFloor} disabled={busy} title={tr('floor.importBtnTitle')}>
                   {tr('floor.importBtn')}
                 </PixelButton>
+              )}
+              {/* Describe a company → a planned team → the same floor review as import. */}
+              {onImportFloor && !pendingHire && (
+                <PixelButton variant="secondary" size="md" onClick={() => setShowCompany(true)} disabled={busy} title={tr('company.openBtnTitle')}>
+                  {tr('company.openBtn')}
+                </PixelButton>
+              )}
+              {showCompany && onImportFloor && (
+                <CompanyBuilderModal onClose={() => setShowCompany(false)} onReview={onImportFloor} />
               )}
               {onExportFloor && !pendingHire && (
                 <PixelButton variant="secondary" size="md" onClick={onExportFloor} disabled={busy} title={tr('floor.exportBtnTitle')}>

@@ -17,7 +17,8 @@
  * Contract: hive/docs/integrations-spec.md.
  */
 import { app, safeStorage } from 'electron';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, rmSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import {
   type IntegrationRecord,
@@ -49,12 +50,17 @@ export function enabledIds(): string[] {
 }
 
 /** Create or replace a record (validated). Stamps createdAt/updatedAt; preserves the
- *  original createdAt on update. Does NOT touch the secret store. */
+ *  original createdAt on update. Drops the stored secret when where/how it is sent
+ *  changes, so a re-pointed baseUrl can never receive the old key. */
 export function upsertRecord(input: unknown): { ok: true; record: IntegrationRecord } | { ok: false; error: string } {
   const v = validateIntegrationRecord(input);
   if (!v.ok) return v;
   const now = Date.now();
   const existing = getRecord(v.value.id);
+  if (existing && (existing.baseUrl !== v.value.baseUrl || existing.authType !== v.value.authType
+    || existing.authHeader !== v.value.authHeader)) {
+    deleteSecret(existing.secretRef ?? secretRefFor(existing.id));
+  }
   const record: IntegrationRecord = {
     ...v.value,
     createdAt: existing?.createdAt ?? now,
@@ -99,7 +105,15 @@ function readSecretBlob(): Record<string, string> {
 function writeSecretBlob(blob: Record<string, string>): void {
   const p = secretsPath();
   mkdirSync(dirname(p), { recursive: true });
-  writeFileSync(p, JSON.stringify(blob, null, 2), { encoding: 'utf8', mode: 0o600 });
+  // Temp + rename: a torn write reads as {} and would drop every stored key.
+  const tmp = `${p}.tmp-${randomBytes(4).toString('hex')}`;
+  try {
+    writeFileSync(tmp, JSON.stringify(blob, null, 2), { encoding: 'utf8', mode: 0o600 });
+    renameSync(tmp, p);
+  } catch (e) {
+    try { rmSync(tmp, { force: true }); } catch { /* the tmp file is disposable */ }
+    throw e;
+  }
 }
 
 /** Store a secret ENCRYPTED. Fail closed if OS encryption is unavailable (never

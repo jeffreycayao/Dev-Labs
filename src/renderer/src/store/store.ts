@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import type { AccentColorName } from '@/design/tokens';
 import type { OfficeCharacterName } from '@/scene/office/cast';
-import type { ThemeId } from '@/scene/office/themeRegistry';
 import type { StatusKind } from '@/components/PixelBadge';
+import type { AgentAvatarProfile } from '@/lib/avatars/profile';
 import type { AgentProvider } from '@shared/agentProvider';
 import type { HireManifest } from '@shared/hire';
 import {
@@ -88,6 +88,9 @@ export interface Agent {
   /** Ramon's prep assistant — send-only; enriches prompts and forwards them to
    *  the god. Excluded from broadcast fan-out and from the restorable-dead sweep. */
   isAssistant?: boolean;
+  /** Look of this agent's 3D avatar in the office (hair, clothes, hat…).
+   *  Unset agents get a stable look seeded from their id. */
+  avatarProfile?: AgentAvatarProfile;
   /** The human has this agent 1:1 and Ramon has been told to leave it alone.
    *  Mirrors `RegistryAgent.onHold`; main owns the record, this is the copy the
    *  title bar renders from. */
@@ -175,7 +178,6 @@ interface State {
    *  cards stay in `agents`; god/assistant auto-respawn through their own path. */
   restorableAgents: Agent[];
   selectedId: string | null;
-  feeds: Record<string, string[]>;
   addAgentOpen: boolean;
   fullscreenAgentId: string | null;
   /** Does the user work in focus mode by default? Persisted as a boolean, and
@@ -222,7 +224,6 @@ interface State {
    *  The agent id and all id-derived paths remain unchanged. */
   renameAgent: (id: string, name: string) => Promise<{ ok: boolean; error?: string }>;
   setAgentNote: (id: string, note: string) => void;
-  pushFeed: (id: string, line: string) => void;
   addAgent: (agent: Agent) => void;
   markAgentStopped: (id: string) => void;
   removeAgent: (id: string) => void;
@@ -273,10 +274,6 @@ interface State {
    *  window.cth.realtimeHasOpenAiKey(). */
   hasOpenAiKey: boolean;
   setHasOpenAiKey: (has: boolean) => void;
-  /** Mirror of the active office theme (set by App on config load + by Settings
-   *  on switch). OfficeFloor depends on this and rebuilds the scene on change. */
-  officeTheme: ThemeId;
-  setOfficeTheme: (theme: ThemeId) => void;
   /** Mirror of config.webhookTriggers — the inbound HTTP endpoints. Webhooks are
    *  editable from BOTH Settings → Connections and the Triggers tab, so neither
    *  surface keeps its own copy: both render off this list and both call the
@@ -711,7 +708,6 @@ export const useStore = create<State>((set, get) => ({
   archivedAgents: initialArchivedAgents,
   restorableAgents: initialRestorableAgents,
   selectedId: initialSelectedId,
-  feeds: {},
   addAgentOpen: false,
   ccTabRequest: null,
   requestCommandCenterTab: (tab) =>
@@ -732,6 +728,10 @@ export const useStore = create<State>((set, get) => ({
   select: (id) => set((s) => { persistAgents(s.agents, id); return { selectedId: id, ccTabRequest: null }; }),
   updateAgent: (id, patch) =>
     set((s) => {
+      // The pty parser re-sends the same status/action many times a second; a
+      // patch that changes nothing must not re-render the whole app.
+      const current = s.agents.find((a) => a.id === id);
+      if (!current || (Object.keys(patch) as (keyof Agent)[]).every((k) => Object.is(current[k], patch[k]))) return s;
       const agents = s.agents.map(a => a.id === id ? { ...a, ...patch } : a);
       // Persist only when something DURABLE changed. `updateAgent` is also the
       // pty parser's per-chunk write (status/action/progress), so persisting
@@ -793,8 +793,6 @@ export const useStore = create<State>((set, get) => ({
       persistAgents(agents, s.selectedId);
       return { agents };
     }),
-  pushFeed: (id, line) =>
-    set((s) => ({ feeds: { ...s.feeds, [id]: [...(s.feeds[id] ?? []), line] } })),
   addAgent: (agent) =>
     set((s) => {
       // Idempotent by id: a MAIN-initiated spawn broadcast (hive:agentSpawned, e.g.
@@ -832,8 +830,7 @@ export const useStore = create<State>((set, get) => ({
         agents,
         archivedAgents,
         restorableAgents,
-        selectedId: agent.id,
-        feeds: { ...s.feeds, [agent.id]: s.feeds[agent.id] ?? [] }
+        selectedId: agent.id
       };
     }),
   markAgentStopped: (id) =>
@@ -859,14 +856,13 @@ export const useStore = create<State>((set, get) => ({
       if (target && id !== 'god' && !target.isGod && !target.isAssistant) return s;
       const agents = s.agents.filter(a => a.id !== id);
       const restorableAgents = s.restorableAgents.filter((a) => a.id !== id);
-      const { [id]: _gone, ...feeds } = s.feeds;
       const { [id]: _queueGone, ...messageQueues } = s.messageQueues;
       const selectedId = s.selectedId === id ? (agents[0]?.id ?? null) : s.selectedId;
       const fullscreenAgentId = refocusAfterRemoval(s.fullscreenAgentId, agents, selectedId);
       persistAgents(agents, selectedId);
       if (restorableAgents.length !== s.restorableAgents.length) persistRestorable(restorableAgents);
       if (_queueGone) persistQueues(messageQueues);
-      return { agents, restorableAgents, feeds, selectedId, messageQueues, fullscreenAgentId };
+      return { agents, restorableAgents, selectedId, messageQueues, fullscreenAgentId };
     }),
   archiveAgent: (id) =>
     set((s) => {
@@ -884,7 +880,6 @@ export const useStore = create<State>((set, get) => ({
       };
       const archivedAgents = [...s.archivedAgents.filter((a) => a.id !== id), archivedEntry];
       const restorableAgents = s.restorableAgents.filter((a) => a.id !== id);
-      const { [id]: _feedGone, ...feeds } = s.feeds;
       const { [id]: _queueGone, ...messageQueues } = s.messageQueues;
       const selectedId = s.selectedId === id ? (agents[0]?.id ?? null) : s.selectedId;
       const fullscreenAgentId = refocusAfterRemoval(s.fullscreenAgentId, agents, selectedId);
@@ -892,7 +887,7 @@ export const useStore = create<State>((set, get) => ({
       persistArchived(archivedAgents);
       if (restorableAgents.length !== s.restorableAgents.length) persistRestorable(restorableAgents);
       if (_queueGone) persistQueues(messageQueues);
-      return { agents, archivedAgents, restorableAgents, feeds, selectedId, messageQueues, fullscreenAgentId };
+      return { agents, archivedAgents, restorableAgents, selectedId, messageQueues, fullscreenAgentId };
     }),
   unarchiveAgent: (id) =>
     set((s) => {
@@ -953,8 +948,6 @@ export const useStore = create<State>((set, get) => ({
   setHasGroqKey: (has) => set({ hasGroqKey: has }),
   hasOpenAiKey: false,
   setHasOpenAiKey: (has) => set({ hasOpenAiKey: has }),
-  officeTheme: 'office',
-  setOfficeTheme: (theme) => set({ officeTheme: theme }),
   webhookTriggers: [],
   setWebhookTriggers: (list) => set({ webhookTriggers: list }),
   // A copy, not the shared DEFAULT_ORG_TRIGGER instance — main takes the same

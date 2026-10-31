@@ -45,7 +45,7 @@ test('catalog invariants: secrets only on consent tiers, never baked into specs,
     if (e.secret) {
       assert.notEqual(e.tier, 'safe-readonly', `${e.id}: a keyed server is never on by default`);
       if (e.secret.helpUrl) assert.match(e.secret.helpUrl, /^https:\/\//, e.id);
-      assert.equal(e.secret.kind === 'header', cat.isHttpSpec(e.spec), `${e.id}: header secrets are for http, env for stdio`);
+      assert.equal(e.secret.kind === 'header', cat.isBrokered(e), `${e.id}: header secrets are for brokered servers, env for plain stdio`);
     }
     if (!cat.isHttpSpec(e.spec)) {
       for (const [k, v] of Object.entries(e.spec.env ?? {})) assert.notEqual(v, '', `${e.id}: empty env ${k} is a secret placeholder`);
@@ -97,6 +97,54 @@ test('http connector with the broker down is skipped, not exposed', () => {
   const r = cat.buildMcpServers({ cwd: '/w', consent: { 'pancake-pos': { enabled: true } }, getSecret });
   assert.equal(r.servers['atmt-pancake-pos'], undefined);
   assert.deepEqual(r.skipped, [{ id: 'pancake-pos', reason: 'broker_offline' }]);
+});
+
+// ── bundled connectors (Obsidian, Discord) ───────────────────────────────────
+
+const vars = { node: '/app/electron', resources: '/app/resources', 'obsidian-vault': '/notes/vault' };
+
+test('Obsidian runs the bundled server on the app Node, scoped to the chosen vault', () => {
+  const e = cat.mcpCatalogEntry('obsidian');
+  assert.equal(e.tier, 'write');
+  assert.equal(e.defaultEnabled, false, 'writes outside the workspace: consent only');
+  const r = cat.buildMcpServers({ cwd: '/w', consent: { obsidian: { enabled: true } }, getSecret, broker, vars });
+  assert.deepEqual(r.servers['atmt-obsidian'], {
+    command: '/app/electron',
+    args: ['/app/resources/md-obsidian-mcp.cjs'],
+    env: { ELECTRON_RUN_AS_NODE: '1', OBSIDIAN_VAULT: '/notes/vault' }
+  });
+});
+
+test('a connector with an unfilled placeholder is skipped, never launched with a literal <obsidian-vault>', () => {
+  const r = cat.buildMcpServers({ cwd: '/w', consent: { obsidian: { enabled: true } }, getSecret, broker, vars: { node: 'n', resources: 'r' } });
+  assert.equal(r.servers['atmt-obsidian'], undefined);
+  assert.deepEqual(r.skipped, [{ id: 'obsidian', reason: 'not_configured' }]);
+});
+
+test('Discord talks to the broker with a capability token; the bot token appears nowhere', () => {
+  const BOT = 'discord-bot-DO-NOT-LEAK-789';
+  const e = cat.mcpCatalogEntry('discord');
+  assert.deepEqual(e.spec.upstream, { url: 'https://discord.com/api/v10', authType: 'discord' });
+  assert.equal(e.defaultEnabled, false);
+  const r = cat.buildMcpServers({ cwd: '/w', consent: { discord: { enabled: true } }, getSecret: (id) => (id === 'discord' ? BOT : undefined), broker, vars });
+  const s = r.servers['atmt-discord'];
+  assert.equal(s.env.MD_UPSTREAM_URL, 'http://127.0.0.1:5555/i/mcp-discord');
+  assert.equal(s.env.MD_UPSTREAM_TOKEN, 'cap-token');
+  assert.ok(!JSON.stringify(r.servers).includes(BOT), 'bot token must never reach agent config');
+  assert.deepEqual(r.brokerIds, ['mcp-discord']);
+  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://discord.com/api/v10', authType: 'discord' });
+  assert.deepEqual(cat.enabledBrokeredEntries({ discord: { enabled: true }, obsidian: { enabled: true } }).map((x) => x.id), ['discord']);
+
+  const noBroker = cat.buildMcpServers({ cwd: '/w', consent: { discord: { enabled: true } }, getSecret: () => BOT, vars });
+  assert.deepEqual(noBroker.skipped, [{ id: 'discord', reason: 'broker_offline' }]);
+  const noKey = cat.buildMcpServers({ cwd: '/w', consent: { discord: { enabled: true } }, getSecret: () => undefined, broker, vars });
+  assert.deepEqual(noKey.skipped, [{ id: 'discord', reason: 'no_secret' }]);
+});
+
+test('the broker sends a Discord key as "Authorization: Bot <token>"', () => {
+  const { buildAuthHeaders } = loadTs('src/shared/integrations.ts');
+  assert.deepEqual(buildAuthHeaders('discord', undefined, 'abc'), { authorization: 'Bot abc' });
+  assert.deepEqual(buildAuthHeaders('discord', undefined, undefined), {});
 });
 
 // ── what the agent is launched with ──────────────────────────────────────────

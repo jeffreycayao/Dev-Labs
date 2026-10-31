@@ -199,7 +199,11 @@ export class IntegrationBroker {
     const rawUrl = req.url ?? '';
     const m = /^\/i\/([^/?#]+)(?:\/([^?#]*))?(\?[^#]*)?$/.exec(rawUrl);
     if (!m) return IntegrationBroker.sendError(res, 404, 'not_found', 'expected /i/<integrationId>/<path>');
-    const integrationId = decodeURIComponent(m[1]);
+    let integrationId: string;
+    try { integrationId = decodeURIComponent(m[1]); } catch {
+      // A malformed %-escape used to throw out of the handler and leave the caller hanging.
+      return IntegrationBroker.sendError(res, 400, 'bad_request', 'malformed integration id');
+    }
     const path = m[2] ?? '';
     const query = m[3] ?? '';
 

@@ -4,6 +4,7 @@ import { SchedulesSection } from './SchedulesSection';
 import { ContextSection } from './ContextSection';
 import { WebhooksSection } from './WebhooksSection';
 import { OrgSection } from './OrgSection';
+import { DiscordSection } from './DiscordSection';
 import { Muted, Scroll, TriggerCard } from './ui';
 
 /**
@@ -23,6 +24,7 @@ export function TriggersTab() {
   const [contextSummary, setContextSummary] = useState('');
   const [webhooksSummary, setWebhooksSummary] = useState('');
   const [orgSummary, setOrgSummary] = useState('');
+  const [discordSummary, setDiscordSummary] = useState('');
 
   return (
     <Scroll>
@@ -52,6 +54,14 @@ export function TriggersTab() {
         summary={webhooksSummary}
       >
         <WebhooksSection onSummary={setWebhooksSummary} />
+      </TriggerCard>
+
+      <TriggerCard
+        title={t('triggersTab.discord')}
+        blurb={t('triggersTab.discordBlurb')}
+        summary={discordSummary}
+      >
+        <DiscordSection onSummary={setDiscordSummary} />
       </TriggerCard>
 
       <TriggerCard

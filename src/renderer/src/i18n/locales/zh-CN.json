@@ -170,26 +170,6 @@
     "seeTheWall": "查看榜单",
     "joinDiscord": "加入 Discord"
   },
-  "officeTheme": {
-    "title": "办公室主题",
-    "tvShow": "电视剧办公室主题",
-    "experimental": "实验性",
-    "desc": "更换像素办公室外观。已雇用的智能体会留在楼层上。",
-    "current": "当前",
-    "soon": "即将推出",
-    "notBuiltYet": "{{label}} 尚未构建——暂时显示办公室。",
-    "switchAborted": "无法切换办公室主题：{{error}}",
-    "confirmTitle": "切换到「{{label}}」？",
-    "startsFreshCast": "开启全新演员阵容",
-    "deleteCount": "你的 {{count}} 个当前智能体将被删除——它们的终端会关闭，进行中的工作会停止。",
-    "deleteCountPlural": "你的 {{count}} 个当前智能体将被删除——它们的终端会关闭，进行中的工作会停止。",
-    "onlyCarries": "只有 {{god}} 会保留。",
-    "stillWorking": "⚠ {{count}} 个智能体仍在工作。",
-    "stillWorkingPlural": "⚠ {{count}} 个智能体仍在工作。",
-    "cantUndo": "此操作无法撤销。",
-    "switching": "切换中…",
-    "deleteSwitch": "删除 {{count}} 个并切换"
-  },
   "settings": {
     "title": "设置",
     "changeHomeTitle": "更改主文件夹",
@@ -781,13 +761,22 @@
       "史上最好的老板。真心话。"
     ],
     "gossip": [
-      "他到底写过代码没有？",
-      "又一个拖了一小时的「快速同步」…",
-      "「世界上最好的老板」——那个杯子是他自己买的",
-      "他把我的任务据为己有，说是他的主意",
-      "说真的，那股雪茄味…",
-      "他浇了那盆植物。就一盆。他自己的。",
-      "你听见了吗？「我宣布……休息一下」"
+      "姐妹，老板又开了个“快速同步”。两小时。还说快。",
+      "刚才那个 PR？47 个文件。说是“小修复”。",
+      "昨晚周五上线。周五！胆子真大。",
+      "谁往 main 强推了？没人认，行吧。",
+      "“尽快”。老板什么都要尽快。",
+      "说“做完了”。真做完了，还是差不多做完了？",
+      "那个“已修复”的 bug？又回来了，跟前任一样。",
+      "八卦：有人没看就写了 LGTM。不是我哦。",
+      "嘘……老板过来了。假装我们在聊冲刺。",
+      "会这么多，我们什么时候写代码？",
+      "“TODO: 以后再修”——2019 年写的。以后就是现在。",
+      "听说老代码要回来了。别啊，老天。",
+      "茶水间的咖啡放了三天了。跟我们的截止日期一样。",
+      "说来话长，大概三个站会那么长。",
+      "又来一个新框架。旧的还没弄完呢。",
+      "“在我电脑上能跑”。那就部署到你电脑上呗。"
     ],
     "cheer": [
       "完成！✔",
@@ -810,6 +799,21 @@
       "looping": "循环中——断路器已启动",
       "runningFloor": "正在管理楼层",
       "idle": "空闲"
+    },
+    "levels": {
+      "floor": "{{n}} 楼",
+      "addFloor": "添加楼层",
+      "moveTo": "将 {{name}} 移到",
+      "moveHint": "在名单中选择一个智能体，即可把它移到其他楼层。",
+      "full": "{{n}} 楼已满（最多 {{max}} 个智能体）。",
+      "count": "{{count}}/{{max}} 个智能体",
+      "deleteFloor": "删除 {{n}} 楼",
+      "deleteConfirm": "删除 {{n}} 楼？它的家具布局会被移除，上面的楼层各下移一层。",
+      "deleteBlocked": "{{n}} 楼还有智能体。请先把它们移到其他楼层。"
+    },
+    "avatar": {
+      "edit3d": "3D 形象",
+      "personality": "个性"
     }
   },
   "setupPanel": {
@@ -883,6 +887,35 @@
       "savedNote": "{{label}}密钥已保存。新的智能体将会连接。",
       "clearedNote": "{{label}}密钥已移除。",
       "needsKey": "已开启，但保存密钥之前智能体不会连接。"
+    },
+    "setupShow": "如何设置",
+    "setupHide": "隐藏步骤",
+    "setup": {
+      "obsidian": [
+        "打开 Obsidian，新建或打开你想让智能体使用的仓库（vault）。任何文件夹都可以。",
+        "点击下方的“选择文件夹”，选中这个仓库所在的文件夹。",
+        "打开 Obsidian 开关，然后启动一个新的智能体。它可以保存笔记、经验和决策，写入今天的日记，并搜索和阅读仓库。",
+        "智能体只会访问这个文件夹，不会打开 .obsidian 设置文件夹，也不会覆盖或删除笔记：用相同标题再次保存只会追加一条更新。",
+        "可选：如需使用 Obsidian 自身的功能，请安装社区插件 “Local REST API”，并在“已连接服务”中用 Obsidian Local REST API 模板添加它。"
+      ],
+      "discord": [
+        "前往 discord.com/developers/applications，点击 New Application，给它起个名字，例如 DevLabs。",
+        "打开 Bot 页面，点击 Reset Token，复制令牌，粘贴到上方输入框并点击保存。令牌会加密存储。",
+        "在同一个 Bot 页面，打开 Message Content Intent，让机器人能读取频道里的消息。",
+        "打开 OAuth2 → URL Generator，勾选 “bot”，再勾选 View Channels、Send Messages 和 Read Message History。打开生成的链接，把机器人添加到你的服务器。",
+        "打开 Discord 开关，然后启动一个新的智能体。智能体可以向频道发消息、读取最近的消息并列出频道。它们发的消息不会提醒（@）任何人。",
+        "如果想让 Discord 消息触发工作，请打开“触发器”标签 → Discord，添加频道 ID 并打开开关。然后在该频道里 @ 机器人。"
+      ]
+    },
+    "vault": {
+      "none": "尚未选择仓库",
+      "choose": "选择文件夹",
+      "clear": "清除",
+      "savedNote": "仓库已设置。新的智能体将会连接。",
+      "clearedNote": "仓库已清除。",
+      "missing": "这个文件夹已不存在，请重新选择。",
+      "notVault": "Obsidian 还没有打开过这个文件夹。笔记仍会保存；在 Obsidian 中把它作为仓库打开即可浏览。",
+      "needsVault": "已开启，但在你选择仓库之前智能体不会连接。"
     }
   },
   "devicePicker": {
@@ -944,7 +977,9 @@
     "webhooks": "Webhook",
     "webhooksBlurb": "让外部系统把工作投进来。",
     "organisation": "组织",
-    "organisationBlurb": "让队友的 DevLabs 给你的发消息。"
+    "organisationBlurb": "让队友的 DevLabs 给你的发消息。",
+    "discord": "DISCORD",
+    "discordBlurb": "在 Discord 中 @ 你的机器人即可开始工作。"
   },
   "orgSection": {
     "acceptMessages": "接受来自你组织的消息",
@@ -1548,5 +1583,57 @@
       "too-many": "文件太多",
       "total-too-large": "交付超过 200 MB"
     }
+  },
+  "company": {
+    "openBtn": "组建公司",
+    "openBtnTitle": "描述一家公司，自动为你规划整个团队",
+    "title": "组建公司",
+    "intro": "描述你的公司或项目。规划器会建议一个包含角色和性格的团队。在雇用任何人之前，你会逐一审核。",
+    "describeLabel": "这家公司做什么？",
+    "describePlaceholder": "例如：一家小型网上烘焙店。我们需要有人负责网站、社交媒体帖子和回复客户邮件。",
+    "generate": "规划我的团队",
+    "regenerate": "重新规划",
+    "generating": "正在规划团队，最多可能需要一分钟。",
+    "teamCount": "已规划 {{count}} 个智能体",
+    "review": "审核并雇用",
+    "errEmpty": "请先描述这家公司。",
+    "brainIntro": "为这个智能体设定性格。它会作为单独的一节保存在智能体文件夹的 {{file}} 中，文件的其余部分保持不变。智能体会在下一次会话中读取。",
+    "brainNoFolder": "这个智能体没有文件夹，无法保存性格。",
+    "brainReadError": "无法读取 {{file}}：{{error}}。未做任何更改。请检查该文件后重新打开此标签页。",
+    "brainWriteError": "无法保存 {{file}}：{{error}}。请确认文件夹可写后重试。",
+    "brainPreview": "{{file}} 中该节的预览",
+    "brainSave": "保存性格",
+    "brainSaved": "已保存到 {{file}}。",
+    "brainField": {
+      "identity": "身份",
+      "vibe": "气质",
+      "coreTruths": "核心信念",
+      "boundaries": "边界",
+      "communication": "沟通方式",
+      "userContext": "关于你"
+    },
+    "brainHint": {
+      "identity": "例如：你是团队的文档撰写者。",
+      "vibe": "例如：温和、冷静，略带幽默。",
+      "coreTruths": "工作原则，每行一条。",
+      "boundaries": "不能做的事，以及何时应停下来询问。",
+      "communication": "例如：简短更新，使用要点，不用术语。",
+      "userContext": "你是谁，你关心什么。"
+    }
+  },
+  "discordSection": {
+    "listen": "监听对机器人的 @ 提及",
+    "channels": "频道 ID",
+    "channelsPlaceholder": "粘贴频道 ID 或频道链接，每行一个",
+    "channelsHint": "在 Discord 中：设置 → 高级 → 打开开发者模式，然后右键点击频道 → 复制频道 ID。最多 20 个频道。",
+    "save": "保存频道",
+    "howItWorks": "当被允许的人在这些频道中 @ 机器人时，机器人会回复“已收到”，消息会进入 {{godName}} 的队列并直接执行，不再询问。DevLabs 每 5 秒检查一次。请在“设置 → 连接”中打开 Discord 连接器，以便智能体把答复发回来。",
+    "noToken": "无令牌",
+    "noTokenWarning": "还没有机器人令牌。请先在“设置 → 连接 → Discord”中保存。",
+    "listening": "正在以 {{name}} 的身份监听。接受以下用户的请求：{{users}}。",
+    "channelError": "无法读取频道 {{id}}：{{error}}。请确认机器人已被添加到该服务器并能看到这个频道。",
+    "users": "谁可以发起工作（用户 ID）",
+    "usersPlaceholder": "留空则只允许机器人的所有者（你）",
+    "usersHint": "只有这些 Discord 用户可以发起工作，其他人的消息会被忽略。留空表示机器人应用的所有者。右键点击某人 → 复制用户 ID。"
   }
 }

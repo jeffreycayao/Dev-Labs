@@ -7,7 +7,8 @@
 
 import type { AccentColorName } from '@/design/tokens';
 import type { StatusKind } from '@/components/PixelBadge';
-import type { MessageAct } from '@/scene/office/MessageEnvelope';
+/** A hive message's speech act (see src/main/hive.ts). */
+export type MessageAct = 'request' | 'inform' | 'propose' | 'query' | 'agree' | 'refuse' | 'done';
 import { extractTopics } from './extractTopics';
 
 export interface AgentNode {

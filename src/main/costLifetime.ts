@@ -49,6 +49,36 @@ interface Segment {
   peak: number;
 }
 
+/** Every cumulative column a ledger row carries. Each is folded on its own: the
+ *  token counters reset with the same signature as usd (a local model's usd
+ *  stays 0, so it can't stand in for them). */
+const METRICS = ['usd', 'input', 'output', 'cache_read', 'cache_creation'] as const;
+type Metric = typeof METRICS[number];
+
+/** One session's usage across app restarts (the breaker's cap figures). */
+export interface SessionUsage {
+  usd: number;
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheCreation: number;
+}
+
+/** `sample` with each counter raised to what the ledger says the same session
+ *  spent, where that's more: an app restart resets the in-memory sample, and a
+ *  cap judged on it alone would hand every agent a fresh budget. */
+export function withLedgerUsage<T extends SessionUsage>(sample: T | null, ledger: SessionUsage | null): T | null {
+  if (!sample || !ledger) return sample;
+  return {
+    ...sample,
+    usd: Math.max(sample.usd, ledger.usd),
+    input: Math.max(sample.input, ledger.input),
+    output: Math.max(sample.output, ledger.output),
+    cacheRead: Math.max(sample.cacheRead, ledger.cacheRead),
+    cacheCreation: Math.max(sample.cacheCreation, ledger.cacheCreation)
+  };
+}
+
 /** Float noise guard. Real resets drop by cents at minimum, so anything below
  *  this is arithmetic dust rather than a restart. */
 const EPS = 1e-9;
@@ -64,7 +94,7 @@ export class CostLedgerTotals {
    *  across a read boundary is never decoded in half. */
   private tail: Buffer = Buffer.alloc(0);
   /** `agentId \t sessionId` → fold state. */
-  private readonly seg = new Map<string, Segment>();
+  private readonly seg = new Map<string, Record<Metric, Segment>>();
   /** agentId → lifetime usd. Recomputed after each pass. */
   private totals = new Map<string, number>();
   /** One pass at a time; a timer must never stack folds on itself. */
@@ -78,6 +108,17 @@ export class CostLedgerTotals {
   usdFor(agentId: string): number | null {
     if (!this.warm) return null;
     return this.totals.get(agentId) ?? 0;
+  }
+
+  /** One (agent, session)'s usage including what it spent before an app
+   *  restart reset the in-memory counters. Null until the first full pass, or
+   *  for a session the ledger has never seen. */
+  sessionUsage(agentId: string, sessionId: string): SessionUsage | null {
+    if (!this.warm) return null;
+    const s = this.seg.get(`${agentId}\t${sessionId}`);
+    if (!s) return null;
+    const v = (m: Metric): number => s[m].committed + s[m].peak;
+    return { usd: v('usd'), input: v('input'), output: v('output'), cacheRead: v('cache_read'), cacheCreation: v('cache_creation') };
   }
 
   /** Every agent's lifetime usd. Empty until the first pass completes. */
@@ -160,21 +201,27 @@ export class CostLedgerTotals {
   }
 
   private foldLine(line: string): void {
-    let row: { agent_id?: string; session_id?: string; usd?: number };
+    let row: { agent_id?: string; session_id?: string } & Partial<Record<Metric, unknown>>;
     try { row = JSON.parse(line); } catch { return; } // half-written tail line
     if (!row || typeof row.agent_id !== 'string') return;
-    const usd = typeof row.usd === 'number' && Number.isFinite(row.usd) ? row.usd : 0;
 
     const key = `${row.agent_id}\t${row.session_id ?? ''}`;
-    let s = this.seg.get(key);
-    if (!s) { s = { committed: 0, peak: 0 }; this.seg.set(key, s); }
-
-    if (usd < s.peak - EPS) {
-      // Counter went backwards: the previous segment ended at its peak.
-      s.committed += s.peak;
-      s.peak = usd;
-    } else if (usd > s.peak) {
-      s.peak = usd;
+    let segs = this.seg.get(key);
+    if (!segs) {
+      segs = Object.fromEntries(METRICS.map((m) => [m, { committed: 0, peak: 0 }])) as Record<Metric, Segment>;
+      this.seg.set(key, segs);
+    }
+    for (const m of METRICS) {
+      const raw = row[m];
+      const value = typeof raw === 'number' && Number.isFinite(raw) ? raw : 0;
+      const s = segs[m];
+      if (value < s.peak - EPS) {
+        // Counter went backwards: the previous segment ended at its peak.
+        s.committed += s.peak;
+        s.peak = value;
+      } else if (value > s.peak) {
+        s.peak = value;
+      }
     }
   }
 
@@ -182,7 +229,7 @@ export class CostLedgerTotals {
     const next = new Map<string, number>();
     for (const [key, s] of this.seg) {
       const agentId = key.slice(0, key.indexOf('\t'));
-      next.set(agentId, (next.get(agentId) ?? 0) + s.committed + s.peak);
+      next.set(agentId, (next.get(agentId) ?? 0) + s.usd.committed + s.usd.peak);
     }
     this.totals = next;
   }

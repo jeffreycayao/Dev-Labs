@@ -125,7 +125,7 @@ test('#8 logTail reads only the tail of a large log', async (t) => {
 
 test('#3 proxy cost samples are written as a running total per agent+session', () => {
   const rows = [];
-  const hive = { recordSession() {}, appendCostLedger: (r) => rows.push(r) };
+  const hive = { recordSession() {}, hookAgent: (claimed) => claimed, appendCostLedger: (r) => rows.push(r) };
   const server = new HookServer(hive, () => null, () => ({ notifications: false }));
   const sample = { hook_event_name: 'CostSample', agent_id: 'q', session_id: 's1', model: 'qwen', input: 100, output: 10 };
   server.handle(sample);

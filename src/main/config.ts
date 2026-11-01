@@ -633,6 +633,86 @@ function migrateModelDefaultsV2(cfg: HarnessConfig, stored: Partial<HarnessConfi
  *  an external edit — is picked up, and an unchanged file is one stat. */
 let configCache: { mtimeMs: number; size: number; cfg: HarnessConfig } | null = null;
 
+// ─── Secret settings live in safeStorage, never in config.json ───────────────
+// Agents can read config.json (the sandbox only limits writes), so keys and
+// signing secrets are kept in the encrypted connector store instead. The rest of
+// the app still sees them as ordinary fields: they're filled in on read and
+// taken out on write. integrations.ts owns that store and imports this file, so
+// it registers the store here rather than this file importing it.
+export interface ConfigSecretStore {
+  get(ref: string): string | undefined;
+  /** False when OS encryption is unavailable (nothing was stored). */
+  set(ref: string, value: string): boolean;
+  del(ref: string): void;
+}
+let secretStore: ConfigSecretStore | null = null;
+export function useConfigSecretStore(store: ConfigSecretStore): void {
+  secretStore = store;
+  configCache = null;
+}
+
+const PLAIN_SECRETS = ['slackSigningSecret', 'slackBotToken', 'groqApiKey', 'webhookSecret'] as const;
+const webhookRef = (id: string) => `config:webhook:${id}`;
+
+function hasPlaintextSecrets(stored: Partial<HarnessConfig>): boolean {
+  return PLAIN_SECRETS.some((k) => !!stored[k])
+    || !!stored.orgTrigger?.apiKey
+    || (stored.webhookTriggers ?? []).some((t) => !!t?.secret);
+}
+
+/** Fill secret fields from the store (a legacy plaintext value on disk wins). */
+function openSecrets(cfg: HarnessConfig): HarnessConfig {
+  const store = secretStore;
+  if (!store) return cfg;
+  for (const k of PLAIN_SECRETS) if (!cfg[k]) cfg[k] = store.get(`config:${k}`);
+  if (cfg.orgTrigger && !cfg.orgTrigger.apiKey) {
+    cfg.orgTrigger = { ...cfg.orgTrigger, apiKey: store.get('config:orgTrigger') ?? '' };
+  }
+  if (cfg.webhookTriggers) {
+    cfg.webhookTriggers = cfg.webhookTriggers.map((t) => (t.secret ? t : { ...t, secret: store.get(webhookRef(t.id)) ?? '' }));
+  }
+  return cfg;
+}
+
+/** The copy of `cfg` to write to disk: each secret moved into the store. A value
+ *  is deleted from the store only when `explicit` (the caller's patch) cleared
+ *  it, so a secret that merely failed to decrypt on read is never wiped by an
+ *  unrelated save. Without OS encryption the value stays where it was. */
+function sealSecrets(cfg: HarnessConfig, explicit: Partial<HarnessConfig>): HarnessConfig {
+  const store = secretStore;
+  if (!store) return cfg;
+  const disk: HarnessConfig = { ...cfg };
+  const seal = (ref: string, value: string | undefined, cleared: boolean): boolean => {
+    if (value) return store.set(ref, value);
+    if (cleared) store.del(ref);
+    return true;
+  };
+  for (const k of PLAIN_SECRETS) if (seal(`config:${k}`, cfg[k], k in explicit)) delete disk[k];
+  if (cfg.orgTrigger && seal('config:orgTrigger', cfg.orgTrigger.apiKey, 'orgTrigger' in explicit)) {
+    disk.orgTrigger = { ...cfg.orgTrigger, apiKey: '' };
+  }
+  if (cfg.webhookTriggers) {
+    disk.webhookTriggers = cfg.webhookTriggers.map((t) =>
+      seal(webhookRef(t.id), t.secret, 'webhookTriggers' in explicit) ? { ...t, secret: '' } : t);
+  }
+  return disk;
+}
+
+/** Stands in for a saved key in what the window receives. A save that sends it
+ *  back unchanged keeps the stored key. */
+export const SAVED_SECRET = '••••••••';
+
+/** The config as the window may see it: Slack and Groq keys replaced by
+ *  SAVED_SECRET. Webhook and org secrets stay, because Settings shows them for
+ *  the user to copy into the sending system. */
+export function configForRenderer(cfg: HarnessConfig): HarnessConfig {
+  const out = { ...cfg };
+  for (const k of ['slackSigningSecret', 'slackBotToken', 'groqApiKey', 'webhookSecret'] as const) {
+    if (out[k]) out[k] = SAVED_SECRET;
+  }
+  return out;
+}
+
 /** Set while config.json exists but cannot be read. Reads fall back to defaults
  *  so the app still boots; persistConfig refuses, so the user's file survives. */
 let configReadError: string | null = null;
@@ -660,9 +740,13 @@ export function readConfig(): HarnessConfig {
     const raw = readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
     configReadError = null;
-    const cfg = normalizeStoredHomes(migrateModelDefaultsV2(
+    const cfg = openSecrets(normalizeStoredHomes(migrateModelDefaultsV2(
       migrateUnsupportedCodexModel(migrateTriggersV1(withTriggerDefaults({ ...DEFAULTS, ...parsed }))), parsed
-    ));
+    )));
+    // A config.json from before secrets moved out: save once to seal them.
+    if (secretStore && hasPlaintextSecrets(parsed)) {
+      try { persistConfig(cfg); } catch { /* sealed on the next save instead */ }
+    }
     // Stat again: a migration above may have rewritten the file.
     const after = statSync(p);
     configCache = { mtimeMs: after.mtimeMs, size: after.size, cfg: structuredClone(cfg) };
@@ -728,7 +812,7 @@ function writeJsonAtomic(p: string, data: unknown): void {
   }
 }
 
-function persistConfig(next: HarnessConfig): HarnessConfig {
+function persistConfig(next: HarnessConfig, explicit: Partial<HarnessConfig> = {}): HarnessConfig {
   // Every writer reads first; a failed read means `next` is defaults + patch.
   if (configReadError) throw new Error(configReadError);
   const p = configPath();
@@ -740,7 +824,7 @@ function persistConfig(next: HarnessConfig): HarnessConfig {
   // harnessHome, the Slack/webhook secrets and every saved setting. Same
   // discipline as roster.ts and hive.ts atomicWriteJson.
   configCache = null; // mtime alone can miss two same-size writes in one tick
-  writeJsonAtomic(p, next);
+  writeJsonAtomic(p, sealSecrets(next, explicit));
   // Saving one setting stores only that setting, so fill the rest back in first:
   // subscribers must see the same complete config a read gives them, never a
   // half-filled one. Skip the migration — it saves in its own right, and has
@@ -788,7 +872,7 @@ export function writeConfig(patch: Partial<HarnessConfig>): HarnessConfig {
     next.harnessHome = home;
     next.recentHives = recentHives;
   }
-  return persistConfig(next);
+  return persistConfig(next, patch);
 }
 
 /** Set or clear one agent's token ceiling against the latest config on disk.
@@ -828,7 +912,7 @@ export function resetConfig(): HarnessConfig {
   // Starting over is the one write meant to replace an unreadable file.
   configReadError = null;
   // Saved like any other change, so a reset announces itself too.
-  persistConfig({ ...DEFAULTS });
+  persistConfig({ ...DEFAULTS }, Object.fromEntries(PLAIN_SECRETS.map((k) => [k, undefined])));
   // Drop the migration latch too: the file on disk is back to `triggersMigratedV1:
   // false`, and a latch left set would keep the flag from ever being written again
   // in this process. The migration itself is a no-op on defaults either way.

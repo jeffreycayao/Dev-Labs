@@ -5,7 +5,6 @@ const loadTs = require('./load-ts.cjs');
 const {
   WorkerWakeWatchdog,
   classifyHook,
-  WORKER_WAKE_NUDGE,
   WORKER_WAKE_IDLE_MS,
   WORKER_WAKE_BOOT_GRACE_MS,
   WORKER_WAKE_COOLDOWN_MS,
@@ -189,8 +188,11 @@ test('classifyHook: idle-waiting shapes are idle, other events are null', () => 
   assert.equal(classifyHook('UserPromptSubmit', undefined), null);
 });
 
-test('the nudge text matches the renderer guardrail exactly', () => {
-  // If the renderer's nudge wording ever changes, update WORKER_WAKE_NUDGE to match.
-  assert.equal(WORKER_WAKE_NUDGE.length > 100, true);
-  assert.match(WORKER_WAKE_NUDGE, /read your inbox/i);
+test('ids the renderer already announced are not announced again', () => {
+  const w = new WorkerWakeWatchdog();
+  const now = 1_000_000;
+  const facts = [{ agentId: 'a', ptyId: 'p', lastOutputAt: now - 60_000, inboxIds: ['m1'], autoDeliveryPaused: false, paused: false, halted: false }];
+  w.noteAnnounced('a', ['m1'], now - 120_000);
+  assert.deepEqual(w.decide(facts, now), []);
+  assert.deepEqual(w.decide([{ ...facts[0], inboxIds: ['m1', 'm2'] }], now), ['a'], 'a new id still wakes it');
 });

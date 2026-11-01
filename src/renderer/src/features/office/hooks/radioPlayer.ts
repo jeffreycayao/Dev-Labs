@@ -13,8 +13,10 @@ const VOLUME_KEY = "office.radio.volume";
 
 function readVolume(): number {
   try {
-    const v = Number(localStorage.getItem(VOLUME_KEY));
-    return v > 0 && v <= 1 ? v : 0.6;
+    const saved = localStorage.getItem(VOLUME_KEY);
+    const v = Number(saved);
+    // 0 is a real choice (muted); only a missing or broken value falls back.
+    return saved !== null && v >= 0 && v <= 1 ? v : 0.6;
   } catch {
     return 0.6;
   }
@@ -35,6 +37,8 @@ const set = (patch: Partial<RadioState>) => {
 audio.addEventListener("playing", () => set({ status: "playing" }));
 audio.addEventListener("waiting", () => { if (state.status === "playing") set({ status: "loading" }); });
 audio.addEventListener("error", () => { if (state.status !== "stopped") set({ status: "error" }); });
+// A live stream "ends" when the station drops it: show it offline, not "Live".
+audio.addEventListener("ended", () => { if (state.status !== "stopped") set({ status: "error" }); });
 
 export const radio = {
   play(station: RadioStation) {

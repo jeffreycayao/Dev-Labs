@@ -13,6 +13,14 @@ export async function deliverWithAcknowledgement(
   }
 }
 
+/** May the terminal parser's quiet timer flip this agent to `idle`? Not while a
+ *  prompt is on screen (`waiting`/`blocked`), the breaker pins it (`looping`) or
+ *  it is stopped (`ghost`): `idle` opens the drain, and the drain's Enter would
+ *  answer the prompt. */
+export function mayDriftIdle(status: string | undefined): boolean {
+  return status !== 'waiting' && status !== 'blocked' && status !== 'looping' && status !== 'ghost';
+}
+
 /**
  * May the drain type into this agent's terminal right now?
  *
@@ -81,7 +89,7 @@ export type PreconditionVerdict = 'send' | 'drop';
  *  indefinitely. */
 export async function checkPrecondition(
   message: DeliveryGateMessage,
-  readInbox: () => Promise<{ id?: string }[]>
+  readInbox: () => Promise<readonly unknown[]>
 ): Promise<PreconditionVerdict> {
   if (message.precondition !== 'inbox-nonempty') return 'send';
   try {

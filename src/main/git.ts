@@ -1,12 +1,24 @@
 import { spawn } from 'node:child_process';
 import { openForRead, safeResolve } from './fs';
 
+/** Agents can write the folders the Git tab polls, including a worktree's
+ *  `.git` file, which can point at a git config of their choosing. Git runs
+ *  commands named in that config (`core.fsmonitor` on every status, external
+ *  diff and textconv drivers on diffs), and the main process isn't sandboxed.
+ *  So every git DevLabs runs switches those off. `gh` runs git too: give it
+ *  this environment. */
+export const SAFE_GIT_ENV = { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'core.fsmonitor', GIT_CONFIG_VALUE_0: 'false' };
+const DIFF_COMMANDS = new Set(['diff', 'show', 'log']);
+
 /** Run git in `cwd` with `args`. Returns stdout text or an error. */
 function runGit(cwd: string, args: string[], timeoutMs = 8000): Promise<{
   ok: true; stdout: string;
 } | { ok: false; error: string }> {
   return new Promise((resolve) => {
-    const proc = spawn('git', args, { cwd });
+    const [command, ...rest] = args;
+    const safeArgs = ['-c', 'core.fsmonitor=false', command,
+      ...(DIFF_COMMANDS.has(command) ? ['--no-ext-diff', '--no-textconv'] : []), ...rest];
+    const proc = spawn('git', safeArgs, { cwd, env: { ...process.env, ...SAFE_GIT_ENV } });
     let stdout = '';
     let stderr = '';
     const timer = setTimeout(() => {

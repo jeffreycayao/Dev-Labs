@@ -26,6 +26,8 @@ const MAX_HOOK_FRAME_BYTES = 256 * 1024;
 interface HookPayload {
   hook_event_name?: string;
   agent_id?: string | null;
+  /** The sender's HIVE_HOOK_TOKEN; decides agent_id (see HiveManager.hookAgent). */
+  hook_token?: string;
   session_id?: string;
   transcript_path?: string;
   /** Status-line payloads only: the session's live context accounting. */
@@ -153,7 +155,10 @@ export class HookServer {
   }
 
   private handle(p: HookPayload): unknown {
-    const agentId = p.agent_id ?? undefined;
+    const agentId = this.hive.hookAgent(p.agent_id ?? undefined, p.hook_token);
+    // The token is a credential: it goes no further than this check.
+    delete p.hook_token;
+    p.agent_id = agentId ?? null;
     const event = p.hook_event_name ?? 'Unknown';
     this.onEvent?.(agentId, event, p.message);
     if (agentId && typeof p.transcript_path === 'string' && p.transcript_path) {

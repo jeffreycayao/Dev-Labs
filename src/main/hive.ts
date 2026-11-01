@@ -196,7 +196,12 @@ export interface SpawnInjection {
   degraded?: string;
 }
 
-const HOP_CAP = 12;
+/** Most agent messages one conversation may carry before the router drops the
+ *  rest as a runaway loop. Counted by the router; an agent's own `hops` is ignored.
+ *  High enough for a long god ↔ worker task thread. */
+const HOP_CAP = 40;
+/** Conversations whose counts are remembered (oldest forgotten first). */
+const HOP_MEMORY = 5000;
 
 function sleepSync(ms: number): void {
   const sab = new SharedArrayBuffer(4);
@@ -313,9 +318,21 @@ function createOnce(p: string, data: string): void {
   try { writeFileSync(p, data, { encoding: 'utf8', flag: 'wx' }); }
   catch (e) { if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e; }
 }
-/** A file's text, or '' when it is missing or not a regular file (a link). */
-function readPlain(p: string): string {
-  try { return lstatSync(p).isFile() ? readFileSync(p, 'utf8') : ''; } catch { return ''; }
+const PLAIN_READ_CAP = 4 * 1024 * 1024;
+/** A file's text, or '' when it is missing or not a regular file (a link, or a
+ *  FIFO or device an agent left to hang or flood the main process). Past
+ *  PLAIN_READ_CAP only the newest part is read: agents grow these files. */
+export function readPlain(p: string): string {
+  try {
+    const st = lstatSync(p);
+    if (!st.isFile()) return '';
+    if (st.size <= PLAIN_READ_CAP) return readFileSync(p, 'utf8');
+    const fd = openSync(p, 'r');
+    try {
+      const buf = Buffer.alloc(PLAIN_READ_CAP);
+      return buf.toString('utf8', 0, readSync(fd, buf, 0, PLAIN_READ_CAP, st.size - PLAIN_READ_CAP));
+    } finally { closeSync(fd); }
+  } catch { return ''; }
 }
 // O_NOFOLLOW is POSIX-only; on Windows the lstat in appendPlain is the guard.
 const APPEND_NOFOLLOW = fsConstants.O_WRONLY | fsConstants.O_APPEND | fsConstants.O_CREAT | (fsConstants.O_NOFOLLOW ?? 0);
@@ -679,6 +696,11 @@ export class HiveManager {
    *  ensureAgent, killed on PTY exit / removeAgent / app quit (index.ts) — so a
    *  dead agent never leaks an orphan loopback listener. */
   private proxyChildren = new Map<string, ChildProcess>();
+  /** Hook tokens: token → agent, and each agent's current token. */
+  private agentByHookToken = new Map<string, string>();
+  private hookTokenByAgent = new Map<string, string>();
+  /** Agent messages routed per conversation, for the loop guard. */
+  private hopsByConversation = new Map<string, number>();
 
   // — bootstrap —
 
@@ -921,6 +943,9 @@ export class HiveManager {
 
     const env: Record<string, string> = {
       AGENT_ID: meta.id,
+      // Proves which agent a hook frame comes from: every agent can reach the
+      // hook socket, and a frame's own agent_id is just a claim.
+      HIVE_HOOK_TOKEN: this.newHookToken(meta.id),
       AGENT_NAME: meta.name,
       HIVE_ROOT: root,
       AGENT_DIR: dir
@@ -1334,7 +1359,9 @@ export class HiveManager {
    */
   recordSession(agentId: string, sessionId: string): void {
     const root = this.root();
-    if (!root || !sessionId) return;
+    // The id comes from a hook frame and is later passed to the CLI on resume
+    // (through cmd.exe on Windows): only the plain shape every provider uses.
+    if (!root || !/^[A-Za-z0-9_-]{1,200}$/.test(sessionId)) return;
     try {
       const reg = this.registry();
       const agent = reg.agents[agentId];
@@ -1516,6 +1543,7 @@ export class HiveManager {
             ELECTRON_RUN_AS_NODE: '1',
             HIVE_SOCK: cfg.sock,
             AGENT_ID: agentId,
+            HIVE_HOOK_TOKEN: this.hookTokenFor(agentId),
             UPSTREAM_BASE_URL: cfg.upstream,
             HIVE_PROXY_SESSION: cfg.sessionId,
             HIVE_PROXY_API: cfg.api
@@ -1775,6 +1803,37 @@ export class HiveManager {
     this.routeMessage(msg);
     this.commit(`hive: msg ${msg.from}→${msg.to} (${msg.act})`);
     return msg;
+  }
+
+  /** A fresh hook token for a spawn; the agent's previous one stops working. */
+  newHookToken(agentId: string): string {
+    const old = this.hookTokenByAgent.get(agentId);
+    if (old) this.agentByHookToken.delete(old);
+    const token = randomBytes(18).toString('base64url');
+    this.agentByHookToken.set(token, agentId);
+    this.hookTokenByAgent.set(agentId, token);
+    return token;
+  }
+  /** The agent's current hook token (made if it has none yet). */
+  hookTokenFor(agentId: string): string {
+    return this.hookTokenByAgent.get(agentId) ?? this.newHookToken(agentId);
+  }
+  /** Which agent sent a hook frame. A valid token decides it. Without one, the
+   *  claimed id is believed only for an agent that was never given a token (a
+   *  spawn path that predates them), so no agent can speak for one that has. */
+  hookAgent(claimed: string | undefined, token: unknown): string | undefined {
+    if (typeof token === 'string' && this.agentByHookToken.has(token)) return this.agentByHookToken.get(token);
+    return claimed && !this.hookTokenByAgent.has(claimed) ? claimed : undefined;
+  }
+
+  /** Count one more agent message in `conversation`; returns the new count. */
+  private countHop(conversation: string): number {
+    const seen = this.hopsByConversation;
+    const n = (seen.get(conversation) ?? 0) + 1;
+    seen.delete(conversation); // re-insert so the map stays oldest-first
+    seen.set(conversation, n);
+    if (seen.size > HOP_MEMORY) seen.delete(seen.keys().next().value as string);
+    return n;
   }
 
   private routeMessage(msg: HiveMessage): void {
@@ -2153,9 +2212,12 @@ export class HiveManager {
           }
           const msg = this.normalize(partial, id);
           msg.from = id; // sender is authoritative — the owning directory
+          msg.hops = this.countHop(msg.conversation);
+          // Archive BEFORE routing: if the move fails (a locked file, a removed
+          // .sent), routing first would send the same message again every tick.
+          renameSync(full, join(realDirs(outbox, '.sent'), f));
           if (msg.attachments?.length) this.captureDelivery(msg);
           this.routeMessage(msg);
-          renameSync(full, join(realDirs(outbox, '.sent'), f)); // archive, don't reprocess
           routed++;
         } catch {
           // malformed file — quarantine so we don't spin on it
@@ -2176,7 +2238,7 @@ export class HiveManager {
   }
   board(): string {
     const root = this.root();
-    return root && existsSync(join(root, 'board.md')) ? readFileSync(join(root, 'board.md'), 'utf8') : '';
+    return root ? readPlain(join(root, 'board.md')) : '';
   }
   tasks(): unknown {
     const root = this.root();
@@ -2243,7 +2305,7 @@ export class HiveManager {
   }
   memory(id: string): string {
     const p = join(this.agentDir(id), 'memory.md');
-    return existsSync(p) ? readFileSync(p, 'utf8') : '';
+    return readPlain(p);
   }
   /** Whether an agent has recorded NON-TRIVIAL memory — i.e. has appended real
    *  notes beyond the boilerplate header ensureAgent seeds. Lets the voice
@@ -2257,11 +2319,19 @@ export class HiveManager {
     try {
       // A fresh seed is ~90 chars (one header line + the prompt). Anything
       // meaningfully longer means the agent appended durable facts.
-      return readFileSync(p, 'utf8').trim().length > 200;
+      return readPlain(p).trim().length > 200;
     } catch { return false; }
   }
   inbox(id: string): HiveMessage[] {
     return this.listMessages(join(this.agentDir(id), 'inbox'));
+  }
+  /** Ids of an agent's pending messages, from the file names alone (deliver
+   *  names each `<id>.json`): the wake pollers need only these, every few seconds. */
+  inboxIds(id: string): string[] {
+    try {
+      return readdirSync(join(this.agentDir(id), 'inbox'))
+        .filter((f) => f.endsWith('.json')).sort().map((f) => f.slice(0, -'.json'.length));
+    } catch { return []; }
   }
   /** Read an agent's OUTBOX (messages it has authored/sent). Symmetric with
    *  inbox(); the router drains live outbox files into recipients' inboxes and
@@ -2959,7 +3029,7 @@ export class HiveManager {
     if (!existsSync(dir)) return [];
     const files = readdirSync(dir).filter((f) => f.endsWith('.json')).sort();
     return (newest ? files.slice(-newest) : files)
-      .map((f) => { try { return JSON.parse(readFileSync(join(dir, f), 'utf8')) as HiveMessage; } catch { return null; } })
+      .map((f) => { try { return JSON.parse(readPlain(join(dir, f))) as HiveMessage; } catch { return null; } })
       .filter((m): m is HiveMessage => m !== null);
   }
 
@@ -3068,7 +3138,7 @@ export class HiveManager {
 
   // — json + atomic io —
   private readJson<T>(p: string, fallback: T): T {
-    try { return JSON.parse(readFileSync(p, 'utf8')) as T; } catch { return fallback; }
+    try { return JSON.parse(readPlain(p)) as T; } catch { return fallback; }
   }
   // registry.json / tasks.json / fleet.json are read back on every beat; a torn
   // write would read as empty, so every JSON write goes through temp + rename.
@@ -3455,9 +3525,10 @@ write there become searchable by every agent. You don't run \`mine\` yourself.
 // Write/Edit used to run straight past a pause or halt. Over the limit, send a
 // stub: the gate only needs the event, agent and tool name.
 const FIT_FRAME = `function fitFrame(p) {
+  p.hook_token = process.env.HIVE_HOOK_TOKEN || undefined;
   const f = JSON.stringify(p);
   if (Buffer.byteLength(f) <= 200000) return f;
-  return JSON.stringify({ hook_event_name: p.hook_event_name, agent_id: p.agent_id, session_id: p.session_id,
+  return JSON.stringify({ hook_event_name: p.hook_event_name, agent_id: p.agent_id, hook_token: p.hook_token, session_id: p.session_id,
     transcript_path: p.transcript_path, cwd: p.cwd, tool_name: p.tool_name, tool_input: { truncated: true } });
 }`;
 const HOOK_SHIM = `#!/usr/bin/env node
@@ -3472,6 +3543,7 @@ process.stdin.on('end', () => {
   let payload = {};
   try { payload = JSON.parse(data || '{}'); } catch (_) {}
   if (!payload.agent_id) payload.agent_id = process.env.AGENT_ID || null;
+  payload.hook_token = process.env.HIVE_HOOK_TOKEN || undefined;
   const sock = process.env.HIVE_SOCK;
   if (isStatus) {
     // Status-line mode: Claude Code pipes the session status JSON (incl.
@@ -3592,6 +3664,7 @@ function post(payload) {
   try {
     if (!SOCK) return;
     payload.agent_id = payload.agent_id || AGENT;
+    payload.hook_token = process.env.HIVE_HOOK_TOKEN || undefined;
     var c = net.createConnection(SOCK, function () { try { c.end(JSON.stringify(payload) + '\\n'); } catch (e) {} });
     c.on('error', function () {});
   } catch (e) {}
@@ -3629,6 +3702,7 @@ function post(payload) {
   try {
     if (!SOCK) return;
     payload.agent_id = payload.agent_id || AGENT;
+    payload.hook_token = process.env.HIVE_HOOK_TOKEN || undefined;
     const c = createConnection(SOCK, () => { try { c.end(JSON.stringify(payload) + '\\n'); } catch (e) {} });
     c.on('error', () => {});
   } catch (e) {}
@@ -3687,6 +3761,7 @@ function ctxSize(model) {
 // Fire-and-forget emit of a shim-shaped payload to the hive socket. Never throws.
 function emit(payload) {
   if (!SOCK) return;
+  payload.hook_token = process.env.HIVE_HOOK_TOKEN || undefined;
   try {
     const c = net.createConnection(SOCK, function () { c.end(JSON.stringify(payload) + '\\n'); });
     c.on('error', function () {});

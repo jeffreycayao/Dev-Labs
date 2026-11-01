@@ -45,7 +45,7 @@ async function floor(t) {
   const hive = new HiveManager(() => home);
   await hive.ensureAgent({ id: 'jim-1', name: 'Jim', provider: 'claude', cwd: home });
   const server = new HookServer(hive, () => null, () => CONFIG, undefined, undefined);
-  const fire = (payload) => server.handle({ agent_id: 'jim-1', session_id: 's1', ...payload });
+  const fire = (payload) => server.handle({ agent_id: 'jim-1', hook_token: hive.hookTokenFor('jim-1'), session_id: 's1', ...payload });
   notifications.length = 0;
   return { home, hive, server, fire };
 }

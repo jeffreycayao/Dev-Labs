@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { gh } from './office/githubPr';
 
 /** A GitHub issue, normalized for the renderer (labels/assignees flattened to names). */
 export interface GHIssue {
@@ -22,46 +22,26 @@ interface RawGHIssue {
 }
 
 /**
- * List up to 30 issues in the repo at `cwd` via the `gh` CLI.
+ * List up to 30 issues in the repo at `cwd` via the `gh` CLI (the same runner as
+ * the Code Review Room: the user's shell PATH, a timeout, no prompts).
  *
- * Returns `{ ok: false, error }` on any failure — spawn error (e.g. `gh` not
- * installed), non-zero exit (e.g. unauthenticated / not a repo), or a JSON
- * parse failure — so callers never have to try/catch.
+ * Returns `{ ok: false, error }` on any failure — `gh` missing, non-zero exit
+ * (e.g. unauthenticated / not a repo), or a JSON parse failure — so callers
+ * never have to try/catch.
  */
-export function listIssues(cwd: string): Promise<{ ok: boolean; issues?: GHIssue[]; error?: string }> {
-  return new Promise((resolve) => {
-    const proc = spawn(
-      'gh',
-      ['issue', 'list', '--json', 'number,title,body,assignees,labels,url,state', '--limit', '30'],
-      { cwd }
-    );
-    let stdout = '';
-    let stderr = '';
-    // Decode on the stream: a per-chunk toString splits multi-byte UTF-8 characters.
-    proc.stdout.setEncoding('utf8');
-    proc.stderr.setEncoding('utf8');
-    proc.stdout.on('data', (d) => { stdout += d; });
-    proc.stderr.on('data', (d) => { stderr += d; });
-    proc.on('error', (e) => resolve({ ok: false, error: e.message }));
-    proc.on('close', (code) => {
-      if (code !== 0) {
-        resolve({ ok: false, error: stderr.trim() || `gh exited ${code}` });
-        return;
-      }
-      try {
-        const raw = JSON.parse(stdout) as RawGHIssue[];
-        const issues: GHIssue[] = (Array.isArray(raw) ? raw : []).map((i) => ({
-          number: i.number ?? 0,
-          title: i.title ?? '',
-          body: i.body ?? '',
-          url: i.url ?? '',
-          labels: (i.labels ?? []).map((l) => l.name ?? '').filter(Boolean),
-          assignees: (i.assignees ?? []).map((a) => a.login ?? '').filter(Boolean)
-        }));
-        resolve({ ok: true, issues });
-      } catch (e) {
-        resolve({ ok: false, error: e instanceof Error ? e.message : String(e) });
-      }
-    });
-  });
+export async function listIssues(cwd: string): Promise<{ ok: boolean; issues?: GHIssue[]; error?: string }> {
+  try {
+    const raw = JSON.parse(await gh(cwd, ['issue', 'list', '--json', 'number,title,body,assignees,labels,url,state', '--limit', '30'])) as RawGHIssue[];
+    const issues: GHIssue[] = (Array.isArray(raw) ? raw : []).map((i) => ({
+      number: i.number ?? 0,
+      title: i.title ?? '',
+      body: i.body ?? '',
+      url: i.url ?? '',
+      labels: (i.labels ?? []).map((l) => l.name ?? '').filter(Boolean),
+      assignees: (i.assignees ?? []).map((a) => a.login ?? '').filter(Boolean)
+    }));
+    return { ok: true, issues };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
 }

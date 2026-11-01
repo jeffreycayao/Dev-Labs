@@ -166,3 +166,17 @@ test('a non-numeric usd is treated as 0 rather than NaN-poisoning the total', as
   assert.equal(Number.isFinite(t.usdFor('a')), true);
   assert.equal(t.usdFor('a'), 5);
 });
+
+test('caps see a session\'s tokens and dollars across an app restart', async () => {
+  const { withLedgerUsage } = loadTs('src/main/costLifetime.ts');
+  const tok = (input, usd) => JSON.stringify({ agent_id: 'a', session_id: 's1', ts: 0, input, output: 0, cache_read: 0, cache_creation: 0, model: '', usd });
+  // 4.9M tokens, then DevLabs restarts and the counter starts again from 0.
+  const t = await totalsFor([tok(4_900_000, 40), tok(100, 0.01)]);
+  const usage = t.sessionUsage('a', 's1');
+  assert.equal(usage.input, 4_900_100);
+  assert.equal(usage.usd, 40.01);
+  const live = { agentId: 'a', sessionId: 's1', ts: 1, input: 100, output: 0, cacheRead: 0, cacheCreation: 0, model: null, usd: 0.01 };
+  assert.equal(withLedgerUsage(live, usage).input, 4_900_100, 'the breaker judges the restart-proof figure');
+  assert.equal(withLedgerUsage(live, null), live);
+  assert.equal(t.sessionUsage('a', 'other'), null);
+});

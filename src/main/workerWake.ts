@@ -26,15 +26,13 @@
  *  - a per-worker cooldown (NUDGE_COOLDOWN_MS) so the watchdog and the renderer
  *    nudge don't stack on top of each other.
  *
- * Deliberately the renderer's own nudge text, and the same type pattern the
- * renderer's submitToPty uses (text first, Enter as a separate keystroke).
+ * The renderer and this watchdog share one record of announced ids
+ * (noteAnnounced), so each message is announced once, by whichever sees it
+ * first. While a window is open the caller hands the nudge to its queue, which
+ * also waits out a half-typed prompt; it types directly only with no window.
  *
  * No electron import — unit-testable (mirrors ControlRegistry).
  */
-
-/** The exact nudge the renderer's inbox-wake loop would have typed. */
-export const WORKER_WAKE_NUDGE =
-  'You have new hive inbox message(s) — read your inbox, act on them now, and move handled ones to inbox/.done/. Act autonomously; only message god if you genuinely need a decision.';
 
 /** No PTY output for this long = genuinely idle (renderer QUIESCE_IDLE_MS). */
 export const WORKER_WAKE_IDLE_MS = 12_000;
@@ -105,6 +103,16 @@ export class WorkerWakeWatchdog {
   noteHook(agentId: string | undefined, event: string | undefined, message: string | undefined, at = Date.now()): void {
     if (!agentId) return;
     if (classifyHook(event, message) === 'needsHuman') this.lastHumanNeedsAt.set(agentId, at);
+  }
+
+  /** Record ids the renderer announced on its own, so this watchdog doesn't
+   *  announce them again (and backs off for its cooldown). */
+  noteAnnounced(agentId: string, ids: readonly string[], at = Date.now()): void {
+    if (!agentId || !ids.length) return;
+    const seen = this.announcedInboxIds.get(agentId) ?? new Set<string>();
+    for (const id of ids) seen.add(id);
+    this.announcedInboxIds.set(agentId, seen);
+    this.lastNudgeAt.set(agentId, at);
   }
 
   /** Forget per-agent state (e.g. the agent's PTY was closed). */

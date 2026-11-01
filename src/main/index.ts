@@ -16,6 +16,7 @@ import { initAutoUpdater, abortPendingRestart } from './updater';
 import { RealtimeFloorWatcher } from './realtimeFloorWatcher';
 import {
   readConfig, writeConfig, setAgentTokenCap, resetConfig, onConfigWritten, ensureHarnessHome, ensureClaudePermissionsAccepted,
+  configForRenderer, SAVED_SECRET, useConfigSecretStore,
   modelForRole, OPS_STANDUP_MISSION, HEARTBEAT_MISSION, COMPACT_MAINTENANCE_MISSION, type HarnessConfig, type ScheduledMission
 } from './config';
 import { listDir, readFileText, readFileBinary, writeFileText, statAbs, expandTilde } from './fs';
@@ -27,7 +28,7 @@ import {
   getLogGraph, getCommitFiles, getFileAtRev, compareRefs, checkoutRef
 } from './git';
 import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';
-import { HiveManager, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
+import { HiveManager, readPlain, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import { CumulativeSampleGate, type UsageProvider } from './usage';
@@ -65,7 +66,7 @@ import { registerRadioIpc } from './office/radio';
 import { initCompletionWatcher } from './realtimeCompletionWatcher';
 import type { TaskCard, InboxMessage } from './realtimeCompletionWatcher';
 import { TelemetryCollector } from './telemetry';
-import { CostLedgerTotals } from './costLifetime';
+import { CostLedgerTotals, withLedgerUsage } from './costLifetime';
 import { analytics, isRendererMessageSurface } from './analytics';
 import type { SpawnFailReason } from './analytics';
 import { IntegrationBroker } from './integrationBroker';
@@ -1293,7 +1294,9 @@ function runBreakerBeat(progressWindowMs: number): void {
     const lastSpanAt = spans.length ? spans[spans.length - 1].ts : 0;
     inputs.push({
       agentId: id,
-      sample,
+      // The in-memory sample restarts near 0 when DevLabs restarts; the ledger
+      // still holds what this session spent before, and the caps judge that.
+      sample: withLedgerUsage(sample, sample?.sessionId ? costTotals.sessionUsage(id, sample.sessionId) : null),
       progressing: now - lastCoordinationAt(id) < progressWindowMs || now - lastSpanAt < progressWindowMs,
       // Work, as distinct from coordination. The breaker decides what to do
       // with it; the beat only reports it.
@@ -2640,6 +2643,13 @@ function createWindow(opts: { floor?: boolean } = {}): BrowserWindow {
       callback(micFeatureLive() && wantsAudio);
       return;
     }
+    // A link to another app's URL scheme (ms-msdt:, file:, …) would launch it:
+    // only web and mail links may leave the app this way.
+    if (permission === 'openExternal') {
+      const url = details && 'externalURL' in details ? details.externalURL ?? '' : '';
+      callback(/^(https?|mailto):/i.test(url));
+      return;
+    }
     callback(true);
   });
   ses.setPermissionCheckHandler((_wc, permission) => {
@@ -3554,8 +3564,12 @@ ipcMain.handle('integrations:test', async (_evt, payload: unknown) => {
 });
 
 // ─── IPC: config ────────────────────────────────────────────────────────────
-ipcMain.handle('config:get', (): HarnessConfig => readConfig());
-ipcMain.handle('config:update', (_evt, patch: Partial<HarnessConfig>) => {
+ipcMain.handle('config:get', (): HarnessConfig => configForRenderer(readConfig()));
+ipcMain.handle('config:update', (_evt, raw: Partial<HarnessConfig>) => {
+  // The window holds SAVED_SECRET in place of saved keys: echoing it back keeps
+  // the key. Token caps go through config:setAgentTokenCap, which checks them.
+  const patch = Object.fromEntries(Object.entries(raw ?? {}).filter(([k, v]) =>
+    v !== SAVED_SECRET && k !== 'agentTokenCaps')) as Partial<HarnessConfig>;
   // FIRST RUN: every hive-bound service is started by bootstrapHiveServices(),
   // which runs once at app-ready and early-returns on `!hive.enabled()` — i.e.
   // whenever harnessHome is still null, which is exactly the state a fresh
@@ -3591,10 +3605,10 @@ ipcMain.handle('config:update', (_evt, patch: Partial<HarnessConfig>) => {
     console.log('[hive] harnessHome configured — bootstrapping hive services');
     try { bootstrapHiveServices(); } catch (e) { console.error('[hive] bootstrap after onboarding:', e); }
   }
-  return next;
+  return configForRenderer(next);
 });
 ipcMain.handle('config:setAgentTokenCap', (_evt, agentId: unknown, tokenCap: unknown) =>
-  setAgentTokenCap(agentId, tokenCap)
+  configForRenderer(setAgentTokenCap(agentId, tokenCap))
 );
 ipcMain.handle('config:ensureHome', (_evt, path: unknown) => {
   if (typeof path !== 'string' || path.length === 0) return { ok: false, error: 'invalid path' };
@@ -3694,6 +3708,11 @@ ipcMain.handle('config:changeHome', async (_evt, payload: unknown) => {
   try { reflector.stop(); } catch (e) { console.error('[changeHome] reflector.stop:', e); }
 
   if (mode === 'move' && oldHome) {
+    // The agents write the hive too (outbox, memory, deliveries): stop them
+    // before the copy, or what they write mid-copy stays behind or lands torn.
+    try { telemetry.stop(); } catch (e) { console.error('[changeHome] telemetry.stop:', e); }
+    try { hive.stopAllProxyBridges(); } catch (e) { console.error('[changeHome] proxy.stop:', e); }
+    try { ptyManager.killAll(); } catch (e) { console.error('[changeHome] killAll:', e); }
     try {
       // roster.json + its backups ride along with hive/palace: the roster is the
       // renderer's half of the same state, and leaving it behind would move the
@@ -3715,7 +3734,7 @@ ipcMain.handle('config:changeHome', async (_evt, payload: unknown) => {
       if (cfg.slackEnabled && cfg.slackSigningSecret) void startSlackServer();
       if (normalizeDiscordTrigger(cfg.discordTrigger).enabled) void startDiscordTrigger();
       reconcileWebhookServer();
-      return { ok: false, error: `Could not copy data: ${e instanceof Error ? e.message : String(e)}` };
+      return { ok: false, error: `Could not copy data: ${e instanceof Error ? e.message : String(e)}. Nothing moved; restore your agents to carry on here.` };
     }
   }
 
@@ -3772,7 +3791,8 @@ ipcMain.handle('fs:statAbs', (_evt, p: unknown) => {
  *  already open themselves.
  *
  *  openPath IS used for a directory, and only after statAbs has confirmed it is
- *  one — a directory has no default application to launch, so the execution
+ *  one, and never on macOS (where an `.app` folder IS an application) — a plain
+ *  directory has no default application to launch, so the execution
  *  argument above does not apply, and revealing a folder inside its parent is
  *  not what "open this folder" means to anyone. */
 ipcMain.handle('fs:revealPath', async (_evt, p: unknown) => {
@@ -3781,7 +3801,9 @@ ipcMain.handle('fs:revealPath', async (_evt, p: unknown) => {
   }
   const st = await statAbs(p);
   if (!st.exists) return { ok: false, error: 'not found' };
-  if (st.isFile) { shell.showItemInFolder(st.path); return { ok: true }; }
+  // On macOS a folder can be an app (`Setup.app`, `.pkg`, `.prefPane`), and
+  // openPath would launch it: there, only ever reveal.
+  if (st.isFile || process.platform === 'darwin') { shell.showItemInFolder(st.path); return { ok: true }; }
   const err = await shell.openPath(st.path);
   return err ? { ok: false, error: err } : { ok: true };
 });
@@ -3899,6 +3921,13 @@ ipcMain.handle('hive:tasks', () => hive.tasks());
 ipcMain.handle('hive:log', (_evt, n: unknown) => hive.logTail(typeof n === 'number' ? n : 200));
 ipcMain.handle('hive:memory', (_evt, id: unknown) => (typeof id === 'string' ? hive.memory(id) : ''));
 ipcMain.handle('hive:inbox', (_evt, id: unknown) => (typeof id === 'string' ? hive.inbox(id) : []));
+ipcMain.handle('hive:inboxIds', (_evt, id: unknown) => (typeof id === 'string' ? hive.inboxIds(id) : []));
+// The renderer's poll announced these ids itself: the wake watchdog skips them.
+ipcMain.handle('hive:noteNudged', (_evt, agentId: unknown, ids: unknown) => {
+  if (typeof agentId === 'string' && Array.isArray(ids)) {
+    workerWake.noteAnnounced(agentId, ids.filter((id): id is string => typeof id === 'string'));
+  }
+});
 // Voice read-layer: recent message CONTENT (inbox/outbox bodies), REDACTED
 // main-side by hive.voiceMessages(). The renderer/voice layer never sees a raw
 // body — secrets are stripped here, before the result crosses IPC.
@@ -4180,6 +4209,11 @@ ipcMain.handle('clipboard:saveImage', async () => {
     if (bytes.length === 0) return { ok: false as const, error: 'no image in clipboard' };
     const dir = join(app.getPath('temp'), 'cth-pastes');
     mkdirSync(dir, { recursive: true });
+    // Nothing else ever clears this folder: drop pastes older than three days.
+    for (const f of readdirSync(dir)) {
+      try { if (Date.now() - statSync(join(dir, f)).mtimeMs > 3 * 86_400_000) rmSync(join(dir, f), { force: true }); }
+      catch { /* best-effort */ }
+    }
     const ext = (pick.t.split('/')[1] ?? 'png').replace(/[^a-z0-9]/gi, '').replace(/^jpeg$/, 'jpg') || 'png';
     const name = `paste-${Date.now()}.${ext}`;
     const dest = join(dir, name);
@@ -4530,9 +4564,9 @@ ipcMain.handle('hive:textSearch', (_evt, query: unknown) => {
     }
   }
   for (const { path, source } of targets) {
-    if (!existsSync(path)) continue;
     let hits = 0;
-    for (const line of readFileSync(path, 'utf8').split('\n')) {
+    // Agents write these files: readPlain refuses a FIFO or device, caps the size.
+    for (const line of readPlain(path).split('\n')) {
       if (hits >= 3) break;
       const idx = line.toLowerCase().indexOf(q);
       if (idx === -1) continue;
@@ -4627,8 +4661,8 @@ ipcMain.handle('slack:setConfig', (_evt, patch: unknown) => {
   };
   const next: Partial<HarnessConfig> = {};
   // Trim string fields; an emptied field clears back to undefined.
-  if (typeof p.signingSecret === 'string') next.slackSigningSecret = p.signingSecret.trim() || undefined;
-  if (typeof p.botToken === 'string') next.slackBotToken = p.botToken.trim() || undefined;
+  if (typeof p.signingSecret === 'string' && p.signingSecret !== SAVED_SECRET) next.slackSigningSecret = p.signingSecret.trim() || undefined;
+  if (typeof p.botToken === 'string' && p.botToken !== SAVED_SECRET) next.slackBotToken = p.botToken.trim() || undefined;
   if (typeof p.channelId === 'string') next.slackChannelId = p.channelId.trim() || undefined;
   if (typeof p.port === 'number' && Number.isFinite(p.port)) next.slackPort = p.port;
   if (typeof p.enabled === 'boolean') next.slackEnabled = p.enabled;
@@ -4857,7 +4891,7 @@ ipcMain.handle('freeflow:setConfig', (_evt, patch: unknown) => {
   const next: Partial<HarnessConfig> = {};
   if (typeof p.enabled === 'boolean') next.freeflowEnabled = p.enabled;
   // Trim string fields; an emptied key clears back to undefined.
-  if (typeof p.apiKey === 'string') next.groqApiKey = p.apiKey.trim() || undefined;
+  if (typeof p.apiKey === 'string' && p.apiKey !== SAVED_SECRET) next.groqApiKey = p.apiKey.trim() || undefined;
   if (typeof p.model === 'string') next.freeflowModel = p.model.trim() || DEFAULT_GROQ_MODEL;
   writeConfig(next);
   return { ok: true };
@@ -5620,7 +5654,12 @@ let workerWakeTimer: ReturnType<typeof setInterval> | null = null;
 /** Type the renderer's guarded nudge into one worker's PTY — text first, Enter a
  *  tick later (the exact submitToPty pattern: a single-chunk write would land the
  *  "\r" inside the input box and never submit). Best-effort + never throws. */
-function nudgeWorker(ptyId: string, ids: string[] = []): void {
+function nudgeWorker(agentId: string, ptyId: string, ids: string[] = []): void {
+  // A window's queue waits out a half-typed prompt or an open menu before it
+  // types; this function can't see either. So while a window is open, hand the
+  // nudge to it, and type directly only when there's none.
+  const win = liveWebContents();
+  if (win) { win.send('hive:wakeNudge', { agentId, ids }); return; }
   // Same text the renderer queues (#187's inboxNudgeText), so the two wake paths
   // produce byte-identical nudges: the queue's one-pending rule recognises either
   // via isInboxNudge, and a watchdog nudge names its ids so the agent can still
@@ -5660,7 +5699,7 @@ function runWorkerWakeBeat(): void {
       isGod: agentId === reg.godId,
       ptyId,
       lastOutputAt: ptyManager.lastOutputAt(ptyId) ?? 0,
-      inboxIds: hive.inbox(agentId).map((message) => message.id).filter(Boolean),
+      inboxIds: hive.inboxIds(agentId),
       autoDeliveryPaused: snap.autoDeliveryPaused,
       paused: snap.paused,
       halted: snap.halted
@@ -5672,10 +5711,10 @@ function runWorkerWakeBeat(): void {
     // Re-read at delivery time, not from the facts snapshot: the agent may have
     // drained the mail during the beat, and a nudge naming ids it already filed
     // is the exact staleness #187 exists to stop.
-    const ids = hive.inbox(agentId).map((m) => m.id).filter(Boolean);
+    const ids = hive.inboxIds(agentId);
     if (!ids.length) { console.log(`[worker-wake] ${agentId} drained before delivery, skipping`); continue; }
     console.log(`[worker-wake] nudging ${agentId} on ${ptyId} (${ids.length} pending)`);
-    nudgeWorker(ptyId, ids);
+    nudgeWorker(agentId, ptyId, ids);
   }
 }
 
@@ -5781,6 +5820,13 @@ app.whenReady().then(() => {
   // notifications as DevLabs, not "Electron"; dev runs get the logo in the Dock.
   if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
   if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(appIconPath());
+  // Settings keys live in the encrypted connector store, which needs the app
+  // ready to decrypt; reads before this see config.json alone.
+  useConfigSecretStore({
+    get: integrations.getSecret,
+    set: (ref, value) => integrations.setSecret(ref, value).ok,
+    del: integrations.deleteSecret
+  });
   // Realtime Ramon mic-gate hygiene (rt-8 / Pam rt-10 nit): the voice session
   // opens the mic permission gate by persisting realtimeVoiceEnabled=true and
   // closes it on disconnect — but a hard crash/reload mid-session skips that
@@ -5884,7 +5930,7 @@ app.on('before-quit', (e) => {
 onConfigWritten((config) => {
   for (const w of allWindows) {
     if (w.isDestroyed() || w.webContents.isDestroyed()) continue;
-    w.webContents.send('config:changed', config);
+    w.webContents.send('config:changed', configForRenderer(config));
   }
 });
 

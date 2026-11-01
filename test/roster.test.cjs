@@ -16,7 +16,8 @@ function tmpHome() {
 /** A store bound to `home`. A fresh instance is a fresh RUN — which is what the
  *  empty-guard keys off, so "another instance" is how a restart is simulated. */
 function storeAt(home) {
-  return new RosterStore(() => home);
+  // Every save backed up, so the pruning and naming tests see each one.
+  return new RosterStore(() => home, 0);
 }
 
 function backupsIn(home) {
@@ -189,6 +190,14 @@ test('queues and selection round-trip, and a bad queues field degrades to empty'
   const coerced = store.read();
   assert.deepEqual(coerced.queues, {});
   assert.equal(coerced.selectedId, null);
+});
+
+test('ordinary saves back up at most every few minutes, so backups span hours', () => {
+  const home = tmpHome();
+  const store = new RosterStore(() => home);
+  for (let i = 0; i < 30; i++) store.write(snapshot([{ id: 'a', name: `v${i}` }]));
+  // The first save has nothing to copy, the second backs up, the other 28 add none.
+  assert.equal(backupsIn(home).length, 1);
 });
 
 test('backups are pruned to the newest ROSTER_BACKUP_KEEP', () => {

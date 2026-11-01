@@ -315,13 +315,6 @@ export function useHive(config: HarnessConfig | null): void {
   // 'working' (there's a short window where it still reads 'idle' right after we
   // type into it). One message per cooldown keeps delivery strictly one-by-one.
   const lastFlush = useRef<Record<string, number>>({});
-  // Queue-drain delivery tracking (#36): a message now stays IN the queue until
-  // its PTY write chain resolves, so `inFlightSends` (message ids mid-write)
-  // stops a store-update burst from double-sending the head, and `sendFailures`
-  // bounds retries — after MAX_SEND_ATTEMPTS failed writes the message is
-  // dropped WITH a console.warn instead of being silently destroyed.
-  const inFlightSends = useRef<Set<string>>(new Set());
-  const sendFailures = useRef<Record<string, number>>({});
   // In-flight spawn guard so a re-render / StrictMode double-mount can't spawn
   // Ramon twice (the window between the listPtys check and spawnPty is racy).
   const godSpawning = useRef(false);
@@ -427,9 +420,19 @@ export function useHive(config: HarnessConfig | null): void {
         resume: true,
         hive: { id: GOD_ID, name: godName, provider: godProvider, cwd: config.harnessHome!, isGod: true, role: 'orchestrator (god)' }
       });
-      const { result: res, startup } = godProvider === 'codex'
-        ? await spawnAndObservePty(GOD_PTY, window.cth, spawnGod)
-        : { result: await spawnGod(), startup: undefined };
+      let spawned: { result: Awaited<ReturnType<typeof spawnGod>>; startup?: Awaited<ReturnType<typeof spawnAndObservePty>>['startup'] };
+      try {
+        spawned = godProvider === 'codex'
+          ? await spawnAndObservePty(GOD_PTY, window.cth, spawnGod)
+          : { result: await spawnGod(), startup: undefined };
+      } catch (e) {
+        // A thrown spawn must release the guard, or Ramon stays "booting" forever.
+        console.error('[hive] Ramon failed to spawn:', e);
+        godSpawning.current = false;
+        if (!cancelled) useStore.getState().setGodStatus('failed');
+        return;
+      }
+      const { result: res, startup } = spawned;
       if (cancelled) { godSpawning.current = false; return; }
       if (!res.ok) { godSpawning.current = false; useStore.getState().setGodStatus('failed'); return; }
       const needsInput = startup?.kind === 'needs-input';
@@ -650,7 +653,8 @@ export function useHive(config: HarnessConfig | null): void {
       if (seenTerminalHandoffs.current.has(msg.id)) return;
       const { agents, enqueueMessage, messageQueues } = useStore.getState();
       const target = agents.find((a) => a.id === msg.to);
-      if (target?.ptyId) {
+      // A stopped agent keeps its ptyId (status 'ghost'), but nothing drains its queue.
+      if (target?.ptyId && target.status !== 'ghost') {
         const marker = `Message: ${msg.id}`;
         if ((messageQueues[target.id] ?? []).some((queued) => queued.text.includes(marker))) return;
         seenTerminalHandoffs.current.add(msg.id);
@@ -724,11 +728,23 @@ export function useHive(config: HarnessConfig | null): void {
   //    always worked this way.
   useEffect(() => {
     if (!config?.onboardingComplete) return;
+    // One record of announced ids per agent, shared with the main process's wake
+    // watchdog (hiveNoteNudged / onHiveWakeNudge), so each message is announced
+    // once by whichever side sees it first.
+    const queueNudge = (agentId: string, ids: string[]): void => {
+      const seen = nudged.current[agentId] ?? (nudged.current[agentId] = new Set());
+      const fresh = ids.filter((id) => id && !seen.has(id));
+      if (!fresh.length) return;
+      useStore.getState().enqueueMessage(agentId, inboxNudgeText(fresh), { precondition: 'inbox-nonempty' });
+      for (const id of fresh) seen.add(id);
+      void window.cth.hiveNoteNudged(agentId, fresh).catch(() => {});
+    };
+    const offWake = window.cth.onHiveWakeNudge(({ agentId, ids }) => queueNudge(agentId, ids));
     const iv = setInterval(async () => {
       const agents = useStore.getState().agents.filter((a) => a.ptyId);
       for (const a of agents) {
         try {
-          const inbox = await window.cth.hiveInbox(a.id);
+          const ids = await window.cth.hiveInboxIds(a.id);
           // Nudge on any id we have not nudged for yet (#130's per-id Set).
           // Draining shrinks the set and introduces nothing new, so this POLL
           // stays quiet; a genuinely new message fires regardless of how its id
@@ -741,27 +757,19 @@ export function useHive(config: HarnessConfig | null): void {
           // drains the whole inbox in that same turn, and the nudge is typed into
           // an empty inbox afterwards — a wasted turn, and the most expensive one
           // on the floor when the agent is god.
-          const seen = nudged.current[a.id] ?? (nudged.current[a.id] = new Set());
-          const fresh = inbox.filter((m) => m.id && !seen.has(m.id));
-          if (fresh.length) {
-            // Name the ids: the nudge is queued now and typed whenever the agent
-            // next goes idle, so it can arrive long after the agent drained and
-            // filed this very mail. Carrying the ids is what lets it tell
-            // "already handled" from "woken for nothing". The queue keeps only
-            // one nudge pending per agent (see enqueueMessage), so a suppressed
-            // copy's ids stay unnamed — hence the text points at the pending
-            // inbox as the authority rather than at the list.
-            useStore.getState().enqueueMessage(
-              a.id,
-              inboxNudgeText(fresh.map((m) => m.id)),
-              { precondition: 'inbox-nonempty' }
-            );
-            for (const m of fresh) seen.add(m.id);
-          }
+          //
+          // Name the ids: the nudge is queued now and typed whenever the agent
+          // next goes idle, so it can arrive long after the agent drained and
+          // filed this very mail. Carrying the ids is what lets it tell
+          // "already handled" from "woken for nothing". The queue keeps only
+          // one nudge pending per agent (see enqueueMessage), so a suppressed
+          // copy's ids stay unnamed — hence the text points at the pending
+          // inbox as the authority rather than at the list.
+          queueNudge(a.id, ids);
         } catch { /* ignore */ }
       }
     }, 4000);
-    return () => clearInterval(iv);
+    return () => { clearInterval(iv); offWake(); };
   }, [config?.onboardingComplete]);
 
   // 3b) Seed a fresh "type-into-tui" worker (Crush) with the hive protocol. Its
@@ -857,27 +865,29 @@ export function useHive(config: HarnessConfig | null): void {
       if (!canDeliverToAgent(target.status, ptyQuietMs(target.ptyId, now), QUIESCE_IDLE_MS)) {
         return { sent: false };
       }
+      // Cheap in-memory holds first: this runs on every store change, so the
+      // IPC round trip below should only happen for an agent that could send.
+      // Hold queued messages until the target finishes its boot sequence.
+      if ((bootGraceUntil.current[target.id] ?? 0) >= now) return { sent: false };
+      if (now - (lastFlush.current[target.id] ?? 0) < FLUSH_COOLDOWN_MS) return { sent: false };
       const control = await window.cth.controlSnapshot(target.id);
       // The pause gate holds everything EXCEPT messages the user explicitly
       // released with "send now" (m.manual) — otherwise a paused floor leaves
       // the queue with no escape hatch at all. Idle/draft/picker safety below
       // still applies to manual messages; only the pause is bypassed.
       if (control?.autoDeliveryPaused && !next.manual) return { sent: false };
-      // Hold queued messages until the target finishes its boot sequence.
-      if ((bootGraceUntil.current[target.id] ?? 0) >= now) return { sent: false };
       // The user owns the prompt: a draft they are writing, or a menu they
       // opened, holds delivery. Both blocks expire after half an hour, and when
       // one does we simply type after whatever is there — automation never
       // erases the user's text and never closes the user's menu.
       if (!isTerminalAutomationSafe(target.ptyId, now, inferAgentProvider(target.command, target.provider))) return { sent: false };
-      if (now - (lastFlush.current[target.id] ?? 0) < FLUSH_COOLDOWN_MS) return { sent: false };
       // Last gate before we type: re-check the message's delivery-time
       // precondition. A queue item is decided at enqueue time and delivered an
       // arbitrary interval later, and the inbox nudge is only worth sending if
       // there is still something in the inbox — the agent routinely drains it in
       // the very turn the nudge was queued from. Stale ones are DROPPED, not
       // deferred, so they cannot park at the queue head and starve the rest.
-      if (await checkPrecondition(next, () => window.cth.hiveInbox(srcId)) === 'drop') {
+      if (await checkPrecondition(next, () => window.cth.hiveInboxIds(srcId)) === 'drop') {
         removeQueuedMessage(srcId, next.id);
         return { sent: false };
       }

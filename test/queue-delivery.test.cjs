@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const loadTs = require('./load-ts.cjs');
 
-const { deliverWithAcknowledgement, canDeliverToAgent, checkPrecondition } =
+const { deliverWithAcknowledgement, canDeliverToAgent, checkPrecondition, mayDriftIdle } =
   loadTs('src/renderer/src/hooks/queueDelivery.ts');
 
 const QUIESCE_MS = 12_000; // mirrors QUIESCE_IDLE_MS in useHive
@@ -104,4 +104,10 @@ test('messages without a precondition never consult the inbox', async () => {
   });
   assert.equal(verdict, 'send');
   assert.equal(consulted, false);
+});
+
+test('the quiet timer never turns an on-screen prompt or a pinned agent idle', () => {
+  // idle opens the drain, and its Enter would answer the prompt.
+  for (const status of ['waiting', 'blocked', 'looping', 'ghost']) assert.equal(mayDriftIdle(status), false, status);
+  for (const status of ['working', 'thinking', 'idle', undefined]) assert.equal(mayDriftIdle(status), true, String(status));
 });

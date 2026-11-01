@@ -6,6 +6,7 @@ import { existsSync, statSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
 import { ipcMain } from 'electron';
 import { userShellPath } from '../shellEnv';
+import { SAFE_GIT_ENV } from '../git';
 import {
   buildInlineCommentArgs,
   buildReviewArgs,
@@ -30,13 +31,14 @@ const DETAIL_FIELDS =
 
 class GhError extends Error {}
 
-function gh(cwd: string, args: string[]): Promise<string> {
+/** Run `gh` in a repo folder; rejects with a friendly message. */
+export function gh(cwd: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile(
       'gh',
       args,
       // userShellPath: macOS GUI apps don't inherit the shell PATH where Homebrew puts gh.
-      { cwd, timeout: TIMEOUT_MS, maxBuffer: MAX_BUFFER, windowsHide: true, env: { ...process.env, PATH: userShellPath(), GH_PROMPT_DISABLED: '1', NO_COLOR: '1' } },
+      { cwd, timeout: TIMEOUT_MS, maxBuffer: MAX_BUFFER, windowsHide: true, env: { ...process.env, ...SAFE_GIT_ENV, PATH: userShellPath(), GH_PROMPT_DISABLED: '1', NO_COLOR: '1' } },
       (err, stdout, stderr) => (err ? reject(new GhError(friendlyGhError({ code: err.code, killed: err.killed, stderr, message: err.message }))): resolve(stdout))
     );
   });

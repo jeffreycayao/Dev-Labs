@@ -761,6 +761,16 @@ const api = {
   hiveLog: (n?: number): Promise<unknown[]> => ipcRenderer.invoke('hive:log', n ?? 200),
   hiveMemory: (id: string): Promise<string> => ipcRenderer.invoke('hive:memory', id),
   hiveInbox: (id: string): Promise<HiveMessage[]> => ipcRenderer.invoke('hive:inbox', id),
+  /** Pending message ids only (file names): cheap enough to poll. */
+  hiveInboxIds: (id: string): Promise<string[]> => ipcRenderer.invoke('hive:inboxIds', id),
+  /** Tell the main wake watchdog these ids were announced here. */
+  hiveNoteNudged: (agentId: string, ids: string[]): Promise<void> => ipcRenderer.invoke('hive:noteNudged', agentId, ids),
+  /** The main wake watchdog found new mail for an idle worker: queue the nudge. */
+  onHiveWakeNudge: (cb: (e: { agentId: string; ids: string[] }) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, payload: { agentId: string; ids: string[] }) => cb(payload);
+    ipcRenderer.on('hive:wakeNudge', listener);
+    return () => ipcRenderer.removeListener('hive:wakeNudge', listener);
+  },
   /** Voice read-layer: recent message CONTENT (inbox/outbox bodies), REDACTED in
    *  main. Pass { id } for one message, { agentId } to scope to one mailbox, or
    *  {} for the whole floor. Backs Realtime Ramon's get_messages. The renderer

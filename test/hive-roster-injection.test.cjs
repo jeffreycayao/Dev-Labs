@@ -47,7 +47,7 @@ async function floor(t, { steer } = {}) {
     ? { takeSteer: (id) => (id === 'god-1' ? steer : null), shouldHalt: () => false, toolDecision: () => ({ deny: false }) }
     : undefined;
   const server = new HookServer(hive, () => null, () => CONFIG, control, undefined);
-  const fire = (agent_id, hook_event_name, extra = {}) => server.handle({ agent_id, hook_event_name, session_id: 's1', ...extra });
+  const fire = (agent_id, hook_event_name, extra = {}) => server.handle({ agent_id, hook_token: hive.hookTokenFor(agent_id), hook_event_name, session_id: 's1', ...extra });
   return { home, hive, server, fire };
 }
 

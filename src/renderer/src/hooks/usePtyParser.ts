@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useStore, type ToolKind, type StationKind, type BlockReason } from '@/store/store';
 import { createAnsiStripper } from '@/components/ansiText';
 import { terminalShowsStartupPrompt } from '@/components/terminalPool';
+import { mayDriftIdle } from './queueDelivery';
 
 // Tool call lines look like: `● Read SPEC.md`, `● Bash npm test`, `● Edit src/foo.ts`
 const TOOL_RE = /●\s+([A-Za-z][A-Za-z_]*)(?:\s+(.+))?/g;
@@ -71,7 +72,7 @@ export function usePtyParser(agentId: string) {
     }
     idleTimerRef.current = window.setTimeout(() => {
       const current = useStore.getState().agents.find((agent) => agent.id === agentId);
-      if (current?.status === 'ghost') return;
+      if (!mayDriftIdle(current?.status)) return;
       if (current?.action === 'Complete engine setup in Terminal'
         && current.ptyId && terminalShowsStartupPrompt(current.ptyId)) return;
       // No new tool calls for ~4 s → assume the model went idle
@@ -91,13 +92,12 @@ export function usePtyParser(agentId: string) {
     }
   }, []);
 
+  // The hook outlives a switch to another agent (the panels aren't keyed): drop
+  // the old agent's pending drift and its half-parsed escape on every switch.
   useEffect(() => {
-    return () => {
-      if (idleTimerRef.current !== null) {
-        window.clearTimeout(idleTimerRef.current);
-      }
-    };
-  }, []);
+    stripRef.current = createAnsiStripper();
+    return cancelIdle;
+  }, [agentId, cancelIdle]);
 
   return useCallback((chunk: string) => {
     const text = stripRef.current(chunk);
@@ -129,7 +129,10 @@ export function usePtyParser(agentId: string) {
       lastArg = (m[2] ?? '').trim();
     }
 
-    if (lastTool) {
+    // A prompt drawn in the same chunk as its tool line wins: it's what's on screen.
+    const promptShown = !running && BLOCK_HINTS.some(re => re.test(text.slice(-400)));
+
+    if (lastTool && !promptShown) {
       const station = TOOL_TO_STATION[lastTool] ?? 'desk';
       const carrying = TOOLKIND_BY_NAME[lastTool] ?? undefined;
       // Collapse space runs: translated cursor-forwards (see ansiText) can
@@ -157,9 +160,10 @@ export function usePtyParser(agentId: string) {
       return;
     }
 
-    // Not running → a genuine approval/question prompt is on screen.
-    const recent = text.slice(-400);
-    if (BLOCK_HINTS.some(re => re.test(recent))) {
+    // Not running → a genuine approval/question prompt is on screen. Cancel any
+    // drift a tool line just before it scheduled, or idle would open the drain.
+    if (promptShown) {
+      cancelIdle();
       // Only the god agent talks to the human, so only it is truly "blocked"
       // (needs you). A sub-agent sitting at a prompt is autonomous — it reads as
       // "waiting" and we don't raise a human-approval card for it.

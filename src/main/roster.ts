@@ -57,6 +57,10 @@ export function rosterPath(home: string): string {
 
 /** How many roster backups survive pruning. */
 export const ROSTER_BACKUP_KEEP = 50;
+/** Ordinary saves (every queued nudge is one) back up at most this often, so
+ *  the 50 kept span hours rather than minutes. Run-start, refused and reset
+ *  backups are always taken. */
+export const ROSTER_WRITE_BACKUP_EVERY_MS = 10 * 60_000;
 
 export function rosterBackupDir(home: string): string {
   return join(home, 'roster-backups');
@@ -91,8 +95,13 @@ export class RosterStore {
    *  tick used to produce the same filename, and the second silently replaced
    *  the first — a backup folder that quietly loses backups is worse than none. */
   private backupSeq = 0;
+  /** When the last ordinary-save backup was taken. */
+  private lastWriteBackupAt = 0;
 
-  constructor(private readonly getHome: () => string | null) {}
+  constructor(
+    private readonly getHome: () => string | null,
+    private readonly writeBackupEveryMs = ROSTER_WRITE_BACKUP_EVERY_MS
+  ) {}
 
   private home(): string | null {
     try { return this.getHome(); } catch { return null; }
@@ -147,7 +156,11 @@ export class RosterStore {
         return { ok: false, skipped: 'empty-first-write' };
       }
 
-      this.backup(home, p, this.wrote ? 'write' : 'run-start');
+      if (!this.wrote) this.backup(home, p, 'run-start');
+      else if (Date.now() - this.lastWriteBackupAt >= this.writeBackupEveryMs) {
+        this.lastWriteBackupAt = Date.now();
+        this.backup(home, p, 'write');
+      }
 
       const body: RosterSnapshot = {
         version: 1,

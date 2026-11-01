@@ -7,7 +7,7 @@
  * an agent wrote itself. With no system node those die with 127 — same bug, one
  * level down.
  *
- * `<hive>/bin/runtime/` holds a shim literally NAMED `node`, APPENDED to the
+ * `<home>/hive-internal/bin/runtime/` holds a shim literally NAMED `node`, APPENDED to the
  * agent's PATH. Appended, not prepended: a user with their own node keeps their
  * own version, and we are strictly the fallback.
  */
@@ -39,7 +39,7 @@ test('bootstrap materializes a PATH-visible `node`', async (t) => {
   const { hive, root } = await hiveIn(t);
 
   const dir = hive.runtimeBinDir();
-  assert.equal(dir, path.join(root, 'bin', 'runtime'));
+  assert.equal(dir, path.join(path.dirname(root), 'hive-internal', 'bin', 'runtime'));
   const shim = path.join(dir, POSIX ? 'node' : 'node.cmd');
   assert.equal(fs.existsSync(shim), true, 'nothing resolves `node` here without it');
 
@@ -60,7 +60,7 @@ test('npm and npx are deliberately NOT shimmed', async (t) => {
 
 test('the runtime dir is APPENDED — the user\'s own node still wins', async (t) => {
   const { root } = await hiveIn(t);
-  const dir = path.join(root, 'bin', 'runtime');
+  const dir = path.join(path.dirname(root), 'hive-internal', 'bin', 'runtime');
 
   const out = withHiveRuntimeFallback(`/usr/local/bin${SEP}/usr/bin`, root);
   assert.equal(out, `/usr/local/bin${SEP}/usr/bin${SEP}${dir}`);

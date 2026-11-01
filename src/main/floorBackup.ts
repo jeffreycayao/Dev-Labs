@@ -6,7 +6,7 @@ import { join, relative, resolve, sep } from 'node:path';
 import { ZipFile } from 'yazl';
 import * as yauzl from 'yauzl';
 
-const FLOOR_ENTRIES = ['hive', 'palace', 'roster.json', 'roster-backups'] as const;
+const FLOOR_ENTRIES = ['hive', 'hive-internal', 'palace', 'roster.json', 'roster-backups'] as const;
 const BACKUP_SPEC = 'atmt-labs/floor-backup@1';
 
 /** Move floor-owned paths out of their live names together before deleting them.

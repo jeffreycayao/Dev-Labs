@@ -3699,7 +3699,7 @@ ipcMain.handle('config:changeHome', async (_evt, payload: unknown) => {
       // renderer's half of the same state, and leaving it behind would move the
       // agents' sessions and memory to the new home while their names, notes and
       // worktree paths stayed at the old one.
-      for (const sub of ['hive', 'palace', 'roster.json', 'roster-backups']) {
+      for (const sub of ['hive', 'hive-internal', 'palace', 'roster.json', 'roster-backups']) {
         const src = join(oldHome, sub);
         if (!existsSync(src)) continue;
         // cpSync copies the whole tree incl. .git and is cross-device safe (unlike
@@ -4269,7 +4269,7 @@ ipcMain.handle('app:resetAll', () => {
   // Erase the hive (Ramon's + every agent's memory, inboxes, tasks, board,
   // git history) and the semantic-memory palace. Only these harness-created
   // subdirs are removed — never the user's whole harnessHome folder.
-  for (const dir of [hive.root(), memory.palacePath()]) {
+  for (const dir of [hive.root(), hive.internalDir(), memory.palacePath()]) {
     if (!dir) continue;
     try { rmSync(dir, { recursive: true, force: true }); }
     catch (e) { console.error('[reset] rm', dir, e); }

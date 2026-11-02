@@ -1,5 +1,5 @@
-- Philippine radio now plays inside DevLabs, with a mini player.
-- The Kapihan: a new office cafeteria for coffee and chismis.
-- Agents show what they're doing in small, readable bubbles.
-- Three monitors per desk; busy agents keep working to music.
-- Code Review Room opens on This Repo.
+- Feature Manual in Help, with a 3D tour.
+- Bundled skills: SkillSpector, ponytail and a security audit.
+- Slack, Groq and webhook keys are now stored encrypted.
+- Queued messages can no longer answer approval prompts.
+- Stronger guards stop agents running code through DevLabs.

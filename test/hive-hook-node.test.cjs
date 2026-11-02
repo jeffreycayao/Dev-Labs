@@ -181,6 +181,7 @@ test('Codex hook commands survive a hive path containing spaces', { skip: !POSIX
   const hive = new HiveManager(() => harness);
   hive.ensureHive();
   const agentDir = path.join(harness, 'hive', 'agents', 'a1');
+  fs.mkdirSync(agentDir, { recursive: true }); // ensureAgent makes it before any installer runs
   const codexHome = hive.installCodexHooks(agentDir, 'a1');
   const config = fs.readFileSync(path.join(codexHome, 'config.toml'), 'utf8');
   const commands = [...config.matchAll(/^command\s*=\s*(.+)$/gm)].map((m) => {
@@ -239,6 +240,7 @@ test('POSIX Gemini and Antigravity hooks survive a hive path containing spaces',
   const hive = new HiveManager(() => harness);
   hive.ensureHive();
   hive.installAgyHooks();
+  fs.mkdirSync(path.join(harness, 'hive/agents/a1'), { recursive: true }); // as ensureAgent does
   hive.installGeminiHooks(path.join(harness, 'hive/agents/a1'));
 
   const commands = hookCommandsUnder(home);

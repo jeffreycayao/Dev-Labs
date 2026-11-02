@@ -112,3 +112,11 @@ test('notifications setting off suppresses the OS toast but the hook still resol
   assert.equal(notifications.length, 0, 'notifications:false must suppress the OS toast');
   assert.deepEqual(res, {}, 'the hook itself still resolves normally');
 });
+test('a frame that names an agent without a valid token is refused, not run as anonymous', async (t) => {
+  // Anonymous would skip that agent's halt and pause gates.
+  const { server } = await floor(t);
+  const deny = await server.handle({ agent_id: 'jim-1', hook_token: 'stale', hook_event_name: 'PreToolUse', tool_name: 'Bash' });
+  assert.equal(deny.hookSpecificOutput.permissionDecision, 'deny');
+  await server.handle({ agent_id: 'jim-1', hook_event_name: 'Notification', notification_type: 'idle', message: 'x' });
+  assert.equal(notifications.length, 0, 'an unproven frame drives nothing');
+});

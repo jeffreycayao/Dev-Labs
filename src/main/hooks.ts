@@ -158,6 +158,13 @@ export class HookServer {
     const agentId = this.hive.hookAgent(p.agent_id ?? undefined, p.hook_token);
     // The token is a credential: it goes no further than this check.
     delete p.hook_token;
+    // A frame that names an agent without a valid token is refused, not passed on
+    // as anonymous: anonymous would skip that agent's halt and pause gates.
+    if (p.agent_id && !agentId) {
+      return p.hook_event_name === 'PreToolUse'
+        ? { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: 'DevLabs could not verify this agent (stale hook token). Restart the agent.' } }
+        : {};
+    }
     p.agent_id = agentId ?? null;
     const event = p.hook_event_name ?? 'Unknown';
     this.onEvent?.(agentId, event, p.message);

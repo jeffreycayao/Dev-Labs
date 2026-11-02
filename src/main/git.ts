@@ -10,7 +10,10 @@ import { openForRead, safeResolve } from './fs';
  *  diff and textconv drivers on diffs), and the main process isn't sandboxed.
  *  So every git DevLabs runs switches those off, and hooks too (a checkout runs
  *  post-checkout). `gh` runs git too: give it safeGitEnv(). */
-const safeConfig = (): [string, string][] => [['core.fsmonitor', 'false'], ['core.hooksPath', hooksDir()]];
+// showSignature would run the repo's gpg.program on log/show; submodule.recurse
+// would carry a checkout into submodules, whose own filters the read below misses.
+const safeConfig = (): [string, string][] => [['core.fsmonitor', 'false'], ['core.hooksPath', hooksDir()],
+  ['log.showSignature', 'false'], ['submodule.recurse', 'false']];
 export const safeGitEnv = (): Record<string, string> => configEnv(safeConfig());
 
 let noHooksDir: string | null = null;
@@ -71,7 +74,10 @@ async function runGit(cwd: string, args: string[], timeoutMs = 8000): Promise<{
 } | { ok: false; error: string }> {
   const [command, ...rest] = args;
   const safeArgs = ['-c', 'core.fsmonitor=false', '-c', `core.hooksPath=${hooksDir()}`, command,
-    ...(DIFF_COMMANDS.has(command) ? ['--no-ext-diff', '--no-textconv'] : []), ...rest];
+    ...(DIFF_COMMANDS.has(command) ? ['--no-ext-diff', '--no-textconv'] : []),
+    // Checking a submodule's work tree runs git inside it, with its own filters;
+    // `dirty` skips that but still reports a moved submodule commit.
+    ...(command === 'status' || command === 'diff' ? ['--ignore-submodules=dirty'] : []), ...rest];
   if (NO_FILTER_COMMANDS.has(command)) return spawnGit(cwd, safeArgs, safeGitEnv(), timeoutMs);
   const filters = await filterOverrides(cwd);
   if ('error' in filters) return { ok: false, error: filters.error };

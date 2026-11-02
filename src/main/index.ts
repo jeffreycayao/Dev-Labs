@@ -25,7 +25,7 @@ import { APP_ID } from '../shared/brand';
 import {
   getBranch, getStatus, getLog, getBranches, getAheadBehind, isRepo, getDiff, mainRepoRoot,
   addWorktree, removeWorktree, worktreeHasUnintegratedWork, worktreeIsGcSafe,
-  getLogGraph, getCommitFiles, getFileAtRev, compareRefs, checkoutRef
+  getLogGraph, getCommitFiles, getFileAtRev, compareRefs, checkoutRef, useNoHooksDir
 } from './git';
 import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';
 import { HiveManager, readPlain, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
@@ -5820,6 +5820,8 @@ app.whenReady().then(() => {
   // notifications as DevLabs, not "Electron"; dev runs get the logo in the Dock.
   if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
   if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(appIconPath());
+  // DevLabs' own git reads hooks from here: empty, and no agent can write it.
+  useNoHooksDir(join(app.getPath('userData'), 'no-git-hooks'));
   // Settings keys live in the encrypted connector store, which needs the app
   // ready to decrypt; reads before this see config.json alone.
   useConfigSecretStore({

@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process';
+import { mkdirSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { openForRead, safeResolve } from './fs';
 
 /** Agents can write the folders the Git tab polls, including a worktree's
@@ -6,9 +9,20 @@ import { openForRead, safeResolve } from './fs';
  *  commands named in that config (`core.fsmonitor` on every status, external
  *  diff and textconv drivers on diffs), and the main process isn't sandboxed.
  *  So every git DevLabs runs switches those off, and hooks too (a checkout runs
- *  post-checkout). `gh` runs git too: give it this environment. */
-const SAFE_CONFIG: [string, string][] = [['core.fsmonitor', 'false'], ['core.hooksPath', '/dev/null']];
-export const SAFE_GIT_ENV = configEnv(SAFE_CONFIG);
+ *  post-checkout). `gh` runs git too: give it safeGitEnv(). */
+const safeConfig = (): [string, string][] => [['core.fsmonitor', 'false'], ['core.hooksPath', hooksDir()]];
+export const safeGitEnv = (): Record<string, string> => configEnv(safeConfig());
+
+let noHooksDir: string | null = null;
+/** Hooks come from an empty folder the app owns, outside every agent's writable
+ *  reach (index.ts puts it under userData). Not /dev/null: Git for Windows reads
+ *  that as `nul`, a path relative to the worktree, which an agent can create. */
+export function useNoHooksDir(dir: string): void {
+  mkdirSync(dir, { recursive: true });
+  noHooksDir = dir;
+}
+// Before startup sets it (tests): a fresh empty folder of our own.
+const hooksDir = (): string => (noHooksDir ??= mkdtempSync(join(tmpdir(), 'devlabs-no-hooks-')));
 const DIFF_COMMANDS = new Set(['diff', 'show', 'log']);
 /** Commands that only read objects and refs, so no clean/smudge filter can run. */
 const NO_FILTER_COMMANDS = new Set(['rev-parse', 'rev-list', 'cat-file', 'log', 'show', 'merge-base', 'branch', 'diff-tree', 'config']);
@@ -25,15 +39,28 @@ function configEnv(pairs: [string, string][]): Record<string, string> {
   return env;
 }
 
+/** Always present in the config read below; missing means git ignored the
+ *  environment config (older than 2.31), so none of the overrides would hold. */
+const ENV_CHECK: [string, string] = ['devlabs.envconfig', 'on'];
+
 /** Overrides that blank every filter driver the repo's config names (a clean
  *  filter runs on status and diff, smudge on checkout), and pin `lfs` to the
- *  real Git LFS commands so an agent can't redefine it.
+ *  real Git LFS commands so an agent can't redefine it. Refuses (an error) when
+ *  the names can't be trusted to be complete: the read failed, git is too old,
+ *  or the repo's own config includes other files, whose `includeIf` can name a
+ *  filter that applies only where this read can't see it (a new worktree).
  *  shortcut: a filter added between this read and the command still runs; close
  *  it with a git that can switch filters off wholesale, if one ever ships. */
-async function filterOverrides(cwd: string): Promise<[string, string][]> {
-  const res = await spawnGit(cwd, ['config', '--name-only', '--get-regexp', '^filter\\.'], SAFE_GIT_ENV, 8000);
-  if (!res.ok) return []; // exits 1 when no filter is configured
-  const names = new Set(res.stdout.split('\n').map((l) => /^filter\.(.+)\.[^.]+$/.exec(l.trim())?.[1]).filter((n): n is string => !!n));
+async function filterOverrides(cwd: string): Promise<[string, string][] | { error: string }> {
+  const res = await spawnGit(cwd, ['config', '--show-scope', '--name-only', '--get-regexp', '^(filter|include|includeif|devlabs)\\.'],
+    configEnv([...safeConfig(), ENV_CHECK]), 8000);
+  if (!res.ok) return { error: `could not read the repo's git config: ${res.error}` };
+  const entries = res.stdout.split('\n').map((l) => l.trim().split('\t')).filter((e) => e.length === 2);
+  if (!entries.some(([, name]) => name === ENV_CHECK[0])) return { error: 'DevLabs needs git 2.31 or newer' };
+  if (entries.some(([scope, name]) => /^include(if)?\./i.test(name) && scope !== 'global' && scope !== 'system' && scope !== 'command')) {
+    return { error: "this repo's git config includes other config files, so DevLabs won't run git here (it could not tell which filters run)" };
+  }
+  const names = new Set(entries.map(([, name]) => /^filter\.(.+)\.[^.]+$/.exec(name)?.[1]).filter((n): n is string => !!n));
   return [...names].flatMap((n) => Object.entries(LFS_FILTER).map(([k, v]): [string, string] =>
     [`filter.${n}.${k}`, n === 'lfs' ? v : k === 'required' ? 'false' : '']));
 }
@@ -43,10 +70,12 @@ async function runGit(cwd: string, args: string[], timeoutMs = 8000): Promise<{
   ok: true; stdout: string;
 } | { ok: false; error: string }> {
   const [command, ...rest] = args;
-  const safeArgs = ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null', command,
+  const safeArgs = ['-c', 'core.fsmonitor=false', '-c', `core.hooksPath=${hooksDir()}`, command,
     ...(DIFF_COMMANDS.has(command) ? ['--no-ext-diff', '--no-textconv'] : []), ...rest];
-  const env = NO_FILTER_COMMANDS.has(command) ? SAFE_GIT_ENV : configEnv([...SAFE_CONFIG, ...await filterOverrides(cwd)]);
-  return spawnGit(cwd, safeArgs, env, timeoutMs);
+  if (NO_FILTER_COMMANDS.has(command)) return spawnGit(cwd, safeArgs, safeGitEnv(), timeoutMs);
+  const filters = await filterOverrides(cwd);
+  if ('error' in filters) return { ok: false, error: filters.error };
+  return spawnGit(cwd, safeArgs, configEnv([...safeConfig(), ...filters]), timeoutMs);
 }
 
 function spawnGit(cwd: string, args: string[], env: Record<string, string>, timeoutMs: number): Promise<{

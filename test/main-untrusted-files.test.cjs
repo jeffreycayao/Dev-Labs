@@ -97,6 +97,18 @@ test('an agent cannot redefine the lfs filter to run its own command', async (t)
   assert.equal(fs.existsSync(marker), true);
 });
 
+test('a repo whose own config includes other files gets no work-tree git at all', async (t) => {
+  // An includeIf can name a filter that applies only in the new worktree, where
+  // the filter read can't see it; so such a repo is refused, not half-guarded.
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'md-include-'));
+  t.after(() => fs.rmSync(repo, { recursive: true, force: true }));
+  execFileSync('git', ['init', '-q'], { cwd: repo });
+  execFileSync('git', ['config', 'includeIf.gitdir:**/agent-wt/**.path', 'evil.cfg'], { cwd: repo });
+  const status = await getStatus(repo);
+  assert.match(status.error ?? '', /includes other config files/);
+  assert.equal((await addWorktree(repo, path.join(repo, '..', 'agent-wt'), 'main')).ok, false);
+});
+
 test('readPlain keeps only the newest 4 MB of an oversized file', (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'md-readplain-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));

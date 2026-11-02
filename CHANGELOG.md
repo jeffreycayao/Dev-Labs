@@ -4,6 +4,8 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.4.1 — 2026-11-02
+
 - **Security: your Slack, Groq, webhook and teammate keys are encrypted now.** They used to sit as plain text in `config.json`, which every agent can read. They now live in the same encrypted store as your connector keys, existing ones move there on first start, and the app window only ever sees a placeholder for the Slack and Groq keys (saving Settings without retyping keeps them).
 - **Fixed: a queued message could answer an approval prompt.** When an agent stopped at a "Do you want to proceed?" prompt, DevLabs could mark it idle a few seconds later and type the next queued message, whose Enter picked "Yes". A prompt on screen now always holds delivery. Switching between agents no longer marks the one you left idle mid-turn either.
 - **Fixed: a message could be resent every second and a half.** If DevLabs couldn't file a sent message away (a locked file, a missing folder), it delivered it again on every pass. Messages are now filed first and delivered once.

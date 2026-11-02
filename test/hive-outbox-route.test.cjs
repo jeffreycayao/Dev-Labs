@@ -55,7 +55,7 @@ test('a hook frame speaks for the agent its token belongs to, not the one it nam
   assert.equal(hive.hookAgent('god-1', jim), 'jim-1', 'a valid token decides, whatever id is claimed');
   assert.equal(hive.hookAgent('god-1', undefined), undefined, 'no token: cannot claim an agent that has one');
   assert.equal(hive.hookAgent('god-1', 'forged'), undefined);
-  assert.equal(hive.hookAgent('legacy-1', undefined), 'legacy-1', 'an agent never given a token still works');
+  assert.equal(hive.hookAgent('stopped-1', undefined), undefined, 'no token: not even for an agent never given one');
   // A respawn rotates the token; the old one stops working.
   hive.newHookToken('jim-1');
   assert.equal(hive.hookAgent('jim-1', jim), undefined);

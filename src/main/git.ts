@@ -5,20 +5,55 @@ import { openForRead, safeResolve } from './fs';
  *  `.git` file, which can point at a git config of their choosing. Git runs
  *  commands named in that config (`core.fsmonitor` on every status, external
  *  diff and textconv drivers on diffs), and the main process isn't sandboxed.
- *  So every git DevLabs runs switches those off. `gh` runs git too: give it
- *  this environment. */
-export const SAFE_GIT_ENV = { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'core.fsmonitor', GIT_CONFIG_VALUE_0: 'false' };
+ *  So every git DevLabs runs switches those off, and hooks too (a checkout runs
+ *  post-checkout). `gh` runs git too: give it this environment. */
+const SAFE_CONFIG: [string, string][] = [['core.fsmonitor', 'false'], ['core.hooksPath', '/dev/null']];
+export const SAFE_GIT_ENV = configEnv(SAFE_CONFIG);
 const DIFF_COMMANDS = new Set(['diff', 'show', 'log']);
+/** Commands that only read objects and refs, so no clean/smudge filter can run. */
+const NO_FILTER_COMMANDS = new Set(['rev-parse', 'rev-list', 'cat-file', 'log', 'show', 'merge-base', 'branch', 'diff-tree', 'config']);
+/** The standard Git LFS filter, the one filter DevLabs' git still runs. */
+const LFS_FILTER: Record<string, string> = {
+  clean: 'git-lfs clean -- %f', smudge: 'git-lfs smudge -- %f', process: 'git-lfs filter-process', required: 'true'
+};
+
+/** Git config given through the environment (GIT_CONFIG_COUNT, git 2.31+): it
+ *  beats every config file, and a key can hold any character. */
+function configEnv(pairs: [string, string][]): Record<string, string> {
+  const env: Record<string, string> = { GIT_CONFIG_COUNT: String(pairs.length) };
+  pairs.forEach(([k, v], i) => { env[`GIT_CONFIG_KEY_${i}`] = k; env[`GIT_CONFIG_VALUE_${i}`] = v; });
+  return env;
+}
+
+/** Overrides that blank every filter driver the repo's config names (a clean
+ *  filter runs on status and diff, smudge on checkout), and pin `lfs` to the
+ *  real Git LFS commands so an agent can't redefine it.
+ *  shortcut: a filter added between this read and the command still runs; close
+ *  it with a git that can switch filters off wholesale, if one ever ships. */
+async function filterOverrides(cwd: string): Promise<[string, string][]> {
+  const res = await spawnGit(cwd, ['config', '--name-only', '--get-regexp', '^filter\\.'], SAFE_GIT_ENV, 8000);
+  if (!res.ok) return []; // exits 1 when no filter is configured
+  const names = new Set(res.stdout.split('\n').map((l) => /^filter\.(.+)\.[^.]+$/.exec(l.trim())?.[1]).filter((n): n is string => !!n));
+  return [...names].flatMap((n) => Object.entries(LFS_FILTER).map(([k, v]): [string, string] =>
+    [`filter.${n}.${k}`, n === 'lfs' ? v : k === 'required' ? 'false' : '']));
+}
 
 /** Run git in `cwd` with `args`. Returns stdout text or an error. */
-function runGit(cwd: string, args: string[], timeoutMs = 8000): Promise<{
+async function runGit(cwd: string, args: string[], timeoutMs = 8000): Promise<{
+  ok: true; stdout: string;
+} | { ok: false; error: string }> {
+  const [command, ...rest] = args;
+  const safeArgs = ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=/dev/null', command,
+    ...(DIFF_COMMANDS.has(command) ? ['--no-ext-diff', '--no-textconv'] : []), ...rest];
+  const env = NO_FILTER_COMMANDS.has(command) ? SAFE_GIT_ENV : configEnv([...SAFE_CONFIG, ...await filterOverrides(cwd)]);
+  return spawnGit(cwd, safeArgs, env, timeoutMs);
+}
+
+function spawnGit(cwd: string, args: string[], env: Record<string, string>, timeoutMs: number): Promise<{
   ok: true; stdout: string;
 } | { ok: false; error: string }> {
   return new Promise((resolve) => {
-    const [command, ...rest] = args;
-    const safeArgs = ['-c', 'core.fsmonitor=false', command,
-      ...(DIFF_COMMANDS.has(command) ? ['--no-ext-diff', '--no-textconv'] : []), ...rest];
-    const proc = spawn('git', safeArgs, { cwd, env: { ...process.env, ...SAFE_GIT_ENV } });
+    const proc = spawn('git', args, { cwd, env: { ...process.env, ...env } });
     let stdout = '';
     let stderr = '';
     const timer = setTimeout(() => {

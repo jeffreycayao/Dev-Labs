@@ -324,16 +324,21 @@ const PLAIN_READ_CAP = 4 * 1024 * 1024;
  *  PLAIN_READ_CAP only the newest part is read: agents grow these files. */
 export function readPlain(p: string): string {
   try {
-    const st = lstatSync(p);
-    if (!st.isFile()) return '';
-    if (st.size <= PLAIN_READ_CAP) return readFileSync(p, 'utf8');
-    const fd = openSync(p, 'r');
+    if (!lstatSync(p).isFile()) return '';
+    // Checked again on the open descriptor, so a swap after the lstat is caught:
+    // NOFOLLOW refuses a link, NONBLOCK keeps a FIFO from hanging the open.
+    const fd = openSync(p, READ_NOFOLLOW);
     try {
-      const buf = Buffer.alloc(PLAIN_READ_CAP);
-      return buf.toString('utf8', 0, readSync(fd, buf, 0, PLAIN_READ_CAP, st.size - PLAIN_READ_CAP));
+      const st = fstatSync(fd);
+      if (!st.isFile()) return '';
+      const len = Math.min(st.size, PLAIN_READ_CAP);
+      const buf = Buffer.alloc(len);
+      return buf.toString('utf8', 0, readSync(fd, buf, 0, len, st.size - len));
     } finally { closeSync(fd); }
   } catch { return ''; }
 }
+// POSIX-only flags; on Windows the lstat above is the guard (no FIFOs there).
+const READ_NOFOLLOW = fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0) | (fsConstants.O_NONBLOCK ?? 0);
 // O_NOFOLLOW is POSIX-only; on Windows the lstat in appendPlain is the guard.
 const APPEND_NOFOLLOW = fsConstants.O_WRONLY | fsConstants.O_APPEND | fsConstants.O_CREAT | (fsConstants.O_NOFOLLOW ?? 0);
 // Appending is the one write that keeps the old file, so a hard link (nlink > 1,
@@ -1818,12 +1823,11 @@ export class HiveManager {
   hookTokenFor(agentId: string): string {
     return this.hookTokenByAgent.get(agentId) ?? this.newHookToken(agentId);
   }
-  /** Which agent sent a hook frame. A valid token decides it. Without one, the
-   *  claimed id is believed only for an agent that was never given a token (a
-   *  spawn path that predates them), so no agent can speak for one that has. */
-  hookAgent(claimed: string | undefined, token: unknown): string | undefined {
-    if (typeof token === 'string' && this.agentByHookToken.has(token)) return this.agentByHookToken.get(token);
-    return claimed && !this.hookTokenByAgent.has(claimed) ? claimed : undefined;
+  /** Which agent sent a hook frame: only a valid token decides it. Every spawn
+   *  that sets AGENT_ID also issues a token (ensureAgent), so a frame that claims
+   *  an id without one is an agent speaking for another (or a stopped one). */
+  hookAgent(_claimed: string | undefined, token: unknown): string | undefined {
+    return typeof token === 'string' ? this.agentByHookToken.get(token) : undefined;
   }
 
   /** Count one more agent message in `conversation`; returns the new count. */

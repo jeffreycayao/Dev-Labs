@@ -51,6 +51,9 @@ export interface McpHttpSpec {
   transport: 'http';
   /** https URL of the vendor's MCP endpoint. */
   url: string;
+  /** How the broker sends the key. Default 'header': the raw key in the
+   *  secret's header; 'bearer': `Authorization: Bearer <key>`. */
+  authType?: 'header' | 'bearer';
 }
 
 export type McpSpec = McpStdioSpec | McpHttpSpec;
@@ -204,6 +207,17 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     defaultEnabled: false
   },
   {
+    // Fireflies' own hosted MCP server (Streamable HTTP). URL + "Authorization:
+    // Bearer <key>" from docs.fireflies.ai/getting-started/mcp-configuration.
+    id: 'fireflies',
+    label: 'Fireflies.ai',
+    description: 'Read your Fireflies meeting notes: transcripts, summaries and action items. Can also rename, share or move meetings, within the key\'s permissions.',
+    spec: { transport: 'http', url: 'https://api.fireflies.ai/mcp', authType: 'bearer' },
+    secret: { kind: 'header', name: 'Authorization', label: 'Fireflies API key (Settings → Developer Settings)', helpUrl: 'https://docs.fireflies.ai/getting-started/mcp-configuration' },
+    tier: 'secret',
+    defaultEnabled: false
+  },
+  {
     // The server Webcake's docs point to (docs.pancake.biz/landing/st-f7/st-p3).
     // Published on npm by a single developer, so the version is PINNED: an update
     // is a reviewed change here, never a silent `latest`. Its writes are dry-run
@@ -279,7 +293,10 @@ export function isBrokered(e: McpCatalogEntry): boolean {
 /** Where the broker forwards a brokered entry, and how it adds the key. */
 export function mcpBrokerTarget(e: McpCatalogEntry): { baseUrl: string; authType: IntegrationAuthType; authHeader?: string } | undefined {
   if (e.secret?.kind !== 'header') return undefined;
-  if (isHttpSpec(e.spec)) return { baseUrl: mcpUpstream(e.spec).baseUrl, authType: 'header', authHeader: e.secret.name };
+  if (isHttpSpec(e.spec)) {
+    const baseUrl = mcpUpstream(e.spec).baseUrl;
+    return e.spec.authType === 'bearer' ? { baseUrl, authType: 'bearer' } : { baseUrl, authType: 'header', authHeader: e.secret.name };
+  }
   if (e.spec.upstream) return { baseUrl: e.spec.upstream.url, authType: e.spec.upstream.authType };
   return undefined;
 }

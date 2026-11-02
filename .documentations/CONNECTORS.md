@@ -10,6 +10,7 @@ Connectors let agents on your floor work inside other apps.
 | Connector | What agents can do | Key you paste | Where to get it |
 |---|---|---|---|
 | **Pancake POS** | Read and change your shop: orders, products, stock, sales | Pancake POS API key | [docs.pancake.biz — POS MCP setup](https://docs.pancake.biz/pos/st-f14/st-p2?lang=en) (account API key recommended) |
+| **Fireflies.ai** | Read meeting notes: transcripts, summaries, action items. Can also rename, share or move meetings | Fireflies API key | Fireflies → Settings → Developer Settings ([MCP setup](https://docs.fireflies.ai/getting-started/mcp-configuration)) |
 | **Webcake Landing** | Design, edit and publish landing pages in your Webcake account | Webcake token | Webcake → Settings → Access code → Generate API keys ([guide](https://docs.pancake.biz/landing/st-f7/st-p3?lang=en)) |
 | **Obsidian** | Save notes, learnings and decisions (frontmatter, tags, [[links]]), append to today's daily note, search and read notes | No key: you pick the vault folder | Any folder; ideally one Obsidian has opened as a vault |
 | **Discord** | Post messages to channels, read recent messages, list servers and channels | Discord bot token | [Discord Developer Portal](https://discord.com/developers/applications) → your app → Bot → Reset Token |

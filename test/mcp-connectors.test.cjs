@@ -32,6 +32,18 @@ test('Pancake POS is the vendor-hosted endpoint with the documented X-Api-Key he
   assert.equal(e.defaultEnabled, false);
 });
 
+test('Fireflies goes through the broker with the key as a Bearer token', () => {
+  const FF = 'fireflies-key-DO-NOT-LEAK-321';
+  const e = cat.mcpCatalogEntry('fireflies');
+  assert.equal(e.defaultEnabled, false);
+  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://api.fireflies.ai', authType: 'bearer' });
+  const { buildAuthHeaders } = loadTs('src/shared/integrations.ts');
+  assert.deepEqual(buildAuthHeaders('bearer', undefined, FF), { authorization: `Bearer ${FF}` });
+  const r = cat.buildMcpServers({ cwd: '/w', consent: { fireflies: { enabled: true } }, getSecret: () => FF, broker });
+  assert.equal(r.servers['atmt-fireflies'].url, 'http://127.0.0.1:5555/i/mcp-fireflies/mcp');
+  assert.ok(!JSON.stringify(r.servers).includes(FF), 'key must never reach agent config');
+});
+
 test('Webcake runs a PINNED package version with its token in WEBCAKE_JWT', () => {
   const e = cat.mcpCatalogEntry('webcake-landing');
   assert.equal(e.spec.command, 'npx');

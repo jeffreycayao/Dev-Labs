@@ -154,6 +154,7 @@
   <a href="#faq">Top 20 FAQ</a>
   <div class="grp">Info</div>
   <a href="#about">About DevLabs</a>
+  <a href="#credits">Credits</a>
 </nav>
 
 <main id="content">
@@ -345,12 +346,30 @@
   <dl>
     <dt>Version</dt><dd id="ver2">—</dd>
     <dt>Edition</dt><dd>Philippine localized edition</dd>
-    <dt>Developer</dt><dd><a href="https://jepoy.dev">jepoy.dev</a></dd>
+    <dt>Developer</dt><dd>Jeffrey Cayao · <a href="https://jepoy.dev">jepoy.dev</a> · <a href="https://www.facebook.com/jeffcayao.social">facebook.com/jeffcayao.social</a></dd>
     <dt>Built on</dt><dd><a href="https://github.com/chaitanyagiri/munder-difflin">Munder Difflin</a> by Chaitanya Giri (MIT License), extended, localized and maintained by jepoy.dev.</dd>
     <dt>License</dt><dd>Open source under the MIT License (Help → License Agreement). Third-party components keep their own licenses (Help → Third-Party Notices).</dd>
     <dt>Why we ship it</dt><dd>To give Filipino teams and businesses an easy, local-first way to put AI agents to work — localized, supported and maintained here.</dd>
     <dt>Contact</dt><dd><a href="https://github.com/jeffreycayao/Dev-Labs">Source &amp; issues on GitHub</a> · <a href="https://devlabs.atmt.dev">devlabs.atmt.dev</a></dd>
   </dl>
+</div>
+
+<h2 id="credits">Credits</h2>
+<div class="about searchable">
+  <dl>
+    <dt>Developer</dt><dd>Jeffrey Cayao · <a href="https://jepoy.dev">jepoy.dev</a> · <a href="https://www.facebook.com/jeffcayao.social">facebook.com/jeffcayao.social</a></dd>
+    <dt>Original app</dt><dd><a href="https://github.com/chaitanyagiri/munder-difflin">Munder Difflin</a> by Chaitanya Giri and its contributors (MIT License).</dd>
+    <dt>Brand colors</dt><dd>Vee Trimidal · <a href="https://www.facebook.com/veetrimidal">facebook.com/veetrimidal</a></dd>
+    <dt>3D office</dt><dd>Claw3D by Luke The Dev (MIT License). Furniture models and the <i>kenpixel</i> font by <a href="https://kenney.nl">Kenney</a> (CC0).</dd>
+    <dt>Pixel art</dt><dd><i>Modern Interiors</i> tilesets by <a href="https://limezu.itch.io/">LimeZu</a>, with tileset and map vendoring from <a href="https://github.com/shahar061/the-office">shahar061/the-office</a>.</dd>
+    <dt>Fonts</dt><dd>Press Start 2P (Cody Boisclair), Inter (Rasmus Andersson), Plus Jakarta Sans (Tokotype) and JetBrains Mono (JetBrains), all under the SIL Open Font License.</dd>
+    <dt>Git tools</dt><dd><a href="https://git-scm.com">Git</a> by Linus Torvalds, Junio C Hamano and the Git community (GPL-2.0), <a href="https://gitforwindows.org">Git for Windows</a>, <a href="https://git-lfs.com">Git LFS</a> and the <a href="https://cli.github.com">GitHub CLI</a>. DevLabs uses the copies installed on your computer; it doesn't ship them.</dd>
+    <dt>Built with</dt><dd><a href="https://www.electronjs.org">Electron</a>, <a href="https://react.dev">React</a>, <a href="https://threejs.org">Three.js</a>, React Three Fiber &amp; drei (pmndrs), <a href="https://xtermjs.org">xterm.js</a>, node-pty, Monaco Editor, better-sqlite3, i18next, Lucide icons, Zustand, react-markdown, troika-three-text, electron-vite, electron-builder, Vite, Tailwind CSS and TypeScript.</dd>
+    <dt>Agent skills</dt><dd>SkillSpector by NVIDIA (Apache-2.0), ponytail by DietrichGebert (MIT) and security-audit by Cloudflare (MIT).</dd>
+    <dt>Connectors</dt><dd>The Model Context Protocol reference servers, Context7 by Upstash, and the hosted MCP servers of Fireflies.ai, Pancake POS and Webcake.</dd>
+    <dt>AI agents</dt><dd>Claude Code, Codex, Gemini CLI, Cursor and the other agent tools belong to their makers. DevLabs runs them; it doesn't include them.</dd>
+  </dl>
+  <p>Full license texts: Help → Third-Party Notices.</p>
 </div>
 
 <footer>© 2026 Chaitanya Giri and jepoy.dev. MIT License. Includes third-party open-source components under their own licenses. AI output can be wrong — always review before use.</footer>
@@ -367,7 +386,7 @@
     document.querySelectorAll('.v-live').forEach(function (el) { el.textContent = label; });
     // Links to the other guide page keep ?v= so its version label stays right.
     document.querySelectorAll('a.keep-v').forEach(function (a) { a.href = a.getAttribute('href') + location.search; });
-    if (location.hash === '#about') document.getElementById('about').scrollIntoView();
+    if (location.hash === '#about' || location.hash === '#credits') document.getElementById(location.hash.slice(1)).scrollIntoView();
   })();
 
   // Search: filters accordions/sections, opens matching accordions.

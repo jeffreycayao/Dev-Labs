@@ -1554,18 +1554,21 @@ async function showAboutDialog(parent: BrowserWindow | null): Promise<void> {
       '© 2026 Chaitanya Giri and jepoy.dev. Open source under the MIT License.',
       '',
       'Original project: github.com/chaitanyagiri/munder-difflin',
-      'Developer: jepoy.dev · devlabs.atmt.dev · Source & issues: github.com/jeffreycayao/Dev-Labs',
+      'Developer: Jeffrey Cayao · jepoy.dev · facebook.com/jeffcayao.social',
+      'Website: devlabs.atmt.dev · Source & issues: github.com/jeffreycayao/Dev-Labs',
+      'Brand colors: Vee Trimidal (facebook.com/veetrimidal)',
       '',
       `Electron ${process.versions.electron} · Chromium ${process.versions.chrome} · Node ${process.versions.node}`
     ].join('\n'),
-    buttons: ['OK', 'How to use', 'Third-party notices'],
+    buttons: ['OK', 'How to use', 'Credits', 'Third-party notices'],
     defaultId: 0,
     cancelId: 0,
     noLink: true
   };
   const { response } = parent ? await dialog.showMessageBox(parent, opts) : await dialog.showMessageBox(opts);
   if (response === 1) openHelpWindow();
-  if (response === 2) openBundledDoc('THIRD_PARTY_NOTICES.md');
+  if (response === 2) openHelpWindow('credits');
+  if (response === 3) openBundledDoc('THIRD_PARTY_NOTICES.md');
 }
 
 /** Open a legal doc shipped via extraResources (repo root in dev). */

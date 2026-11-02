@@ -74,7 +74,23 @@ SOFTWARE.
 
 ## Online services used by optional office features
 
-The jukebox uses the Spotify Web API and is subject to the Spotify Developer Terms; Spotify content and trademarks belong to Spotify. Spoken replies use the ElevenLabs API. Neither is bundled; both run only after you connect your own account.
+The jukebox uses the Spotify Web API and is subject to the Spotify Developer Terms; Spotify content and trademarks belong to Spotify. Spoken replies use the ElevenLabs API. The Fireflies.ai connector uses Fireflies' hosted MCP server under Fireflies' terms. None is bundled; each runs only after you connect your own account.
+
+---
+
+## Git tools (used, not bundled)
+
+DevLabs runs **Git** (https://git-scm.com/, GPL-2.0, by Linus Torvalds, Junio C Hamano and the
+Git community), **Git for Windows** (https://gitforwindows.org/), **Git LFS**
+(https://git-lfs.com/, MIT) and the **GitHub CLI** (https://cli.github.com/, MIT) from the copies
+installed on your computer. DevLabs does not ship, modify or link any of them, so their licenses
+are not reproduced here.
+
+---
+
+## Brand colors
+
+The DevLabs brand colors are by **Vee Trimidal** (https://www.facebook.com/veetrimidal).
 
 ---
 

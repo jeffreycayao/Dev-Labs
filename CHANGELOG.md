@@ -4,6 +4,9 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **New connector: Fireflies.ai.** Agents can read your Fireflies meeting notes (transcripts, summaries and action items) and work from them, for example turning a meeting's action items into tasks. Paste your Fireflies API key (Fireflies → Settings → Developer Settings) in Settings → Connections and switch it on. Like Pancake POS, it goes through the local proxy, so agents never see the key.
+- **New: Help → Credits,** also a button in Help → About. It names the developer, Jeffrey Cayao (jepoy.dev), and everyone whose work DevLabs uses: Munder Difflin, the brand colors by Vee Trimidal, the 3D office and pixel art, the fonts, Git, Git LFS and the GitHub CLI, the libraries, the bundled skills and the connectors. README and Third-Party Notices list them too.
+
 ## v4.4.1 — 2026-11-02
 
 - **Security: your Slack, Groq, webhook and teammate keys are encrypted now.** They used to sit as plain text in `config.json`, which every agent can read. They now live in the same encrypted store as your connector keys, existing ones move there on first start, and the app window only ever sees a placeholder for the Slack and Groq keys (saving Settings without retyping keeps them).

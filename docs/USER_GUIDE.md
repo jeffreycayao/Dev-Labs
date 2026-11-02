@@ -369,6 +369,7 @@ Connectors let agents work **inside other apps you use**. Set them up in **Setti
 | Connector | What agents can do |
 |---|---|
 | **Pancake POS** | read and change orders, products, stock and sales |
+| **Fireflies.ai** | read your meeting notes: transcripts, summaries and action items |
 | **Webcake Landing** | design, edit and publish landing pages |
 | **Obsidian** | save notes, lessons and decisions in your Obsidian vault, keep a daily note, search and read notes |
 | **Discord** | post in your channels, read recent messages, list channels |

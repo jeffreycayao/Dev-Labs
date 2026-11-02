@@ -1,5 +1,3 @@
-- Feature Manual in Help, with a 3D tour.
-- Bundled skills: SkillSpector, ponytail and a security audit.
-- Slack, Groq and webhook keys are now stored encrypted.
-- Queued messages can no longer answer approval prompts.
-- Stronger guards stop agents running code through DevLabs.
+- New Fireflies.ai connector: agents can read your meeting notes and action items.
+- Your Fireflies key stays encrypted; agents only get a local proxy link.
+- New Help → Credits page, also a button in the About box.

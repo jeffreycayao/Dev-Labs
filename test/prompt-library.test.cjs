@@ -13,7 +13,8 @@ const EXPECTED = {
   'scrum-master': 'operations', 'launch-marketer': 'marketing', 'marketing-executive': 'marketing',
   'social-media': 'marketing', 'content-writer': 'marketing', 'customer-support': 'support',
   'sales-researcher': 'sales', 'market-researcher': 'research', 'operations-admin': 'operations',
-  'hr-recruitment': 'hr', 'finance-bookkeeper': 'finance'
+  'hr-recruitment': 'hr', 'finance-bookkeeper': 'finance',
+  'ux-ui-designer': 'design', 'graphic-designer': 'design'
 };
 
 test('every role template maps to its intended category', () => {
@@ -34,6 +35,9 @@ test('free-text roles are classified by keywords', () => {
     ['recruitment of riders', 'hr'],
     ['competitor research', 'research'],
     ['finds B2B leads for outreach', 'sales'],
+    ['wireframes and figma prototypes for the app', 'design'],
+    ['accessibility reviewer for our UI', 'design'],
+    ['frontend developer who builds the UI', 'engineering'],
     ["Scrum master + feature strategist for the team's WXT Chrome extensions — verifies existing features, writes implementable specs, runs backlog and sprints for coder agents.", 'operations'],
     ['a fresh harness', 'general']
   ];

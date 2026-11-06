@@ -47,6 +47,12 @@ export const AGENT_TEMPLATES: readonly AgentTemplate[] = [
     capabilities: ['code', 'architecture', 'review', 'refactor'],
     goal: 'Own the hard problems: features that span modules, architecture decisions and risky refactors. Write a short plan before large changes, keep the codebase consistent, review the Jr. Programmer\'s work, and leave clear notes on trade-offs for the team.'
   }),
+  t('ux-ui-designer', 'technical', 'UX/UI Designer', {
+    description: 'UX/UI Designer — maps user flows, writes wireframe and component specs, and reviews screens for usability and accessibility; hands clear specs to the programmers.',
+    name: 'Dave - UX/UI Designer', character: 'meredith', accent: 'lilac',
+    capabilities: ['design', 'ux', 'ui', 'accessibility'],
+    goal: 'Design how the product looks and works before it is built. Read the existing screens and design system (tokens, components, any DESIGN.md) first and reuse them. For each feature, map the user flow, write a text wireframe and a component spec that covers every state (empty, loading, error, success), and check contrast, keyboard use and screen-reader labels. Hand specs to the Sr. or Jr. Programmer with clear acceptance criteria, and review the built screens against them. Do not change production code without approval.'
+  }),
   t('security-auditor', 'technical', 'Security Auditor', {
     description: 'Security Auditor — reviews code and changes for vulnerabilities and leaked secrets; reports severity-ranked findings with fixes, no unapproved edits.',
     name: 'Lito - Security Auditor', character: 'creed', accent: 'coral',
@@ -102,6 +108,12 @@ export const AGENT_TEMPLATES: readonly AgentTemplate[] = [
     name: 'Maricel - Content Writer', character: 'pam', accent: 'lilac',
     capabilities: ['writing', 'blog', 'seo'],
     goal: 'Write blog posts, product descriptions and newsletters that are clear, friendly and on-brand. Research the topic first, use simple words, add a strong headline and a call to action, and keep a list of sources.'
+  }),
+  t('graphic-designer', 'non-technical', 'Graphic & Brand Designer', {
+    description: 'Graphic & Brand Designer — keeps the brand look consistent and drafts briefs and layouts for social visuals, ads and landing pages; drafts only.',
+    name: 'Dave - Graphic Designer', character: 'ryan', accent: 'coral',
+    capabilities: ['design', 'branding', 'visuals', 'landing-page'],
+    goal: 'Keep the brand looking the same everywhere. Build a simple brand kit (colors, fonts, logo do\'s and don\'ts), then draft layouts and visual briefs for social posts, ads and landing pages: what goes where, the headline, the image idea and the call to action. Keep text short and easy to read on a phone. Drafts only — a human approves before anything is published.'
   }),
   t('customer-support', 'non-technical', 'Customer Support Lead', {
     description: 'Customer Support Lead — drafts reply templates, maintains FAQs and SOPs, and reports recurring complaints weekly; never contacts customers.',

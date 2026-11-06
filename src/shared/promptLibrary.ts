@@ -14,12 +14,13 @@
  */
 
 export type PromptCategory =
-  | 'management' | 'engineering' | 'security' | 'marketing' | 'sales'
+  | 'management' | 'engineering' | 'design' | 'security' | 'marketing' | 'sales'
   | 'support' | 'research' | 'operations' | 'hr' | 'finance' | 'general';
 
 export const PROMPT_CATEGORIES: { id: PromptCategory; label: string }[] = [
   { id: 'management', label: 'Management' },
   { id: 'engineering', label: 'Engineering' },
+  { id: 'design', label: 'Design' },
   { id: 'security', label: 'Security' },
   { id: 'marketing', label: 'Marketing' },
   { id: 'sales', label: 'Sales' },
@@ -47,6 +48,8 @@ const TITLE_MAP: Record<string, PromptCategory> = {
   'qa tester': 'engineering',
   'devops engineer': 'engineering',
   'technical writer': 'engineering',
+  'ux/ui designer': 'design',
+  'graphic & brand designer': 'design',
   'security auditor': 'security',
   'scrum master': 'operations',
   'marketing executive': 'marketing',
@@ -71,6 +74,7 @@ const KEYWORDS: [PromptCategory, RegExp][] = [
   ['hr', /\b(hr|human resources?|recruit\w*|talent|hiring|people ops|onboarding)\b/gi],
   ['finance', /\b(financ\w*|bookkeep\w*|accounting|accountant|budget\w*|invoic\w*|payroll|tax\w*|expenses?)\b/gi],
   ['operations', /\b(operations?|ops|admin\w*|assistant|scrum|project manag\w*|pm|coordinat\w*|planner|secretary|virtual assistant)\b/gi],
+  ['design', /\b(design\w*|ux|ui|wirefram\w*|prototyp\w*|figma|mockups?|accessib\w*|a11y|graphics?|typograph\w*)\b/gi],
   ['engineering', /\b(programmer|developer|dev|engineer\w*|coder|code|software|frontend|backend|full[- ]?stack|qa|tester|testing|devops|bug\w*|refactor\w*|docs?|documentation|technical writer|architect)\b/gi]
 ];
 
@@ -113,6 +117,15 @@ export const PROMPTS: readonly PromptItem[] = [
   p('engineering', 'refactor', 'Refactor safely', 'Refactor {file / module} to be easier to read and maintain without changing behaviour. Keep changes small and run the tests before and after.'),
   p('engineering', 'review-pr', 'Review my changes', 'Review the current uncommitted changes (or branch {branch}). Look for bugs, missed edge cases and style issues. List findings by severity with file:line.'),
   p('engineering', 'docs', 'Update the docs', 'Update the README and CHANGELOG for {feature}. Explain what it does, how to use it, and any setup needed. Plain language.'),
+
+  // Design
+  p('design', 'ux-review', 'UX review of a screen', 'Review {screen / page} for usability: what is confusing, what takes too many steps, and what is hard to find. List issues by impact with a concrete fix for each.'),
+  p('design', 'user-flow', 'Map a user flow', 'Map the user flow for {task, e.g. sign up / checkout}: each step, what the user sees, what they decide, and where they might get stuck or drop off.'),
+  p('design', 'wireframe', 'Wireframe a feature', 'Write a text wireframe for {feature}: the layout from top to bottom, each component, its label and what it does. Reuse our existing components and tokens.'),
+  p('design', 'component', 'Component spec', 'Write a spec for the {component} component: purpose, props/options, every state (default, hover, focus, disabled, loading, empty, error), and acceptance criteria for the programmers.'),
+  p('design', 'a11y', 'Accessibility check', 'Check {screen / feature} for accessibility: color contrast, keyboard navigation, focus order, screen-reader labels and text size. List problems by severity with the fix.'),
+  p('design', 'style-guide', 'Style guide / design tokens', 'Draft a simple style guide for {product / brand}: colors (with contrast-safe pairs), fonts and sizes, spacing, corner radius, and how buttons, inputs and cards should look.'),
+  p('design', 'visual-brief', 'Social visual / ad brief', 'Write a visual brief for a {post / ad / banner} about {product}: size, layout, headline, image idea, colors from the brand kit, and the call to action. Easy to read on a phone.'),
 
   // Security
   p('security', 'audit', 'Security audit', 'Audit {folder / feature} for security issues: injection, auth and session flaws, secrets in code or logs, unsafe dependencies, missing input validation. Rank findings by severity with file:line and the fix. Do not change code.'),

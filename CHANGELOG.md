@@ -4,6 +4,8 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **New role templates: a designer named Dave.** Add Agent → Role templates now has a **UX/UI Designer** on the Technical tab (user flows, wireframes, component specs and accessibility checks, handed to the programmers) and a **Graphic & Brand Designer** on the Non-technical tab (brand kit and briefs for social posts, ads and landing pages; drafts only). The Prompt Library has a new **Design** section with ready-made prompts for them, and any agent whose role mentions design, UX, UI, wireframes or accessibility gets it too.
+
 ## v4.4.2 — 2026-11-03
 
 - **New connector: Fireflies.ai.** Agents can read your Fireflies meeting notes (transcripts, summaries and action items) and work from them, for example turning a meeting's action items into tasks. Paste your Fireflies API key (Fireflies → Settings → Developer Settings) in Settings → Connections and switch it on. Like Pancake POS, it goes through the local proxy, so agents never see the key.

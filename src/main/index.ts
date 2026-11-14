@@ -5190,9 +5190,12 @@ interface SpawnRequest {
  *  The renderer never removes the card for a MAIN-initiated fire, so it is told
  *  to (mirrors hive:agentSpawned). Idempotent: an already-fired agent re-broadcasts. */
 function fireAgent(id: string): { ok: boolean; error?: string } {
-  const r = ptyManager.kill(id);
+  // A hire's terminal is `pty-<id>`, not the agent id: kill the PTY that owns it,
+  // or the CLI and its MCP servers keep running behind an archived card.
+  const ptyId = ptyForAgent(id) ?? id;
+  const r = ptyManager.kill(ptyId);
   if (!r.ok && !/^no pty:/.test(r.error ?? '')) return r;
-  teardownPty(id);
+  teardownPty(ptyId);
   if (!hive.setArchived(id, true)) return { ok: false, error: 'Could not save the fire decision.' };
   try { liveWebContents()?.send('hive:agentArchived', { id }); } catch { /* window torn down */ }
   return { ok: true };

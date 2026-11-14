@@ -192,6 +192,11 @@ const SIM_STEP_MS = 1000 / 60;
 // Frames per second while nothing moves: enough for bubbles, screens and the
 // jukebox to keep ticking, a fraction of the cost of a full 60 Hz loop.
 const CALM_FPS = 12;
+// Frames per second while only agents move (walking, dancing). Drawing every
+// display refresh (60-144 Hz) for a few walking figures cost the renderer and
+// GPU processes most of a core each; the sim still steps at 60 Hz, so motion
+// stays exact. Camera moves keep the full rate.
+const MOVING_FPS = 30;
 
 /** Agents whose animation needs every frame. Seated and standing agents only
  *  shift pose, which the calm heartbeat covers. */
@@ -203,7 +208,8 @@ const isInMotion = (agent: RenderAgent) =>
 
 /** Runs the office simulation at a fixed 60 Hz regardless of frame rate, and
  *  decides when the on-demand Canvas draws the next frame: straight away while
- *  the camera or an agent moves, otherwise on a slow heartbeat. */
+ *  the camera moves, at MOVING_FPS while an agent moves, otherwise on a slow
+ *  heartbeat. */
 export function GameLoop({
   tick,
   agentsRef,
@@ -265,7 +271,7 @@ export function GameLoop({
       gl.shadowMap.needsUpdate = true;
       last.shadowAt = now;
     }
-    if (cameraMoved || agentsMoving) {
+    if (cameraMoved) {
       invalidate();
       return;
     }
@@ -273,7 +279,7 @@ export function GameLoop({
     last.timer = window.setTimeout(() => {
       last.timer = 0;
       invalidate();
-    }, 1000 / CALM_FPS);
+    }, 1000 / (agentsMoving ? MOVING_FPS : CALM_FPS));
   });
 
   return null;

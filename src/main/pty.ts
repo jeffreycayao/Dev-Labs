@@ -3,7 +3,7 @@ import type { WebContents } from 'electron';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { delimiter, dirname, join, win32 } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { ensureKilled, hardKillTree } from './procKill';
+import { ensureKilled, hardKillTree, killPtyTree } from './procKill';
 import { expandTilde } from './fs';
 import { buildPtyEnv } from './ptyEnv';
 import {
@@ -359,11 +359,7 @@ export class PtyManager {
   killByOwner(wc: WebContents): void {
     for (const [id, s] of [...this.sessions.entries()]) {
       if (s.owner === wc) {
-        try {
-          const pid = s.proc.pid;
-          s.proc.kill();
-          ensureKilled(pid);
-        } catch { /* already gone */ }
+        try { killPtyTree(s.proc); } catch { /* already gone */ }
         void id;
       }
     }
@@ -776,10 +772,9 @@ export class PtyManager {
     const s = this.sessions.get(id);
     if (!s) return { ok: false, error: `no pty: ${id}` };
     try {
-      const pid = s.proc.pid;
-      s.proc.kill();
-      ensureKilled(pid); // verify + sweep the process group so no PID leaks
+      // Delete first: the dying process's late output/exit must not reach anyone.
       this.sessions.delete(id);
+      killPtyTree(s.proc); // the whole tree: MCP servers, npx wrappers, browsers
       return { ok: true };
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : String(e) };

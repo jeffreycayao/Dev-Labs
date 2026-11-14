@@ -100,19 +100,33 @@ export interface McpCatalogEntry {
   /** How to reach the server. `<name>` placeholders in a stdio spec are filled at
    *  merge time: `<cwd>` with the agent cwd, the rest from `BuildMcpServersInput.vars`. */
   spec: McpSpec;
+  /** For an `npx` server: the pinned package DevLabs installs once into its data
+   *  folder (mcpPackages.ts), so agents run it straight from disk instead of
+   *  paying an `npx` resolve (two extra processes) on every spawn. */
+  npm?: McpNpmPackage;
   /** The credential this server needs, if any (write/secret tiers only). */
   secret?: McpSecret;
   /** Plain, non-secret values the user types in Settings → Connections (stored
    *  in `config.mcpVars`), offered to the spec as `<name>` placeholders. */
   vars?: { name: string; label: string }[];
   tier: McpTier;
-  /** Seed for `config.mcpDefaults[id].enabled`. True only for 'safe-readonly' and
-   *  'browser' entries; a keyed (secret) entry is never on by default. */
+  /** Seed for `config.mcpDefaults[id].enabled`. Only 'safe-readonly' and
+   *  'browser' entries may be on by default; a keyed (secret) entry never is. */
   defaultEnabled: boolean;
   /** Owner feature switch (Settings → General → Features) that must be on for
    *  this entry to exist at all: hidden in Settings and never written to an
    *  agent's config while off, whatever the consent says. */
   feature?: keyof FeatureFlags;
+}
+
+export interface McpNpmPackage {
+  pkg: string;
+  version: string;
+  /** Entry script inside the package, run with node. */
+  bin: string;
+  /** Scope whose per-platform package holds a native `bin/<name>[.exe]` to run
+   *  instead of the JS launcher (agent-browser). */
+  native?: string;
 }
 
 /** The default MCP bundle. Safe/read-only servers are ON; anything that writes
@@ -123,7 +137,8 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     id: 'sequential-thinking',
     label: 'Sequential Thinking',
     description: 'Structured step-by-step reasoning scratchpad. No I/O, no secrets.',
-    spec: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-sequential-thinking'] },
+    spec: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-sequential-thinking@2.1.1'] },
+    npm: { pkg: '@modelcontextprotocol/server-sequential-thinking', version: '2.1.1', bin: 'dist/index.js' },
     tier: 'safe-readonly',
     defaultEnabled: true
   },
@@ -133,8 +148,10 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     description: 'Current time and timezone conversions.',
     // Reference time server ships as Python. // TODO-verify transport (uvx vs an npm port)
     spec: { command: 'uvx', args: ['mcp-server-time'] },
+    // Claude Code (the only CLI that gets this bundle) has this built in, and each
+    // running server costs every agent its own process: off unless switched on.
     tier: 'safe-readonly',
-    defaultEnabled: true
+    defaultEnabled: false
   },
   {
     id: 'fetch',
@@ -142,14 +159,17 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     description: 'Fetch a URL and return its content as markdown (read-only HTTP GET).',
     // Reference fetch server ships as Python. // TODO-verify transport (uvx vs an npm port)
     spec: { command: 'uvx', args: ['mcp-server-fetch'] },
+    // Claude Code (the only CLI that gets this bundle) has this built in, and each
+    // running server costs every agent its own process: off unless switched on.
     tier: 'safe-readonly',
-    defaultEnabled: true
+    defaultEnabled: false
   },
   {
     id: 'context7',
     label: 'Context7 Docs',
     description: 'Up-to-date library/framework documentation lookups.',
-    spec: { command: 'npx', args: ['-y', '@upstash/context7-mcp'] },
+    spec: { command: 'npx', args: ['-y', '@upstash/context7-mcp@4.7.0'] },
+    npm: { pkg: '@upstash/context7-mcp', version: '4.7.0', bin: 'dist/index.js' },
     tier: 'safe-readonly',
     defaultEnabled: true
   },
@@ -160,8 +180,10 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     // The trailing arg is the allowed root — Workstream 3 replaces this placeholder
     // with the agent cwd at merge time so it is NEVER whole-disk.
     spec: { command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', '<cwd>'] },
+    // Claude Code (the only CLI that gets this bundle) has this built in, and each
+    // running server costs every agent its own process: off unless switched on.
     tier: 'safe-readonly',
-    defaultEnabled: true
+    defaultEnabled: false
   },
   {
     id: 'git',
@@ -170,8 +192,10 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     // Reference git server ships as Python; `--repository <cwd>` is set at merge time.
     // TODO-verify transport (uvx vs an npm port).
     spec: { command: 'uvx', args: ['mcp-server-git', '--repository', '<cwd>'] },
+    // Claude Code (the only CLI that gets this bundle) has this built in, and each
+    // running server costs every agent its own process: off unless switched on.
     tier: 'safe-readonly',
-    defaultEnabled: true
+    defaultEnabled: false
   },
 
   // ─── Write / secret — shipped OFF, consent-gated ──────────────────────────
@@ -325,6 +349,8 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     label: 'Agent Browser',
     description: 'A real headless Chrome the agent drives: open pages, read them, click, fill forms, take screenshots. Visits any website you have not blocked.',
     spec: { command: 'npx', args: ['-y', 'agent-browser@0.43.0', 'mcp'], env: { AGENT_BROWSER_SESSION: 'devlabs-<agent>' } },
+    // The JS launcher only finds and starts a native binary; run that binary directly.
+    npm: { pkg: 'agent-browser', version: '0.43.0', bin: 'bin/agent-browser.js', native: '@agent-browser' },
     tier: 'browser',
     defaultEnabled: true,
     feature: 'agentBrowser'
@@ -392,6 +418,9 @@ export interface BuildMcpServersInput {
   vars?: Record<string, string>;
   /** Owner feature switches; an entry whose switch is off is not offered. */
   features?: Partial<FeatureFlags>;
+  /** The installed copy of an entry's pinned package, as the command to run it
+   *  (without the server's own args), or undefined to fall back to `npx`. */
+  localPackage?: (npm: McpNpmPackage) => { command: string; args: string[] } | undefined;
   catalog?: readonly McpCatalogEntry[];
 }
 
@@ -453,8 +482,15 @@ export function buildMcpServers(input: BuildMcpServersInput): {
       brokerIds.push(mcpBrokerId(e.id));
       continue;
     }
-    const command = fill(e.spec.command);
-    const args = e.spec.args.map(fill);
+    let command = fill(e.spec.command);
+    let args = e.spec.args.map(fill);
+    const local = e.npm && input.localPackage?.(e.npm);
+    if (local) {
+      // Keep only the server's own args: everything after the package spec.
+      const at = e.spec.args.findIndex((a) => a === e.npm!.pkg || a.startsWith(`${e.npm!.pkg}@`));
+      command = local.command;
+      args = [...local.args, ...args.slice(at + 1)];
+    }
     const env: Record<string, string> = {};
     for (const [k, v] of Object.entries(e.spec.env ?? {})) env[k] = fill(v);
     if (missing) { skipped.push({ id: e.id, reason: 'not_configured' }); continue; }

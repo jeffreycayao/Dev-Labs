@@ -8,6 +8,7 @@ import { agencyApi } from './agencyAgents';
 import { spotifyApi } from './office/spotify';
 import { radioApi } from './office/radio';
 import type { AgentProvider } from '../shared/agentProvider';
+import type { ResourceUsage } from '../shared/resourceUsage';
 import type { HireManifest } from '../shared/hire';
 import type { OfficeTheme } from '../shared/officeTheme';
 export type { HireManifest } from '../shared/hire';
@@ -591,6 +592,9 @@ const api = {
     ipcRenderer.invoke('pty:redraw', id),
   killPty: (id: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke('pty:kill', id),
+  /** DevLabs' CPU/RAM (whole process tree) and each agent's process count.
+   *  CPU is the rate since the previous call: null on the first. */
+  resourceUsage: (): Promise<ResourceUsage> => ipcRenderer.invoke('perf:usage'),
   listPtys: (): Promise<Array<{
     id: string;
     cwd: string;

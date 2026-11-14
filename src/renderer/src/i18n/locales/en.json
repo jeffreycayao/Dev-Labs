@@ -400,6 +400,17 @@
       "count": "{{n}} / {{max}} characters",
       "appliesNext": "Takes effect for agents started after saving. Running agents keep the text they started with.",
       "switchedOff": "The Personal ATTITUDE.md switch is off (General → Features), so this text is kept but not sent to agents."
+    },
+    "resources": {
+      "title": "Resource use",
+      "loading": "Measuring…",
+      "unavailable": "Could not read the process list on this computer.",
+      "summary": "DevLabs and its agents are using {{cpu}} of your CPU and {{mem}} of memory, across {{procs}} processes.",
+      "agent": "Agent",
+      "processes": "Processes",
+      "memory": "Memory",
+      "cpu": "CPU",
+      "note": "Each agent runs its own command-line tool plus its connections (MCP servers). Fewer connections in Connections means a lighter agent. Updates every 5 seconds while this page is open."
     }
   },
   "commandCenter": {
@@ -1547,14 +1558,14 @@
   },
   "mcpDefaults": {
     "title": "Default MCP servers",
-    "desc": "These servers are merged into each new agent's session settings. Safe servers are on by default; write/secret servers are off until you consent. Changes take effect on the next agent spawn — running agents are not affected.",
+    "desc": "These servers are merged into each new agent's session settings. Write/secret servers are off until you consent. Changes take effect on the next agent spawn — running agents are not affected.",
     "toggleNote": "{{id}}: {{state}}",
     "couldNotSave": "could not save",
     "tiers": {
-      "safeReadonly": "Safe & Read-Only (on by default)",
+      "safeReadonly": "Safe & Read-Only",
       "write": "Write Access (consent required)",
       "secret": "Requires Secret / API Key (consent required)",
-      "safeReadonlyNote": "These servers read data only, need no secrets, and are scoped to the agent workspace. They are enabled for every new agent.",
+      "safeReadonlyNote": "These servers read data only, need no secrets, and are scoped to the agent workspace. Every agent runs its own copy of each one that is on, so each costs memory per agent. Files, Git, Time and Fetch start off because agents already have those tools built in.",
       "writeNote": "These servers can mutate state beyond the workspace. Off by default — enable only after reviewing.",
       "secretNote": "These servers require an API key or credentials. Off by default — add your credentials and enable after consent.",
       "browser": "Browser (consent required)",

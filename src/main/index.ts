@@ -12,6 +12,8 @@ import { homedir } from 'node:os';
 import { request as httpsRequest } from 'node:https';
 import { PtyManager, type SpawnOptions } from './pty';
 import { resolveCommand as resolveCliCommand, isSafeCommandName } from './shellEnv';
+import { ensureMcpPackages, localMcpPackage } from './mcpPackages';
+import { sampleResourceUsage } from './resourceUsage';
 import { initAutoUpdater, abortPendingRestart } from './updater';
 import { RealtimeFloorWatcher } from './realtimeFloorWatcher';
 import {
@@ -3169,6 +3171,9 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
             resources: bundledResourcesDir(),
             ...(readConfig().obsidianVault ? { 'obsidian-vault': readConfig().obsidianVault! } : {})
           },
+          // Run pinned npx servers from the one-time install (mcpPackages.ts); the
+          // first spawns while it is still installing simply use npx.
+          mcpLocalPackage: (() => { void ensureMcpPackages(readConfig().mcpDefaults, readConfig().features); return localMcpPackage; })(),
           onMcpSkipped: (skipped) => {
             for (const s of skipped) console.warn(`[mcp] ${s.id} not attached to ${opts.id}: ${s.reason}`);
           },
@@ -3443,6 +3448,14 @@ ipcMain.handle('pty:kill', (_evt, id: string) => {
   return res;
 });
 ipcMain.handle('pty:list', () => ptyManager.list());
+// Settings → General → Resource use: the app's CPU/RAM and each agent's process tree.
+ipcMain.handle('perf:usage', () => {
+  const reg = hive.enabled() ? hive.registry().agents : {};
+  return sampleResourceUsage(ptyManager.list().map((p) => {
+    const id = ptyToAgent.get(p.id) ?? p.id;
+    return { id, name: reg[id]?.name ?? id, pid: p.pid };
+  }));
+});
 ipcMain.handle('pty:commandAvailable', (_evt, command: string) =>
   typeof command === 'string' && ptyManager.isCommandAvailable(command));
 
@@ -5969,6 +5982,9 @@ app.whenReady().then(() => {
   if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(appIconPath());
   // DevLabs' own git reads hooks from here: empty, and no agent can write it.
   useNoHooksDir(join(app.getPath('userData'), 'no-git-hooks'));
+  // Install the default MCP servers' pinned packages once, after launch settles,
+  // so agents run them from disk instead of through npx (mcpPackages.ts).
+  setTimeout(() => { void ensureMcpPackages(readConfig().mcpDefaults, readConfig().features); }, 15_000).unref();
   // Settings keys live in the encrypted connector store, which needs the app
   // ready to decrypt; reads before this see config.json alone.
   useConfigSecretStore({

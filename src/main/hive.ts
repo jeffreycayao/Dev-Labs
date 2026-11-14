@@ -40,7 +40,7 @@ import {
   bridgeOf,
   type AgentProvider
 } from '../shared/agentProvider';
-import { buildMcpServers, type McpSkipReason } from '../shared/mcpCatalog';
+import { buildMcpServers, type BuildMcpServersInput, type McpSkipReason } from '../shared/mcpCatalog';
 import type { FeatureFlags } from '../shared/features';
 import { selectBroadcastTargets } from '../shared/broadcast';
 import { preferredAgentRole } from '../shared/agentRole';
@@ -881,6 +881,9 @@ export class HiveManager {
       /** Values for `<name>` placeholders in catalog specs (app Node, resources
        *  dir, Obsidian vault). Missing → servers that need them are skipped. */
       mcpVars?: Record<string, string>;
+      /** The installed copy of a server's pinned npm package (mcpPackages.ts),
+       *  or undefined to launch it through npx. */
+      mcpLocalPackage?: BuildMcpServersInput['localPackage'];
       /** Owner feature switches: a catalog entry behind an off switch is not offered. */
       features?: Partial<FeatureFlags>;
       /** Told which enabled servers were left out and why (no key, broker down). */
@@ -1191,7 +1194,8 @@ export class HiveManager {
       broker: opts.mcpBroker,
       // `<agent>` gives per-agent servers (the browser session) their own name.
       vars: { ...opts.mcpVars, agent: meta.id },
-      features: opts.features
+      features: opts.features,
+      localPackage: opts.mcpLocalPackage
     });
     if (mcp.skipped.length) opts.onMcpSkipped?.(mcp.skipped);
     if (Object.keys(mcp.servers).length) {

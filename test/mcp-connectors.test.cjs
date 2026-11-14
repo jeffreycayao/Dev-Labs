@@ -68,8 +68,8 @@ test('catalog invariants: secrets only on consent tiers, never baked into specs,
     } else {
       assert.match(e.spec.url, /^https:\/\//, e.id);
     }
-    // Only read-only servers and the owner-switched browser start on; never a keyed one.
-    assert.equal(e.defaultEnabled, e.tier === 'safe-readonly' || e.tier === 'browser', e.id);
+    // Only read-only servers and the owner-switched browser may start on; never a keyed one.
+    if (e.defaultEnabled) assert.ok(e.tier === 'safe-readonly' || e.tier === 'browser', e.id);
   }
 });
 
@@ -77,8 +77,11 @@ test('catalog invariants: secrets only on consent tiers, never baked into specs,
 
 test('defaults: only safe servers, cwd-scoped, namespaced', () => {
   const { servers } = cat.buildMcpServers({ cwd: '/work', consent: undefined, getSecret, broker });
-  assert.ok(servers['atmt-filesystem']);
-  assert.ok(servers['atmt-filesystem'].args.includes('/work'));
+  assert.ok(servers['atmt-context7']);
+  // Built-in duplicates (files, git, time, fetch) are off until switched on.
+  assert.equal(servers['atmt-filesystem'], undefined);
+  const fsOn = cat.buildMcpServers({ cwd: '/work', consent: { filesystem: { enabled: true } }, getSecret, broker }).servers;
+  assert.ok(fsOn['atmt-filesystem'].args.includes('/work'));
   assert.equal(servers['atmt-pancake-pos'], undefined);
   assert.equal(servers['atmt-webcake-landing'], undefined);
 });

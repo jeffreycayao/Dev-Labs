@@ -9,7 +9,7 @@ import {
   providerPreset,
   type AgentProvider
 } from '../shared/agentProvider';
-import { defaultMcpDefaults } from '../shared/mcpCatalog';
+import { MCP_CATALOG, defaultMcpDefaults } from '../shared/mcpCatalog';
 import { MAX_AGENT_TOKEN_CAP } from '../shared/tokenCaps';
 import { expandTilde, normalizeHiveHome } from './fs';
 import type { IntegrationRecord } from '../shared/integrations';
@@ -219,6 +219,9 @@ export interface HarnessConfig {
   defaultModel?: string;
   /** Internal one-time migration latch for the shipped model defaults. */
   modelDefaultsV2?: boolean;
+  /** Internal one-time latch: the MCP servers that duplicate an agent's own
+   *  tools (files, git, time, fetch) were switched off once. */
+  leanMcpV1?: boolean;
   /** Which provider powers the GOD orchestrator ("Ramon"). The persona is
    *  constant; only its engine is selectable. Default 'claude'. Eligible providers
    *  are those that can receive inbox (claude/codex/antigravity/qwen). */
@@ -460,6 +463,7 @@ const DEFAULTS: HarnessConfig = {
   // their own defaults. An explicit per-agent model still wins.
   defaultModel: 'claude-opus-5-5',
   modelDefaultsV2: true,
+  leanMcpV1: true,
   // Seeded from the MCP catalog so the consent defaults never drift from it
   // (safe-readonly ON, write/secret OFF).
   mcpDefaults: defaultMcpDefaults(),
@@ -635,6 +639,22 @@ function migrateModelDefaultsV2(cfg: HarnessConfig, stored: Partial<HarnessConfi
   return next;
 }
 
+/** Switch off, once, the read-only MCP servers that are no longer on by default
+ *  (files, git, time, fetch: Claude Code has these tools built in). Every agent
+ *  ran its own copy of each, so they cost a process tree per agent for nothing.
+ *  The seed wrote `enabled: true` for them, so a stored true is indistinguishable
+ *  from a choice; the user can switch any back on in Settings → Connections. */
+function migrateLeanMcpV1(cfg: HarnessConfig, stored: Partial<HarnessConfig>): HarnessConfig {
+  if (stored.leanMcpV1 === true) return cfg;
+  const mcpDefaults = { ...(cfg.mcpDefaults ?? {}) };
+  for (const e of MCP_CATALOG) {
+    if (e.tier === 'safe-readonly' && !e.defaultEnabled && mcpDefaults[e.id]?.enabled) mcpDefaults[e.id] = { enabled: false };
+  }
+  const next = { ...cfg, mcpDefaults, leanMcpV1: true };
+  try { persistConfig(next); } catch { /* Use the lean set in memory this run. */ }
+  return next;
+}
+
 /** readConfig runs on every hook event (via hive.root()). Keep the parsed result
  *  keyed on the file's mtime + size, so a write from anywhere — persistConfig or
  *  an external edit — is picked up, and an unchanged file is one stat. */
@@ -747,9 +767,9 @@ export function readConfig(): HarnessConfig {
     const raw = readFileSync(p, 'utf8');
     const parsed = JSON.parse(raw);
     configReadError = null;
-    const cfg = openSecrets(normalizeStoredHomes(migrateModelDefaultsV2(
+    const cfg = openSecrets(normalizeStoredHomes(migrateLeanMcpV1(migrateModelDefaultsV2(
       migrateUnsupportedCodexModel(migrateTriggersV1(withTriggerDefaults({ ...DEFAULTS, ...parsed }))), parsed
-    )));
+    ), parsed)));
     // A config.json from before secrets moved out: save once to seal them.
     if (secretStore && hasPlaintextSecrets(parsed)) {
       try { persistConfig(cfg); } catch { /* sealed on the next save instead */ }

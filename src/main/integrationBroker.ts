@@ -38,6 +38,12 @@ const UPSTREAM_TIMEOUT_MS = 30_000;
 /** MCP over Streamable HTTP keeps responses open (SSE) for as long as a tool call
  *  runs, so broker-proxied MCP servers get a much longer ceiling. */
 const MCP_UPSTREAM_TIMEOUT_MS = 10 * 60_000;
+/** Model-provider (BYOK LLM) routes: prompts with images run to tens of MB (Anthropic
+ *  accepts 32 MB), and a long answer can stream for longer than any fixed ceiling, so
+ *  the timeout only covers waiting for the response headers; after that the stream is
+ *  bounded by the agent hanging up. */
+const MODEL_MAX_BODY_BYTES = 32 * 1024 * 1024;
+const MODEL_FIRST_BYTE_TIMEOUT_MS = 10 * 60_000;
 const DEFAULT_USER_AGENT = 'devlabs-broker/1';
 
 /** Hop-by-hop headers never forwarded in either direction. */
@@ -47,7 +53,8 @@ const HOP_BY_HOP = new Set([
 ]);
 /** Request headers the worker is NEVER allowed to pass upstream. */
 const STRIP_REQUEST = new Set([
-  'authorization', 'x-md-broker-token', 'host', 'cookie', 'content-length', ...HOP_BY_HOP
+  'authorization', 'x-md-broker-token', 'x-api-key', 'x-goog-api-key',
+  'host', 'cookie', 'content-length', ...HOP_BY_HOP
 ]);
 /** Response headers never forwarded back (fetch already decodes the body, so the
  *  upstream content-encoding/length would be wrong). */
@@ -64,6 +71,8 @@ interface Capability {
 export interface IntegrationBrokerDeps {
   /** Longer upstream timeout for this integration (MCP streams). Optional. */
   isStreaming?: (id: string) => boolean;
+  /** A model-provider route (bigger body cap, first-byte timeout). Optional. */
+  isModelRoute?: (id: string) => boolean;
   /** Resolve an integration record by id (injected — the registry). */
   getRecord: (id: string) => IntegrationRecord | undefined;
   /** Decrypt a secret by ref (injected — the secret store). Main-internal. */
@@ -174,16 +183,22 @@ export class IntegrationBroker {
     res.end(JSON.stringify({ error: message, code }));
   }
 
-  /** Extract the bearer/x-md-broker-token from the request. */
+  /** Extract the capability token from the request. Model SDKs put "the API key"
+   *  wherever their provider wants it, and the agent's key IS its token, so the
+   *  Anthropic (`x-api-key`) and Gemini (`x-goog-api-key`, `?key=`) spots count too. */
   private static tokenFrom(req: IncomingMessage): string | undefined {
-    const x = req.headers['x-md-broker-token'];
-    if (typeof x === 'string' && x) return x;
+    for (const h of ['x-md-broker-token', 'x-api-key', 'x-goog-api-key']) {
+      const x = req.headers[h];
+      if (typeof x === 'string' && x) return x.trim();
+    }
     const auth = req.headers['authorization'];
     if (typeof auth === 'string') {
       const m = /^Bearer\s+(.+)$/i.exec(auth.trim());
       if (m) return m[1].trim();
     }
-    return undefined;
+    const q = (req.url ?? '').split('?')[1];
+    const key = q ? new URLSearchParams(q).get('key') : null;
+    return key || undefined;
   }
 
   private handle(req: IncomingMessage, res: ServerResponse): void {
@@ -205,7 +220,12 @@ export class IntegrationBroker {
       return IntegrationBroker.sendError(res, 400, 'bad_request', 'malformed integration id');
     }
     const path = m[2] ?? '';
-    const query = m[3] ?? '';
+    // Never forward a token that rode in as `?key=` (Gemini SDK style).
+    let query = m[3] ?? '';
+    if (query) {
+      const params = new URLSearchParams(query.slice(1));
+      if (params.has('key')) { params.delete('key'); const rest = params.toString(); query = rest ? `?${rest}` : ''; }
+    }
 
     // 4) Authorize against this worker's capability.
     if (!cap.allowedIds.has(integrationId)) {
@@ -227,6 +247,10 @@ export class IntegrationBroker {
       if (!secret) return IntegrationBroker.sendError(res, 503, 'no_secret', 'no secret configured for this integration');
     }
 
+    if (this.deps.isModelRoute?.(integrationId)) {
+      void this.forward(req, res, rec, upstream, secret, MODEL_FIRST_BYTE_TIMEOUT_MS, MODEL_MAX_BODY_BYTES, true);
+      return;
+    }
     void this.forward(req, res, rec, upstream, secret, this.deps.isStreaming?.(integrationId) ? MCP_UPSTREAM_TIMEOUT_MS : UPSTREAM_TIMEOUT_MS);
   }
 
@@ -236,7 +260,9 @@ export class IntegrationBroker {
     rec: IntegrationRecord,
     upstream: URL,
     secret: string | undefined,
-    timeoutMs: number = UPSTREAM_TIMEOUT_MS
+    timeoutMs: number = UPSTREAM_TIMEOUT_MS,
+    maxBodyBytes: number = MAX_BODY_BYTES,
+    firstByteOnly = false
   ): Promise<void> {
     // Buffer the request body with a hard cap (write methods).
     const method = (req.method ?? 'GET').toUpperCase();
@@ -244,7 +270,7 @@ export class IntegrationBroker {
     let body: Buffer | undefined;
     if (hasBody) {
       try {
-        body = await readBodyCapped(req);
+        body = await readBodyCapped(req, maxBodyBytes);
       } catch (e) {
         if ((e as Error).message === 'too_large') {
           return IntegrationBroker.sendError(res, 413, 'payload_too_large', 'request body too large');
@@ -294,6 +320,7 @@ export class IntegrationBroker {
       if (!STRIP_RESPONSE.has(key.toLowerCase())) respHeaders[key] = value;
     });
     res.writeHead(upstreamRes.status, respHeaders);
+    if (firstByteOnly) clearTimeout(timer);
     try {
       if (upstreamRes.body) {
         await pipeWebStream(upstreamRes.body, res);
@@ -308,14 +335,14 @@ export class IntegrationBroker {
   }
 }
 
-/** Read a request body into a Buffer, aborting past MAX_BODY_BYTES (throws 'too_large'). */
-function readBodyCapped(req: IncomingMessage): Promise<Buffer> {
+/** Read a request body into a Buffer, aborting past `maxBytes` (throws 'too_large'). */
+function readBodyCapped(req: IncomingMessage, maxBytes = MAX_BODY_BYTES): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let size = 0;
     req.on('data', (c: Buffer) => {
       size += c.length;
-      if (size > MAX_BODY_BYTES) { reject(new Error('too_large')); req.destroy(); return; }
+      if (size > maxBytes) { reject(new Error('too_large')); req.destroy(); return; }
       chunks.push(c);
     });
     req.on('end', () => resolve(Buffer.concat(chunks)));

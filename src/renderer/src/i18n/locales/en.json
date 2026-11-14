@@ -1532,6 +1532,8 @@
     "providers": "AI ENGINE PROVIDERS (BYOK)",
     "providersDesc": "API keys + local endpoints for the OpenCode, Crush, pi.dev and Qwen engines. Keys are stored write-only (encrypted at rest; never shown again) and used only when those engines spawn. Claude Code and Codex use their own login.",
     "apiKeys": "API KEYS",
+    "keysBrokered": "Agents never see these keys: each agent gets its own token, and DevLabs adds the real key on the way to the provider's official API. The token stops working when the agent stops.",
+    "directKeyWarning": "⚠ {{engines}} can't send {{label}} through the key broker, so {{engines}} agents get this key directly and could read it.",
     "setCheck": "set ✓",
     "keyStoredPlaceholder": "•••••••• (stored — type to replace)",
     "keyPlaceholder": "paste {{label}} key",

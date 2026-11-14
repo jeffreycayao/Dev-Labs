@@ -4,6 +4,7 @@ import type { HarnessConfig, AgentProvider } from '@/store/config';
 import { PixelButton } from './PixelButton';
 import { ProviderLogo } from './ProviderLogo';
 import { OSS_BLOG_LINKS } from '@shared/ossModels';
+import { BYOK_DIRECT_KEY } from '@shared/byokBroker';
 import { useStore } from '@/store/store';
 
 /**
@@ -18,7 +19,7 @@ import { useStore } from '@/store/store';
  */
 
 /** Backend model-providers whose keys the CLIs read from standard env vars. Must
- *  match BACKEND_KEY_ENV in src/main/index.ts. */
+ *  match BACKEND_KEY_ENV in src/shared/byokBroker.ts. */
 const BACKENDS: Array<{ id: string; label: string; envVar: string }> = [
   { id: 'anthropic', label: 'Anthropic', envVar: 'ANTHROPIC_API_KEY' },
   { id: 'openai', label: 'OpenAI', envVar: 'OPENAI_API_KEY' },
@@ -35,6 +36,14 @@ const CLIS: Array<{ id: AgentProvider; label: string; hint: string }> = [
   { id: 'pi', label: 'Pi', hint: 'local models are file-based (models.json); base-URL reserved' },
   { id: 'qwen', label: 'Qwen', hint: 'OpenAI-compatible endpoint — used as the proxy upstream' }
 ];
+
+/** Engines that can't route this backend through the key broker and so still get
+ *  the real key (BYOK_DIRECT_KEY), as a display list; '' when none. */
+const directEngines = (backend: string): string =>
+  Object.entries(BYOK_DIRECT_KEY)
+    .filter(([, backends]) => (backends as readonly string[]).includes(backend))
+    .map(([engine]) => CLIS.find((c) => c.id === engine)?.label ?? engine)
+    .join(', ');
 
 const inputStyle: CSSProperties = {
   width: '100%',
@@ -139,6 +148,7 @@ export function AiEnginesSettings({ config }: { config: HarnessConfig }) {
       {/* Backend API keys (write-only) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={headStyle}>{t('aiEngines.apiKeys')}</div>
+        <div style={{ fontSize: 11, color: 'var(--cth-ink-500)' }}>{t('aiEngines.keysBrokered')}</div>
         {BACKENDS.map((b) => (
           <div key={b.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <label style={labelStyle}>
@@ -159,6 +169,11 @@ export function AiEnginesSettings({ config }: { config: HarnessConfig }) {
               )}
             </div>
             {note[b.id] && <div style={{ fontSize: 11, color: 'var(--cth-ink-500)' }}>{note[b.id]}</div>}
+            {directEngines(b.id) && (
+              <div style={{ fontSize: 11, color: 'var(--cth-coral)' }}>
+                {t('aiEngines.directKeyWarning', { engines: directEngines(b.id), label: b.label })}
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -456,6 +456,7 @@ DevLabs is free, but **the AI tools charge you for the work agents do**. Ways to
 - Your files, requests, agent output and keys **stay on your computer**.
 - There's **no account**: nothing about you is sent to us.
 - Your AI tools send your requests to their own companies (Anthropic, OpenAI, Google…), under their terms.
+- **Agents never see your AI provider keys.** The keys you save in **Settings → AI Engines** (Anthropic, OpenAI, Gemini, OpenRouter, Groq) stay encrypted on your computer. OpenCode, Crush, Pi and Qwen agents get a stand-in token instead; DevLabs adds the real key on the way to the provider's official address, and the token stops working when the agent stops. One exception: Crush can't route OpenRouter this way, so Crush agents still get your OpenRouter key, and Settings warns you about it.
 - **Optional extras send data only when you turn them on:** Discord (messages to and from your server), ElevenLabs (text of replies, for voice), Spotify (searches and playback), GitHub (pull-request reviews, through your own sign-in), and the company builder (your company description, to Groq or Claude).
 - **Anonymous usage stats** are optional: **Settings → General → Anonymous usage stats**.
 

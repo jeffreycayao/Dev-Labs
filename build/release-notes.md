@@ -1,5 +1,3 @@
-- Office themes: export, import and undo.
-- Smooth 3D zoom, far less CPU when idle.
-- Agents match their cards, with status badges.
-- 268 agency personas, freelancer roles, ATTITUDE.md.
-- Systeme.io and GoHighLevel connectors.
+- New: agents can browse the web with Vercel's Agent Browser.
+- Each agent gets its own browser session.
+- Turn it off anytime in Settings → Features or Connections.

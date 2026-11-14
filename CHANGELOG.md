@@ -4,6 +4,10 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **The 3D office is lighter on your machine and nicer to look at.** It no longer redraws 60 times a second when nothing is happening: frames are drawn when an agent walks, the camera moves or something changes, and a few times a second otherwise. Static furniture (plants, couches, lamps, cabinets, the desk monitors, the capiz windows) is drawn in batches instead of piece by piece, and shadows are only recomputed when something that casts them moves. The result is roughly a quarter of the draw work per frame and a renderer that sits near idle when everyone is at their desk.
+- **Smooth zoom and pan.** The mouse wheel or a trackpad pinch now eases the view in and out, from the whole floor down to a single desk, and keeps the spot under your cursor in place while it does. Drag to pan (the view stays over the office), double-click or press Home to glide back to the whole floor. The camera presets (front desk, lounge, machines) work as before.
+- **Clearer highlights and lighting.** Hovering an agent or a desk, or opening an agent's panel, puts a lime ring (orange for the open agent) on the floor under them that stays the same size at any zoom. The office gets a softer key light with a warm fill, and the base floor slabs use the DevLabs dark greens instead of blue-grey.
+
 ## v4.4.2 — 2026-11-03
 
 - **New connector: Fireflies.ai.** Agents can read your Fireflies meeting notes (transcripts, summaries and action items) and work from them, for example turning a meeting's action items into tasks. Paste your Fireflies API key (Fireflies → Settings → Developer Settings) in Settings → Connections and switch it on. Like Pancake POS, it goes through the local proxy, so agents never see the key.

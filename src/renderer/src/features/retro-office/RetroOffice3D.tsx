@@ -209,7 +209,9 @@ import {
   CAMERA_PRESETS as CAMERA_PRESET_MAP,
   CameraAnimator as CameraPresetAnimator,
   FollowCamController as FollowCamSystem,
+  SmoothZoomController as SceneSmoothZoom,
 } from "@/features/retro-office/systems/cameraLighting";
+import { clampTarget, fitZoom as fitZoomFor } from "@/features/retro-office/core/cameraMath";
 import {
   FloorRaycaster as SceneFloorRaycaster,
   GameLoop as SceneGameLoop,
@@ -218,6 +220,7 @@ import {
 } from "@/features/retro-office/systems/sceneRuntime";
 import { applyAgentCollisionBumps } from "@/features/retro-office/systems/NavigationSystem";
 import {
+  FloorHighlights as SceneFloorHighlights,
   HeatmapSystem as AgentHeatmapSystem,
   TrailSystem as AgentTrailSystem,
 } from "@/features/retro-office/systems/visualSystems";
@@ -238,6 +241,25 @@ type FeedEvent = {
 };
 
 const EMPTY_STRING_RECORD: Record<string, string> = {};
+// GLB furniture with no behaviour of its own (a desk computer only opens its
+// monitor on click). Outside edit mode each type is drawn instanced: one draw
+// call per mesh of the model instead of one per item on the floor.
+const STATIC_INSTANCED_TYPES = new Set([
+  "plant",
+  "couch",
+  "couch_v",
+  "beanbag",
+  "bookshelf",
+  "whiteboard",
+  "cabinet",
+  "lamp",
+  "fridge",
+  "water_cooler",
+  "table_rect",
+  "executive_desk",
+  "printer",
+  "computer",
+]);
 const EMPTY_BOOLEAN_RECORD: Record<string, boolean> = {};
 const EMPTY_NUMBER_RECORD: Record<string, number> = {};
 const EMPTY_MONITOR_MAP: OfficeDeskMonitorMap = {};
@@ -430,56 +452,6 @@ function CameraRig({ target }: { target: [number, number, number] }) {
     camera.lookAt(...target);
     camera.updateProjectionMatrix();
   }, [camera, target]);
-  return null;
-}
-
-function AdaptiveDprController() {
-  const { gl, setDpr } = useThree();
-  const currentDprRef = useRef(1.25);
-  const frameCounterRef = useRef(0);
-  const avgDeltaRef = useRef(1 / 60);
-
-  useEffect(() => {
-    const initialDpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    currentDprRef.current = initialDpr;
-    setDpr(initialDpr);
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== "visible") {
-        currentDprRef.current = 0.85;
-        setDpr(0.85);
-        return;
-      }
-      const restoredDpr = Math.min(window.devicePixelRatio || 1, 1.5);
-      currentDprRef.current = restoredDpr;
-      setDpr(restoredDpr);
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [setDpr]);
-
-  useFrame((_, delta) => {
-    if (document.visibilityState !== "visible") return;
-    avgDeltaRef.current = avgDeltaRef.current * 0.92 + delta * 0.08;
-    frameCounterRef.current += 1;
-    if (frameCounterRef.current < 45) return;
-    frameCounterRef.current = 0;
-
-    const maxDpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    const minDpr = 0.85;
-    let nextDpr = currentDprRef.current;
-    if (avgDeltaRef.current > 1 / 42) {
-      nextDpr = Math.max(minDpr, currentDprRef.current - 0.1);
-    } else if (avgDeltaRef.current < 1 / 57) {
-      nextDpr = Math.min(maxDpr, currentDprRef.current + 0.05);
-    }
-    if (Math.abs(nextDpr - currentDprRef.current) < 0.025) return;
-    currentDprRef.current = nextDpr;
-    setDpr(Number(nextDpr.toFixed(2)));
-    gl.info.reset();
-  });
-
   return null;
 }
 
@@ -2018,6 +1990,7 @@ export function RetroOffice3D({
   fullscreen = false,
   onToggleFullscreen,
   paused = false,
+  selectedAgentId = null,
 }: {
   agents: OfficeAgent[];
   officeCenterSignal?: number;
@@ -2117,6 +2090,8 @@ export function RetroOffice3D({
   onToggleFullscreen?: () => void;
   /** DevLabs: stop the render loop while something covers the office. */
   paused?: boolean;
+  /** DevLabs: the agent open in the side panel gets a floor ring. */
+  selectedAgentId?: string | null;
 }) {
   const resolvedCleaningCues = animationState?.cleaningCues ?? cleaningCues;
   const resolvedDanceUntilByAgentId =
@@ -2189,6 +2164,23 @@ export function RetroOffice3D({
   const autoOpenedStandupIdRef = useRef<string | null>(null);
   // Idea 1 (original): hovered agent for tooltip overlay.
   const [hoveredAgentId, setHoveredAgentId] = useState<string | null>(null);
+  const [hoveredDeskUid, setHoveredDeskUid] = useState<string | null>(null);
+  const staticInstancedGroups = useMemo(() => {
+    const groups = new Map<string, { itemType: string; color?: string; items: FurnitureItem[] }>();
+    for (const item of furniture) {
+      const itemType = resolveItemTypeKey(item);
+      if (!STATIC_INSTANCED_TYPES.has(itemType)) continue;
+      const key = `${itemType}:${item.color ?? ""}`;
+      const group = groups.get(key) ?? { itemType, color: item.color, items: [] };
+      group.items.push(item);
+      groups.set(key, group);
+    }
+    return [...groups.entries()];
+  }, [furniture]);
+  const hoveredDesk = useMemo(
+    () => (hoveredDeskUid ? furniture.find((item) => item._uid === hoveredDeskUid) ?? null : null),
+    [furniture, hoveredDeskUid],
+  );
   const [renderAgentUiById, setRenderAgentUiById] = useState<
     Record<string, RenderAgentUiSnapshot>
   >({});
@@ -2267,7 +2259,7 @@ export function RetroOffice3D({
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
       if (width <= 0 || height <= 0) return;
-      const next = Math.min(80, Math.max(25, Math.min(width * 0.03, height * 0.047)));
+      const next = fitZoomFor(width, height);
       setFitZoom((prev) => (Math.abs(prev - next) < 1 ? prev : next));
     });
     observer.observe(el);
@@ -4695,14 +4687,21 @@ export function RetroOffice3D({
     selectedUid,
   ]);
 
+  const overviewPresetRef = useRef(overviewPreset);
+  overviewPresetRef.current = overviewPreset;
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
-      if (e.code !== "Space") return;
       if (
         document.activeElement?.tagName === "INPUT" ||
         document.activeElement?.tagName === "TEXTAREA"
       )
         return;
+      // Home glides back to the whole-floor view, like a double-click.
+      if (e.code === "Home") {
+        cameraPresetRef.current = overviewPresetRef.current;
+        return;
+      }
+      if (e.code !== "Space") return;
       e.preventDefault();
       setSpaceDown(true);
     };
@@ -4850,9 +4849,11 @@ export function RetroOffice3D({
             key={canvasResetKey}
             // DevLabs: stop drawing while the office is covered (focus mode, IDE);
             // Electron keeps background windows rendering otherwise.
-            frameloop={paused ? "never" : "always"}
+            // Frames are drawn on demand: the game loop asks for them at full
+            // rate while something moves and on a slow heartbeat otherwise.
+            frameloop={paused ? "never" : "demand"}
             orthographic
-            dpr={[0.85, 1.5]}
+            dpr={[0.75, 1.25]}
             camera={{
               position: CAM_POS,
               zoom: cameraZoom,
@@ -4868,7 +4869,6 @@ export function RetroOffice3D({
           >
             {/* Ensure camera looks at the active office target after mount. */}
             <CameraRig target={cameraTarget} />
-            <AdaptiveDprController />
 
             {/* Orbit / pan / zoom controls — disabled while follow cam is active or while editing furniture. */}
             <OrbitControls
@@ -4881,12 +4881,10 @@ export function RetroOffice3D({
               enableDamping
               dampingFactor={0.12}
               rotateSpeed={0.5}
-              zoomSpeed={1}
               panSpeed={1}
               screenSpacePanning={false}
-              zoomToCursor
-              minZoom={25}
-              maxZoom={140}
+              // Wheel/pinch zoom is SceneSmoothZoom below (eased, anchored under the cursor).
+              enableZoom={false}
               minPolarAngle={0.25}
               maxPolarAngle={1.05}
               enableRotate={!spaceDown}
@@ -4903,8 +4901,7 @@ export function RetroOffice3D({
                 const controls = orbitRef.current;
                 if (!controls) return;
                 const t = controls.target;
-                const cx = Math.min(Math.max(t.x, panBounds.minX), panBounds.maxX);
-                const cz = Math.min(Math.max(t.z, panBounds.minZ), panBounds.maxZ);
+                const [cx, cz] = clampTarget(t.x, t.z, panBounds);
                 if (cx !== t.x || cz !== t.z) {
                   // Shift camera with the target so clamping doesn't change the angle.
                   controls.object.position.x += cx - t.x;
@@ -4915,8 +4912,15 @@ export function RetroOffice3D({
               }}
             />
 
-            {/* Game loop — no React state, pure ref mutations. */}
-            <SceneGameLoop tick={tick} />
+            <SceneSmoothZoom
+              orbitRef={orbitRef}
+              presetRef={cameraPresetRef}
+              bounds={panBounds}
+              enabled={followAgentId === null && (!editMode || spaceDown)}
+            />
+
+            {/* Game loop — no React state, pure ref mutations. Also schedules frames. */}
+            <SceneGameLoop tick={tick} agentsRef={renderAgentsRef} />
 
             {/* New Idea 2: Camera preset animator. */}
             <CameraPresetAnimator
@@ -4938,12 +4942,14 @@ export function RetroOffice3D({
               agentLookupRef={renderAgentLookupRef}
             />
 
-            {/* Keep office lighting static to avoid extra scene churn from ambience effects. */}
-            <ambientLight intensity={0.72} color="#d8d4c8" />
+            {/* Static lighting: a sky/ground wash so walls and floor shade softly,
+                a warm key that casts the (rarely redrawn) shadows, a cool fill. */}
+            <hemisphereLight intensity={0.5} color="#f3f0e6" groundColor="#2A3128" />
+            <ambientLight intensity={0.34} color="#e6ecdd" />
             <directionalLight
               position={[8, 14, 6]}
-              intensity={1.1}
-              color="#f6f1e6"
+              intensity={1.15}
+              color="#fff3df"
               castShadow
               shadow-mapSize={[1024, 1024]}
               shadow-bias={-0.0002}
@@ -4951,12 +4957,18 @@ export function RetroOffice3D({
             />
             <directionalLight
               position={[-5, 8, -4]}
-              intensity={0.4}
-              color="#7090ff"
+              intensity={0.3}
+              color="#9fb4ff"
             />
 
             {/* Floor + walls — always visible, no async loading. */}
             <SceneFloorAndWalls />
+            <SceneFloorHighlights
+              hoveredAgentId={hoveredAgentId}
+              selectedAgentId={selectedAgentId}
+              hoveredDesk={hoveredDesk}
+              agentLookupRef={renderAgentLookupRef}
+            />
 
             {/* Wall pictures — procedural, no async loading. */}
             <SceneWallPictures />
@@ -4981,6 +4993,7 @@ export function RetroOffice3D({
                   itemType="desk_cubicle"
                   items={deskItems}
                   onItemClick={handleDeskClick}
+                  onItemHover={setHoveredDeskUid}
                 />
               ) : null}
               {!editMode ? (
@@ -4989,8 +5002,19 @@ export function RetroOffice3D({
                   items={chairItems}
                 />
               ) : null}
+              {!editMode
+                ? staticInstancedGroups.map(([key, group]) => (
+                    <InstancedFurnitureItemsModel
+                      key={key}
+                      itemType={group.itemType}
+                      itemColor={group.color}
+                      items={group.items}
+                      onItemClick={group.itemType === "computer" ? handleDeskClick : undefined}
+                    />
+                  ))
+                : null}
               {furniture.map((item) =>
-                item.type === "wall" ? (
+                !editMode && STATIC_INSTANCED_TYPES.has(resolveItemTypeKey(item)) ? null : item.type === "wall" ? (
                   editMode ? (
                     <PrimitiveWallSegmentModel
                       key={item._uid}
@@ -6802,7 +6826,7 @@ export function RetroOffice3D({
                 <>
                   <span className="opacity-30">·</span>
                   <span className="text-amber-400/40">
-                    drag · scroll · space+drag · dbl-click
+                    drag · scroll · space+drag · dbl-click · home
                   </span>
                 </>
               )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Billboard, Text } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import * as THREE from "three";
 import {
@@ -10,8 +10,14 @@ import {
   SCALE,
   SNAP_GRID,
 } from "@/features/retro-office/core/constants";
-import { toWorld } from "@/features/retro-office/core/geometry";
+import { screenConstantSize } from "@/features/retro-office/core/cameraMath";
+import {
+  ITEM_FOOTPRINT,
+  getItemRotationRadians,
+  toWorld,
+} from "@/features/retro-office/core/geometry";
 import type {
+  FurnitureItem,
   OfficeAgent,
   RenderAgent,
 } from "@/features/retro-office/core/types";
@@ -272,6 +278,76 @@ export function DeskNameplates({
           </Billboard>
         );
       })}
+    </>
+  );
+}
+
+const HIGHLIGHT_LIME = "#CDF252";
+const HIGHLIGHT_KEY = "#E1642D";
+
+/** Rings on the floor under the hovered and the selected agent, and a pad under
+ *  the hovered desk. The rings keep a constant size on screen, so they read the
+ *  same from the whole-floor view down to a single desk. */
+export function FloorHighlights({
+  hoveredAgentId,
+  selectedAgentId,
+  hoveredDesk,
+  agentLookupRef,
+}: {
+  hoveredAgentId: string | null;
+  selectedAgentId: string | null;
+  hoveredDesk: FurnitureItem | null;
+  agentLookupRef: RefObject<Map<string, RenderAgent>>;
+}) {
+  const { camera } = useThree();
+  const hoverRef = useRef<THREE.Mesh>(null);
+  const selectedRef = useRef<THREE.Mesh>(null);
+  const deskPad = useMemo(() => {
+    if (!hoveredDesk) return null;
+    const [w, h] = ITEM_FOOTPRINT[hoveredDesk.type] ?? [60, 47];
+    const [wx, , wz] = toWorld(hoveredDesk.x, hoveredDesk.y);
+    return {
+      position: [wx, 0.012, wz] as [number, number, number],
+      rotationY: getItemRotationRadians(hoveredDesk),
+      size: [(hoveredDesk.w ?? w) * SCALE + 0.16, (hoveredDesk.h ?? h) * SCALE + 0.16] as [number, number],
+    };
+  }, [hoveredDesk]);
+
+  useFrame(() => {
+    const zoom = camera instanceof THREE.OrthographicCamera ? camera.zoom : 60;
+    const place = (mesh: THREE.Mesh | null, agentId: string | null, px: number) => {
+      if (!mesh) return;
+      const agent = agentId ? agentLookupRef.current?.get(agentId) : undefined;
+      mesh.visible = Boolean(agent);
+      if (!agent) return;
+      const [wx, , wz] = toWorld(agent.x, agent.y);
+      mesh.position.set(wx, 0.014, wz);
+      mesh.scale.setScalar(screenConstantSize(px, zoom, 0.5));
+    };
+    place(hoverRef.current, hoveredAgentId, 64);
+    place(selectedRef.current, selectedAgentId === hoveredAgentId ? null : selectedAgentId, 72);
+  });
+
+  return (
+    <>
+      <mesh ref={hoverRef} rotation={[-Math.PI / 2, 0, 0]} visible={false} renderOrder={1}>
+        <ringGeometry args={[0.4, 0.5, 40]} />
+        <meshBasicMaterial color={HIGHLIGHT_LIME} transparent opacity={0.9} depthWrite={false} />
+      </mesh>
+      <mesh ref={selectedRef} rotation={[-Math.PI / 2, 0, 0]} visible={false} renderOrder={1}>
+        <ringGeometry args={[0.42, 0.5, 40]} />
+        <meshBasicMaterial color={HIGHLIGHT_KEY} transparent opacity={0.9} depthWrite={false} />
+      </mesh>
+      {deskPad ? (
+        <mesh
+          position={deskPad.position}
+          rotation={[-Math.PI / 2, 0, deskPad.rotationY]}
+          renderOrder={1}
+        >
+          <planeGeometry args={deskPad.size} />
+          <meshBasicMaterial color={HIGHLIGHT_LIME} transparent opacity={0.22} depthWrite={false} />
+        </mesh>
+      ) : null}
     </>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { useStore, type Agent } from '@/store/store';
 import { buildSpawnCommand, inferAgentProvider, tokenizeCommand, type HarnessConfig } from '@/store/config';
 import { roleForHiveSpawn } from '@shared/agentRole';
+import { firedStillOnFloor } from '@shared/fireRequest';
 
 /** "Restore team" — respawn every worker from the previous session.
  *
@@ -75,6 +76,11 @@ export function useRestoreTeam(config?: HarnessConfig | null): RestoreTeamState 
     note = null;
     emit();
     const prevSel = useStore.getState().selectedId;
+    // Someone fired these from the hive side (Ramon, voice): archive the card
+    // instead of respawning it. Main refuses the spawn anyway.
+    const reg = await window.cth.hiveRegistry().catch(() => null);
+    const fired = reg ? firedStillOnFloor(reg, { restorable: useStore.getState().restorableAgents }) : [];
+    for (const id of fired) useStore.getState().archiveAgent(id);
     const restorableAgents = useStore.getState().restorableAgents;
     // Tally every agent's outcome so the run ALWAYS leaves a visible trace — the
     // original bug was that every failure path was console-only, so a click that

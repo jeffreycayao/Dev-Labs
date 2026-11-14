@@ -1740,6 +1740,10 @@ export class HiveManager {
     const spawnQueueLine = meta.isGod && this.orchestratorMaySpawn()
       ? `SPAWNING AN AGENT: write ONE JSON file into ${inRoot('spawn-requests')}/<id>.json. Required: \`objective\` (what the agent must do) and \`cwd\` (the repo it runs in). Optional: \`name\`, \`command\`, \`provider\`, \`model\`, \`isolate\` (default true = its own git worktree), \`tokenCap\`, and \`slack\` ({channel, thread_ts}) to route failures back to a thread. The agent remains hired and available after finishing or becoming idle; only the human or you may explicitly fire it. Set \`ephemeral: true\` ONLY for a clearly one-off worker that should exit and leave the floor when done or after its idle timeout. The harness polls that directory, spawns \`worker-<id>\`, and moves the request to \`spawn-requests/.done/\` on success or \`.failed/\` with a reason. This is the ONLY way you can spawn; a hire manifest under research/hires/ needs the human to confirm it in the UI. Reuse an existing agent first — every new agent is a fresh spend.`
       : '';
+    // Without this Ramon edited registry.json by hand, which the floor never sees.
+    const fireQueueLine = meta.isGod
+      ? `FIRING AN AGENT: write ONE JSON file \`{ "id": "<agent id>" }\` into ${inRoot('fire-requests')}/<id>.json per agent. The harness stops its terminal, marks it archived and moves its card to the Archived section, then moves the request to \`fire-requests/.done/\` (or \`.failed/\` with a reason). Never edit registry.json to fire, and never delete agent folders or memories: firing is an archive the human can undo from the Archived section. You cannot fire yourself.`
+      : '';
     let projectLine = '';
     if (meta.isGod) {
       try {
@@ -1775,6 +1779,7 @@ export class HiveManager {
       projectLine,
       godLine,
       spawnQueueLine,
+      fireQueueLine,
       runtimeLine,
       slackLine,
       ctxLine,
@@ -3526,6 +3531,19 @@ OFF by default, because every worker you start spends tokens nobody approved. Wh
 request is NOT failed or deleted, it waits in \`spawn-requests/\` and runs if the operator turns it on.
 If a request of yours has sat there without moving, that is why, and it is a decision to raise with the
 human rather than retry. Route work to an agent already on the floor first either way.
+
+## Firing an agent (orchestrator)
+Write ONE JSON file per agent into \`fire-requests/<id>.json\` in the hive root:
+
+\`\`\`json
+{ "id": "the agent id from registry.json" }
+\`\`\`
+
+The harness stops the agent's terminal, marks it archived in the registry, moves its card to the
+Archived section of the floor, and moves the request to \`fire-requests/.done/\` (or \`.failed/\` with a
+reason). Firing is an archive, not a deletion: the human can bring the agent back from the Archived
+section, so never delete its folder or memories, and never edit \`registry.json\` to fire (the floor
+does not see that edit). You cannot fire yourself. Unlike spawning, this is always available.
 
 ## Semantic memory (optional — when \`mempalace\` is installed)
 When \`MEMPALACE_PALACE_PATH\` is set in your environment, the hive shares a

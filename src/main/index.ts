@@ -79,7 +79,8 @@ import { DiscordPoller, postDiscordMessage } from './discord';
 import { normalizeDiscordTrigger, DEFAULT_DISCORD_TRIGGER, type DiscordTriggerConfig } from '../shared/discord';
 import type { IntegrationRecord } from '../shared/integrations';
 import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';
-import { RosterStore } from './roster';
+import { RosterStore, rosterPath } from './roster';
+import { firedStillOnFloor, parseFireRequest } from '../shared/fireRequest';
 import { prepareProjectFloorSelections, settingsForFloorSwitch } from './projectFloor';
 import { createFloorBackup, restoreStagedFloor, stageFloorData } from './floorBackup';
 import { buildWorkerLaunch } from './workerLaunch';
@@ -2985,6 +2986,12 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
   // returned to the caller so the renderer records the same absolute path.
   opts.cwd = expandTilde(opts.cwd);
   if (opts.hive) opts.hive = { ...opts.hive, cwd: expandTilde(opts.hive.cwd) };
+  // A fired agent stays fired: registration below resets `archived`, so without
+  // this a Restore Team or boot respawn would quietly rehire it. Rehiring goes
+  // through Unarchive (hive:setArchived false) first.
+  if (opts.hive?.id && hive.registry().agents[opts.hive.id]?.archived) {
+    return { ok: false, error: `${opts.hive.name ?? opts.hive.id} was fired; unarchive them first.` };
+  }
   // Which CLI is this? Explicit wins; else inferred from the binary
   // (claude/codex/grok/agy). Non-Claude providers skip every Claude-only spawn step
   // below. Persist the resolved provider onto opts (+ hive meta) so the registry
@@ -5045,16 +5052,7 @@ registerRealtimeActionIpc({
   controlSteer: (id, text) => control.steer(id, text),
   controlHalt: (id) => control.halt(id),
   controlSnapshot: (id) => control.snapshot(id),
-  killAgent: (id) => {
-    const r = ptyManager.kill(id);
-    if (!r.ok && !/^no pty:/.test(r.error ?? '')) return r;
-    teardownPty(id);
-    if (!hive.setArchived(id, true)) return { ok: false, error: 'Could not save the fire decision.' };
-    // A voice (MAIN-initiated) kill: the renderer never removed the card itself
-    // (unlike a UI kill), so tell the floor to archive it. Mirrors hive:agentSpawned.
-    try { liveWebContents()?.send('hive:agentArchived', { id }); } catch { /* window torn down */ }
-    return r;
-  },
+  killAgent: (id) => fireAgent(id),
   spawnAgent: async (opts) => {
     const o = opts as AgentSpawnOptions;
     const res = await spawnAgentCore(o, null);
@@ -5185,6 +5183,66 @@ interface SpawnRequest {
   accent?: string;
 }
 
+/** The one fire path (voice, Ramon's fire-requests, drift repair): stop the
+ *  terminal, record the decision in the registry, and archive the floor card.
+ *  The renderer never removes the card for a MAIN-initiated fire, so it is told
+ *  to (mirrors hive:agentSpawned). Idempotent: an already-fired agent re-broadcasts. */
+function fireAgent(id: string): { ok: boolean; error?: string } {
+  const r = ptyManager.kill(id);
+  if (!r.ok && !/^no pty:/.test(r.error ?? '')) return r;
+  teardownPty(id);
+  if (!hive.setArchived(id, true)) return { ok: false, error: 'Could not save the fire decision.' };
+  try { liveWebContents()?.send('hive:agentArchived', { id }); } catch { /* window torn down */ }
+  return { ok: true };
+}
+
+/** HIVE_ROOT/fire-requests — the queue god drops `{ "id": "<agent id>" }` into. */
+function fireRequestsDir(): string | null {
+  const root = hive.root();
+  return root ? join(root, 'fire-requests') : null;
+}
+
+/** Fire every queued request. Not behind orchestratorMaySpawn: firing spends
+ *  nothing and is undone from the Archived section. */
+function processFireRequests(): void {
+  const dir = fireRequestsDir();
+  if (!dir || !existsSync(dir)) return;
+  let files: string[] = [];
+  try { files = readdirSync(dir).filter((f) => f.endsWith('.json')).sort(); } catch { return; }
+  for (const f of files) {
+    const fp = join(dir, f);
+    let raw: unknown;
+    try { raw = JSON.parse(readFileSync(fp, 'utf8')); } catch { raw = null; }
+    const req = parseFireRequest(raw, f, hive.registry());
+    const res = req.ok ? fireAgent(req.id) : { ok: false, error: req.reason };
+    if (!res.ok) informGod('[fire rejected]', `Fire-request ${f} rejected: ${res.error}.`);
+    archiveRequest(fp, res.ok ? '.done' : '.failed', dir);
+  }
+}
+
+/** Registry says fired, floor still shows it (registry.json edited by hand, or a
+ *  broadcast the window missed): run the fire path for those ids. Checked when
+ *  either file changes, and again every DRIFT_RETRY_MS while drift remains, since
+ *  a broadcast sent before the renderer listens is lost. */
+const DRIFT_RETRY_MS = 15_000;
+let driftStamp = '';
+let driftCheckedAt = 0;
+let driftPending = false;
+function reconcileFiredAgents(): void {
+  const root = hive.root();
+  const home = readConfig().harnessHome;
+  if (!root || !home || !liveWebContents()) return;
+  const mtime = (p: string): number => { try { return statSync(p).mtimeMs; } catch { return 0; } };
+  const stamp = `${mtime(join(root, 'registry.json'))}:${mtime(rosterPath(home))}`;
+  const now = Date.now();
+  if (stamp === driftStamp && !(driftPending && now - driftCheckedAt >= DRIFT_RETRY_MS)) return;
+  driftStamp = stamp;
+  driftCheckedAt = now;
+  const ids = firedStillOnFloor(hive.registry(), roster.read());
+  driftPending = ids.length > 0;
+  for (const id of ids) fireAgent(id);
+}
+
 /** Polling cadence — matches the hive router. */
 const WORKER_TICK_MS = 1500;
 let workerWatchTimer: ReturnType<typeof setInterval> | null = null;
@@ -5198,8 +5256,7 @@ function spawnRequestsDir(): string | null {
 }
 
 /** Move a processed request out of the queue so it's never reprocessed. */
-function archiveRequest(filePath: string, sub: '.done' | '.failed'): void {
-  const queue = spawnRequestsDir();
+function archiveRequest(filePath: string, sub: '.done' | '.failed', queue = spawnRequestsDir()): void {
   try {
     if (!queue) throw new Error('no hive root');
     const dir = join(queue, sub);
@@ -5464,6 +5521,9 @@ async function ephemeralWorkerTick(): Promise<void> {
   if (workerTickRunning) return;
   workerTickRunning = true;
   try {
+    // (0) Fires first: Ramon's queued fire-requests, then any registry/floor drift.
+    processFireRequests();
+    reconcileFiredAgents();
     const cfg = readConfig();
     const maxWorkers = Math.max(1, cfg.maxConcurrentWorkers ?? 4);
     const idleTimeoutMs = Math.max(1, cfg.workerIdleTimeoutMinutes ?? 20) * 60_000;
@@ -5562,8 +5622,9 @@ async function ephemeralWorkerTick(): Promise<void> {
 
 function startEphemeralWorkerWatcher(): void {
   if (workerWatchTimer || !hive.enabled()) return;
-  const dir = spawnRequestsDir();
-  if (dir) { try { mkdirSync(dir, { recursive: true }); } catch { /* noop */ } }
+  for (const dir of [spawnRequestsDir(), fireRequestsDir()]) {
+    if (dir) { try { mkdirSync(dir, { recursive: true }); } catch { /* noop */ } }
+  }
   workerWatchTimer = setInterval(() => { void ephemeralWorkerTick(); }, WORKER_TICK_MS);
 }
 

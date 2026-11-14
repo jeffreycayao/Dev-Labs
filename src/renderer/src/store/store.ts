@@ -866,7 +866,8 @@ export const useStore = create<State>((set, get) => ({
     }),
   archiveAgent: (id) =>
     set((s) => {
-      const target = s.agents.find((a) => a.id === id);
+      // A restorable-only agent (not yet respawned) can be fired from the hive too.
+      const target = s.agents.find((a) => a.id === id) ?? s.restorableAgents.find((a) => a.id === id);
       if (!target) return s;
       const agents = s.agents.filter((a) => a.id !== id);
       // Retain the PTY id as part of the restore recipe, but clear live run-state.

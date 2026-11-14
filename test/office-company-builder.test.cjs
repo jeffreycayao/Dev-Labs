@@ -9,6 +9,7 @@ const loadTs = require('./load-ts.cjs');
 
 const cb = loadTs('src/shared/office/companyBuilder.ts');
 const { validateFloorManifest } = loadTs('src/shared/floor.ts');
+const { AGENT_TEMPLATES } = loadTs('src/shared/agentTemplates.ts');
 
 const good = {
   companyName: 'Acme Bakery',
@@ -95,6 +96,20 @@ test('names are cleaned, deduped, capped; role count capped', () => {
   assert.equal(new Set(names).size, names.length);
   for (const n of names) assert.ok(n.length <= 40);
   assert.ok(names.includes('dev') && names.includes('dev 2'));
+});
+
+test('preset teams name real templates and become valid floors', () => {
+  const ids = new Set(AGENT_TEMPLATES.map((t) => t.id));
+  assert.ok(cb.COMPANY_PRESETS.some((p) => p.id === 'solo-freelancer'));
+  for (const preset of cb.COMPANY_PRESETS) {
+    for (const id of preset.templateIds) assert.ok(ids.has(id), `${preset.id}: unknown template "${id}"`);
+    assert.equal(new Set(preset.templateIds).size, preset.templateIds.length, `${preset.id}: duplicate template`);
+    const r = cb.presetCompanyFloor(preset.id);
+    assert.equal(r.ok, true, preset.id);
+    assert.equal(r.floor.hires.length, preset.templateIds.length);
+    assert.equal(validateFloorManifest(r.floor).ok, true);
+  }
+  assert.equal(cb.presetCompanyFloor('nope').ok, false);
 });
 
 test('control characters and huge strings are flattened and capped', () => {

@@ -1,0 +1,6 @@
+{
+  "_note": "Pin for tools/sync-agency-agents.cjs. Bump `commit` to a newer sha on github.com/msitarzewski/agency-agents, run the script, review the diff under resources/agency-agents, commit.",
+  "repo": "msitarzewski/agency-agents",
+  "commit": "8ae6164602c95ca78828b148b9052460ee426885",
+  "license": "MIT"
+}

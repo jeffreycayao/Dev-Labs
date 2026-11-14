@@ -78,6 +78,9 @@ extraResources:
     to: LICENSE-ASSETS
   - from: resources/md-slack-reply.cjs
     to: md-slack-reply.cjs
+  # The agency-agents roster (MIT), listed under Add Agent → Agency (src/main/agencyAgents.ts).
+  - from: resources/agency-agents
+    to: agency-agents
   # Bundled MCP connectors (Obsidian, Discord) + their shared stdio loop. Agents
   # launch them with the app's own Node; they require each other as siblings.
   - from: resources/md-mcp-stdio.cjs

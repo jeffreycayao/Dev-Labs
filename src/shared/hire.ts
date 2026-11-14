@@ -26,6 +26,11 @@ import { MAX_AGENT_TOKEN_CAP } from './tokenCaps';
 
 export const HIRE_SPEC_V1 = 'atmt-labs/hire@1';
 
+/** Goal (standing briefing) cap. Room for a full agency-agents persona (the longest
+ *  is ~26k chars before its code templates are dropped); the whole manifest is
+ *  still capped at MAX_BYTES. */
+export const HIRE_GOAL_MAX = 32_000;
+
 /** Skill ids bundled in app resources (the only values a hire manifest may request
  *  in the `skills` field). A manifest can never name an arbitrary skill path —
  *  only these curated, read-only, no-secret skill ids are allowlisted. */
@@ -187,7 +192,7 @@ export function validateHireManifest(raw: unknown): HireValidation {
 
   const name = capped(o.name, 40, 'name', errors, true);
   const description = capped(o.description, 200, 'description', errors);
-  const goal = capped(o.goal, 4000, 'goal', errors);
+  const goal = capped(o.goal, HIRE_GOAL_MAX, 'goal', errors);
   const character = capped(o.character, 24, 'character', errors)?.toLowerCase();
   const accent = capped(o.accent, 24, 'accent', errors)?.toLowerCase();
   const model = capped(o.model, 80, 'model', errors);

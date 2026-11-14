@@ -28,6 +28,7 @@ import { PixelButton } from '@/components/PixelButton';
 import { Icon } from '@/components/Icon';
 import { SidebarSplitter } from '@/components/SidebarSplitter';
 import { acquireTerminal, notifyThemeChangeAll } from '@/components/terminalPool';
+import { startAppTour, startAppTourOnce } from '@/lib/tour';
 import { FullscreenTerminal } from '@/components/FullscreenTerminal';
 import { TaskDetailOverlay } from '@/components/TaskDetailOverlay';
 import { IdePanel } from '@/ide/IdePanel';
@@ -150,6 +151,7 @@ export function App() {
     clearPendingHires();
     setAddAgentOpen(false);
   };
+  useEffect(() => window.cth.onStartTour?.(() => startAppTour()), []);
   useEffect(() => {
     const unsub = window.cth.onHireImport?.((m) => {
       enqueuePendingHires([m]);
@@ -281,7 +283,7 @@ export function App() {
 
   if (!config.onboardingComplete) {
     // Just-onboarded users go straight into the hive they set up — skip the picker.
-    return <OnboardingWizard onComplete={(next) => { setConfig(next); setHiveOpened(true); }} />;
+    return <OnboardingWizard onComplete={(next) => { setConfig(next); setHiveOpened(true); startAppTourOnce(); }} />;
   }
 
   // Launch-time hive picker: on reopen, let the user open their current hive,
@@ -353,6 +355,7 @@ export function App() {
             // harness agents — the user's global Claude theme is never touched.
             void window.cth.updateConfig({ terminalTheme: next });
           }}
+          data-tour="theme"
           data-tip={appThemeNow === 'dark' ? 'Light theme' : 'Dark theme'}
           aria-label="Toggle dark mode"
           style={{
@@ -371,6 +374,7 @@ export function App() {
             (sidebar detail, god Command Center, fullscreen) carries it. */}
         <button
           className="cth-titlebar-nodrag cth-settings-btn cth-tip"
+          data-tour="settings"
           onClick={() => { setSettingsSection(undefined); setSettingsOpen(true); }}
           data-tip="Settings"
           aria-label="Settings"
@@ -422,7 +426,7 @@ export function App() {
         padding: 6,
         gap: 0
       }}>
-        <div style={{ flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
+        <div data-tour="office" style={{ flex: 1, minHeight: 0, minWidth: 0, position: 'relative' }}>
           <OfficeFloor3D />
           <MemoryPanel />
           {agentCount === 0 && godStatus === 'booting' && <MichaelBooting />}
@@ -456,7 +460,7 @@ export function App() {
           viewportWidth={vpWidth}
         />
 
-        <div style={{
+        <div data-tour="sidebar" style={{
           width: sidebarWidth, flexShrink: 0,
           minHeight: 0, display: 'flex', flexDirection: 'column'
         }}>

@@ -380,3 +380,15 @@ canvas, img, svg { image-rendering: pixelated; image-rendering: crisp-edges; }
   text-transform: lowercase !important;
   letter-spacing: -0.01em !important;
 }
+
+/* Guided tour (driver.js) — popover in the office palette, light and dark. */
+.driver-popover { background: var(--cth-paper-100); color: var(--cth-ink-900); border-radius: 2px; box-shadow: 0 0 0 1px var(--cth-ink-300), 0 8px 24px rgba(0,0,0,.25); font-family: var(--cth-font-ui); }
+.driver-popover-title { font-family: var(--cth-font-display); font-size: 14px; }
+.driver-popover-description { color: var(--cth-ink-700); font-size: 13px; line-height: 19px; }
+.driver-popover-progress-text { color: var(--cth-ink-500); }
+.driver-popover-footer button { background: var(--cth-cream-200); color: var(--cth-ink-900); border: none; border-radius: 2px; box-shadow: inset 0 0 0 1px var(--cth-ink-300); text-shadow: none; font-family: var(--cth-font-ui); }
+.driver-popover-footer .driver-popover-next-btn { background: var(--cth-lemon); color: var(--cth-on-accent); }
+.driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: var(--cth-paper-100); }
+.driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: var(--cth-paper-100); }
+.driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: var(--cth-paper-100); }
+.driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: var(--cth-paper-100); }

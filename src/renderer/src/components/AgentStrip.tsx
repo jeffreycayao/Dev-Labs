@@ -82,7 +82,7 @@ export function AgentStrip({ config }: AgentStripProps) {
   }, []);
 
   return (
-    <div style={{
+    <div data-tour="strip" style={{
       display: 'flex',
       gap: 8,
       padding: '6px 12px',
@@ -232,16 +232,17 @@ export function AgentStrip({ config }: AgentStripProps) {
           })()}
         </div>
       ))}
-      <PixelButton
-        variant="secondary"
-        size="lg"
-        style={{ alignSelf: 'center', flexShrink: 0 }}
-        onClick={() => setAddAgentOpen(true)}
-      >
-        <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', whiteSpace: 'nowrap' }}>
-          <Icon name="plus" /> {t('agentStrip.addAgent')}
-        </span>
-      </PixelButton>
+      <span data-tour="add-agent" style={{ alignSelf: 'center', flexShrink: 0, display: 'inline-flex' }}>
+        <PixelButton
+          variant="secondary"
+          size="lg"
+          onClick={() => setAddAgentOpen(true)}
+        >
+          <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', whiteSpace: 'nowrap' }}>
+            <Icon name="plus" /> {t('agentStrip.addAgent')}
+          </span>
+        </PixelButton>
+      </span>
       {/* ONE restore control, pinned to the strip's right edge. Busy (manual OR
           boot auto-restore) collapses to a single disabled "restoring your
           team…"; otherwise the button opens an upward dropdown listing last

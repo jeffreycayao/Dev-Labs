@@ -12,6 +12,7 @@
  */
 import { validateFloorManifest, FLOOR_SPEC_V1, type FloorManifest } from '../floor';
 import { HIRE_SPEC_V1 } from '../hire';
+import { AGENT_TEMPLATES } from '../agentTemplates';
 
 export const COMPANY_MAX_DESCRIPTION = 4000;
 export const COMPANY_MAX_ROLES = 8;
@@ -93,6 +94,42 @@ export function parseCompanyPlan(reply: unknown): CompanyPlanResult {
     hires
   });
   if (!v.ok || !v.floor) return { ok: false, error: `The plan could not be used: ${v.errors.join('; ')}` };
+  return { ok: true, floor: v.floor, consentRequired: v.consentRequired };
+}
+
+// ─── preset teams ─────────────────────────────────────────────────────────────
+
+/** A ready-made team assembled from the built-in role templates. No LLM call:
+ *  the hires ARE the templates, so they carry nothing a template doesn't. */
+export interface CompanyPreset {
+  id: string;
+  name: string;
+  description: string;
+  /** Ids from AGENT_TEMPLATES, in floor order. */
+  templateIds: readonly string[];
+}
+
+export const COMPANY_PRESETS: readonly CompanyPreset[] = [
+  {
+    id: 'solo-freelancer',
+    name: 'Solo freelancer',
+    description: 'One developer, many clients: someone to qualify leads, write the proposal, read the contract, guard the scope, build and test, hand the project over, send the invoice and turn the result into the next client.',
+    templateIds: [
+      'client-relations', 'proposal-writer', 'contract-reviewer', 'scope-guardian',
+      'sr-programmer', 'qa-tester', 'handover-writer', 'invoicing-assistant', 'portfolio-writer'
+    ]
+  }
+];
+
+/** A preset → the same validated floor the LLM path produces. */
+export function presetCompanyFloor(presetId: string): CompanyPlanResult {
+  const preset = COMPANY_PRESETS.find((x) => x.id === presetId);
+  if (!preset) return { ok: false, error: `Unknown team preset "${presetId}".` };
+  const hires = preset.templateIds
+    .map((id) => AGENT_TEMPLATES.find((tpl) => tpl.id === id)?.manifest)
+    .filter((m) => m !== undefined);
+  const v = validateFloorManifest({ spec: FLOOR_SPEC_V1, name: preset.name, description: preset.description, hires });
+  if (!v.ok || !v.floor) return { ok: false, error: `The preset could not be used: ${v.errors.join('; ')}` };
   return { ok: true, floor: v.floor, consentRequired: v.consentRequired };
 }
 

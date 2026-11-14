@@ -15,7 +15,7 @@
 
 export type PromptCategory =
   | 'management' | 'engineering' | 'security' | 'marketing' | 'sales'
-  | 'support' | 'research' | 'operations' | 'hr' | 'finance' | 'general';
+  | 'support' | 'research' | 'operations' | 'hr' | 'finance' | 'freelance' | 'general';
 
 export const PROMPT_CATEGORIES: { id: PromptCategory; label: string }[] = [
   { id: 'management', label: 'Management' },
@@ -28,6 +28,7 @@ export const PROMPT_CATEGORIES: { id: PromptCategory; label: string }[] = [
   { id: 'operations', label: 'Operations' },
   { id: 'hr', label: 'HR' },
   { id: 'finance', label: 'Finance' },
+  { id: 'freelance', label: 'Freelance' },
   { id: 'general', label: 'General' }
 ];
 
@@ -58,12 +59,20 @@ const TITLE_MAP: Record<string, PromptCategory> = {
   'market researcher': 'research',
   'operations / admin assistant': 'operations',
   'hr & recruitment': 'hr',
-  'finance / bookkeeper': 'finance'
+  'finance / bookkeeper': 'finance',
+  'scope guardian': 'freelance',
+  'project handover specialist': 'freelance',
+  'client relations manager': 'freelance',
+  'proposal & quote writer': 'freelance',
+  'contract reviewer': 'freelance',
+  'invoicing & collections assistant': 'freelance',
+  'portfolio & case study writer': 'freelance'
 };
 
 /** Keyword rules, in tie-break priority order. */
 const KEYWORDS: [PromptCategory, RegExp][] = [
   ['security', /\b(secur\w*|audit\w*|pentest\w*|vulnerab\w*|appsec|infosec|compliance)\b/gi],
+  ['freelance', /\b(freelanc\w*|proposals?|quot(?:e|es|ation)|contracts?|clauses?|scope creep|change requests?|handover|portfolio|case stud(?:y|ies)|upwork|fiverr)\b/gi],
   ['sales', /\b(sales|sell\w*|lead\s?gen\w*|leads?|prospect\w*|closer|account exec\w*|bdr|sdr|outreach)\b/gi],
   ['support', /\b(support|customer service|helpdesk|help desk|csr|customer care|tickets?|faq)\b/gi],
   ['marketing', /\b(marketing|marketer|social media|content|copy\w*|brand\w*|seo|ads?|campaigns?|growth|launch|community|pr)\b/gi],
@@ -171,6 +180,17 @@ export const PROMPTS: readonly PromptItem[] = [
   p('finance', 'expenses', 'Categorize expenses', 'Categorize these expenses into clear categories and total each: {paste or file}.'),
   p('finance', 'budget', 'Budget plan', 'Draft a {monthly/quarterly} budget for {team/business} based on {last period data}, with a short explanation of each line.'),
   p('finance', 'invoice', 'Invoice / quote draft', 'Draft an invoice/quotation for {client} for {items/services}, with VAT {inclusive/exclusive} and payment terms.'),
+
+  // Freelance — running a one-person business: clients, proposals, contracts, getting paid.
+  p('freelance', 'qualify', 'Qualify a new lead', 'New inquiry from {client}: "{paste message}". Draft the discovery questions I should ask, then a one-page brief template: the problem, what done looks like, budget range, deadline, who decides, red flags, and a take / decline / refer recommendation.'),
+  p('freelance', 'proposal', 'Proposal with a three-option quote', 'Write a proposal for {client} from this brief: {paste brief}. Their situation first, then our approach, proof, deliverables and timeline, then a quote with three options (lean, recommended, full) at {rate}/hour, with assumptions and exclusions. One page. Drafts only.'),
+  p('freelance', 'contract', 'Review a contract before I sign', 'Review this contract: {paste or path}. I am the {freelancer / vendor}. Summarise the key terms, rank risky clauses high/medium/low with the exact text and a plain explanation, list missing terms, and give me the top 3 changes to ask for. Not legal advice; tell me if I should see a lawyer.'),
+  p('freelance', 'scope', 'Is this in scope?', 'The client asked for: "{request}". Our agreed scope: {paste SOW / ticket}. Say whether it is in scope. If not, draft a change request with the extra hours, cost at {rate}/hour and the effect on the deadline.'),
+  p('freelance', 'invoice', 'Invoice from my work log', 'Turn this work log into time entries (quarter-hour steps, one-line narratives a client can read) and an invoice draft for {client} for {period} at {rate}/hour: {paste log}.'),
+  p('freelance', 'reminders', 'Payment reminder sequence', 'Invoice {number} for {client} ({amount}) was due on {date}. Draft three reminders: friendly (due date), firm (7 days late), final (30 days late, citing the late-fee clause if {contract clause}). Short and polite; I will send them.'),
+  p('freelance', 'handover', 'Handover pack', 'Write the handover pack for {project}: what was built, setup and deploy steps, how to run the tests, where things live, open items with owners, and a plain-language summary for the client. Verify each step against the repo. No secrets in the document.'),
+  p('freelance', 'case-study', 'Case study from a finished project', 'Write a case study for {project}: the problem, what we did, the result with numbers, and a short testimonial request I can send to {client}. Then 3 LinkedIn posts from it. Do not name the client until I confirm their permission.'),
+  p('freelance', 'week', 'Freelance week in review', 'Summarise my week: billable vs unbilled hours, invoices sent and still unpaid, proposals open, scope changes, and 3 things to do next week to bring in the next client.'),
 
   // General — any agent
   p('general', 'status', 'What are you working on?', 'What are you working on right now, how far along are you, and is anything blocking you?'),

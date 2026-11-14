@@ -9,6 +9,7 @@ import {
   createDefaultAgentAvatarProfile,
 } from "@/lib/avatars/profile";
 import { RunningAvatarLoader } from "@/features/office/avatar/RunningAvatarLoader";
+import { AvatarHair, darker, useFaceTexture } from "@/features/office/avatar/figureParts";
 
 const PreviewFigure = ({
   profile,
@@ -39,8 +40,9 @@ const PreviewFigure = ({
   const shoeColor = profile.clothing.shoesColor;
   const hairColor = profile.hair.color;
   const accessoryColor = topColor;
-  const sleeveColor = profile.clothing.topStyle === "jacket" ? "#dbe4ff" : topColor;
+  const sleeveColor = topColor;
   const cuffColor = profile.clothing.topStyle === "hoodie" ? "#d1d5db" : sleeveColor;
+  const faceTexture = useFaceTexture(skin);
 
   return (
     <group ref={groupRef} position={[0, -0.72, 0]} scale={[1.45, 1.45, 1.45]}>
@@ -125,7 +127,7 @@ const PreviewFigure = ({
         <>
           <mesh position={[0, 0.3, 0.056]}>
             <boxGeometry args={[0.202, 0.23, 0.012]} />
-            <meshLambertMaterial color="#1f2937" />
+            <meshLambertMaterial color={darker(topColor, 0.35)} />
           </mesh>
           <mesh position={[0, 0.3, 0.063]}>
             <boxGeometry args={[0.038, 0.21, 0.01]} />
@@ -173,59 +175,15 @@ const PreviewFigure = ({
       </mesh>
       <mesh position={[0, 0.5, 0]}>
         <boxGeometry args={[0.17, 0.17, 0.15]} />
-        <meshLambertMaterial color={skin} />
+        <meshLambertMaterial attach="material-0" color={skin} />
+        <meshLambertMaterial attach="material-1" color={skin} />
+        <meshLambertMaterial attach="material-2" color={skin} />
+        <meshLambertMaterial attach="material-3" color={skin} />
+        <meshLambertMaterial attach="material-4" map={faceTexture} />
+        <meshLambertMaterial attach="material-5" color={skin} />
       </mesh>
 
-      {profile.hair.style === "short" ? (
-        <mesh position={[0, 0.59, 0]}>
-          <boxGeometry args={[0.18, 0.05, 0.15]} />
-          <meshLambertMaterial color={hairColor} />
-        </mesh>
-      ) : null}
-      {profile.hair.style === "parted" ? (
-        <>
-          <mesh position={[0, 0.585, 0]}>
-            <boxGeometry args={[0.18, 0.045, 0.15]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[-0.03, 0.62, 0.01]} rotation={[0.1, 0, -0.2]}>
-            <boxGeometry args={[0.12, 0.03, 0.08]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-        </>
-      ) : null}
-      {profile.hair.style === "spiky" ? (
-        <>
-          <mesh position={[0, 0.58, 0]}>
-            <boxGeometry args={[0.17, 0.035, 0.14]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[-0.05, 0.62, 0]} rotation={[0, 0, -0.2]}>
-            <boxGeometry args={[0.04, 0.06, 0.04]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[0, 0.635, 0]}>
-            <boxGeometry args={[0.04, 0.08, 0.04]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[0.05, 0.62, 0]} rotation={[0, 0, 0.2]}>
-            <boxGeometry args={[0.04, 0.06, 0.04]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-        </>
-      ) : null}
-      {profile.hair.style === "bun" ? (
-        <>
-          <mesh position={[0, 0.58, 0]}>
-            <boxGeometry args={[0.18, 0.04, 0.15]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[0, 0.63, -0.03]}>
-            <sphereGeometry args={[0.045, 16, 16]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-        </>
-      ) : null}
+      <AvatarHair style={profile.hair.style} color={hairColor} y={0.5} size={[0.17, 0.17, 0.15]} />
 
       {profile.accessories.hatStyle === "cap" ? (
         <>

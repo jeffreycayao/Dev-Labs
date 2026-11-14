@@ -2,11 +2,10 @@
 // from the original roster (sprites + saved teams key on them); only the
 // user-facing displayName/blurb are localized to Filipino names.
 //
-// Both the static portraits (cards / picker) and the in-scene walking sprites are
-// now fully custom-drawn from the same per-character recipes in portraitArt.ts:
-// the scene sprite reuses the portrait's exact head/face/clothing and adds legs,
-// so an agent on the office floor looks identical to its card. The LimeZu base
-// sheets are no longer used for the cast. See assets/ATTRIBUTION.md.
+// The static portraits (cards / picker) are custom-drawn from per-character
+// recipes in portraitArt.ts; the 3D office derives each agent's default mesh
+// look (skin, hair, outfit) from the same recipe, so the floor matches the
+// card. No LimeZu art is used for the cast. See assets/ATTRIBUTION.md.
 
 import { paintPortrait } from './portraitArt';
 
@@ -60,6 +59,7 @@ export async function paintCastPortrait(
   ctx: CanvasRenderingContext2D,
   name: OfficeCharacterName,
   scale = 2,
+  clear = true,
 ): Promise<void> {
-  paintPortrait(ctx, name, scale);
+  paintPortrait(ctx, name, scale, clear);
 }

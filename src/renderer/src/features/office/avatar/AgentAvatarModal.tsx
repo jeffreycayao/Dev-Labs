@@ -26,6 +26,7 @@ export function AgentAvatarModal({ agent, onClose }: { agent: Agent; onClose: ()
         <AgentAvatarEditorPanel
           agentId={agent.id}
           agentName={agent.name}
+          character={agent.character}
           initialProfile={agent.avatarProfile}
           onSave={(profile) => useStore.getState().updateAgent(agent.id, { avatarProfile: profile })}
           onSaved={onClose}

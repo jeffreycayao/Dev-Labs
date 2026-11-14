@@ -1,8 +1,11 @@
 import { Billboard, Html, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { memo, useEffect, useMemo, useRef } from "react";
+import { memo, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { createDefaultAgentAvatarProfile } from "@/lib/avatars/profile";
+import { AvatarHair, darker, useFaceTexture } from "@/features/office/avatar/figureParts";
+import { useStore } from "@/store/store";
+import { agentStatusBadge } from "@/lib/avatars/statusBadge";
 import {
   AGENT_SCALE,
   WALK_ANIM_SPEED,
@@ -43,6 +46,24 @@ const HTML_BUBBLE_STYLE = {
   WebkitLineClamp: MAX_SPEECH_BUBBLE_LINES,
   overflow: "hidden",
 } as const;
+// Status badge over the head: screen-space HTML, so it is the same 9px pill at
+// every camera zoom (the office zooms 25–220) and stays readable at the default.
+const STATUS_BADGE_STYLE = {
+  display: "flex",
+  alignItems: "center",
+  gap: 4,
+  padding: "1px 6px 1px 4px",
+  borderRadius: 999,
+  border: "1px solid",
+  background: "rgba(8, 12, 20, 0.92)",
+  color: "#f8fafc",
+  font: "700 9px/1.4 var(--cth-font-ui, Inter, system-ui, sans-serif)",
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.4)",
+} as const;
+const STATUS_BADGE_DOT_STYLE = { width: 6, height: 6, borderRadius: 999, flexShrink: 0 } as const;
 const HTML_BUBBLE_TAIL_STYLE = {
   width: 0,
   height: 0,
@@ -125,13 +146,22 @@ export const AgentModel = memo(function AgentModel({
   const heldScrubberRef = useRef<THREE.Group>(null);
   const speechBubbleRef = useRef<THREE.Group>(null);
   const htmlBubbleRef = useRef<HTMLDivElement>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
+  const badgeDotRef = useRef<HTMLSpanElement>(null);
+  const badgeTextRef = useRef<HTMLSpanElement>(null);
+  const badgeKeyRef = useRef("");
   const speechBubbleMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const awayBubbleRef = useRef<THREE.Group>(null);
   const bodyMatRef = useRef<THREE.MeshLambertMaterial>(null);
   const pos = useRef(new THREE.Vector3(0, 0, 0));
+  // No saved avatar: dress the figure like its portrait, so the floor matches
+  // the card. (The janitor is not on the roster and keeps the seeded look.)
+  const character = useStore(
+    (state) => state.agents.find((entry) => entry.id === agentId)?.character ?? null,
+  );
   const resolvedAppearance = useMemo(
-    () => appearance ?? createDefaultAgentAvatarProfile(agentId),
-    [agentId, appearance],
+    () => appearance ?? createDefaultAgentAvatarProfile(agentId, character),
+    [agentId, appearance, character],
   );
 
   useFrame(() => {
@@ -156,6 +186,7 @@ export const AgentModel = memo(function AgentModel({
       ? (agent as RenderAgent & JanitorActor).janitorTool
       : undefined;
     const workoutStyle = agent.workoutStyle ?? "lift";
+    const typing = agent.state === "sitting" && agent.status === "working";
     const frameValue = agent.frame + (agent.phaseOffset ?? 0) / WALK_ANIM_SPEED;
     const walkPhase = Math.sin(frameValue * WALK_ANIM_SPEED);
     const workoutPhase = Math.sin(
@@ -260,7 +291,9 @@ export const AgentModel = memo(function AgentModel({
         leftArmRef.current.rotation.x =
           0.2 + Math.sin(agent.frame * 0.08) * 0.28;
       } else if (agent.state === "sitting") {
-        leftArmRef.current.rotation.x = 0.3;
+        leftArmRef.current.rotation.x = typing
+          ? 0.28 + Math.sin(agent.frame * 0.55 + (agent.phaseOffset ?? 0)) * 0.07
+          : 0.3;
       }
     }
     if (rightArmRef.current) {
@@ -319,7 +352,9 @@ export const AgentModel = memo(function AgentModel({
         rightArmRef.current.rotation.x =
           0.08 - Math.sin(agent.frame * 0.08) * 0.16;
       } else if (agent.state === "sitting") {
-        rightArmRef.current.rotation.x = 0.3;
+        rightArmRef.current.rotation.x = typing
+          ? 0.28 + Math.cos(agent.frame * 0.55 + (agent.phaseOffset ?? 0)) * 0.07
+          : 0.3;
       }
     }
     if (leftLegRef.current) {
@@ -393,6 +428,18 @@ export const AgentModel = memo(function AgentModel({
     }
 
     if (awayBubbleRef.current) awayBubbleRef.current.visible = isAway;
+    if (badgeRef.current && badgeDotRef.current && badgeTextRef.current) {
+      // Same reading as the nameplate dot; the "z z z" bubble covers the away case.
+      const badge = agentStatusBadge(agent.status, agent.state);
+      const key = isAway ? "away" : badge.label;
+      if (key !== badgeKeyRef.current) {
+        badgeKeyRef.current = key;
+        badgeRef.current.style.display = isAway ? "none" : "flex";
+        badgeRef.current.style.borderColor = badge.color;
+        badgeDotRef.current.style.background = badge.color;
+        badgeTextRef.current.textContent = badge.label;
+      }
+    }
     if (bodyMatRef.current) bodyMatRef.current.opacity = isAway ? 0.45 : 1;
     if (groupRef.current) {
       groupRef.current.traverse((child) => {
@@ -621,37 +668,11 @@ export const AgentModel = memo(function AgentModel({
   const showHeadset = resolvedAppearance.accessories.headset;
   const showBackpack = resolvedAppearance.accessories.backpack;
   const accessoryColor = topColor;
-  const sleeveColor = topStyle === "jacket" ? "#dbe4ff" : topColor;
+  const sleeveColor = topColor;
   const cuffColor = topStyle === "hoodie" ? "#d1d5db" : sleeveColor;
-  const topAccentColor = topStyle === "jacket" ? "#1f2937" : cuffColor;
-
-  const faceTexture = useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return new THREE.CanvasTexture(canvas);
-
-    ctx.fillStyle = skin;
-    ctx.fillRect(0, 0, 64, 64);
-    ctx.fillStyle = "rgba(255,255,255,0.14)";
-    ctx.fillRect(0, 0, 64, 10);
-    ctx.fillStyle = "rgba(196,122,84,0.18)";
-    ctx.beginPath();
-    ctx.arc(18, 38, 7, 0, Math.PI * 2);
-    ctx.arc(46, 38, 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#d8a06e";
-    ctx.fillRect(30, 28, 4, 10);
-    ctx.fillRect(29, 37, 6, 2);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.needsUpdate = true;
-    return texture;
-  }, [skin]);
-  // r3f does not dispose a texture passed as `map`; free it with the agent.
-  useEffect(() => () => faceTexture.dispose(), [faceTexture]);
+  const topAccentColor = topStyle === "jacket" ? darker(topColor, 0.35) : cuffColor;
+  // Pixel-art face (nearest filter, sRGB), one per skin colour, disposed with the agent.
+  const faceTexture = useFaceTexture(skin);
 
   const resolvedSpeechText =
     showSpeech && speechText?.trim()
@@ -945,56 +966,7 @@ export const AgentModel = memo(function AgentModel({
         <meshLambertMaterial attach="material-4" map={faceTexture} />
         <meshLambertMaterial attach="material-5" color={skin} />
       </mesh>
-      {hairStyle === "short" ? (
-        <mesh position={[0, 0.555, 0]}>
-          <boxGeometry args={[0.17, 0.05, 0.15]} />
-          <meshLambertMaterial color={hairColor} />
-        </mesh>
-      ) : null}
-      {hairStyle === "parted" ? (
-        <>
-          <mesh position={[0, 0.555, 0]}>
-            <boxGeometry args={[0.17, 0.045, 0.15]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[-0.035, 0.59, 0.01]} rotation={[0.1, 0, -0.2]}>
-            <boxGeometry args={[0.12, 0.03, 0.08]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-        </>
-      ) : null}
-      {hairStyle === "spiky" ? (
-        <>
-          <mesh position={[0, 0.55, 0]}>
-            <boxGeometry args={[0.16, 0.035, 0.14]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[-0.05, 0.59, 0]} rotation={[0, 0, -0.2]}>
-            <boxGeometry args={[0.04, 0.06, 0.04]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[0, 0.605, 0]} rotation={[0, 0, 0]}>
-            <boxGeometry args={[0.04, 0.08, 0.04]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[0.05, 0.59, 0]} rotation={[0, 0, 0.2]}>
-            <boxGeometry args={[0.04, 0.06, 0.04]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-        </>
-      ) : null}
-      {hairStyle === "bun" ? (
-        <>
-          <mesh position={[0, 0.548, 0]}>
-            <boxGeometry args={[0.17, 0.04, 0.15]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[0, 0.6, -0.035]}>
-            <sphereGeometry args={[0.042, 14, 14]} />
-            <meshLambertMaterial color={hairColor} />
-          </mesh>
-        </>
-      ) : null}
+      <AvatarHair style={hairStyle} color={hairColor} y={0.47} size={[0.16, 0.16, 0.14]} />
       {hatStyle === "cap" ? (
         <>
           <mesh position={[0, 0.59, 0]}>
@@ -1124,7 +1096,7 @@ export const AgentModel = memo(function AgentModel({
             <meshBasicMaterial color={color} />
           </mesh>
           <mesh position={[0.355, subtitleText ? 0.05 : 0, 0]}>
-            <circleGeometry args={[0.052, 14]} />
+            <circleGeometry args={[0.062, 14]} />
             <meshBasicMaterial ref={statusDotMatRef} color="#ef4444" />
           </mesh>
           <Text
@@ -1154,6 +1126,14 @@ export const AgentModel = memo(function AgentModel({
           ) : null}
         </Billboard>
       ) : null}
+      {activeSpeechBubble ? null : (
+        <Html position={[0, 1.45, 0]} center zIndexRange={[20, 10]} pointerEvents="none">
+          <div ref={badgeRef} style={{ ...STATUS_BADGE_STYLE, display: "none" }}>
+            <span ref={badgeDotRef} style={STATUS_BADGE_DOT_STYLE} />
+            <span ref={badgeTextRef} />
+          </div>
+        </Html>
+      )}
       <group ref={awayBubbleRef} visible={false}>
         <Billboard position={[0, 1.3, 0]}>
           <mesh position={[0, 0, -0.001]}>

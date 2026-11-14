@@ -21,10 +21,10 @@ drawn on the office floor. Nothing else in this directory is LimeZu art.
 
 ## The Office cast is *not* LimeZu art
 
-Every character, meaning the card portraits and the walking sprites on the office floor, is drawn
-procedurally in [`scene/office/portraitArt.ts`](../scene/office/portraitArt.ts) from per-character
-recipes. These are original, fully custom-drawn busts, not recolours of anyone else's sprites, and
-they carry no third-party licence.
+Every character portrait is drawn procedurally in
+[`scene/office/portraitArt.ts`](../scene/office/portraitArt.ts) from per-character recipes, and the
+3D office builds each agent's mesh figure from the same recipe. These are original, fully
+custom-drawn, not recolours of anyone else's sprites, and they carry no third-party licence.
 
 This was not always true. The cast was once recoloured from LimeZu's `Adam/Alex/Amelia/Bob` walk
 sheets; those sheets were deleted on 2026-08-20 once nothing referenced them any more. If you are

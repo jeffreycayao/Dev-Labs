@@ -1,4 +1,8 @@
-export type AgentAvatarHairStyle = "short" | "parted" | "spiky" | "bun";
+import type { OfficeCharacterName } from "@/scene/office/cast";
+import { characterLook } from "@/scene/office/portraitArt";
+
+export type AgentAvatarHairStyle =
+  | "short" | "parted" | "spiky" | "bun" | "long" | "curly" | "bald";
 export type AgentAvatarTopStyle = "tee" | "hoodie" | "jacket";
 export type AgentAvatarBottomStyle = "pants" | "shorts" | "cuffed";
 export type AgentAvatarHatStyle = "none" | "cap" | "beanie";
@@ -53,6 +57,9 @@ export const AGENT_AVATAR_HAIR_STYLE_OPTIONS: EnumOption<AgentAvatarHairStyle>[]
   { id: "parted", label: "Parted" },
   { id: "spiky", label: "Spiky" },
   { id: "bun", label: "Bun" },
+  { id: "long", label: "Long" },
+  { id: "curly", label: "Curly" },
+  { id: "bald", label: "Bald" },
 ];
 
 export const AGENT_AVATAR_HAIR_COLOR_OPTIONS: ColorOption[] = [
@@ -120,13 +127,16 @@ const hashSeed = (seed: string) => {
 
 const pick = <T,>(values: readonly T[], index: number) => values[index % values.length];
 
+// A swatch id, a swatch hex, or any #rrggbb (character looks use the portrait
+// palette, which is not in the swatch lists).
 const resolveColor = (value: unknown, options: ColorOption[], fallback: string) => {
   const color = coerceString(value).toLowerCase();
   if (!color) return fallback;
   const option =
     options.find((entry) => entry.id === color) ??
     options.find((entry) => entry.color.toLowerCase() === color);
-  return option?.color ?? fallback;
+  if (option) return option.color;
+  return /^#[0-9a-f]{6}$/.test(color) ? color : fallback;
 };
 
 const resolveEnumOption = <T extends string>(
@@ -178,8 +188,36 @@ export const createAgentAvatarProfileFromSeed = (seed: string): AgentAvatarProfi
   };
 };
 
-export const createDefaultAgentAvatarProfile = (seed: string): AgentAvatarProfile =>
-  createAgentAvatarProfileFromSeed(seed);
+/** The office character's portrait look as a 3D profile, so the figure on the
+ *  floor matches the card. The seed keeps the hash-only extras stable. */
+export const createAgentAvatarProfileForCharacter = (
+  character: OfficeCharacterName,
+  seed: string,
+): AgentAvatarProfile => {
+  const look = characterLook(character);
+  const base = createAgentAvatarProfileFromSeed(seed);
+  return {
+    ...base,
+    body: { skinTone: look.skin },
+    hair: { style: look.hairStyle, color: look.hairColor },
+    clothing: {
+      topStyle: look.topStyle,
+      topColor: look.topColor,
+      bottomStyle: "pants",
+      bottomColor: look.bottomColor,
+      shoesColor: AGENT_AVATAR_SHOE_COLOR_OPTIONS[0].color,
+    },
+    accessories: { glasses: look.glasses, headset: false, hatStyle: "none", backpack: false },
+  };
+};
+
+export const createDefaultAgentAvatarProfile = (
+  seed: string,
+  character?: OfficeCharacterName | null,
+): AgentAvatarProfile =>
+  character
+    ? createAgentAvatarProfileForCharacter(character, seed)
+    : createAgentAvatarProfileFromSeed(seed);
 
 export const normalizeAgentAvatarProfile = (
   value: unknown,

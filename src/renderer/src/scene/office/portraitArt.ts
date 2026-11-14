@@ -4,33 +4,28 @@
 // character is an explicit recipe layering skin → clothing → face → facial hair
 // → hairstyle → glasses on an 18×28 canvas. This gives real control over each
 // person's hairstyle shape, garment cut/color, and facial hair so they read as
-// the specific show character. The in-scene walking sprites still use the LimeZu
-// recolor in cast.ts; this module only powers the static portraits in the UI.
+// the specific show character. The 3D office builds its mesh figure from the
+// same recipe through characterLook(), so the floor matches the card.
 
 import type { OfficeCharacterName } from './cast';
+import { rgbToHex, shade } from '../../lib/avatars/palette';
 
 export const PORTRAIT_W = 18;
 export const PORTRAIT_H = 28;
-// In-scene walking sprite: same width + upper body as the portrait, taller to add legs.
-export const SCENE_W = 18;
-export const SCENE_H = 32;
 const OUTLINE: RGB = [38, 34, 46];
 const HX0 = 4, HX1 = 13; // head skin columns
 
 type RGB = [number, number, number];
 type Buf = Uint8ClampedArray;
 
-// Current canvas dims — set per compose() so the same drawing primitives serve
-// both the 18×28 portrait and the 18×32 scene sprite. (Rendering is synchronous.)
+// Current canvas dims, set by compose(). (Rendering is synchronous.)
 let CUR_W = PORTRAIT_W, CUR_H = PORTRAIT_H;
 
-const clamp = (v: number) => (v < 0 ? 0 : v > 255 ? 255 : Math.round(v));
+// Highlight / base / shadow. The multipliers are kept as the knob (1.22 = 22%
+// lighter) but the ramp is hue-shifted, not a flat multiply, so highlights stay
+// warm and shadows stay coloured instead of going chalky or grey.
 function shades(rgb: RGB, dl = 1.22, dd = 0.68): [RGB, RGB, RGB] {
-  return [
-    [clamp(rgb[0] * dl), clamp(rgb[1] * dl), clamp(rgb[2] * dl)],
-    [rgb[0], rgb[1], rgb[2]],
-    [clamp(rgb[0] * dd), clamp(rgb[1] * dd), clamp(rgb[2] * dd)],
-  ];
+  return [shade(rgb, dl - 1), [rgb[0], rgb[1], rgb[2]], shade(rgb, -(1 - dd))];
 }
 
 function set(buf: Buf, x: number, y: number, c: RGB, a = 255): void {
@@ -332,123 +327,6 @@ function collarNeck(buf: Buf, skin: string): void {
   rect(buf, 7, 18, 10, 19, SKIN[skin].sh);
 }
 
-// ─── scene body (full standing figure: torso + legs, front or back) ──────────
-// Proportioned for standing (not the portrait bust): a narrower torso over real
-// legs. Head (rows 2-16) sits above; this draws rows 18-31.
-const SHOE: RGB = [44, 40, 48];
-
-function drawSceneLegs(buf: Buf, pants: RGB, phase: number): void {
-  const [, base, sh] = shades(pants);
-  // two legs cols 5-7 / 10-12, gap at 8-9
-  for (const [lx0, lx1] of [[5, 7], [10, 12]] as const) {
-    rect(buf, lx0, 25, lx1, 30, base);
-    for (let y = 25; y <= 30; y++) set(buf, lx1, y, sh); // inner shade
-  }
-  // feet — lift one foot per walk phase for a simple gait
-  const leftLow = phase !== 1, rightLow = phase !== 2;
-  rect(buf, 5, leftLow ? 31 : 30, 7, leftLow ? 31 : 30, SHOE);
-  rect(buf, 10, rightLow ? 31 : 30, 12, rightLow ? 31 : 30, SHOE);
-}
-
-function drawSceneTorso(buf: Buf, r: Recipe, back: boolean): void {
-  const [hi, base, sh] = shades(r.c1);
-  // shoulders → torso, narrower than the portrait bust (wider + rounder if heavy)
-  if (r.heavy) {
-    rect(buf, 3, 18, 14, 18, base);
-    rect(buf, 2, 19, 15, 19, base);
-    rect(buf, 2, 20, 15, 24, base);
-    for (let y = 20; y <= 24; y++) { set(buf, 2, y, sh); set(buf, 15, y, sh); set(buf, 14, y, sh); }
-  } else {
-    rect(buf, 4, 18, 13, 18, base);
-    rect(buf, 3, 19, 14, 19, base);
-    rect(buf, 4, 20, 13, 24, base);
-    for (let y = 20; y <= 24; y++) { set(buf, 3, y, sh); set(buf, 14, y, sh); set(buf, 13, y, sh); } // arms / right shade
-  }
-  if (back) {
-    // plain back with a collar line + center seam
-    rect(buf, 6, 18, 11, 18, sh);
-    for (let y = 19; y <= 24; y++) set(buf, 8, y, sh);
-    return;
-  }
-  const skin = SKIN[r.skin];
-  if (r.cloth === 'suit') {
-    const white: RGB = [238, 238, 236];
-    for (const [x, y] of [[8, 18], [9, 18], [7, 19], [8, 19], [9, 19], [10, 19], [8, 20], [9, 20]] as const) set(buf, x, y, white);
-    for (const [x, y] of [[6, 19], [7, 20], [11, 19], [10, 20]] as const) set(buf, x, y, sh);
-    if (r.tie) { for (let y = 19; y <= 24; y++) { set(buf, 8, y, r.tie); set(buf, 9, y, r.tie); } set(buf, 8, 19, shades(r.tie)[0]); }
-  } else if (r.cloth === 'dressshirt') {
-    for (const [x, y] of [[6, 18], [7, 18], [10, 18], [11, 18], [7, 19], [10, 19]] as const) set(buf, x, y, sh);
-    if (r.tie) for (let y = 18; y <= 24; y++) { set(buf, 8, y, r.tie); set(buf, 9, y, r.tie); }
-    else for (let y = 20; y <= 24; y += 2) set(buf, 8, y, sh);
-  } else if (r.cloth === 'polo') {
-    for (const [x, y] of [[6, 18], [7, 18], [10, 18], [11, 18]] as const) set(buf, x, y, hi);
-    set(buf, 8, 19, sh); set(buf, 8, 21, sh);
-  } else if (r.cloth === 'blouse') {
-    for (const [x, y] of [[7, 18], [8, 18], [9, 18], [10, 18], [8, 19], [9, 19]] as const) set(buf, x, y, skin.sh);
-    for (let x = 5; x < 13; x++) if (eq(rgbAt(buf, x, 19), base)) set(buf, x, 19, hi);
-  } else if (r.cloth === 'cardigan') {
-    const inner: RGB = r.c2 ? shades(r.c2)[1] : [235, 233, 226];
-    for (let y = 18; y <= 24; y++) { set(buf, 8, y, inner); set(buf, 9, y, inner); }
-    for (const [x, y] of [[6, 18], [7, 18], [10, 18], [11, 18]] as const) set(buf, x, y, sh);
-  } else if (r.cloth === 'sweater') {
-    for (const [x, y] of [[6, 18], [7, 18], [8, 18], [9, 18], [10, 18], [11, 18]] as const) set(buf, x, y, sh);
-  }
-}
-
-/** Back of the head: a rounded hair-covered skull with crown sheen + nape, no face. */
-function drawHeadBack(buf: Buf, r: Recipe): void {
-  const s = SKIN[r.skin];
-  if (r.hair === 'styleBald') { drawHeadBackBald(buf, r); return; }
-  const [hi, base, sh] = shades(r.hairc);
-  // rounded skull silhouette (narrow at crown + nape, full through the middle)
-  const rows: [number, number, number][] = [
-    [2, 6, 11], [3, 5, 12], [4, 4, 13], [5, 4, 13], [6, 4, 13], [7, 4, 13], [8, 4, 13],
-    [9, 4, 13], [10, 4, 13], [11, 4, 13], [12, 4, 13], [13, 5, 12], [14, 6, 11],
-  ];
-  for (const [y, a, b] of rows) rect(buf, a, y, b, y, base);
-  // long styles drape down the sides past the head
-  const len = r.hair === 'styleFrame' ? (r.hairargs?.length ?? 17)
-            : r.hair === 'styleMessy' ? (r.hairargs?.length ?? 9) : 0;
-  for (let y = 11; y <= len; y++) { set(buf, HX0 - 1, y, base); set(buf, HX0, y, base); set(buf, HX1, y, base); set(buf, HX1 + 1, y, base); }
-  // roundness: darken the side edges and the nape
-  for (let y = 4; y <= 12; y++) { set(buf, 4, y, sh); set(buf, 13, y, sh); }
-  for (const [x, y] of [[5, 3], [12, 3], [5, 13], [12, 13], [6, 14], [11, 14]] as const) set(buf, x, y, sh);
-  // crown sheen (rounded top catching the light) + subtle center part
-  for (const [x, y] of [[7, 2], [8, 2], [9, 2], [10, 2], [7, 3], [8, 3], [9, 3]] as const) set(buf, x, y, hi);
-  for (let y = 4; y <= 11; y++) set(buf, 9, y, hi);   // sheen down the crown
-  for (let y = 4; y <= 12; y++) set(buf, 8, y, sh);   // part line
-  // nape + neck (skin)
-  rect(buf, 7, 14, 10, 14, sh);
-  rect(buf, 7, 15, 10, 17, s.sh);
-  rect(buf, 7, 15, 9, 15, s.base);
-}
-
-/** Back of a bald head: a skin skull with a sheen and a low hair fringe ring. */
-function drawHeadBackBald(buf: Buf, r: Recipe): void {
-  const s = SKIN[r.skin];
-  const [shi, sbase, ssh] = shades(s.base, 1.1, 0.82);
-  const rows: [number, number, number][] = [
-    [2, 6, 11], [3, 5, 12], [4, 4, 13], [5, 4, 13], [6, 4, 13], [7, 4, 13], [8, 4, 13],
-    [9, 4, 13], [10, 4, 13], [11, 4, 13], [12, 4, 13], [13, 5, 12], [14, 6, 11],
-  ];
-  for (const [y, a, b] of rows) rect(buf, a, y, b, y, sbase);
-  for (let y = 4; y <= 12; y++) { set(buf, 4, y, ssh); set(buf, 13, y, ssh); }
-  for (const [x, y] of [[7, 2], [8, 2], [9, 2], [8, 3], [9, 4], [9, 5]] as const) set(buf, x, y, shi);
-  // low hair fringe ring around the back/sides
-  const [, base, sh] = shades(r.hairc);
-  for (let x = 4; x <= 13; x++) { set(buf, x, 11, base); set(buf, x, 12, base); }
-  for (const x of [4, 13]) { set(buf, x, 11, sh); set(buf, x, 12, sh); }
-  // nape + neck (skin)
-  rect(buf, 7, 14, 10, 14, s.sh);
-  rect(buf, 7, 15, 10, 17, s.sh);
-  rect(buf, 7, 15, 9, 15, s.base);
-}
-
-function drawSceneBody(buf: Buf, r: Recipe, phase: number, back: boolean): void {
-  drawSceneTorso(buf, r, back);
-  drawSceneLegs(buf, defaultPants(r), phase);
-}
-
 // ─── outline pass ────────────────────────────────────────────────────────────
 function outlinePass(buf: Buf): void {
   const pts: [number, number][] = [];
@@ -535,20 +413,8 @@ function compose(r: Recipe): Buf {
   return buf;
 }
 
-/** Full-body 18×32 scene sprite. `back=false` reuses the portrait's exact face. */
-function composeScene(r: Recipe, phase: number, back: boolean): Buf {
-  CUR_W = SCENE_W; CUR_H = SCENE_H;
-  const buf = new Uint8ClampedArray(SCENE_W * SCENE_H * 4);
-  drawSceneBody(buf, r, phase, back);
-  if (back) drawHeadBack(buf, r);
-  else drawHeadGroup(buf, r);
-  outlinePass(buf);
-  return buf;
-}
-
 // ─── public render ───────────────────────────────────────────────────────────
 const bufCache = new Map<OfficeCharacterName, Buf>();
-const sceneCache = new Map<OfficeCharacterName, SceneFrames>();
 
 function getBuf(name: OfficeCharacterName): Buf {
   let buf = bufCache.get(name);
@@ -559,24 +425,37 @@ function getBuf(name: OfficeCharacterName): Buf {
   return buf;
 }
 
-export interface SceneFrames { front: Buf[]; back: Buf[]; }
+export type CharacterLook = {
+  skin: string;
+  hairColor: string;
+  hairStyle: 'short' | 'parted' | 'spiky' | 'bun' | 'long' | 'curly' | 'bald';
+  topStyle: 'tee' | 'jacket';
+  topColor: string;
+  bottomColor: string;
+  glasses: boolean;
+};
 
-/** Walk-phase frames (stand, step-L, step-R) for the in-scene sprite, front + back. */
-export function sceneFrameBufs(name: OfficeCharacterName): SceneFrames {
-  let frames = sceneCache.get(name);
-  if (!frames) {
-    const r = RECIPES[name] ?? RECIPES.jim;
-    frames = {
-      front: [composeScene(r, 0, false), composeScene(r, 1, false), composeScene(r, 2, false)],
-      back: [composeScene(r, 0, true), composeScene(r, 1, true), composeScene(r, 2, true)],
-    };
-    sceneCache.set(name, frames);
-  }
-  return frames;
+const HAIR_3D: Record<HairStyle, CharacterLook['hairStyle']> = {
+  styleShort: 'short', styleRecede: 'short', styleFloppy: 'parted', styleSpiky: 'spiky',
+  styleBun: 'bun', styleFrame: 'long', styleMessy: 'long', styleCurly: 'curly', styleBald: 'bald',
+};
+
+/** The portrait recipe reduced to what the 3D mesh figure can show. */
+export function characterLook(name: OfficeCharacterName): CharacterLook {
+  const r = RECIPES[name] ?? RECIPES.jim;
+  return {
+    skin: rgbToHex(SKIN[r.skin].base),
+    hairColor: rgbToHex(r.hairc),
+    hairStyle: HAIR_3D[r.hair],
+    topStyle: r.cloth === 'suit' ? 'jacket' : 'tee',
+    topColor: rgbToHex(r.c1),
+    bottomColor: rgbToHex(defaultPants(r)),
+    glasses: Boolean(r.glasses),
+  };
 }
 
 /** Paint a character's procedural portrait onto `ctx`, nearest-neighbor at `scale`. */
-export function paintPortrait(ctx: CanvasRenderingContext2D, name: OfficeCharacterName, scale = 2): void {
+export function paintPortrait(ctx: CanvasRenderingContext2D, name: OfficeCharacterName, scale = 2, clear = true): void {
   const buf = getBuf(name);
   // Stage at 1× on an offscreen canvas, then blit scaled with smoothing off.
   const stage = document.createElement('canvas');
@@ -586,6 +465,6 @@ export function paintPortrait(ctx: CanvasRenderingContext2D, name: OfficeCharact
   img.data.set(buf);
   sctx.putImageData(img, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, PORTRAIT_W * scale, PORTRAIT_H * scale);
+  if (clear) ctx.clearRect(0, 0, PORTRAIT_W * scale, PORTRAIT_H * scale);
   ctx.drawImage(stage, 0, 0, PORTRAIT_W, PORTRAIT_H, 0, 0, PORTRAIT_W * scale, PORTRAIT_H * scale);
 }

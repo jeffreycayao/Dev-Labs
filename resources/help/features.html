@@ -356,7 +356,7 @@
     <li>To change his model later: click Ramon → <b>floor</b> tab → the manager model picker.</li>
   </ol>
   <div class="lbl">Good to know</div>
-  <ul><li>There's one Ramon for all your windows. He can hand work to agents in any window.</li><li>Ramon can also hire <b>short-term helpers</b> for one job. They show in the <b>workers</b> tab and leave by themselves when finished.</li></ul>
+  <ul><li>There's one Ramon for all your windows. He can hand work to agents in any window.</li><li>Ramon can also hire <b>short-term helpers</b> for one job. They show in the <b>workers</b> tab and leave by themselves when finished.</li><li><b>Ask Ramon to fire an agent</b> ("fire Pam") and the agent stops, its programs close and its card moves to <b>Archived</b>. Bring it back from Command Center → <b>Archived</b> → <b>return to floor</b>.</li></ul>
 </section>
 
 <section class="feat searchable" id="hiring">
@@ -545,7 +545,7 @@
     <li>Pick default models in <span class="where">Settings → Agents &amp; Models</span>. New Claude agents start on Opus 5.5 and new Codex agents on GPT-6 Sol unless you change it.</li>
   </ol>
   <div class="lbl">Good to know</div>
-  <ul><li><b>Max turns per run</b> (Agents &amp; Models → Advanced) limits how long one run can go. Blank means unlimited.</li><li>See <a href="#engines-compare">What each AI tool gets</a> for which features each tool supports.</li></ul>
+  <ul><li><b>Max turns per run</b> (Agents &amp; Models → Advanced) limits how long one run can go. Blank means unlimited.</li><li>See <a href="#engines-compare">What each AI tool gets</a> for which features each tool supports.</li><li><b>Your API keys stay with DevLabs.</b> Keys you save in <span class="where">Settings → AI Engines</span> are encrypted on your computer. OpenCode, Crush, Pi and Qwen agents get a temporary pass instead of the key, and DevLabs adds the real key when the request leaves your computer. The one exception, Crush with OpenRouter, is marked in Settings.</li></ul>
 </section>
 
 <section class="feat searchable" id="skills">
@@ -887,13 +887,13 @@
   <p>Levels of the office that each hold up to 15 agents. Ramon always stays on Floor 1.</p>
   <div class="lbl">How to use it</div>
   <ol class="steps">
-    <li>Use the floor bar (bottom right): click <b>Floor 2</b>, <b>Floor 3</b>… to look at another floor.</li>
+    <li>Use the building (bottom right): the floors are stacked like a building, Floor 1 at the bottom. Each floor's windows light up in its agents' status colours. Click a floor to ride the elevator there.</li>
     <li><b>+ Add floor</b> adds an empty one. A new floor also opens by itself when every floor is full.</li>
     <li>Move an agent: select it, then pick the floor in the <b>move … to</b> box.</li>
     <li>Delete an empty floor: view it, press <b>− Delete floor N</b>, confirm.</li>
   </ol>
   <div class="lbl">Good to know</div>
-  <ul><li>Only empty floors can be deleted, and never Floor 1. Deleting a floor never deletes an agent or any work.</li></ul>
+  <ul><li>Only empty floors can be deleted, and never Floor 1. Deleting a floor never deletes an agent or any work.</li><li>With <b>reduce motion</b> on in your system settings, the elevator ride is skipped and the floor changes at once.</li></ul>
 </section>
 
 <section class="feat searchable" id="decorate">
@@ -973,6 +973,16 @@
   </table>
   <div class="lbl">Good to know</div>
   <ul><li>Connectors have their own switches in <span class="where">Settings → Connections</span>; a keyed connector is never on by default.</li></ul>
+</section>
+
+<section class="feat searchable" id="resources">
+  <h3>Resource use <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>A live view of the CPU and memory DevLabs and its agents use, with how many programs each agent runs.</p>
+  <div class="lbl">Where</div>
+  <ol class="steps"><li><span class="where">Settings → General</span> → <b>Resource use</b>.</li></ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Each connection you switch on in <span class="where">Settings → Connections</span> runs once per agent, so fewer connections means lighter agents. Files, Git, Time and Fetch are off by default because Claude Code already has those tools.</li><li>Firing or stopping an agent closes everything it started.</li></ul>
 </section>
 
 <section class="feat searchable" id="updates">

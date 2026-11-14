@@ -244,16 +244,24 @@ CLI shows as an **Install** card in the agent's terminal instead of an error.
 - **Per-agent git worktrees.** Optional isolation so parallel agents never collide on a branch; the base checkout's `node_modules` is linked in.
 - **New project floor.** Settings → General opens a clean floor for an existing repo or folder.
 - **Reset with backup.** Clear a floor's agents, tasks and memory, with an optional restorable ZIP.
+- **A building you can ride.** Floors are stacked like a building with status-lit windows; click one and an elevator takes you there. Smooth zoom and pan, and the scene only redraws when something moves.
+- **Office themes.** Export the layout as one `.office-theme.json`, import one (checked against a strict schema, with a preview, backup and undo), or let your own AI design one.
 
 **Memory and coordination**
 - **The hive**: per-agent memory, atomic-file mailboxes, a shared board, an append-only event log and single-committer git.
 - **Shared memory search** across every agent, plus a knowledge graph of your own documents.
 - **Restart & Continue**: redraw a garbled terminal without losing the conversation.
+- **Agent Browser**: agents drive a real headless Chrome (Vercel's agent-browser) to open, read and use websites, each in its own session. On by default; one switch turns it off.
+- **268 ready-made personas** from agency-agents, plus freelancer roles (client relations, proposals, contracts, invoicing, portfolio) and six DevLabs skills (3D games, Three.js, Anime.js, UI/UX, DevOps, security research).
+- **ATTITUDE.md**: write once how agents should talk to you; every new agent follows it.
 
 **Control and safety**
 - **Human gates**: spend, scope and destructive operations come to you. Steer mid-run or stop gracefully.
 - **Circuit breaker**: a steer → constrain → stop ladder for agents that loop, repeat errors or blow their budget.
 - **Budgets and cost**: per-agent token caps and real cost read from transcripts.
+- **Your keys never reach agents**: every key is encrypted by your OS. Connector keys and AI provider keys (for OpenCode, Crush, Pi, Qwen) go through a local proxy, so agents only get a temporary pass.
+- **Feature switches**: Settings → General → Features turns each optional feature off.
+- **Resource use**: Settings → General shows DevLabs' CPU and memory per agent. Firing an agent closes everything it started, and Ramon can fire agents for you.
 
 **Command Center**
 - Kanban tasks, an **Ask me** inbox for agent questions, weekday schedules, live fleet monitoring, memory search, activity log and Deliveries.
@@ -262,7 +270,7 @@ CLI shows as an **Install** card in the agent's terminal instead of an error.
 
 **Getting work in and out**
 - **Slack and webhooks**: message a channel or POST a webhook, and Ramon picks up the work and replies in the thread. Inbound servers listen on your computer only and are reached through a tunnel.
-- **Voice**: talk to Ramon through OpenAI's Realtime API with your own key, or dictate into the message box with Free Flow (Groq Whisper).
+- **Voice**: talk to Ramon through OpenAI's Realtime API or Google's Gemini Live with your own key, or dictate into the message box with Free Flow (Groq Whisper).
 - **Your language**: English, Simplified Chinese and Arabic, with right-to-left layout for Arabic.
 - **Updates in one click** from the public releases feed; no GitHub account or token needed.
 

@@ -176,7 +176,7 @@ Click **add agent** (end of the bottom strip, or **add** at the top of the offic
 | **import floor…** | Load a whole team from a floor file ([section 11](#11-whole-teams-in-one-file-floor-files)). |
 | **generate one with AI…** | Copy the given text into any AI chat, describe the agent you want, and save its answer as a file to import. |
 
-**Agents stay until you let them go.** If an agent's AI tool stops, its card shows **stopped** but the agent keeps its name, memory and workspace. Use **Restart & Continue** (Command Center → floor tab) or **restore team** to bring it back. An agent only leaves when you (or Ramon) **fire** it. Ramon can also hire short-term helpers for one quick job; those leave by themselves when they finish.
+**Agents stay until you let them go.** If an agent's AI tool stops, its card shows **stopped** but the agent keeps its name, memory and workspace. Use **Restart & Continue** (Command Center → floor tab) or **restore team** to bring it back. An agent only leaves when you (or Ramon) **fire** it. To have Ramon do it, just ask ("fire Pam"): the agent stops, everything it started is closed, and its card moves to **Archived**. Ramon can also hire short-term helpers for one quick job; those leave by themselves when they finish.
 
 **Bringing back a fired agent:** Command Center → **Archived** → **show closed agents** → **return to floor**, then **Restore Team**. It comes back with the same identity and memory.
 
@@ -239,7 +239,7 @@ The small buttons at the top right of the office also include **add** (hire an a
 
 The office holds **up to 15 agents per floor, plus Ramon**, who always stays on Floor 1. The floor bar is at the bottom right of the office:
 
-- Click **Floor 1**, **Floor 2**… to look at another floor. Each shows how many agents it has (for example **4/15**).
+- The floors are stacked like a building, **Floor 1** at the bottom. Click a floor to ride the elevator there. Each floor shows how many agents it has (for example **4/15**), and its windows light up in its agents' status colours.
 - New agents go to the first floor with room. When every floor is full, a new floor opens automatically.
 - **+ Add floor** adds an empty floor.
 - **To move an agent to another floor:** select the agent, then choose the floor in the **move … to** box.

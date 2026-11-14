@@ -1,3 +1,5 @@
-- New: agents can browse the web with Vercel's Agent Browser.
-- Each agent gets its own browser session.
-- Turn it off anytime in Settings → Features or Connections.
+- Talk to Ramon with Google Gemini Live.
+- Ramon can fire agents; nothing is left running.
+- Much lighter with many agents, plus a resource view.
+- Agents never get your AI provider keys.
+- Ride an elevator between office floors.

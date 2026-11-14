@@ -384,3 +384,10 @@
   .ui-btn-ghost { border: 0; background: transparent; color: #c1c9b6; }
   .ui-btn-ghost:hover { background: #232922; }
 }
+
+/* Floor switch (OfficeFloor3D): the office leaves and arrives like an elevator
+   ride. Going up, the floor you leave drops away and the next one comes from above. */
+@keyframes devlabs-floor-leave-down { to { transform: translateY(100%); } }
+@keyframes devlabs-floor-leave-up { to { transform: translateY(-100%); } }
+@keyframes devlabs-floor-arrive-down { from { transform: translateY(-100%); } }
+@keyframes devlabs-floor-arrive-up { from { transform: translateY(100%); } }

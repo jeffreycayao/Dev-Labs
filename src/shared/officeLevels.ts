@@ -85,6 +85,13 @@ export function removeOfficeLevel(state: OfficeLevels, level: number): OfficeLev
   return { count: state.count - 1, byAgent };
 }
 
+/** Floors the elevator display counts through on a ride, ending on the target.
+ *  Long rides skip floors so the count never takes more than maxStops steps. */
+export function elevatorStops(from: number, to: number, maxStops = 6): number[] {
+  const steps = Math.min(Math.abs(to - from), Math.max(1, maxStops));
+  return Array.from({ length: steps }, (_, i) => from + Math.round(((i + 1) * (to - from)) / steps));
+}
+
 /** Storage key for a level's desk assignments. */
 export const levelDesksKey = (level: number): string => `devlabs.office3d.desks.${level}`;
 /** Storage namespace for a level's furniture layout (keys look like `<key>:<namespace>`). */

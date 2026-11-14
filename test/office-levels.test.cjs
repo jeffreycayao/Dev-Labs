@@ -71,3 +71,16 @@ test('deleting a floor drops its saved layout and renumbers the ones above', () 
   const pending = new Set(moves.map(([from]) => from));
   for (const [from, to] of moves) { pending.delete(from); assert.ok(!pending.has(to)); }
 });
+
+test('the elevator counts every floor on a short ride and skips on a long one', () => {
+  assert.deepEqual(lv.elevatorStops(0, 3), [1, 2, 3]);
+  assert.deepEqual(lv.elevatorStops(3, 0), [2, 1, 0]);
+  assert.deepEqual(lv.elevatorStops(2, 2), []);
+  const long = lv.elevatorStops(0, 50, 5);
+  assert.equal(long.length, 5);
+  assert.equal(long[4], 50);
+  for (let i = 1; i < long.length; i++) assert.ok(long[i] > long[i - 1]);
+  const down = lv.elevatorStops(99, 0);
+  assert.equal(down.length, 6);
+  assert.equal(down[5], 0);
+});

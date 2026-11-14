@@ -81,6 +81,7 @@ import type { IntegrationRecord } from '../shared/integrations';
 import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';
 import { RosterStore, rosterPath } from './roster';
 import { firedStillOnFloor, parseFireRequest } from '../shared/fireRequest';
+import { verifyFireRequest } from './fireAuth';
 import { prepareProjectFloorSelections, settingsForFloorSwitch } from './projectFloor';
 import { createFloorBackup, restoreStagedFloor, stageFloorData } from './floorBackup';
 import { buildWorkerLaunch } from './workerLaunch';
@@ -5203,6 +5204,9 @@ function fireRequestsDir(): string | null {
   return root ? join(root, 'fire-requests') : null;
 }
 
+/** Nonces of fire-requests already acted on (replay guard, pruned by age). */
+const usedFireNonces = new Map<string, number>();
+
 /** Fire every queued request. Not behind orchestratorMaySpawn: firing spends
  *  nothing and is undone from the Archived section. */
 function processFireRequests(): void {
@@ -5214,9 +5218,10 @@ function processFireRequests(): void {
     const fp = join(dir, f);
     let raw: unknown;
     try { raw = JSON.parse(readFileSync(fp, 'utf8')); } catch { raw = null; }
-    // Any agent can write this folder; only the orchestrator's own token counts.
-    const token = raw && typeof raw === 'object' ? (raw as { token?: unknown }).token : undefined;
-    const req = parseFireRequest(raw, f, hive.registry(), hive.hookAgent(undefined, token), trustedGodId);
+    // Any agent can write this folder; only a request signed with the
+    // orchestrator's own hook token (by the cth-fire shim) counts.
+    const auth = verifyFireRequest(raw, trustedGodId ? hive.hookTokenOf(trustedGodId) : undefined, Date.now(), usedFireNonces);
+    const req = auth.ok ? parseFireRequest({ id: auth.id }, f, hive.registry(), trustedGodId ?? undefined, trustedGodId) : auth;
     const res = req.ok ? fireAgent(req.id) : { ok: false, error: req.reason };
     if (!res.ok) informGod('[fire rejected]', `Fire-request ${f} rejected: ${res.error}.`);
     archiveRequest(fp, res.ok ? '.done' : '.failed', dir);

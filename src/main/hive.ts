@@ -570,6 +570,10 @@ export class HiveManager {
     const bin = this.binDir();
     return bin ? join(bin, 'cth-hook.cjs') : null;
   }
+  private firePath(): string | null {
+    const bin = this.binDir();
+    return bin ? join(bin, 'cth-fire.cjs') : null;
+  }
   /** The proxy-bridge sidecar (qwen). Pure-Node loopback reverse-proxy that
    *  observes a hookless CLI's LLM traffic and synthesizes the same HIVE_SOCK
    *  payloads the hook shims emit. Written in ensureHive alongside cth-hook.cjs. */
@@ -764,6 +768,9 @@ export class HiveManager {
     // on every bootstrap so it tracks code changes.
     mkdirSync(this.binDir()!, { recursive: true });
     writeFresh(this.shimPath()!, HOOK_SHIM);
+    // The orchestrator's fire command: signs a fire-request with his hook token
+    // so the token itself never lands in the agent-writable hive root.
+    writeFresh(this.firePath()!, FIRE_SHIM);
     // The proxy-bridge sidecar for hookless CLIs (qwen). Same refresh policy.
     writeFresh(this.proxyShimPath()!, PROXY_BRIDGE_SHIM);
     // The bundled-node launcher every shim above is invoked through — MUST be
@@ -1742,7 +1749,7 @@ export class HiveManager {
       : '';
     // Without this Ramon edited registry.json by hand, which the floor never sees.
     const fireQueueLine = meta.isGod
-      ? `FIRING AN AGENT: write ONE JSON file \`{ "id": "<agent id>", "token": "<your $HIVE_HOOK_TOKEN>" }\` into ${inRoot('fire-requests')}/<id>.json per agent (the token proves it is you; without it the request is refused). The harness stops its terminal, marks it archived and moves its card to the Archived section, then moves the request to \`fire-requests/.done/\` (or \`.failed/\` with a reason). Never edit registry.json to fire, and never delete agent folders or memories: firing is an archive the human can undo from the Archived section. You cannot fire yourself.`
+      ? `FIRING AN AGENT: run \`${this.nodeRun(this.firePath()!)} <agent id>\` once per agent. It queues a request signed with your own credentials in ${inRoot('fire-requests')}/ (a request written any other way is refused). The harness stops its terminal, marks it archived and moves its card to the Archived section, then moves the request to \`fire-requests/.done/\` (or \`.failed/\` with a reason). Never edit registry.json to fire, and never delete agent folders or memories: firing is an archive the human can undo from the Archived section. You cannot fire yourself.`
       : '';
     let projectLine = '';
     if (meta.isGod) {
@@ -1843,6 +1850,10 @@ export class HiveManager {
     this.agentByHookToken.set(token, agentId);
     this.hookTokenByAgent.set(agentId, token);
     return token;
+  }
+  /** The agent's current hook token, or undefined (never makes one). */
+  hookTokenOf(agentId: string): string | undefined {
+    return this.hookTokenByAgent.get(agentId);
   }
   /** The agent's current hook token (made if it has none yet). */
   hookTokenFor(agentId: string): string {
@@ -3533,14 +3544,15 @@ If a request of yours has sat there without moving, that is why, and it is a dec
 human rather than retry. Route work to an agent already on the floor first either way.
 
 ## Firing an agent (orchestrator)
-Write ONE JSON file per agent into \`fire-requests/<id>.json\` in the hive root:
+Run the \`cth-fire\` command (\`hive-internal/bin/cth-fire.cjs\`, the exact command line is in your
+instructions) once per agent, with the agent id from registry.json:
 
-\`\`\`json
-{ "id": "the agent id from registry.json", "token": "the value of your $HIVE_HOOK_TOKEN" }
+\`\`\`sh
+<node> <home>/hive-internal/bin/cth-fire.cjs <agent id>
 \`\`\`
 
-The \`token\` proves the request is yours (every agent can write this folder); a request without your
-token is refused.
+It writes a request signed with your own credentials into \`fire-requests/\`. Every agent can write that
+folder, so a request written by hand, or by anyone else, is refused.
 
 The harness stops the agent's terminal, marks it archived in the registry, moves its card to the
 Archived section of the floor, and moves the request to \`fire-requests/.done/\` (or \`.failed/\` with a
@@ -3558,6 +3570,26 @@ searchable MemPalace and you have the \`mempalace\` CLI:
 
 Your \`memory.md\` is mined into the palace automatically, so the durable facts you
 write there become searchable by every agent. You don't run \`mine\` yourself.
+`;
+
+// ─── cth-fire shim (written to <home>/hive-internal/bin/cth-fire.cjs) ─────
+// The orchestrator runs `cth-fire <agent id>`. It signs the request with his
+// hook token (HMAC, format shared with src/main/fireAuth.ts fireSignature) and
+// drops it in HIVE_ROOT/fire-requests/, so the token never touches disk.
+const FIRE_SHIM = `#!/usr/bin/env node
+'use strict';
+const fs = require('fs'), path = require('path'), crypto = require('crypto');
+const id = process.argv[2];
+const token = process.env.HIVE_HOOK_TOKEN, root = process.env.HIVE_ROOT;
+if (!id || !token || !root) { console.error('usage: cth-fire <agent id>  (run it from your own agent shell)'); process.exit(1); }
+const ts = Date.now(), nonce = crypto.randomBytes(12).toString('hex');
+const sig = crypto.createHmac('sha256', token).update(id + '\\n' + ts + '\\n' + nonce).digest('hex');
+const dir = path.join(root, 'fire-requests');
+fs.mkdirSync(dir, { recursive: true });
+const file = path.join(dir, nonce + '.json');
+fs.writeFileSync(file + '.tmp', JSON.stringify({ id, ts, nonce, sig }));
+fs.renameSync(file + '.tmp', file);
+console.log('Fire request queued for ' + id + '. Check fire-requests/.done/ or .failed/ in a few seconds.');
 `;
 
 // ─── cth-hook shim (written to <home>/hive-internal/bin/cth-hook.cjs) ─────

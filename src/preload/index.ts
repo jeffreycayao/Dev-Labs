@@ -4,6 +4,7 @@ import { usageAnalyticsApi } from './office/usageAnalytics';
 import { standupApi } from './office/standup';
 import { voiceReplyApi } from './office/voiceReply';
 import { companyBuilderApi } from './office/companyBuilder';
+import { agencyApi } from './agencyAgents';
 import { spotifyApi } from './office/spotify';
 import { radioApi } from './office/radio';
 import type { AgentProvider } from '../shared/agentProvider';
@@ -558,6 +559,7 @@ const api = {
   ...standupApi,
   ...voiceReplyApi,
   ...companyBuilderApi,
+  ...agencyApi,
   ...spotifyApi,
   ...radioApi,
   version: __APP_VERSION__,
@@ -936,6 +938,12 @@ const api = {
   /** Fired when a validated hire manifest arrives via the atmtlabs://
    *  deep link. The renderer opens the Add-Agent modal pre-filled — import
    *  never spawns anything by itself. */
+  /** Help → Take a tour (src/renderer/src/lib/tour.ts). */
+  onStartTour: (cb: () => void): (() => void) => {
+    const listener = () => cb();
+    ipcRenderer.on('app:startTour', listener);
+    return () => ipcRenderer.removeListener('app:startTour', listener);
+  },
   onHireImport: (cb: (manifest: HireManifest) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, manifest: HireManifest) => cb(manifest);
     ipcRenderer.on('hire:import', listener);

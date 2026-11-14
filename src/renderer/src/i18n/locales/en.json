@@ -563,6 +563,7 @@
     "templatesTitle": "ROLE TEMPLATES",
     "templatesTechnical": "Technical",
     "templatesNonTechnical": "Non-technical",
+    "templatesAgency": "Agency",
     "templatesYourFloor": "your floor",
     "roleTemplatesHint": "Pick a role to pre-fill the name, character, color and a standing goal. Review each step, then spawn.",
     "importHireDesc": "Import hire loads a ready-made agent from a .json manifest — it fills in every field below for you to review. Nothing spawns until you hit spawn.",
@@ -1657,5 +1658,35 @@
     "users": "WHO CAN START WORK (USER IDS)",
     "usersPlaceholder": "leave empty for just the bot’s owner (you)",
     "usersHint": "Only these Discord users can start work; everyone else is ignored. Empty means the owner of the bot application. Right-click a person → Copy User ID."
+  },
+  "agency": {
+    "hint": "{{count}} specialist personas from agency-agents (MIT), grouped by division. Pick one: its full persona becomes the standing goal. Review every field, then spawn.",
+    "allDivisions": "All",
+    "searchPlaceholder": "Search personas…",
+    "loading": "Loading the roster…",
+    "failed": "The roster could not be loaded: {{error}}",
+    "noMatch": "No persona matches."
+  },
+  "tour": {
+    "next": "Next",
+    "back": "Back",
+    "done": "Done",
+    "progress": "{{current}} of {{total}}",
+    "welcomeTitle": "Welcome to DevLabs",
+    "welcomeBody": "This is your office. The AI coding tools you already pay for work here as employees, each in its own terminal. Eight quick stops.",
+    "officeTitle": "The floor",
+    "officeBody": "Agents sit at desks and move as they work. Click one to open its terminal on the right. Ramon, the manager, runs the floor and hands out work.",
+    "sidebarTitle": "Terminal and command bar",
+    "sidebarBody": "The selected agent's live terminal lands here, with its message composer and the Prompt Library. Ramon gets the Command Center instead.",
+    "stripTitle": "Your team",
+    "stripBody": "Every agent on this floor with status, tokens and cost. Click a card to select it, the ✕ to fire; restore last session's team from the right.",
+    "addAgentTitle": "Hire",
+    "addAgentBody": "Pick a role template, one of the agency personas, or describe a company and let the planner staff it. Every field is shown for review and nothing spawns until you press spawn.",
+    "settingsTitle": "Settings",
+    "settingsBody": "Engines and models, connectors, encrypted keys, triggers, schedules and the hive folder. Cmd/Ctrl+, opens it too.",
+    "themeTitle": "Light, dark, focus",
+    "themeBody": "Switch the theme (terminals follow) and, next to it, focus mode: one agent's terminal full screen. Esc leaves it.",
+    "helpTitle": "Need more?",
+    "helpBody": "Help → How to use (F1) and the Feature Manual explain everything in detail. Replay this tour any time from Help → Take a tour."
   }
 }

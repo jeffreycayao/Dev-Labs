@@ -9,6 +9,7 @@ import { ProviderLogo } from './ProviderLogo';
 import { useStore, type Agent } from '@/store/store';
 import { OFFICE_CAST, CAST_BY_NAME, DEFAULT_CHARACTER, type OfficeCharacterName } from '@/scene/office/cast';
 import { templatesFor, type TemplateTrack } from '@shared/agentTemplates';
+import { AgencyRosterPicker } from './AgencyRosterPicker';
 import { type AccentColorName } from '@/design/tokens';
 import type { HireManifest } from '@shared/hire';
 import { hireQueueProgress } from '@shared/hireQueue';
@@ -200,7 +201,8 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
   const [name, setName] = useState(pendingHire?.name ?? CAST_BY_NAME[DEFAULT_CHARACTER].displayName);
   // Role templates: default tab follows the onboarding audience; both tracks stay available.
   const floorTrack: TemplateTrack = config.audience === 'non-technical' ? 'non-technical' : 'technical';
-  const [templateTrack, setTemplateTrack] = useState<TemplateTrack>(floorTrack);
+  // 'agency' is the vendored agency-agents roster (AgencyRosterPicker), picked the same way.
+  const [templateTrack, setTemplateTrack] = useState<TemplateTrack | 'agency'>(floorTrack);
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [character, setCharacter] = useState<OfficeCharacterName>(knownCharacter(pendingHire?.character));
   const [accent, setAccent] = useState<AccentColorName>(knownAccent(pendingHire?.accent));
@@ -1180,7 +1182,7 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
                     {tr('addAgent.templatesTitle')}
                   </span>
                   <div style={{ flex: 1 }} />
-                  {(['technical', 'non-technical'] as const).map((track) => (
+                  {(['technical', 'non-technical', 'agency'] as const).map((track) => (
                     <button
                       key={track}
                       onClick={() => setTemplateTrack(track)}
@@ -1192,11 +1194,14 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
                         fontFamily: 'var(--cth-font-ui)', fontSize: 12
                       }}
                     >
-                      {tr(track === 'technical' ? 'addAgent.templatesTechnical' : 'addAgent.templatesNonTechnical')}
+                      {tr(track === 'technical' ? 'addAgent.templatesTechnical' : track === 'non-technical' ? 'addAgent.templatesNonTechnical' : 'addAgent.templatesAgency')}
                       {track === floorTrack ? ` · ${tr('addAgent.templatesYourFloor')}` : ''}
                     </button>
                   ))}
                 </div>
+                {templateTrack === 'agency' ? (
+                  <AgencyRosterPicker selectedId={templateId} onPick={(m, id) => { applyManifest(m); setTemplateId(id); }} />
+                ) : (<>
                 <span style={{ fontSize: 12, color: 'var(--cth-ink-500)', lineHeight: '16px' }}>
                   {tr('addAgent.roleTemplatesHint')}
                 </span>
@@ -1219,6 +1224,7 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
                     </button>
                   ))}
                 </div>
+                </>)}
               </div>
             )}
 

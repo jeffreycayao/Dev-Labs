@@ -119,15 +119,17 @@ full license text in a `LICENSE` file.
 
 ---
 
-## Role templates — agency-agents (MIT License)
+## Agency personas and role templates — agency-agents (MIT License)
 
-The freelancer role templates in `src/shared/agentTemplates.ts` (Client Relations Manager,
-Proposal & Quote Writer, Contract Reviewer, Invoicing & Collections Assistant, Portfolio &
-Case Study Writer, Scope Guardian, Project Handover Specialist) and the hand-off rules added
-to the Programmer, Scrum Master and Operations templates adapt instruction patterns from
-**agency-agents** (https://github.com/msitarzewski/agency-agents) by Michael Sitarzewski and
-the AgentLand contributors. The instructions are rewritten in DevLabs' own words; no text is
-copied. The project is licensed as follows:
+The 268 persona files under `resources/agency-agents/<division>/` (listed in the app under
+Add agent → templates → Agency) are copied verbatim from **agency-agents**
+(https://github.com/msitarzewski/agency-agents) by Michael Sitarzewski and the AgentLand
+contributors, at the commit pinned in `tools/agency-agents.json`; the upstream LICENSE ships
+beside them. The freelancer role templates in `src/shared/agentTemplates.ts` (Client Relations
+Manager, Proposal & Quote Writer, Contract Reviewer, Invoicing & Collections Assistant,
+Portfolio & Case Study Writer, Scope Guardian, Project Handover Specialist) and the hand-off
+rules added to the Programmer, Scrum Master and Operations templates adapt its instruction
+patterns in DevLabs' own words. The project is licensed as follows:
 
 ```
 MIT License
@@ -151,6 +153,38 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
+
+---
+
+## Guided tour — driver.js (MIT License)
+
+The guided tour (Help → Take a tour; src/renderer/src/lib/tour.ts) uses **driver.js**
+(https://driverjs.com, https://github.com/kamranahmedse/driver.js) by Kamran Ahmed, bundled
+as an npm dependency. It is used under the following license:
+
+```
+The MIT License
+
+Copyright (c) Kamran Ahmed
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 ```
 
 ---

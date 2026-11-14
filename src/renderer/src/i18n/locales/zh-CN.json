@@ -563,6 +563,7 @@
     "templatesTitle": "角色模板",
     "templatesTechnical": "技术",
     "templatesNonTechnical": "非技术",
+    "templatesAgency": "机构名册",
     "templatesYourFloor": "你的楼层",
     "roleTemplatesHint": "选择一个角色，自动填写名称、角色形象、颜色和长期目标。逐步检查后再生成。",
     "importHireDesc": "导入 hire 会从一个 .json 清单加载现成的智能体——它会填好下方所有字段供你检查。不点 生成 就不会启动任何东西。",
@@ -1657,5 +1658,35 @@
     "users": "谁可以发起工作（用户 ID）",
     "usersPlaceholder": "留空则只允许机器人的所有者（你）",
     "usersHint": "只有这些 Discord 用户可以发起工作，其他人的消息会被忽略。留空表示机器人应用的所有者。右键点击某人 → 复制用户 ID。"
+  },
+  "agency": {
+    "hint": "来自 agency-agents（MIT 许可）的 {{count}} 个专家人设，按部门分组。选择一个：完整人设将成为长期目标。检查每个字段后再生成。",
+    "allDivisions": "全部",
+    "searchPlaceholder": "搜索人设…",
+    "loading": "正在加载名册…",
+    "failed": "无法加载名册：{{error}}",
+    "noMatch": "没有匹配的人设。"
+  },
+  "tour": {
+    "next": "下一步",
+    "back": "上一步",
+    "done": "完成",
+    "progress": "第 {{current}} / {{total}} 步",
+    "welcomeTitle": "欢迎使用 DevLabs",
+    "welcomeBody": "这是你的办公室。你已经在用的 AI 编程工具在这里作为员工工作，各自拥有独立终端。共八个快速站点。",
+    "officeTitle": "楼层",
+    "officeBody": "智能体坐在桌前，工作时会走动。点击一个即可在右侧打开它的终端。经理 Ramon 负责管理楼层并分派工作。",
+    "sidebarTitle": "终端与命令栏",
+    "sidebarBody": "所选智能体的实时终端在这里显示，连同消息编辑器和提示词库。Ramon 则拥有指挥中心。",
+    "stripTitle": "你的团队",
+    "stripBody": "本楼层的每个智能体及其状态、令牌和成本。点击卡片选中，点击 ✕ 解雇；可从右侧恢复上次会话的团队。",
+    "addAgentTitle": "招聘",
+    "addAgentBody": "选择一个角色模板、一个机构人设，或描述一家公司让规划器为其配置团队。每个字段都会展示供你检查，按下生成之前不会启动任何东西。",
+    "settingsTitle": "设置",
+    "settingsBody": "引擎与模型、连接器、加密密钥、触发器、计划任务和蜂巢文件夹。也可用 Cmd/Ctrl+, 打开。",
+    "themeTitle": "浅色、深色、专注",
+    "themeBody": "切换主题（终端随之变化），旁边是专注模式：单个智能体的终端全屏显示。按 Esc 退出。",
+    "helpTitle": "还需要更多？",
+    "helpBody": "帮助 → 使用指南（F1）和功能手册会详细说明一切。随时可从 帮助 → 导览 重新播放此导览。"
   }
 }

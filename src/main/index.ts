@@ -61,6 +61,7 @@ import { registerUsageAnalyticsIpc } from './office/usageAnalytics';
 import { registerStandupIpc } from './office/standup';
 import { registerVoiceReplyIpc } from './office/voiceReply';
 import { registerCompanyBuilderIpc } from './office/companyBuilder';
+import { registerAgencyAgentsIpc } from './agencyAgents';
 import { registerSpotifyIpc } from './office/spotify';
 import { registerRadioIpc } from './office/radio';
 import { initCompletionWatcher } from './realtimeCompletionWatcher';
@@ -2826,6 +2827,7 @@ function installAppMenu(multiWindow: boolean): void {
       submenu: [
         { label: 'How to use DevLabs', accelerator: 'F1', click: () => openHelpWindow() },
         { label: 'Feature Manual', click: () => openHelpWindow(undefined, 'features.html') },
+        { label: 'Take a tour', click: () => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('app:startTour'); } },
         // No '&': Windows menus read it as a shortcut-key marker and drop it.
         { label: 'Security and FAQ', click: () => openHelpWindow('faq') },
         { type: 'separator' as const },
@@ -4933,6 +4935,7 @@ registerUsageAnalyticsIpc();
 registerStandupIpc();
 registerVoiceReplyIpc();
 registerCompanyBuilderIpc();
+registerAgencyAgentsIpc(() => join(bundledResourcesDir(), 'agency-agents'));
 registerSpotifyIpc();
 registerRadioIpc();
 

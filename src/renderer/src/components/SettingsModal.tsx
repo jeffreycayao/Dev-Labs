@@ -23,6 +23,7 @@ import { AiEnginesSettings } from './AiEnginesSettings';
 import { AttitudeEditor } from './AttitudeEditor';
 import { FEATURE_KEYS, featureOn, type FeatureFlags } from '@shared/features';
 import { REALTIME_MODEL } from '@shared/realtimePricing';
+import { GEMINI_KEY_URL, GEMINI_LIVE_MODEL, resolveVoiceProvider } from '@shared/geminiLive';
 import { RealtimeDevicePicker } from '@/realtime/DevicePicker';
 import { CostHud } from '@/realtime/CostHud';
 import {
@@ -541,6 +542,27 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
       setOpenAiVoiceNote(e instanceof Error ? e.message : String(e));
     }
   };
+  // Gemini Live voice: Google AI Studio key (broker slot apikey:google, shared
+  // with Agents & Models) + the provider pick. Same write-only contract as above.
+  const hasGoogleKey = useStore((s) => s.hasGoogleKey);
+  const setHasGoogleKey = useStore((s) => s.setHasGoogleKey);
+  const [googleVoiceKey, setGoogleVoiceKey] = useState('');
+  const [googleVoiceNote, setGoogleVoiceNote] = useState('');
+  const saveGoogleVoiceKey = async (): Promise<void> => {
+    const key = googleVoiceKey.trim();
+    if (!key) return;
+    try {
+      const r = await window.cth.providerKeySet({ backend: 'google', key });
+      if (r.ok) {
+        setGoogleVoiceKey('');
+        setHasGoogleKey(true);
+        setGoogleVoiceNote(t('settings.voice.keySavedNote'));
+      } else setGoogleVoiceNote(r.error ?? t('settings.voice.couldNotSave'));
+    } catch (e) {
+      setGoogleVoiceNote(e instanceof Error ? e.message : String(e));
+    }
+  };
+  const [voiceProviderPick, setVoiceProviderPick] = useState<unknown>(cfgX.voiceProvider);
   // v0.3.4 fix: the config default is ON ('now on by default', 0.2.7) — seeding
   // with `?? false` displayed OFF while the feature was actually running.
   const [freeflowEnabled, setFreeflowEnabled] = useState(config.freeflowEnabled !== false);
@@ -2157,6 +2179,92 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                             {t('settings.voice.voiceChatDesc', { godName })}
                           </span>
                         </div>
+
+                        {/* Voice provider picker + Google AI Studio key (Gemini Live).
+                            Hidden when the owner switch `geminiVoice` is off. The radio
+                            shows the EFFECTIVE provider (resolveVoiceProvider), so with
+                            no explicit pick it reads "Google" once a Google key exists. */}
+                        {featureOn(features, 'geminiVoice') && (() => {
+                          const effective = resolveVoiceProvider({
+                            choice: voiceProviderPick, hasOpenAiKey, hasGoogleKey, geminiEnabled: true
+                          });
+                          const pick = (p: 'openai' | 'google') => {
+                            setVoiceProviderPick(p);
+                            stage({ voiceProvider: p } as Partial<HarnessConfig>);
+                          };
+                          return (
+                            <>
+                              <div role="radiogroup" aria-label={t('settings.voice.provider')} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                <span style={slackLabelStyle}>{t('settings.voice.provider')}</span>
+                                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                                  {(['google', 'openai'] as const).map((p) => (
+                                    <label key={p} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--cth-ink-900)', cursor: 'pointer' }}>
+                                      <input type="radio" name="voice-provider" checked={effective === p} onChange={() => pick(p)} />
+                                      {p === 'google' ? t('settings.voice.providerGoogle') : t('settings.voice.providerOpenai')}
+                                      {!(p === 'google' ? hasGoogleKey : hasOpenAiKey) && (
+                                        <span style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}>{t('settings.voice.providerNeedsKey')}</span>
+                                      )}
+                                    </label>
+                                  ))}
+                                </div>
+                                <span style={{ fontSize: 12, lineHeight: '16px', color: 'var(--cth-ink-500)' }}>
+                                  {t('settings.voice.providerDesc', { godName })}
+                                </span>
+                              </div>
+                              <div style={{
+                                display: 'flex', flexDirection: 'column', gap: 8,
+                                padding: 10,
+                                background: 'var(--cth-paper-100)',
+                                boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)'
+                              }}>
+                                <span style={sectionHeadFlush}>{t('settings.voice.googleKey')}</span>
+                                <span style={{ fontSize: 12, lineHeight: '17px', color: 'var(--cth-ink-700)' }}>
+                                  {t('settings.voice.googleKeyDesc', { model: GEMINI_LIVE_MODEL })}{' '}
+                                  <a
+                                    href={GEMINI_KEY_URL}
+                                    onClick={(e) => { e.preventDefault(); void window.cth.openExternal(GEMINI_KEY_URL); }}
+                                    style={{ color: 'var(--cth-ink-900)', textDecoration: 'underline', cursor: 'pointer' }}
+                                  >
+                                    {t('settings.voice.getKey')}
+                                  </a>
+                                </span>
+                                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                  <input
+                                    type="password"
+                                    value={googleVoiceKey}
+                                    onChange={(e) => setGoogleVoiceKey(e.target.value)}
+                                    onKeyDown={(e) => { if (isComposingKey(e)) return; if (e.key === 'Enter') void saveGoogleVoiceKey(); }}
+                                    placeholder={hasGoogleKey ? t('settings.voice.keyPlaceholderSaved') : t('settings.voice.googlePlaceholder')}
+                                    aria-label={t('settings.voice.googleKey')}
+                                    style={{ ...slackInputStyle, flex: 1, fontFamily: 'var(--cth-font-mono)' }}
+                                  />
+                                  <PixelButton
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => void saveGoogleVoiceKey()}
+                                    disabled={!googleVoiceKey.trim()}
+                                  >
+                                    {t('settings.voice.save')}
+                                  </PixelButton>
+                                </div>
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                                  fontSize: 12, lineHeight: '16px',
+                                  color: hasGoogleKey ? 'var(--cth-ink-900)' : 'var(--cth-ink-500)'
+                                }}>
+                                  <span aria-hidden style={{
+                                    width: 8, height: 8, flexShrink: 0,
+                                    background: hasGoogleKey ? 'var(--cth-mint)' : 'var(--cth-ink-300)',
+                                    boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)'
+                                  }} />
+                                  {googleVoiceNote || (hasGoogleKey
+                                    ? t('settings.voice.keySaved', { godName })
+                                    : t('settings.voice.noKey', { godName }))}
+                                </span>
+                              </div>
+                            </>
+                          );
+                        })()}
 
                         {/* OpenAI Realtime key — settable HERE, not just described here.
                             This is where someone looking for voice actually lands (the Talk

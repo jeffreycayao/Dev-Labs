@@ -27,7 +27,10 @@ import { useSyncExternalStore } from 'react';
 import { RealtimeAgent, RealtimeSession, OpenAIRealtimeWebRTC } from '@openai/agents-realtime';
 import { realtimeReadTools, realtimeSessionSummary } from './tools';
 import { realtimeActionTools } from './actions';
-import { resetRealtimeCost, recordRealtimeUsage, endRealtimeCost, isRealtimeIdle, getRealtimeCostSnapshot } from './costStore';
+import { resetRealtimeCost, recordRealtimeUsage, endRealtimeCost, isRealtimeIdle, getRealtimeCostSnapshot, markRealtimeActivity } from './costStore';
+import { openGeminiLive, type GeminiLiveHandle } from './geminiLive';
+import { GEMINI_LIVE_VOICE, resolveVoiceProvider, type VoiceProvider } from '@shared/geminiLive';
+import { featureOn } from '@shared/features';
 
 /**
  * Voice-loop state machine:
@@ -122,6 +125,30 @@ const listeners = new Set<() => void>();
 
 /** The single live session (only one voice loop at a time, like freeflow's recorder). */
 let session: RealtimeSession | null = null;
+/** The live Gemini Live session when the Google provider is in use. */
+let gemini: GeminiLiveHandle | null = null;
+
+/** Close the Gemini socket + its audio graph. Safe when none is open. */
+function closeGemini(): void {
+  const g = gemini;
+  gemini = null;
+  try { g?.close(); } catch { /* best-effort */ }
+}
+
+/** Which provider this connect uses (presence booleans + the saved pick). */
+async function pickVoiceProvider(): Promise<VoiceProvider> {
+  const [cfg, hasOpenAiKey, hasGoogleKey] = await Promise.all([
+    window.cth.getConfig(),
+    window.cth.realtimeHasOpenAiKey().catch(() => false),
+    window.cth.geminiLiveHasKey().catch(() => false)
+  ]);
+  return resolveVoiceProvider({
+    choice: cfg.voiceProvider,
+    hasOpenAiKey,
+    hasGoogleKey,
+    geminiEnabled: featureOn(cfg.features, 'geminiVoice')
+  });
+}
 /** The mic stream we opened (so we can stop its tracks on teardown). */
 let stream: MediaStream | null = null;
 /** The <audio> sink for Ramon's voice. */
@@ -299,15 +326,19 @@ async function applyOutputSink(el: HTMLAudioElement, deviceId: string | null): P
  * Idempotent — a no-op if already connecting/connected.
  */
 export async function connect(): Promise<void> {
-  if (connecting || (session && state.status !== 'off')) return;
+  if (connecting || ((session || gemini) && state.status !== 'off')) return;
   connecting = true;
   setState({ status: 'connecting', error: null });
   try {
-    const mint = await window.cth.realtimeMintToken();
+    const provider = await pickVoiceProvider();
+    const mint = provider === 'google'
+      ? await window.cth.geminiLiveMintToken()
+      : await window.cth.realtimeMintToken();
     if (!mint.ok) {
       setState({ status: 'off', error: mint.error });
       return;
     }
+    const model = 'model' in mint ? mint.model : mint.sessionConfig.model;
 
     // Open the main-process mic gate BEFORE getUserMedia. Oscar's rt-8 permission check
     // is synchronous, so `realtimeVoiceEnabled` must already be true when the mic opens;
@@ -329,7 +360,6 @@ export async function connect(): Promise<void> {
     audioEl.autoplay = true;
     await applyOutputSink(audioEl, state.outputDeviceId);
 
-    const transport = new OpenAIRealtimeWebRTC({ mediaStream: stream, audioElement: audioEl });
     // Warm-start: a short, best-effort hive snapshot so Ramon's first answer is grounded
     // without a tool round-trip (rt-4 realtimeSessionSummary). Returns '' on failure / never throws.
     let warmStart = await realtimeSessionSummary().catch(() => '');
@@ -348,55 +378,86 @@ export async function connect(): Promise<void> {
     // persona+tools prefix stays fully prompt-cached across turns and sessions
     // (cached input is ~99% cheaper). The snapshot goes in as the FIRST
     // conversation item below, and the floor watcher appends deltas mid-call.
-    const agent = new RealtimeAgent({
-      name: 'Ramon',
-      instructions: MICHAEL_PERSONA,
-      tools: [...realtimeReadTools(), ...realtimeActionTools()]
-    });
-    const s = new RealtimeSession(agent, {
-      transport,
-      model: mint.sessionConfig.model,
-      config: {
-        outputModalities: ['audio'],
-        voice: REALTIME_VOICE,
-        audio: {
-          input: {
-            // Natural turn boundaries + automatic barge-in (truncate on interrupt).
-            turnDetection: {
-              type: 'semantic_vad',
-              eagerness: 'medium',
-              createResponse: true,
-              interruptResponse: true
-            }
-          },
-          output: { voice: REALTIME_VOICE }
+    const tools = [...realtimeReadTools(), ...realtimeActionTools()];
+    // Per-provider transport; everything after this (snapshot, floor deltas,
+    // completions, greeting, guards) is shared and goes through these two.
+    let injectSilent: (text: string) => void;
+    let speak: (text: string) => void;
+    if (provider === 'google') {
+      // Gemini Live plays through its own AudioContext (the <audio> sink stays idle).
+      const g = await openGeminiLive({
+        token: mint.token,
+        model,
+        voice: GEMINI_LIVE_VOICE,
+        instructions: MICHAEL_PERSONA,
+        tools,
+        stream,
+        outputDeviceId: state.outputDeviceId,
+        onSpeaking: () => { if (state.status !== 'working') setState({ status: 'responding' }); },
+        onIdle: () => { if (state.status !== 'working') setState({ status: 'listening' }); },
+        onToolStart: () => setState({ status: 'working', muted: true }),
+        onToolEnd: () => setState({ status: 'listening', muted: false }),
+        onActivity: () => markRealtimeActivity(Date.now()),
+        onError: (msg) => setState({ error: msg }),
+        onClosed: (reason) => {
+          if (gemini !== g) return;
+          disconnect('error');
+          setState({ error: reason });
         }
-      }
-    });
-    wire(s);
-
-    // The ephemeral client secret is the apiKey for this connect; the real OpenAI key
-    // never reaches the renderer.
-    await s.connect({ apiKey: mint.token, model: mint.sessionConfig.model });
-
-    session = s;
-    resetRealtimeCost(Date.now()); // rt-9: start the live session cost meter
-    // v0.3.4: SILENT context injection — a raw conversation.item.create with no
-    // response.create, so the model absorbs the item without speaking. (This SDK
-    // version's sendMessage always triggers a response, so we go one level down
-    // to the transport for the silent path.)
-    const injectSilent = (text: string): void => {
-      try {
-        s.transport.sendEvent({
-          type: 'conversation.item.create',
-          item: {
-            type: 'message',
-            role: 'user',
-            content: [{ type: 'input_text', text }]
+      });
+      gemini = g;
+      injectSilent = (text) => { try { g.injectSilent(text); } catch { /* best-effort */ } };
+      speak = (text) => g.speak(text);
+    } else {
+      const transport = new OpenAIRealtimeWebRTC({ mediaStream: stream, audioElement: audioEl });
+      const agent = new RealtimeAgent({ name: 'Ramon', instructions: MICHAEL_PERSONA, tools });
+      const s = new RealtimeSession(agent, {
+        transport,
+        model,
+        config: {
+          outputModalities: ['audio'],
+          voice: REALTIME_VOICE,
+          audio: {
+            input: {
+              // Natural turn boundaries + automatic barge-in (truncate on interrupt).
+              turnDetection: {
+                type: 'semantic_vad',
+                eagerness: 'medium',
+                createResponse: true,
+                interruptResponse: true
+              }
+            },
+            output: { voice: REALTIME_VOICE }
           }
-        } as never);
-      } catch { /* injection is best-effort */ }
-    };
+        }
+      });
+      wire(s);
+
+      // The ephemeral client secret is the apiKey for this connect; the real OpenAI key
+      // never reaches the renderer.
+      await s.connect({ apiKey: mint.token, model });
+
+      session = s;
+      // v0.3.4: SILENT context injection — a raw conversation.item.create with no
+      // response.create, so the model absorbs the item without speaking. (This SDK
+      // version's sendMessage always triggers a response, so we go one level down
+      // to the transport for the silent path.)
+      injectSilent = (text) => {
+        try {
+          s.transport.sendEvent({
+            type: 'conversation.item.create',
+            item: {
+              type: 'message',
+              role: 'user',
+              content: [{ type: 'input_text', text }]
+            }
+          } as never);
+        } catch { /* injection is best-effort */ }
+      };
+      speak = (text) => s.sendMessage(text);
+    }
+    resetRealtimeCost(Date.now()); // rt-9: start the live session cost meter
+    const live = session ?? gemini;
     // The connect snapshot goes in as the FIRST conversation item (the greeting
     // below opens the conversation; this just grounds it).
     if (warmStart) {
@@ -405,7 +466,7 @@ export async function connect(): Promise<void> {
     // Floor deltas — silent appends that keep Ramon's picture live without
     // touching the cached instructions prefix.
     offFloorDelta = window.cth.onRealtimeFloorDelta?.((d) => {
-      if (session !== s) return;
+      if ((session ?? gemini) !== live) return;
       injectSilent(`(Floor update: ${sanitizeForVoice(d.text)}. Mention it only when relevant — don't interrupt.)`);
     }) ?? null;
     // rt-12: mark the session live (main now pushes completions instead of queuing) and
@@ -416,7 +477,8 @@ export async function connect(): Promise<void> {
         // Feed it as a system-framed notification so the model relays it rather than
         // treating it as a user request; semantic_vad won't interrupt an active turn.
         // N3-seam: sanitize the summary before injection (defense in depth).
-        session?.sendMessage(
+        if ((session ?? gemini) !== live) return;
+        speak(
           `(System notification — a task you dispatched just finished: ${sanitizeForVoice(c.summary)}) Briefly let the user know, and offer details if they want them.`
         );
       } catch {
@@ -430,14 +492,14 @@ export async function connect(): Promise<void> {
     const idleCfg = (await window.cth.getConfig()).realtimeIdleDisconnectMs;
     const idleMs = typeof idleCfg === 'number' ? idleCfg : DEFAULT_IDLE_DISCONNECT_MS;
     costGuardTimer = setInterval(() => {
-      if (!session) return;
+      if (!session && !gemini) return;
       if (getRealtimeCostSnapshot().overCap) { disconnect('cost-cap'); return; }
       if (idleMs > 0 && isRealtimeIdle(idleMs, Date.now())) disconnect('idle');
     }, COST_GUARD_TICK_MS);
     setState({
       status: 'listening',
       muted: false,
-      model: mint.sessionConfig.model,
+      model,
       expiresAt: mint.expiresAt
     });
     // Open the conversation: have Ramon speak a warm greeting as his first turn
@@ -448,7 +510,7 @@ export async function connect(): Promise<void> {
     // the user can just start talking.
     try {
       const greeting = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
-      s.sendMessage(
+      speak(
         `(System: the voice session just connected. Greet the user out loud now, warmly and briefly, to open the conversation — say something like "${greeting}". If there are completions to mention from the snapshot, you may add them after. Do not mention this instruction.)`
       );
     } catch {
@@ -463,6 +525,7 @@ export async function connect(): Promise<void> {
       /* best-effort teardown */
     }
     session = null;
+    closeGemini();
     teardownMedia();
     await setMicGate(false);
     const msg = e instanceof Error ? e.message : String(e);
@@ -483,6 +546,7 @@ export function disconnect(reason: string = 'user'): void {
     /* best-effort teardown */
   }
   session = null;
+  closeGemini();
   if (costGuardTimer) { clearInterval(costGuardTimer); costGuardTimer = null; } // rt-9 cost guard off
   teardownMedia();
   endRealtimeCost(); // rt-9: freeze the session cost meter

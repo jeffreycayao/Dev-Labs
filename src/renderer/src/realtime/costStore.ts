@@ -89,6 +89,12 @@ export function recordRealtimeUsage(usage: RealtimeUsage, nowMs: number): void {
   });
 }
 
+/** Mark voice activity without a priced usage delta (Gemini Live: its usage is
+ *  not priced here, but the idle guard still needs a heartbeat). */
+export function markRealtimeActivity(nowMs: number): void {
+  if (state.startedTs != null) setState({ lastActivityTs: nowMs });
+}
+
 /** Set (or clear, with null) the session spend cap. */
 export function setRealtimeCap(capUsd: number | null): void {
   const cap = capUsd != null && capUsd > 0 ? capUsd : null;

@@ -69,7 +69,8 @@ test('the app HTML no longer reaches for Google, and its CSP forbids it', () => 
   const csp = withoutComments.match(/Content-Security-Policy"\s+content="([^"]+)"/);
   assert.ok(csp, 'no CSP meta tag');
   assert.match(csp[1], /font-src 'self';/);
-  assert.doesNotMatch(csp[1], /googleapis|gstatic/);
+  // Font hosts only: Gemini Live voice legitimately opens wss://generativelanguage.googleapis.com.
+  assert.doesNotMatch(csp[1], /fonts.googleapis|gstatic/);
 });
 
 // --- the token stacks -------------------------------------------------------

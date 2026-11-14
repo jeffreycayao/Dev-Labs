@@ -211,7 +211,10 @@ test('no Arabic string is left as its English source', () => {
     'addAgent.projectPlaceholder',           // /path/to/your/project — a filesystem path
     'onboarding.home.placeholder',           // /path/to/HarnessAgents — same
     'mcpDefaults.toggleNote',                // "{{id}}: {{state}}" — pure interpolation
-    'webhooksSection.summary'                // "{{count}} · {{state}}" — same
+    'webhooksSection.summary',               // "{{count}} · {{state}}" — same
+    'settings.voice.providerOpenai',         // "OpenAI Realtime": product name
+    'settings.voice.providerGoogle',         // "Google Gemini Live": product name
+    'settings.voice.googlePlaceholder'       // "AIza…": the key's literal prefix
   ]);
   const e = pathsOf(en), a = pathsOf(ar);
   const untranslated = [];

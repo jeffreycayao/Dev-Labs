@@ -394,6 +394,10 @@ export interface HarnessConfig {
    *  auto-disconnect on idle — the spend cap remains the runaway guard. The user
    *  tunes this in Settings → Realtime Ramon. */
   realtimeIdleDisconnectMs?: number;
+  /** Ramon's voice provider: 'openai' (Realtime) or 'google' (Gemini Live).
+   *  Unset ⇒ Google once a Google AI Studio key is saved, else OpenAI
+   *  (resolveVoiceProvider in src/shared/geminiLive.ts). */
+  voiceProvider?: 'openai' | 'google';
 
   // ─── Generic inbound webhook + status API (LEGACY, single-endpoint) ─────────
   // Superseded by `webhookTriggers`, which allows many endpoints over one server

@@ -67,6 +67,8 @@ export function AiEnginesSettings({ config }: { config: HarnessConfig }) {
   // here — without it the gate only refreshes on next app start. apikey:openai is
   // the same key the Realtime mint reads; saving/clearing it flips the gate.
   const setHasOpenAiKey = useStore((s) => s.setHasOpenAiKey);
+  // Same for the Google key (apikey:google), which Gemini Live voice reads.
+  const setHasGoogleKey = useStore((s) => s.setHasGoogleKey);
   // Which backends already have a key stored (boolean only — never the value).
   const [hasKey, setHasKey] = useState<Record<string, boolean>>({});
   const [draftKey, setDraftKey] = useState<Record<string, string>>({});
@@ -103,6 +105,7 @@ export function AiEnginesSettings({ config }: { config: HarnessConfig }) {
         setNote((s) => ({ ...s, [backend]: t('aiEngines.saved') }));
         // OpenAI key gates Talk — mirror presence to the store so the warning clears now.
         if (backend === 'openai') setHasOpenAiKey(true);
+        if (backend === 'google') setHasGoogleKey(true);
       } else setNote((s) => ({ ...s, [backend]: r.error ?? t('aiEngines.failed') }));
     } catch (e) { setNote((s) => ({ ...s, [backend]: e instanceof Error ? e.message : String(e) })); }
   };
@@ -113,6 +116,7 @@ export function AiEnginesSettings({ config }: { config: HarnessConfig }) {
       setNote((s) => ({ ...s, [backend]: t('aiEngines.cleared') }));
       // OpenAI key gates Talk — clearing it disables Talk; reflect that immediately.
       if (backend === 'openai') setHasOpenAiKey(false);
+      if (backend === 'google') setHasGoogleKey(false);
     } catch { /* noop */ }
   };
 

@@ -121,6 +121,10 @@ export interface HarnessConfig {
   /** Realtime voice idle auto-disconnect (ms); default 180000 (3 min), 0 = never.
    *  Tuned in Settings → Realtime Ramon; the cost cap stays the runaway guard. */
   realtimeIdleDisconnectMs?: number;
+  /** Ramon's voice provider: 'openai' (Realtime) or 'google' (Gemini Live).
+   *  Unset ⇒ Google once a Google AI Studio key is saved, else OpenAI
+   *  (resolveVoiceProvider in src/shared/geminiLive.ts). */
+  voiceProvider?: 'openai' | 'google';
   costCapUsd?: number;
   /** Hard total-token ceiling across active agents (the user-facing budget). */
   costCapTokens?: number;

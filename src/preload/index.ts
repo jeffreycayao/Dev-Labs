@@ -358,6 +358,10 @@ export interface HarnessConfig {
   /** Realtime voice idle auto-disconnect (ms); default 180000 (3 min), 0 = never.
    *  Tuned in Settings → Realtime Ramon; the cost cap stays the runaway guard. */
   realtimeIdleDisconnectMs?: number;
+  /** Ramon's voice provider: 'openai' (Realtime) or 'google' (Gemini Live).
+   *  Unset ⇒ Google once a Google AI Studio key is saved, else OpenAI
+   *  (resolveVoiceProvider in src/shared/geminiLive.ts). */
+  voiceProvider?: 'openai' | 'google';
   costCapUsd?: number;
   costCapTokens?: number;
   agentTokenCaps?: Record<string, number>;
@@ -1341,6 +1345,14 @@ const api = {
     | { ok: true; token: string; expiresAt: number | null; sessionConfig: { model: string } }
     | { ok: false; error: string; code?: string }
   > => ipcRenderer.invoke('realtime:mintToken', req ?? {}),
+  // Gemini Live (Google AI Studio key, broker slot apikey:google). Same contract:
+  // presence boolean + a single-use ephemeral token; the key never crosses IPC.
+  geminiLiveHasKey: (): Promise<boolean> =>
+    ipcRenderer.invoke('geminiLive:hasKey'),
+  geminiLiveMintToken: (): Promise<
+    | { ok: true; token: string; expiresAt: number | null; model: string }
+    | { ok: false; error: string; code?: string }
+  > => ipcRenderer.invoke('geminiLive:mintToken'),
   // rt-5 voice ACTIONS — the renderer holds NO policy; main (realtimeActions.ts) owns
   // the tiering, two-step verbal confirm, hard allowlist, and michael-voice
   // attribution. These just forward {verb,...args} and speak back `spoken`.

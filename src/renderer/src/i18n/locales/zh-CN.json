@@ -368,7 +368,16 @@
       "5m": "5 分钟",
       "10m": "10 分钟",
       "never": "关闭（永不）",
-      "idleDisconnectDesc": "语音会话在无人说话时保持多久后自动关闭。即使此项关闭，支出上限仍能阻止失控的会话。"
+      "idleDisconnectDesc": "语音会话在无人说话时保持多久后自动关闭。即使此项关闭，支出上限仍能阻止失控的会话。",
+      "provider": "语音服务",
+      "providerDesc": "{{godName}} 的语音使用哪项服务。保存 Google AI Studio 密钥后会自动选择 Google；选择 OpenAI 时，下方的 OpenAI 密钥仍然有效。",
+      "providerOpenai": "OpenAI Realtime",
+      "providerGoogle": "Google Gemini Live",
+      "providerNeedsKey": "（需要密钥）",
+      "googleKey": "Google AI Studio API 密钥 · 语音",
+      "googleKeyDesc": "Gemini Live（{{model}}）——通过实时 WebSocket 语音输入、语音输出。密钥在本机加密保存；每次通话都会用它生成一次性令牌，密钥本身不会进入应用窗口。它与“智能体与模型”中的 Google 密钥是同一个。",
+      "getKey": "获取密钥",
+      "googlePlaceholder": "AIza…"
     },
     "saved": "已保存",
     "saving": "保存中…",
@@ -386,7 +395,9 @@
       "officeThemes": "办公室主题：导出和导入",
       "officeThemesDesc": "楼层栏上的“主题”按钮：把家具布局保存为文件、加载文件，或让 AI 设计一个。导入会经过检查，并且可以撤销。",
       "agentBrowser": "智能体浏览器（Vercel agent-browser）",
-      "agentBrowserDesc": "让智能体驱动真实的无头 Chrome：访问网站、阅读页面、点击并填写表单。默认开启；可在此关闭，或在“连接”中关闭智能体浏览器连接器。智能体首次使用时会下载 Chrome for Testing。"
+      "agentBrowserDesc": "让智能体驱动真实的无头 Chrome：访问网站、阅读页面、点击并填写表单。默认开启；可在此关闭，或在“连接”中关闭智能体浏览器连接器。智能体首次使用时会下载 Chrome for Testing。",
+      "geminiVoice": "Gemini Live 语音（Google）",
+      "geminiVoiceDesc": "在 OpenAI Realtime 之外，提供 Google Gemini Live API 作为与 Ramon 对话的第二个语音服务。关闭 = 仅 OpenAI，并隐藏服务选择器。"
     },
     "attitude": {
       "title": "代理如何与你交谈",
@@ -1637,7 +1648,7 @@
     "helpListening": "聆听中——{{godName}} 正在听你说话（点击停止）",
     "helpSpeaking": "{{godName}} 正在说话（点击停止）",
     "helpWorking": "{{godName}} 正在运行工具——麦克风已静音（点击停止）",
-    "noKeyTitle": "Talk 需要你的 OpenAI API 密钥（用于 Realtime 语音 API）。可在设置 → 语音中添加。",
+    "noKeyTitle": "通话需要语音密钥：OpenAI API 密钥（Realtime）或 Google AI Studio 密钥（Gemini Live）。请在 设置 → 语音 中添加。",
     "whyDisabled": "为什么 Talk 被禁用？",
     "popoverBody": "使用此功能需要一个 OpenAI API 密钥。",
     "setItUpNow": "现在就去设置"

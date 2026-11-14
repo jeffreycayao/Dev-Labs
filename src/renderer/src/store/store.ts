@@ -274,6 +274,10 @@ interface State {
    *  window.cth.realtimeHasOpenAiKey(). */
   hasOpenAiKey: boolean;
   setHasOpenAiKey: (has: boolean) => void;
+  /** Mirror of Google AI Studio key presence (apikey:google) — the Gemini Live
+   *  voice provider. Boolean only, like hasOpenAiKey. */
+  hasGoogleKey: boolean;
+  setHasGoogleKey: (has: boolean) => void;
   /** Mirror of config.webhookTriggers — the inbound HTTP endpoints. Webhooks are
    *  editable from BOTH Settings → Connections and the Triggers tab, so neither
    *  surface keeps its own copy: both render off this list and both call the
@@ -948,6 +952,8 @@ export const useStore = create<State>((set, get) => ({
   setHasGroqKey: (has) => set({ hasGroqKey: has }),
   hasOpenAiKey: false,
   setHasOpenAiKey: (has) => set({ hasOpenAiKey: has }),
+  hasGoogleKey: false,
+  setHasGoogleKey: (has) => set({ hasGoogleKey: has }),
   webhookTriggers: [],
   setWebhookTriggers: (list) => set({ webhookTriggers: list }),
   // A copy, not the shared DEFAULT_ORG_TRIGGER instance — main takes the same

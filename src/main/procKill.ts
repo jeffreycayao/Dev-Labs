@@ -17,7 +17,7 @@
  * daemon the agent intentionally left running (a dev server started via a Bash
  * tool) must survive its parent session.
  */
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 /** Grace between the polite signal and the SIGKILL escalation. */
 export const KILL_GRACE_MS = 4_000;
@@ -86,6 +86,93 @@ export function shouldSweep(
   return false;
 }
 
+/** Every pid under `root` in a `pid -> ppid` table (root excluded). Pure, so
+ *  it is tested on every OS. Cycles (pid reuse) are cut by the visited set. */
+export function descendantsOf(ppidOf: Map<number, number>, root: number): number[] {
+  const kids = new Map<number, number[]>();
+  for (const [pid, ppid] of ppidOf) {
+    if (pid === ppid) continue;
+    if (!kids.has(ppid)) kids.set(ppid, []);
+    kids.get(ppid)!.push(pid);
+  }
+  const out: number[] = [];
+  const seen = new Set([root]);
+  const queue = [root];
+  while (queue.length) {
+    for (const k of kids.get(queue.shift()!) ?? []) {
+      if (seen.has(k)) continue;
+      seen.add(k); out.push(k); queue.push(k);
+    }
+  }
+  return out;
+}
+
+/** POSIX `pid -> { ppid, started }` for every live process, or null when `ps`
+ *  fails. `started` (lstart) lets a later kill skip a recycled pid. */
+function posixTable(): Map<number, { ppid: number; started: string }> | null {
+  try {
+    const r = spawnSync('ps', ['-axo', 'pid=,ppid=,lstart='], { timeout: 2_000 });
+    if (r.error || r.status !== 0) return null;
+    const out = new Map<number, { ppid: number; started: string }>();
+    for (const line of String(r.stdout ?? '').split('\n')) {
+      const m = line.match(/^\s*(\d+)\s+(\d+)\s+(.+\S)\s*$/);
+      if (m) out.set(Number(m[1]), { ppid: Number(m[2]), started: m[3] });
+    }
+    return out;
+  } catch {
+    return null;
+  }
+}
+
+/** At most this many `taskkill` runs at once, so firing 16 agents does not
+ *  start 16 tree walks in the same instant. */
+const MAX_PARALLEL_TREE_KILLS = 4;
+let runningTreeKills = 0;
+const treeKillQueue: Array<() => void> = [];
+
+/** Windows: `taskkill /T /F` the tree WITHOUT blocking the main process (the
+ *  old path was a spawnSync per agent, up to 10s each, one after another).
+ *  Resolves when taskkill exits. No-op elsewhere. */
+export function killTreeAsync(pid: number): Promise<void> {
+  if (process.platform !== 'win32' || !Number.isInteger(pid) || pid <= 0) return Promise.resolve();
+  return new Promise<void>((resolveDone) => {
+    const run = (): void => {
+      runningTreeKills++;
+      let finished = false;
+      const done = (): void => {
+        if (finished) return;
+        finished = true;
+        runningTreeKills--;
+        treeKillQueue.shift()?.();
+        resolveDone();
+      };
+      try {
+        const child = spawn('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+        child.on('exit', done);
+        child.on('error', done);
+        setTimeout(done, 10_000).unref?.();
+      } catch { done(); }
+    };
+    if (runningTreeKills < MAX_PARALLEL_TREE_KILLS) run(); else treeKillQueue.push(run);
+  });
+}
+
+/** Stop a pty-hosted CLI and everything it started (MCP servers, `npx`
+ *  wrappers, browsers). Windows kills the tree FIRST, while it is intact:
+ *  closing ConPTY first ends the root, and a `taskkill /T` that runs after
+ *  that cannot find the children any more — that is how fired agents left
+ *  their MCP servers running. POSIX closes the pty (SIGHUP), then
+ *  ensureKilled sweeps the group and any descendant that left it. */
+export function killPtyTree(proc: { pid: number; kill: () => void }): void {
+  const pid = proc.pid;
+  if (process.platform === 'win32') {
+    void killTreeAsync(pid).finally(() => { try { proc.kill(); } catch { /* already gone */ } });
+    return;
+  }
+  try { proc.kill(); } catch { /* already gone */ }
+  ensureKilled(pid);
+}
+
 /** After a graceful kill (node-pty's SIGHUP), make sure the PIDs actually get
  *  released: wait a short grace, then sweep the process tree. Runs even when
  *  the leader died promptly — the sweep is what reaps grandchildren the polite
@@ -96,13 +183,25 @@ export function shouldSweep(
 export function ensureKilled(pid: number | undefined, graceMs = KILL_GRACE_MS): void {
   if (typeof pid !== 'number' || !Number.isInteger(pid) || pid <= 0) return;
   if (process.platform === 'win32') {
-    const t = setTimeout(() => hardKillTree(pid), graceMs);
+    const t = setTimeout(() => { void killTreeAsync(pid); }, graceMs);
     t.unref?.();
     return;
   }
   const before = groupMembers(pid);
+  // Children that left the group (setsid: a browser, a daemon) are not reached
+  // by the group kill, so remember the descendants now, while they still have
+  // their parent link.
+  const table = posixTable();
+  const strays = table
+    ? descendantsOf(new Map([...table].map(([p, v]) => [p, v.ppid])), pid).map((p) => [p, table.get(p)!.started] as const)
+    : [];
   const t = setTimeout(() => {
     if (shouldSweep(before, groupMembers(pid))) hardKillTree(pid);
+    if (!strays.length) return;
+    const now = posixTable();
+    for (const [p, started] of strays) {
+      if (now?.get(p)?.started === started) { try { process.kill(p, 'SIGKILL'); } catch { /* gone */ } }
+    }
   }, graceMs);
   t.unref?.();
 }

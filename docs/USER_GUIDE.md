@@ -439,6 +439,7 @@ DevLabs is free, but **the AI tools charge you for the work agents do**. Ways to
 - **Safety brake:** if an agent keeps repeating itself, it's marked **looping** and slowed down. Check what it's doing.
 - **Pause everything:** the **auto** button at the top of Ramon's Command Center stops messages being delivered to all agents until you turn it back on.
 - **Stop one agent:** **stop after this step** or **block tools** in its control row.
+- **See what your computer pays:** **Settings → General → Resource use** shows the CPU and memory DevLabs and its agents use right now, and for each agent how many programs it runs. Each connection you switch on in Settings → Connections runs once per agent, so fewer connections means lighter agents.
 
 ---
 

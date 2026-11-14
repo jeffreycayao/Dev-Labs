@@ -19,7 +19,9 @@ Connectors let agents on your floor work inside other apps.
 | **Agent Browser** | Drive a real headless Chrome: open pages, snapshot them as text, click, fill forms, screenshot ([agent-browser](https://github.com/vercel-labs/agent-browser) by Vercel, Apache-2.0) | No key; on by default | Nothing to get; Chrome for Testing downloads itself on first use |
 | GitHub, Database, Email & Calendar, Web Search | See the descriptions in Settings | The token or connection string named in the field | The "how to get it" link in Settings |
 
-Safe read-only servers (Filesystem, Git, Fetch, Time and others) are on by default and need no key.
+Safe read-only servers need no key. Sequential Thinking and Context7 are on by default. Filesystem, Git, Fetch and Time are off by default: Claude Code already has file, shell and web-fetch tools, and every agent runs its own copy of each server that is on, so each one costs memory per agent. Switch any of them on in Settings → Connections if you want it.
+
+The npm-based defaults (Sequential Thinking, Context7, Agent Browser) are pinned to exact versions in `src/shared/mcpCatalog.ts` (`npm` field). About 15 seconds after launch DevLabs installs them once into `<userData>/mcp-packages` (`src/main/mcpPackages.ts`), and agents then run them straight from there (Agent Browser as its native binary) instead of through `npx -y`, which cost a `cmd.exe` shim and an npm process per server per agent. Until that install finishes, or when npm is missing, agents fall back to `npx` with the same pinned version. To update a pin, change the version in both `spec.args` and `npm`; the next launch installs it.
 
 ## Using a connector
 

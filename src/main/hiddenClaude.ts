@@ -4,7 +4,7 @@ import path from 'node:path';
 import { resolveCommand, userShellPath } from './shellEnv';
 import { expandTilde } from './fs';
 import { projectDir } from './transcript';
-import { ensureKilled } from './procKill';
+import { killPtyTree } from './procKill';
 
 /**
  * Shared helper: run a HIDDEN interactive claude session (ephemeral PTY) and
@@ -158,11 +158,7 @@ export function runHiddenClaude(prompt: string, opts: HiddenClaudeOptions): Prom
     // Hidden sessions are ephemeral CHECKS — nothing they spawn (MCP servers,
     // helpers) may outlive them. Kill politely, then sweep the process group so
     // every check releases its PIDs even if `claude` shrugs off the SIGHUP.
-    const kill = () => {
-      const pid = ptyProc.pid;
-      try { ptyProc.kill(); } catch { /* noop */ }
-      ensureKilled(pid);
-    };
+    const kill = () => killPtyTree(ptyProc);
 
     const finish = (r: HiddenClaudeResult) => {
       if (settled) return;

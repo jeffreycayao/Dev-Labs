@@ -17,6 +17,7 @@ import { UpdatesSection } from './UpdatesSection';
 import { SettingsHeroCard } from './SettingsHeroCard';
 import { SetupPanel } from './SetupPanel';
 import { Icon } from './Icon';
+import { ResourceUsageSettings } from './ResourceUsageSettings';
 import { McpDefaultsSettings } from './McpDefaultsSettings';
 import { IntegrationsRegistry } from './IntegrationsRegistry';
 import { AiEnginesSettings } from './AiEnginesSettings';
@@ -2242,6 +2243,13 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                           </span>
                         </label>
                       </div>
+                    </>
+                  )}
+
+                  {activeSection === 'General' && (
+                    <>
+                      <ResourceUsageSettings />
+                      <div style={sectionRule} />
                     </>
                   )}
 

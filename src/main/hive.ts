@@ -1742,7 +1742,7 @@ export class HiveManager {
       : '';
     // Without this Ramon edited registry.json by hand, which the floor never sees.
     const fireQueueLine = meta.isGod
-      ? `FIRING AN AGENT: write ONE JSON file \`{ "id": "<agent id>" }\` into ${inRoot('fire-requests')}/<id>.json per agent. The harness stops its terminal, marks it archived and moves its card to the Archived section, then moves the request to \`fire-requests/.done/\` (or \`.failed/\` with a reason). Never edit registry.json to fire, and never delete agent folders or memories: firing is an archive the human can undo from the Archived section. You cannot fire yourself.`
+      ? `FIRING AN AGENT: write ONE JSON file \`{ "id": "<agent id>", "token": "<your $HIVE_HOOK_TOKEN>" }\` into ${inRoot('fire-requests')}/<id>.json per agent (the token proves it is you; without it the request is refused). The harness stops its terminal, marks it archived and moves its card to the Archived section, then moves the request to \`fire-requests/.done/\` (or \`.failed/\` with a reason). Never edit registry.json to fire, and never delete agent folders or memories: firing is an archive the human can undo from the Archived section. You cannot fire yourself.`
       : '';
     let projectLine = '';
     if (meta.isGod) {
@@ -3536,8 +3536,11 @@ human rather than retry. Route work to an agent already on the floor first eithe
 Write ONE JSON file per agent into \`fire-requests/<id>.json\` in the hive root:
 
 \`\`\`json
-{ "id": "the agent id from registry.json" }
+{ "id": "the agent id from registry.json", "token": "the value of your $HIVE_HOOK_TOKEN" }
 \`\`\`
+
+The \`token\` proves the request is yours (every agent can write this folder); a request without your
+token is refused.
 
 The harness stops the agent's terminal, marks it archived in the registry, moves its card to the
 Archived section of the floor, and moves the request to \`fire-requests/.done/\` (or \`.failed/\` with a

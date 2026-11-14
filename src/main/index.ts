@@ -2992,6 +2992,7 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
   if (opts.hive?.id && hive.registry().agents[opts.hive.id]?.archived) {
     return { ok: false, error: `${opts.hive.name ?? opts.hive.id} was fired; unarchive them first.` };
   }
+  if (opts.hive?.isGod) trustedGodId = opts.hive.id;
   // Which CLI is this? Explicit wins; else inferred from the binary
   // (claude/codex/grok/agy). Non-Claude providers skip every Claude-only spawn step
   // below. Persist the resolved provider onto opts (+ hive meta) so the registry
@@ -5213,7 +5214,9 @@ function processFireRequests(): void {
     const fp = join(dir, f);
     let raw: unknown;
     try { raw = JSON.parse(readFileSync(fp, 'utf8')); } catch { raw = null; }
-    const req = parseFireRequest(raw, f, hive.registry());
+    // Any agent can write this folder; only the orchestrator's own token counts.
+    const token = raw && typeof raw === 'object' ? (raw as { token?: unknown }).token : undefined;
+    const req = parseFireRequest(raw, f, hive.registry(), hive.hookAgent(undefined, token), trustedGodId);
     const res = req.ok ? fireAgent(req.id) : { ok: false, error: req.reason };
     if (!res.ok) informGod('[fire rejected]', `Fire-request ${f} rejected: ${res.error}.`);
     archiveRequest(fp, res.ok ? '.done' : '.failed', dir);
@@ -5221,9 +5224,11 @@ function processFireRequests(): void {
 }
 
 /** Registry says fired, floor still shows it (registry.json edited by hand, or a
- *  broadcast the window missed): run the fire path for those ids. Checked when
- *  either file changes, and again every DRIFT_RETRY_MS while drift remains, since
- *  a broadcast sent before the renderer listens is lost. */
+ *  broadcast the window missed): archive those cards. registry.json is
+ *  agent-writable, so this never stops a terminal — an agent that is running is
+ *  left alone, and the orchestrator always is. Checked when either file changes,
+ *  and again every DRIFT_RETRY_MS while drift remains, since a broadcast sent
+ *  before the renderer listens is lost. */
 const DRIFT_RETRY_MS = 15_000;
 let driftStamp = '';
 let driftCheckedAt = 0;
@@ -5238,10 +5243,22 @@ function reconcileFiredAgents(): void {
   if (stamp === driftStamp && !(driftPending && now - driftCheckedAt >= DRIFT_RETRY_MS)) return;
   driftStamp = stamp;
   driftCheckedAt = now;
-  const ids = firedStillOnFloor(hive.registry(), roster.read());
+  const snap = roster.read();
+  const ptys = new Set(ptyManager.list().map((p) => p.id));
+  const live = new Set<string>();
+  for (const a of [...(snap?.agents ?? []), ...(snap?.restorable ?? [])] as Array<{ id?: unknown; ptyId?: unknown }>) {
+    if (typeof a?.id === 'string' && (ptys.has(a.id) || (typeof a.ptyId === 'string' && ptys.has(a.ptyId)))) live.add(a.id);
+  }
+  const ids = firedStillOnFloor(hive.registry(), snap, live, trustedGodId);
   driftPending = ids.length > 0;
-  for (const id of ids) fireAgent(id);
+  for (const id of ids) {
+    try { liveWebContents()?.send('hive:agentArchived', { id }); } catch { /* window torn down */ }
+  }
 }
+
+/** The orchestrator's agent id as the app window spawned it — main's own record,
+ *  never read back from the agent-writable registry. */
+let trustedGodId: string | null = null;
 
 /** Polling cadence — matches the hive router. */
 const WORKER_TICK_MS = 1500;

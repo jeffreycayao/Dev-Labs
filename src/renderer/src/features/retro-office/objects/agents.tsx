@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { createDefaultAgentAvatarProfile } from "@/lib/avatars/profile";
 import { AvatarHair, darker, useFaceTexture } from "@/features/office/avatar/figureParts";
 import { useStore } from "@/store/store";
+import { agentStatusBadge } from "@/lib/avatars/statusBadge";
 import {
   AGENT_SCALE,
   WALK_ANIM_SPEED,
@@ -45,6 +46,24 @@ const HTML_BUBBLE_STYLE = {
   WebkitLineClamp: MAX_SPEECH_BUBBLE_LINES,
   overflow: "hidden",
 } as const;
+// Status badge over the head: screen-space HTML, so it is the same 9px pill at
+// every camera zoom (the office zooms 25–220) and stays readable at the default.
+const STATUS_BADGE_STYLE = {
+  display: "flex",
+  alignItems: "center",
+  gap: 4,
+  padding: "1px 6px 1px 4px",
+  borderRadius: 999,
+  border: "1px solid",
+  background: "rgba(8, 12, 20, 0.92)",
+  color: "#f8fafc",
+  font: "700 9px/1.4 var(--cth-font-ui, Inter, system-ui, sans-serif)",
+  letterSpacing: "0.04em",
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.4)",
+} as const;
+const STATUS_BADGE_DOT_STYLE = { width: 6, height: 6, borderRadius: 999, flexShrink: 0 } as const;
 const HTML_BUBBLE_TAIL_STYLE = {
   width: 0,
   height: 0,
@@ -127,6 +146,10 @@ export const AgentModel = memo(function AgentModel({
   const heldScrubberRef = useRef<THREE.Group>(null);
   const speechBubbleRef = useRef<THREE.Group>(null);
   const htmlBubbleRef = useRef<HTMLDivElement>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
+  const badgeDotRef = useRef<HTMLSpanElement>(null);
+  const badgeTextRef = useRef<HTMLSpanElement>(null);
+  const badgeKeyRef = useRef("");
   const speechBubbleMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const awayBubbleRef = useRef<THREE.Group>(null);
   const bodyMatRef = useRef<THREE.MeshLambertMaterial>(null);
@@ -405,6 +428,18 @@ export const AgentModel = memo(function AgentModel({
     }
 
     if (awayBubbleRef.current) awayBubbleRef.current.visible = isAway;
+    if (badgeRef.current && badgeDotRef.current && badgeTextRef.current) {
+      // Same reading as the nameplate dot; the "z z z" bubble covers the away case.
+      const badge = agentStatusBadge(agent.status, agent.state);
+      const key = isAway ? "away" : badge.label;
+      if (key !== badgeKeyRef.current) {
+        badgeKeyRef.current = key;
+        badgeRef.current.style.display = isAway ? "none" : "flex";
+        badgeRef.current.style.borderColor = badge.color;
+        badgeDotRef.current.style.background = badge.color;
+        badgeTextRef.current.textContent = badge.label;
+      }
+    }
     if (bodyMatRef.current) bodyMatRef.current.opacity = isAway ? 0.45 : 1;
     if (groupRef.current) {
       groupRef.current.traverse((child) => {
@@ -1091,6 +1126,14 @@ export const AgentModel = memo(function AgentModel({
           ) : null}
         </Billboard>
       ) : null}
+      {activeSpeechBubble ? null : (
+        <Html position={[0, 1.45, 0]} center zIndexRange={[20, 10]} pointerEvents="none">
+          <div ref={badgeRef} style={{ ...STATUS_BADGE_STYLE, display: "none" }}>
+            <span ref={badgeDotRef} style={STATUS_BADGE_DOT_STYLE} />
+            <span ref={badgeTextRef} />
+          </div>
+        </Html>
+      )}
       <group ref={awayBubbleRef} visible={false}>
         <Billboard position={[0, 1.3, 0]}>
           <mesh position={[0, 0, -0.001]}>

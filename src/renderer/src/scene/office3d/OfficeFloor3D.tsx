@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, SkipBack, SkipForward, Square } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
@@ -19,11 +19,12 @@ import { useOfficeActivity } from './useOfficeActivity';
 import { useJukebox } from './useJukebox';
 import { useOfficeMonitors } from './useOfficeMonitors';
 import {
-  AGENTS_PER_LEVEL, assignOfficeLevels, levelDesksKey, levelKeyMoves, levelNamespace, moveAgentToLevel,
+  AGENTS_PER_LEVEL, assignOfficeLevels, elevatorStops, levelDesksKey, levelKeyMoves, levelNamespace, moveAgentToLevel,
   parseOfficeLevels, removeOfficeLevel, type OfficeLevels
 } from '@shared/officeLevels';
 import { activityBubble } from '@shared/office/activityBubble';
 import { BUSY_STATUSES } from '@shared/office/officeActivity';
+import { agentStatusBadge } from '@/lib/avatars/statusBadge';
 import { radio, useRadio } from '@/features/office/hooks/radioPlayer';
 import '@/features/retro-office/retro-office.css';
 import { configureTextBuilder } from 'troika-three-text';
@@ -44,12 +45,15 @@ const itemFor = (id: string) => {
   return ITEMS[Math.abs(hash) % ITEMS.length];
 };
 
+const officeStatus = (a: Agent): OfficeAgent['status'] =>
+  a.status === 'blocked' ? 'error' : BUSY_STATUSES.has(a.status) ? 'working' : 'idle';
+
 const toOfficeAgent = (a: Agent): OfficeAgent => ({
   id: a.id,
   name: a.name,
   // Ramon's red plate already says "boss"; his long brief doesn't fit a tag.
   subtitle: a.isGod || a.id === 'god' ? null : a.description || null,
-  status: a.status === 'blocked' ? 'error' : BUSY_STATUSES.has(a.status) ? 'working' : 'idle',
+  status: officeStatus(a),
   color: `#${(accentByName[a.accent] ?? 0x888888).toString(16).padStart(6, '0')}`,
   item: itemFor(a.id),
   avatarProfile: a.avatarProfile ?? null,
@@ -79,6 +83,21 @@ const isRamon = (a: Agent) => a.id === 'god' || !!a.isGod;
 // suckUp 0–1 need a task count we don't track here, so they're skipped.
 const SUCKUP_LINES = [2, 3, 4, 5, 6];
 const CHEER_COUNT = 7;
+
+// Elevator ride between floors: the old office slides out, the new one is built
+// off screen (the 3D scene remounts per floor), then it slides in.
+const RIDE_LEAVE_MS = 220;
+const RIDE_HOLD_MS = 240;
+const RIDE_ARRIVE_MS = 320;
+type Ride = { to: number; up: boolean; phase: 'leave' | 'hold' | 'arrive'; shown: number };
+
+const rideStyle = (ride: Ride | null): CSSProperties => {
+  if (!ride) return {};
+  const dir = ride.up ? 'down' : 'up';
+  if (ride.phase === 'leave') return { animation: `devlabs-floor-leave-${dir} ${RIDE_LEAVE_MS}ms ease-in forwards`, pointerEvents: 'none' };
+  if (ride.phase === 'hold') return { transform: `translateY(${ride.up ? -100 : 100}%)`, pointerEvents: 'none' };
+  return { animation: `devlabs-floor-arrive-${dir} ${RIDE_ARRIVE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`, pointerEvents: 'none' };
+};
 
 const LS_LEVELS = 'devlabs.office3d.levels';
 const lsDesks = levelDesksKey;
@@ -114,6 +133,23 @@ export function OfficeFloor3D() {
   const [themeOpen, setThemeOpen] = useState(false);
   const [themeRev, setThemeRev] = useState(0);
   const themeAgents = useStore(useShallow((s) => s.agents.map((a) => ({ id: a.id, name: a.name }))));
+  const [ride, setRide] = useState<Ride | null>(null);
+  const rideTimers = useRef<number[]>([]);
+  const stopRide = () => { rideTimers.current.forEach((id) => window.clearTimeout(id)); rideTimers.current = []; };
+  useEffect(() => stopRide, []);
+  const goToLevel = (to: number) => {
+    stopRide();
+    if (to === level) { setRide(null); return; }
+    // The app zeroes animations under "reduce motion", so cut straight to the floor.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setRide(null); setLevel(to); return; }
+    const at = (ms: number, fn: () => void) => { rideTimers.current.push(window.setTimeout(fn, ms)); };
+    const stops = elevatorStops(level, to);
+    setRide({ to, up: to > level, phase: 'leave', shown: level });
+    stops.forEach((shown, i) => at(((i + 1) * (RIDE_LEAVE_MS + RIDE_HOLD_MS)) / stops.length, () => setRide((r) => r && { ...r, shown })));
+    at(RIDE_LEAVE_MS, () => { setLevel(to); setRide((r) => r && { ...r, phase: 'hold' }); });
+    at(RIDE_LEAVE_MS + RIDE_HOLD_MS, () => setRide((r) => r && { ...r, phase: 'arrive' }));
+    at(RIDE_LEAVE_MS + RIDE_HOLD_MS + RIDE_ARRIVE_MS, () => setRide(null));
+  };
 
   // Subscriptions are narrow on purpose: an update to an agent on another floor
   // (every tool call changes its action) must not re-render this office.
@@ -236,7 +272,7 @@ export function OfficeFloor3D() {
     }
     setNotice(null);
     setSaved(next);
-    setLevel(to);
+    goToLevel(to);
   };
 
   const levelCount = (i: number) =>
@@ -256,6 +292,8 @@ export function OfficeFloor3D() {
         localStorage.removeItem(from);
       }
     } catch { /* storage unavailable: the floors above fall back to the default layout */ }
+    stopRide();
+    setRide(null);
     setNotice(null);
     setSaved(next);
     setLevel(level - 1);
@@ -268,6 +306,7 @@ export function OfficeFloor3D() {
       position: fullscreen ? 'fixed' : 'absolute', inset: 0, zIndex: fullscreen ? 900 : undefined,
       overflow: 'hidden', background: '#0b0d10'
     }}>
+      <div style={{ position: 'absolute', inset: 0, ...rideStyle(ride) }}>
       <RetroOffice3D
         key={`${level}:${themeRev}`}
         agents={officeAgents}
@@ -313,6 +352,20 @@ export function OfficeFloor3D() {
         selectedAgentId={selectedId}
         onToggleFullscreen={toggleFullscreen}
       />
+      </div>
+      {ride && (
+        // Elevator display; the pressed floor button already tells screen readers.
+        <div aria-hidden style={{
+          position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 29,
+          display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 10, pointerEvents: 'none',
+          background: BRAND.panel, border: `1px solid ${BRAND.line}`, color: BRAND.lime,
+          font: '800 22px/1 var(--cth-font-display)', letterSpacing: '-0.01em', textTransform: 'lowercase',
+          fontVariantNumeric: 'tabular-nums'
+        }}>
+          <span style={{ fontSize: 14 }}>{ride.up ? '▲' : '▼'}</span>
+          {t('office.levels.floor', { n: ride.shown + 1 })}
+        </div>
+      )}
 
       {themeOpen && featureOn(features, 'officeThemes') && (
         <OfficeThemePanel
@@ -334,55 +387,25 @@ export function OfficeFloor3D() {
         />
       )}
 
-      {/* Floor switcher — bottom right, one line, so it never covers the office's
-          status line (bottom left); scrolls sideways when there are many floors. */}
+      {/* The building — bottom right, floors stacked with Floor 1 at the bottom and
+          "add floor" on the roof. It stays clear of the office's status line
+          (bottom left) and scrolls when the building is tall. */}
       <div style={{
-        position: 'absolute', right: 10, bottom: 10, zIndex: 30, maxWidth: 'calc(100% - 340px)', overflowX: 'auto',
-        display: 'flex', alignItems: 'center', gap: 4, padding: 3, borderRadius: 8,
+        position: 'absolute', right: 10, bottom: 10, zIndex: 30, maxWidth: 'calc(100% - 340px)',
+        display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 3, padding: 3, borderRadius: 8,
         background: BRAND.panel, border: `1px solid ${BRAND.line}`,
         font: '800 11px/1 var(--cth-font-display)', letterSpacing: '-0.01em', textTransform: 'lowercase'
       }}>
-        {Array.from({ length: levels.count }, (_, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => { setLevel(i); setNotice(null); }}
-            title={t('office.levels.count', { count: levelCount(i), max: AGENTS_PER_LEVEL })}
-            aria-pressed={i === level}
-            style={{
-              padding: '4px 8px', borderRadius: 6, cursor: 'pointer', border: '1px solid', whiteSpace: 'nowrap',
-              borderColor: i === level ? BRAND.lime : 'transparent',
-              background: i === level ? BRAND.lime : 'transparent',
-              color: i === level ? BRAND.dark : BRAND.muted, font: 'inherit', letterSpacing: 'inherit'
-            }}
-          >
-            {t('office.levels.floor', { n: i + 1 })} · {levelCount(i)}/{AGENTS_PER_LEVEL}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => { setSaved({ count: levels.count + 1, byAgent: levels.byAgent }); setLevel(levels.count); }}
-          style={{
-            padding: '4px 8px', borderRadius: 6, cursor: 'pointer', border: `1px dashed ${BRAND.line}`, whiteSpace: 'nowrap',
-            background: 'transparent', color: BRAND.lime, font: 'inherit', letterSpacing: 'inherit'
-          }}
-        >
-          + {t('office.levels.addFloor')}
-        </button>
-        {featureOn(features, 'officeThemes') && (
-          <button
-            type="button"
-            onClick={() => setThemeOpen((o) => !o)}
-            aria-pressed={themeOpen}
-            title={t('office.theme.title')}
-            style={{
-              padding: '4px 8px', borderRadius: 6, cursor: 'pointer', border: `1px dashed ${BRAND.line}`, whiteSpace: 'nowrap',
-              background: themeOpen ? BRAND.lime : 'transparent', color: themeOpen ? BRAND.dark : BRAND.lime, font: 'inherit', letterSpacing: 'inherit'
-            }}
-          >
-            ◈ {t('office.theme.button')}
-          </button>
+        {notice && (
+          <div role="status" style={{
+            maxWidth: 220, padding: '6px 8px', borderRadius: 6, background: BRAND.key, color: BRAND.dark,
+            font: '600 12px/1.3 var(--cth-font-ui)', letterSpacing: 0, textTransform: 'none'
+          }}>
+            {notice}
+          </div>
         )}
+        {/* Above the stack, so the floors never move under the cursor. */}
+        <div style={{ display: level > 0 || (levels.count > 1 && selectedName !== undefined) ? 'flex' : 'none', alignItems: 'center', gap: 4, minWidth: 0 }}>
         {level > 0 && (
           <button
             type="button"
@@ -420,19 +443,98 @@ export function OfficeFloor3D() {
             </select>
           </label>
         )}
-      </div>
-      {notice && (
-        <div role="status" style={{
-          position: 'absolute', right: 10, bottom: 46, zIndex: 30,
-          padding: '6px 10px', borderRadius: 6, background: BRAND.key, color: BRAND.dark, fontSize: 12
-        }}>
-          {notice}
         </div>
-      )}
-
+        <button
+          type="button"
+          onClick={() => { setSaved({ count: levels.count + 1, byAgent: levels.byAgent }); goToLevel(levels.count); }}
+          style={{
+            padding: '4px 8px', borderRadius: 6, cursor: 'pointer', border: `1px dashed ${BRAND.line}`, whiteSpace: 'nowrap',
+            background: 'transparent', color: BRAND.lime, font: 'inherit', letterSpacing: 'inherit'
+          }}
+        >
+          + {t('office.levels.addFloor')}
+        </button>
+        {featureOn(features, 'officeThemes') && (
+          <button
+            type="button"
+            onClick={() => setThemeOpen((o) => !o)}
+            aria-pressed={themeOpen}
+            title={t('office.theme.title')}
+            style={{
+              padding: '4px 8px', borderRadius: 6, cursor: 'pointer', border: `1px dashed ${BRAND.line}`, whiteSpace: 'nowrap',
+              background: themeOpen ? BRAND.lime : 'transparent', color: themeOpen ? BRAND.dark : BRAND.lime, font: 'inherit', letterSpacing: 'inherit'
+            }}
+          >
+            ◈ {t('office.theme.button')}
+          </button>
+        )}
+        <BuildingFloors
+          levels={levels}
+          pinned={pinned}
+          active={ride?.to ?? level}
+          onPick={(i) => { setNotice(null); goToLevel(i); }}
+        />
+      </div>
       <MiniRadioPlayer />
       {jukebox.panel}
       {editing && <EditAgentModal agent={editing} onClose={() => setEditingId(null)} />}
+    </div>
+  );
+}
+
+// The building's floors as stacked slabs, Floor 1 at the bottom. Each slab has
+// one window per seat, lit in the colour of the agent's status badge. Its own
+// component so a status change redraws the strip, not the office.
+function BuildingFloors({ levels, pinned, active, onPick }: {
+  levels: OfficeLevels; pinned: string[]; active: number; onPick: (level: number) => void;
+}) {
+  const { t } = useTranslation();
+  const statuses = useStore(useShallow((s) => s.agents.map((a) => `${a.id}\n${officeStatus(a)}`)));
+  const windows = useMemo(() => {
+    const byLevel: string[][] = Array.from({ length: levels.count }, () => []);
+    for (const entry of statuses) {
+      const [id, status] = entry.split('\n');
+      const at = levels.byAgent[id];
+      if (at === undefined || pinned.includes(id)) continue;
+      byLevel[at]?.push(agentStatusBadge(status as OfficeAgent['status'], 'walking').color);
+    }
+    return byLevel;
+  }, [statuses, levels, pinned]);
+  const activeRef = useRef<HTMLButtonElement>(null);
+  // Braces on purpose: newer Chromium returns a Promise from scrollIntoView.
+  useEffect(() => { void activeRef.current?.scrollIntoView({ block: 'nearest' }); }, [active]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: 2, maxHeight: 'min(40vh, 200px)', overflowY: 'auto' }}>
+      {windows.map((lit, i) => (
+        <button
+          key={i}
+          ref={i === active ? activeRef : undefined}
+          type="button"
+          onClick={() => onPick(i)}
+          title={t('office.levels.count', { count: lit.length, max: AGENTS_PER_LEVEL })}
+          aria-label={`${t('office.levels.floor', { n: i + 1 })}, ${t('office.levels.count', { count: lit.length, max: AGENTS_PER_LEVEL })}`}
+          aria-pressed={i === active}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexShrink: 0,
+            padding: '4px 8px', borderRadius: 4, cursor: 'pointer', border: '1px solid', whiteSpace: 'nowrap',
+            borderColor: i === active ? BRAND.lime : 'rgba(230, 236, 221, 0.1)',
+            background: i === active ? 'rgba(205, 242, 82, 0.14)' : 'rgba(230, 236, 221, 0.04)',
+            color: i === active ? BRAND.lime : BRAND.muted, font: 'inherit', letterSpacing: 'inherit'
+          }}
+        >
+          {t('office.levels.floor', { n: i + 1 })}
+          <span aria-hidden style={{ display: 'flex', gap: 2 }}>
+            {Array.from({ length: AGENTS_PER_LEVEL }, (_, w) => (
+              <span key={w} style={{
+                width: 5, height: 8, borderRadius: 1,
+                background: lit[w] ?? 'transparent',
+                boxShadow: lit[w] ? undefined : 'inset 0 0 0 1px rgba(230, 236, 221, 0.14)'
+              }} />
+            ))}
+          </span>
+        </button>
+      ))}
     </div>
   );
 }

@@ -20,6 +20,9 @@ export interface FeatureFlags {
   chatterFollowsLanguage: boolean;
   /** The office theme export/import panel (floor bar → Theme). */
   officeThemes: boolean;
+  /** Vercel's agent-browser: a real (headless) Chrome the agent drives from the
+   *  shell or through MCP. Off by default: agents can visit sites and fill forms. */
+  agentBrowser: boolean;
 }
 
 export const FEATURE_DEFAULTS: Readonly<FeatureFlags> = {
@@ -27,7 +30,8 @@ export const FEATURE_DEFAULTS: Readonly<FeatureFlags> = {
   extraSkills: true,
   extraRoleTemplates: true,
   chatterFollowsLanguage: true,
-  officeThemes: true
+  officeThemes: true,
+  agentBrowser: false
 };
 
 export const FEATURE_KEYS = Object.keys(FEATURE_DEFAULTS) as (keyof FeatureFlags)[];
@@ -42,6 +46,19 @@ export function featureOn(features: Partial<FeatureFlags> | undefined | null, ke
 export const EXTRA_SKILL_IDS: readonly string[] = [
   'game-dev-3d', 'threejs', 'animejs', 'ui-ux-review', 'devops-runbooks', 'security-research'
 ];
+
+/** Bundled skill folders each switch controls; off → not copied to the agent. */
+export const FEATURE_SKILLS: Readonly<Partial<Record<keyof FeatureFlags, readonly string[]>>> = {
+  extraSkills: EXTRA_SKILL_IDS,
+  agentBrowser: ['agent-browser']
+};
+
+/** Skill folder ids under resources/skills whose switch is off. */
+export function excludedSkillIds(features: Partial<FeatureFlags> | undefined | null): string[] {
+  return (Object.keys(FEATURE_SKILLS) as (keyof FeatureFlags)[])
+    .filter((k) => !featureOn(features, k))
+    .flatMap((k) => FEATURE_SKILLS[k] ?? []);
+}
 
 /** Role template ids that `extraRoleTemplates` controls. */
 export const EXTRA_TEMPLATE_IDS: readonly string[] = ['ux-designer', 'security-researcher'];

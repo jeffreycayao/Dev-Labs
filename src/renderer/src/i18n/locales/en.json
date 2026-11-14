@@ -384,7 +384,9 @@
       "chatterFollowsLanguage": "Office chatter follows the app language",
       "chatterFollowsLanguageDesc": "Cafeteria small talk, gossip and cheers in the language you picked. Off keeps the original Taglish lines.",
       "officeThemes": "Office themes: export and import",
-      "officeThemesDesc": "The Theme button on the floor bar: save the furniture layout as a file, load one, or ask an AI to design one. Imports are checked and can be undone."
+      "officeThemesDesc": "The Theme button on the floor bar: save the furniture layout as a file, load one, or ask an AI to design one. Imports are checked and can be undone.",
+      "agentBrowser": "Agent Browser (Vercel agent-browser)",
+      "agentBrowserDesc": "Lets agents drive a real headless Chrome: visit websites, read pages, click and fill forms. Also needs the Agent Browser connector switched on in Connections. Chrome for Testing is downloaded the first time an agent uses it."
     },
     "attitude": {
       "title": "How agents talk to you",
@@ -1554,7 +1556,9 @@
       "secret": "Requires Secret / API Key (consent required)",
       "safeReadonlyNote": "These servers read data only, need no secrets, and are scoped to the agent workspace. They are enabled for every new agent.",
       "writeNote": "These servers can mutate state beyond the workspace. Off by default — enable only after reviewing.",
-      "secretNote": "These servers require an API key or credentials. Off by default — add your credentials and enable after consent."
+      "secretNote": "These servers require an API key or credentials. Off by default — add your credentials and enable after consent.",
+      "browser": "Browser (consent required)",
+      "browserNote": "These servers drive a real web browser: agents can visit any website, read it, click and fill forms. Off by default and behind the Agent Browser switch in General → Features."
     },
     "key": {
       "saved": "Key saved",

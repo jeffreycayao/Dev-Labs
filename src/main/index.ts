@@ -35,7 +35,7 @@ import { CumulativeSampleGate, type UsageProvider } from './usage';
 import { MemoryManager } from './memory';
 import { KnowledgeManager } from './knowledge';
 import { readAttitude, writeAttitude } from './attitude';
-import { EXTRA_SKILL_IDS, featureOn } from '../shared/features';
+import { excludedSkillIds, featureOn } from '../shared/features';
 import { MemoryReflector, type ReflectSettings } from './reflect';
 import { PersistStore } from './db';
 import { readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
@@ -3164,9 +3164,11 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
             for (const s of skipped) console.warn(`[mcp] ${s.id} not attached to ${opts.id}: ${s.reason}`);
           },
           skillsDir: skillsResourceDir(),
-          // Owner switches (Settings → General → Features): drop the DevLabs-written
-          // skills when off; inject ATTITUDE.md only when on AND it has text.
-          skillsExclude: featureOn(readConfig().features, 'extraSkills') ? [] : EXTRA_SKILL_IDS,
+          // Owner switches (Settings → General → Features): drop the skills whose
+          // switch is off (DevLabs-written set, agent-browser); hide the connectors
+          // behind an off switch; inject ATTITUDE.md only when on AND it has text.
+          skillsExclude: excludedSkillIds(readConfig().features),
+          features: readConfig().features,
           attitude: featureOn(readConfig().features, 'attitudeFile') ? readAttitude() : '',
           // The shared palace is mutated by the agent's own `mempalace` calls, so
           // the OS sandbox must let it through (empty when memory is off).

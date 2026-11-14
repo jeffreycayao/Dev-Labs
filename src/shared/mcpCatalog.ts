@@ -11,6 +11,8 @@
  *                       consent-gated.
  *   - 'secret'        → needs an API key / token / connection string; OFF by default,
  *                       consent-gated.
+ *   - 'browser'       → drives a real browser (visits sites, fills forms); OFF by
+ *                       default, consent-gated, and behind an owner feature switch.
  *
  * The actual merge (catalog ∩ enabled, cwd-scoping of filesystem/git, id namespacing,
  * non-fatal resolution) is Workstream 3's `buildDefaultMcpServers`/`hookSettings`
@@ -23,8 +25,9 @@
  */
 
 import type { IntegrationAuthType } from './integrations';
+import { featureOn, type FeatureFlags } from './features';
 
-export type McpTier = 'safe-readonly' | 'write' | 'secret';
+export type McpTier = 'safe-readonly' | 'write' | 'secret' | 'browser';
 
 /** A local server the agent CLI launches (stdio). */
 export interface McpStdioSpec {
@@ -104,6 +107,10 @@ export interface McpCatalogEntry {
   tier: McpTier;
   /** Seed for `config.mcpDefaults[id].enabled`. Always === (tier === 'safe-readonly'). */
   defaultEnabled: boolean;
+  /** Owner feature switch (Settings → General → Features) that must be on for
+   *  this entry to exist at all: hidden in Settings and never written to an
+   *  agent's config while off, whatever the consent says. */
+  feature?: keyof FeatureFlags;
 }
 
 /** The default MCP bundle. Safe/read-only servers are ON; anything that writes
@@ -300,8 +307,31 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     secret: { kind: 'header', name: 'Authorization', label: 'Discord bot token', helpUrl: 'https://discord.com/developers/applications' },
     tier: 'secret',
     defaultEnabled: false
+  },
+
+  // ─── Browser (feature switch + consent) ───────────────────────────────────
+  {
+    // Vercel's agent-browser (Apache-2.0) as its own stdio MCP server, PINNED
+    // like Webcake. The `core` tool profile (open, snapshot, click, fill,
+    // screenshot, close) keeps the agent's context small; the CLI is on PATH
+    // through the same npx call for anything else. One browser SESSION per
+    // agent so two agents never drive the same tab. The npm package has no
+    // Chromium: the first `open` tells the agent to run `agent-browser install`.
+    // file:// stays off (its default) and MCP tool calls cannot turn it on.
+    id: 'agent-browser',
+    label: 'Agent Browser',
+    description: 'A real headless Chrome the agent drives: open pages, read them, click, fill forms, take screenshots. Visits any website you have not blocked.',
+    spec: { command: 'npx', args: ['-y', 'agent-browser@0.43.0', 'mcp'], env: { AGENT_BROWSER_SESSION: 'devlabs-<agent>' } },
+    tier: 'browser',
+    defaultEnabled: false,
+    feature: 'agentBrowser'
   }
 ];
+
+/** The catalog an owner sees: entries behind a switched-off feature are gone. */
+export function mcpCatalogFor(features: Partial<FeatureFlags> | undefined | null, catalog: readonly McpCatalogEntry[] = MCP_CATALOG): McpCatalogEntry[] {
+  return catalog.filter((e) => !e.feature || featureOn(features, e.feature));
+}
 
 /** Encrypted-store handle for an entry's credential. */
 export function mcpSecretRef(id: string): string {
@@ -355,8 +385,10 @@ export interface BuildMcpServersInput {
   /** The loopback broker + this agent's capability token, when the broker is up. */
   broker?: { url: string; token: string };
   /** Values for `<name>` placeholders in stdio specs (`node`, `resources`,
-   *  `obsidian-vault`, …). An entry needing one that is missing is skipped. */
+   *  `obsidian-vault`, `agent`, …). An entry needing one that is missing is skipped. */
   vars?: Record<string, string>;
+  /** Owner feature switches; an entry whose switch is off is not offered. */
+  features?: Partial<FeatureFlags>;
   catalog?: readonly McpCatalogEntry[];
 }
 
@@ -372,7 +404,8 @@ export interface BuildMcpServersInput {
  *     vendor URL + key; with the broker down it is skipped, not exposed;
  *   - a stdio server with `upstream` gets the same broker url + token in env;
  *   - a stdio server whose `<placeholder>` has no value is skipped
- *     ('not_configured'), never launched with a literal `<obsidian-vault>`.
+ *     ('not_configured'), never launched with a literal `<obsidian-vault>`;
+ *   - an entry behind a switched-off feature is not offered, consent or not.
  */
 export function buildMcpServers(input: BuildMcpServersInput): {
   servers: Record<string, McpServerConfig>;
@@ -382,7 +415,7 @@ export function buildMcpServers(input: BuildMcpServersInput): {
   const servers: Record<string, McpServerConfig> = {};
   const skipped: { id: string; reason: McpSkipReason }[] = [];
   const brokerIds: string[] = [];
-  for (const e of input.catalog ?? MCP_CATALOG) {
+  for (const e of mcpCatalogFor(input.features, input.catalog)) {
     const consented = input.consent?.[e.id]?.enabled;
     const enabled = consented ?? e.defaultEnabled;
     if (!enabled) continue;

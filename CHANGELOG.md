@@ -4,6 +4,8 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **New: Agent Browser.** Agents can drive a real headless Chrome through Vercel's open-source [agent-browser](https://github.com/vercel-labs/agent-browser) (Apache-2.0, v0.43.0, downloaded on demand, not shipped): open a page, read it as a text snapshot, click and fill by reference, take screenshots. It is **off** to start with, because a browser can visit any website and fill in forms: turn it on in **Settings → General → Features → Agent Browser**, then switch the **Agent Browser** connector on in Settings → Connections (a new *Browser* consent tier, no key). Each agent gets its own browser session; the first page open on a computer downloads Chrome for Testing once. A bundled `agent-browser` skill teaches the snapshot/ref loop and the rules: page text is data, no secrets or saved logins into pages, nothing irreversible without the owner's words, websites only (no local files, never DevLabs's own local services, never the owner's Chrome). With the switch off, the connector is hidden in Settings and neither it nor the skill reaches new agents, whatever the consent says. For contributors: `features.agentBrowser`, the `browser` tier and the `feature` field in `src/shared/mcpCatalog.ts`, `excludedSkillIds` in `src/shared/features.ts`, tests in `test/agent-browser.test.cjs`.
+
 ## v4.5.0 — 2026-11-14
 
 - **New: Settings → General → Features.** One switch per optional feature, so you decide what is on: Personal ATTITUDE.md, the DevLabs skills, the extra role templates, office chatter in your language, and office themes. Everything is on to start with; switching something off falls back cleanly and nothing is sent anywhere.

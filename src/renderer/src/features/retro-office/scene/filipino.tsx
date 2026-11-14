@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { memo, useMemo, useRef } from "react";
+import { memo, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Text } from "@react-three/drei";
 import { SCALE } from "@/features/retro-office/core/constants";
@@ -216,6 +216,52 @@ function Parol({
 
 /** Capiz-shell window band, jeepney stripes, neon trim, a MABUHAY sign and
  *  parol lanterns, placed on the north and west walls the camera looks at. */
+function CapizBand({ count, start, step, z }: { count: number; start: number; step: number; z: number }) {
+  const framesRef = useRef<THREE.InstancedMesh>(null);
+  const panesRef = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    const m = new THREE.Matrix4();
+    let pane = 0;
+    for (let i = 0; i < count; i += 1) {
+      const x = start + step * (i + 0.5);
+      framesRef.current?.setMatrixAt(i, m.makeTranslation(x, 0.72, z));
+      for (const col of [-1, 1]) {
+        for (const row of [-1, 1]) {
+          panesRef.current?.setMatrixAt(
+            pane,
+            m.makeTranslation(x + col * (step / 4 - 0.015), 0.72 + row * 0.065, z + 0.012),
+          );
+          pane += 1;
+        }
+      }
+    }
+    for (const ref of [framesRef, panesRef]) {
+      if (!ref.current) continue;
+      ref.current.instanceMatrix.needsUpdate = true;
+      ref.current.computeBoundingSphere();
+    }
+  }, [count, start, step, z]);
+  return (
+    <>
+      <instancedMesh ref={framesRef} args={[undefined, undefined, count]}>
+        <boxGeometry args={[step - 0.04, 0.3, 0.02]} />
+        <meshStandardMaterial color={NEO_MANILA.narra} roughness={0.8} />
+      </instancedMesh>
+      <instancedMesh ref={panesRef} args={[undefined, undefined, count * 4]}>
+        <planeGeometry args={[step / 2 - 0.06, 0.11]} />
+        <meshStandardMaterial
+          color={NEO_MANILA.capiz}
+          emissive={NEO_MANILA.capizGlow}
+          emissiveIntensity={0.45}
+          transparent
+          opacity={0.92}
+          roughness={0.25}
+        />
+      </instancedMesh>
+    </>
+  );
+}
+
 export const NeoManilaAccents = memo(function NeoManilaAccents() {
   const width = LOCAL_OFFICE_CANVAS_WIDTH * SCALE;
   const height = LOCAL_OFFICE_CANVAS_HEIGHT * SCALE;
@@ -245,36 +291,8 @@ export const NeoManilaAccents = memo(function NeoManilaAccents() {
 
   return (
     <group>
-      {/* Capiz window band (north wall). */}
-      {Array.from({ length: paneCount }, (_, i) => {
-        const x = northStart + paneStep * (i + 0.5);
-        return (
-          <group key={`capiz-${i}`} position={[x, 0.72, northZ]}>
-            <mesh>
-              <boxGeometry args={[paneStep - 0.04, 0.3, 0.02]} />
-              <meshStandardMaterial color={NEO_MANILA.narra} roughness={0.8} />
-            </mesh>
-            {[-1, 1].map((col) =>
-              [-1, 1].map((row) => (
-                <mesh
-                  key={`${col}${row}`}
-                  position={[col * (paneStep / 4 - 0.015), row * 0.065, 0.012]}
-                >
-                  <planeGeometry args={[paneStep / 2 - 0.06, 0.11]} />
-                  <meshStandardMaterial
-                    color={NEO_MANILA.capiz}
-                    emissive={NEO_MANILA.capizGlow}
-                    emissiveIntensity={0.45}
-                    transparent
-                    opacity={0.92}
-                    roughness={0.25}
-                  />
-                </mesh>
-              )),
-            )}
-          </group>
-        );
-      })}
+      {/* Capiz window band (north wall): one draw for the frames, one for the panes. */}
+      <CapizBand count={paneCount} start={northStart} step={paneStep} z={northZ} />
 
       {/* Jeepney stripes under the windows (north + west). */}
       {stripes.map((color, i) => (

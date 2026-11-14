@@ -71,6 +71,7 @@ export function PingPongBall({
   const ballRef = useRef<THREE.Mesh>(null);
   const shadowRef = useRef<THREE.Mesh>(null);
   const shadowMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const invalidate = useThree((state) => state.invalidate);
 
   useFrame(() => {
     if (!ballRef.current || !shadowRef.current || !shadowMatRef.current) return;
@@ -146,6 +147,7 @@ export function PingPongBall({
         THREE.MathUtils.lerp(bounceY, paddleY, t) + Math.sin(t * Math.PI) * 0.03;
     }
 
+    invalidate();
     ballRef.current.visible = true;
     ballRef.current.position.set(ballX, ballY, ballZ);
     shadowRef.current.visible = true;
@@ -186,8 +188,94 @@ export function PingPongBall({
   );
 }
 
-export function GameLoop({ tick }: { tick: () => void }) {
-  useFrame(() => tick());
+const SIM_STEP_MS = 1000 / 60;
+// Frames per second while nothing moves: enough for bubbles, screens and the
+// jukebox to keep ticking, a fraction of the cost of a full 60 Hz loop.
+const CALM_FPS = 12;
+
+/** Agents whose animation needs every frame. Seated and standing agents only
+ *  shift pose, which the calm heartbeat covers. */
+const isInMotion = (agent: RenderAgent) =>
+  agent.state === "walking" ||
+  agent.state === "dancing" ||
+  agent.state === "working_out" ||
+  agent.pingPongUntil !== undefined;
+
+/** Runs the office simulation at a fixed 60 Hz regardless of frame rate, and
+ *  decides when the on-demand Canvas draws the next frame: straight away while
+ *  the camera or an agent moves, otherwise on a slow heartbeat. */
+export function GameLoop({
+  tick,
+  agentsRef,
+}: {
+  tick: () => void;
+  agentsRef: RefObject<RenderAgent[]>;
+}) {
+  const { camera, gl, invalidate } = useThree();
+  const lastRef = useRef({ time: 0, x: NaN, y: NaN, z: NaN, zoom: NaN, timer: 0, shadowAt: 0 });
+
+  useEffect(() => {
+    const last = lastRef.current;
+    // The sun does not move, so shadow maps are redrawn only when something
+    // that casts them does (below), not every frame.
+    gl.shadowMap.autoUpdate = false;
+    gl.shadowMap.needsUpdate = true;
+    return () => {
+      gl.shadowMap.autoUpdate = true;
+    };
+  }, [gl]);
+
+  useEffect(() => {
+    const last = lastRef.current;
+    // A hidden window stops the heartbeat; draw once it is visible again.
+    const onVisible = () => invalidate();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.clearTimeout(last.timer);
+      // The ref survives a hot reload; a stale id here would stop the heartbeat for good.
+      last.timer = 0;
+    };
+  }, [invalidate]);
+
+  useFrame(() => {
+    const last = lastRef.current;
+    const now = performance.now();
+    const steps = last.time
+      ? Math.min(6, Math.max(1, Math.round((now - last.time) / SIM_STEP_MS)))
+      : 1;
+    last.time = now;
+    for (let step = 0; step < steps; step += 1) tick();
+
+    const zoom = (camera as THREE.OrthographicCamera).zoom ?? 0;
+    const cameraMoved =
+      camera.position.x !== last.x ||
+      camera.position.y !== last.y ||
+      camera.position.z !== last.z ||
+      zoom !== last.zoom;
+    last.x = camera.position.x;
+    last.y = camera.position.y;
+    last.z = camera.position.z;
+    last.zoom = zoom;
+
+    const agentsMoving = (agentsRef.current ?? []).some(isInMotion);
+    // Seated agents still shift their arms; a refresh every second keeps their
+    // shadows honest without paying for the pass on every frame.
+    if (agentsMoving || now - last.shadowAt > 1000) {
+      gl.shadowMap.needsUpdate = true;
+      last.shadowAt = now;
+    }
+    if (cameraMoved || agentsMoving) {
+      invalidate();
+      return;
+    }
+    if (last.timer || document.visibilityState !== "visible") return;
+    last.timer = window.setTimeout(() => {
+      last.timer = 0;
+      invalidate();
+    }, 1000 / CALM_FPS);
+  });
+
   return null;
 }
 
@@ -202,9 +290,12 @@ export function SpotlightEffect({
 }) {
   const lightRef = useRef<THREE.SpotLight>(null);
   const progressRef = useRef(0);
+  const invalidate = useThree((state) => state.invalidate);
 
   useFrame((_, delta) => {
     if (!lightRef.current) return;
+    // Frames only while the beam fades in or out; a settled spotlight costs nothing.
+    if (agentId ? progressRef.current < 1 : progressRef.current > 0) invalidate();
     if (agentId) {
       progressRef.current = Math.min(1, progressRef.current + delta / 0.4);
     } else {

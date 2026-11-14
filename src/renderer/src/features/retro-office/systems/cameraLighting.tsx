@@ -10,6 +10,13 @@ import {
   DISTRICT_CAMERA_ZOOM,
 } from "@/features/retro-office/core/district";
 import { toWorld } from "@/features/retro-office/core/geometry";
+import {
+  approach,
+  clampTarget,
+  wheelZoom,
+  zoomAnchorShift,
+  type PanBounds,
+} from "@/features/retro-office/core/cameraMath";
 import type { RenderAgent } from "@/features/retro-office/core/types";
 
 export type CameraPreset = {
@@ -48,7 +55,7 @@ export function CameraAnimator({
   presetRef: MutableRefObject<CameraPreset | null>;
   orbitRef: RefObject<OrbitControllerLike | null>;
 }) {
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
   // DevLabs: the office Canvas is orthographic, so zoom presets must drive it too.
   const isZoomable = (cam: THREE.Camera) =>
     cam instanceof THREE.PerspectiveCamera || cam instanceof THREE.OrthographicCamera;
@@ -68,6 +75,8 @@ export function CameraAnimator({
     const preset = presetRef.current;
     const orbit = orbitRef.current;
     if (!preset || !orbit) return;
+    // The Canvas renders on demand; keep frames coming while the glide runs.
+    invalidate();
     const activeCamera = activePerspectiveCameraRef.current;
 
     targetPositionRef.current.set(...preset.pos);
@@ -94,6 +103,90 @@ export function CameraAnimator({
   return null;
 }
 
+/** Wheel and trackpad-pinch zoom for the orthographic office camera. The
+ *  zoom eases toward its target over a few frames and the floor point under
+ *  the cursor stays put, so zooming into a desk never slides it off screen. */
+export function SmoothZoomController({
+  orbitRef,
+  presetRef,
+  bounds,
+  enabled,
+}: {
+  orbitRef: RefObject<OrbitControllerLike | null>;
+  presetRef: MutableRefObject<CameraPreset | null>;
+  bounds: PanBounds;
+  enabled: boolean;
+}) {
+  const { camera, gl, size, invalidate } = useThree();
+  const targetZoomRef = useRef<number | null>(null);
+  const anchorRef = useRef({ nx: 0, ny: 0 });
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
+
+  useEffect(() => {
+    const element = gl.domElement;
+    const handleWheel = (event: WheelEvent) => {
+      if (!enabledRef.current || !(camera instanceof THREE.OrthographicCamera)) return;
+      event.preventDefault();
+      const rect = element.getBoundingClientRect();
+      anchorRef.current = {
+        nx: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        ny: -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      };
+      targetZoomRef.current = wheelZoom(
+        targetZoomRef.current ?? camera.zoom,
+        event.deltaY,
+        event.ctrlKey,
+      );
+      // A scroll takes over from any preset still gliding.
+      presetRef.current = null;
+      invalidate();
+    };
+    element.addEventListener("wheel", handleWheel, { passive: false });
+    return () => element.removeEventListener("wheel", handleWheel);
+  }, [camera, gl, invalidate, presetRef]);
+
+  useFrame((_, delta) => {
+    const target = targetZoomRef.current;
+    if (target === null || !(camera instanceof THREE.OrthographicCamera)) return;
+    let next = approach(camera.zoom, target, 50, delta * 1000);
+    if (Math.abs(next - target) < 0.05) {
+      next = target;
+      targetZoomRef.current = null;
+    }
+    camera.updateMatrixWorld();
+    const e = camera.matrixWorld.elements;
+    const [dx, dz] = zoomAnchorShift(
+      {
+        position: camera.position,
+        right: { x: e[0], y: e[1], z: e[2] },
+        up: { x: e[4], y: e[5], z: e[6] },
+        forward: { x: -e[8], y: -e[9], z: -e[10] },
+      },
+      anchorRef.current.nx,
+      anchorRef.current.ny,
+      size.width / 2,
+      size.height / 2,
+      camera.zoom,
+      next,
+    );
+    camera.zoom = next;
+    camera.updateProjectionMatrix();
+    const orbit = orbitRef.current;
+    if (orbit) {
+      const [cx, cz] = clampTarget(orbit.target.x + dx, orbit.target.z + dz, bounds);
+      camera.position.x += cx - orbit.target.x;
+      camera.position.z += cz - orbit.target.z;
+      orbit.target.x = cx;
+      orbit.target.z = cz;
+      orbit.update();
+    }
+    invalidate();
+  });
+
+  return null;
+}
+
 export function FollowCamController({
   followRef,
   agentsRef,
@@ -103,7 +196,7 @@ export function FollowCamController({
   agentsRef: RefObject<RenderAgent[]>;
   agentLookupRef?: RefObject<Map<string, RenderAgent>>;
 }) {
-  const { camera, set, size, gl } = useThree();
+  const { camera, set, size, gl, invalidate } = useThree();
   const perspectiveCameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const originalCameraRef = useRef<THREE.PerspectiveCamera | null>(
     camera instanceof THREE.PerspectiveCamera ? camera : null,
@@ -173,6 +266,7 @@ export function FollowCamController({
   useFrame(() => {
     const agentId = followRef.current;
     const isFollowing = agentId !== null;
+    if (isFollowing || wasFollowingRef.current) invalidate();
 
     if (isFollowing && !wasFollowingRef.current) {
       const agent =

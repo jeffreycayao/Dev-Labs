@@ -221,14 +221,22 @@ const TRIPLE_MONITOR: THREE.Matrix4[] = (() => {
   return [screen(0, 0, 0), screen(-side, forward, angle), screen(side, forward, -angle)];
 })();
 
+const IDENTITY_MATRIX = new THREE.Matrix4();
+
 export function InstancedFurnitureItems({
   itemType,
+  itemColor,
   items,
   onItemClick,
+  onItemHover,
 }: {
   itemType: string;
+  /** Items in one call share a tint (beanbags come in colours). */
+  itemColor?: string;
   items: FurnitureItem[];
   onItemClick?: (itemUid: string) => void;
+  /** Called with the hovered item's uid, or null when the pointer leaves. */
+  onItemHover?: (itemUid: string | null) => void;
 }) {
   const glbPath = FURNITURE_GLB[itemType] ?? FURNITURE_GLB.table_rect;
   const { scene } = useGLTF(glbPath, false, false);
@@ -236,29 +244,33 @@ export function InstancedFurnitureItems({
     () =>
       resolveFurnitureTemplate({
         glbPath,
-        itemColor: undefined,
+        itemColor,
         itemType,
         scene,
       }),
-    [glbPath, itemType, scene],
+    [glbPath, itemColor, itemType, scene],
   );
   const meshRefs = useRef<Array<THREE.InstancedMesh | null>>([]);
   const meshDefs = useMemo<InstancedFurnitureMeshDef[]>(() => {
     template.updateMatrixWorld(true);
+    // A desk computer is the triple-monitor rig: three copies of each screen mesh.
+    const copies = itemType === "computer" ? TRIPLE_MONITOR : [IDENTITY_MATRIX];
     const nextDefs: InstancedFurnitureMeshDef[] = [];
     template.traverse((child) => {
       if (!(child as THREE.Mesh).isMesh) return;
       const mesh = child as THREE.Mesh;
-      nextDefs.push({
-        castShadow: mesh.castShadow,
-        geometry: mesh.geometry,
-        material: mesh.material as THREE.Material,
-        matrixWorld: mesh.matrixWorld.clone(),
-        receiveShadow: mesh.receiveShadow,
-      });
+      for (const copy of copies) {
+        nextDefs.push({
+          castShadow: mesh.castShadow,
+          geometry: mesh.geometry,
+          material: mesh.material as THREE.Material,
+          matrixWorld: copy.clone().multiply(mesh.matrixWorld),
+          receiveShadow: mesh.receiveShadow,
+        });
+      }
     });
     return nextDefs;
-  }, [template]);
+  }, [itemType, template]);
   const itemMatrices = useMemo(
     () => items.map((item) => buildFurnitureItemMatrix(item, itemType)),
     [itemType, items],
@@ -281,6 +293,24 @@ export function InstancedFurnitureItems({
           }
         : undefined,
     [itemUidByInstanceId, onItemClick],
+  );
+
+  const handleOver = useMemo(
+    () =>
+      onItemHover
+        ? (event: ThreeEvent<PointerEvent>) => {
+            const uid =
+              typeof event.instanceId === "number"
+                ? itemUidByInstanceId[event.instanceId]
+                : undefined;
+            if (uid) onItemHover(uid);
+          }
+        : undefined,
+    [itemUidByInstanceId, onItemHover],
+  );
+  const handleOut = useMemo(
+    () => (onItemHover ? () => onItemHover(null) : undefined),
+    [onItemHover],
   );
 
   useLayoutEffect(() => {
@@ -311,6 +341,8 @@ export function InstancedFurnitureItems({
           castShadow={def.castShadow}
           receiveShadow={def.receiveShadow}
           onClick={handleClick}
+          onPointerOver={handleOver}
+          onPointerOut={handleOut}
         />
       ))}
     </>

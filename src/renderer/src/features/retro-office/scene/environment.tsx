@@ -202,7 +202,7 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
         receiveShadow
       >
         <planeGeometry args={[localOfficeWidth, localOfficeHeight, 24, 14]} />
-        <meshStandardMaterial color="#263238" roughness={0.98} metalness={0.02} />
+        <meshStandardMaterial color="#232922" roughness={0.98} metalness={0.02} />
       </mesh>
 
       <mesh
@@ -211,7 +211,7 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
         receiveShadow
       >
         <planeGeometry args={[localOfficeWidth * 0.95, localOfficeHeight * 0.9]} />
-        <meshStandardMaterial color="#1b232a" roughness={0.96} metalness={0.04} />
+        <meshStandardMaterial color="#181C17" roughness={0.96} metalness={0.04} />
       </mesh>
 
       <mesh
@@ -251,7 +251,7 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
           >
             <planeGeometry args={[gymZoneFloorWidth, gymZoneFloorHeight]} />
             <meshStandardMaterial
-              color="#24272d"
+              color="#2A3128"
               roughness={0.95}
               metalness={0.05}
             />

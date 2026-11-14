@@ -310,6 +310,7 @@ export function OfficeFloor3D() {
         onAddAgent={() => useStore.getState().setAddAgentOpen(true)}
         fullscreen={fullscreen}
         paused={coveredByOverlay}
+        selectedAgentId={selectedId}
         onToggleFullscreen={toggleFullscreen}
       />
 

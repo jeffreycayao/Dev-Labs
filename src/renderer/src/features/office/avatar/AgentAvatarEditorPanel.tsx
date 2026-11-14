@@ -16,10 +16,13 @@ import {
 } from "@/lib/avatars/profile";
 import { AgentAvatarPreview3D } from "@/features/office/avatar/AgentAvatarPreview3D";
 import { randomUUID } from "@/lib/uuid";
+import type { OfficeCharacterName } from "@/scene/office/cast";
 
 export type AgentAvatarEditorPanelProps = {
   agentId: string;
   agentName: string;
+  /** Office character: Reset returns to its portrait look instead of a random one. */
+  character?: OfficeCharacterName | null;
   initialProfile: AgentAvatarProfile | null | undefined;
   onSave: (profile: AgentAvatarProfile) => Promise<void> | void;
   onDraftChange?: (profile: AgentAvatarProfile) => void;
@@ -47,6 +50,7 @@ export const AgentAvatarEditorPanel = forwardRef<
   {
     agentId,
     agentName,
+    character = null,
     initialProfile,
     onSave,
     onDraftChange,
@@ -59,8 +63,8 @@ export const AgentAvatarEditorPanel = forwardRef<
   ref
 ) {
   const fallbackProfile = useMemo(
-    () => createDefaultAgentAvatarProfile(agentId),
-    [agentId]
+    () => createDefaultAgentAvatarProfile(agentId, character),
+    [agentId, character]
   );
   const resolvedInitialProfile = initialProfile ?? fallbackProfile;
   const [draft, setDraft] = useState<AgentAvatarProfile>(resolvedInitialProfile);
@@ -110,7 +114,7 @@ export const AgentAvatarEditorPanel = forwardRef<
           <button
             type="button"
             className="ui-btn-secondary inline-flex items-center gap-2 px-3 py-2 text-xs"
-            onClick={() => setDraft(createDefaultAgentAvatarProfile(agentId))}
+            onClick={() => setDraft(createDefaultAgentAvatarProfile(agentId, character))}
             disabled={saving}
           >
             <RefreshCcw className="h-3.5 w-3.5" />

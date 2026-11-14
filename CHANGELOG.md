@@ -4,6 +4,12 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **Agents look like their cards now.** The figure on the office floor used to be dressed from a random mix of colours, so Paolo's card showed brown hair and a blue shirt while his figure wore a beanie and glasses. Every agent without a saved avatar now takes skin, hair, outfit and glasses from its portrait, and the avatar editor's **Reset** returns to that look instead of a random one. Three new hair styles (long, curly, bald) cover the whole cast.
+- **Sharper faces and colours.** The 3D head has a small pixel-art face (brow light, jaw shadow, nose, cheeks) drawn crisp with no blurring; jackets take their colour from the top instead of a fixed blue; portrait shading leans warm in the light and cool in the shade instead of a flat tint, so no colour goes chalky or grey.
+- **Portraits:** every card and detail-panel portrait sits in the same frame with a soft backdrop in the agent's accent colour, and renders at 2x/3x on HiDPI screens.
+- **Small touches:** agents tap at the keyboard while they work at a desk, and the status dot on the nameplate is a bit bigger so it reads at the default zoom.
+- **For contributors:** colour ramps live in `src/renderer/src/lib/avatars/palette.ts` (tested in `test/avatar-palette.test.cjs`); the hair and face meshes shared by the floor and the editor live in `features/office/avatar/figureParts.tsx`; the unused 18×32 walking-sprite composer was removed from `portraitArt.ts`.
+
 ## v4.4.2 — 2026-11-03
 
 - **New connector: Fireflies.ai.** Agents can read your Fireflies meeting notes (transcripts, summaries and action items) and work from them, for example turning a meeting's action items into tasks. Paste your Fireflies API key (Fireflies → Settings → Developer Settings) in Settings → Connections and switch it on. Like Pancake POS, it goes through the local proxy, so agents never see the key.

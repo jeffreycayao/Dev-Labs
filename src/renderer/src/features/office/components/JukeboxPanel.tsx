@@ -3,6 +3,7 @@
 // in the system browser). Both talk to main only through window.cth.
 // Album art and station logos are left out: the renderer CSP blocks remote images.
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { ListPlus, Music, Pause, Play, Radio, SkipBack, SkipForward, Square, Volume2, X } from "lucide-react";
 import type { RadioStation } from "@shared/office/radio";
 import type { SpotifyPlayback, SpotifyTrack } from "@shared/office/spotify";
@@ -22,6 +23,7 @@ export type JukeboxPanelProps = {
 const cth = () => window.cth;
 
 export function JukeboxPanel({ onClose, onPlayback }: JukeboxPanelProps) {
+  const { t: tr } = useTranslation();
   const [source, setSource] = useState<Source>("radio");
   const [status, setStatus] = useState<Status | null>(null);
   const refreshStatus = useCallback(() => cth().spotifyStatus().then(setStatus), []);
@@ -48,23 +50,23 @@ export function JukeboxPanel({ onClose, onPlayback }: JukeboxPanelProps) {
     >
       <div
         role="dialog"
-        aria-label="Office jukebox"
+        aria-label={tr("office.jukebox.title")}
         className="w-full max-w-2xl overflow-hidden rounded-3xl border border-cyan-500/20 bg-slate-950 shadow-2xl"
         style={{ maxHeight: "90vh" }}
       >
         <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
           <div className="flex items-center gap-3">
             <Music className="h-6 w-6 text-cyan-400" aria-hidden />
-            <h2 className="text-base font-semibold text-white">Office jukebox</h2>
+            <h2 className="text-base font-semibold text-white">{tr("office.jukebox.title")}</h2>
           </div>
-          <div role="tablist" aria-label="Music source" className="ml-auto mr-3 flex gap-1">
+          <div role="tablist" aria-label={tr("office.jukebox.source")} className="ml-auto mr-3 flex gap-1">
             {tab("radio", "Radio")}
             {tab("spotify", "Spotify")}
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tr("common.close")}
             className="rounded-full border border-white/10 p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
           >
             <X className="h-4 w-4" />
@@ -95,13 +97,15 @@ function ErrorBox({ text }: { text: string | null }) {
 }
 
 // ─── Radio: Philippine stations, played inside DevLabs ───────────────────────
+// i18n keys per player status; anything else reads as "stopped".
 const RADIO_STATUS: Record<string, string> = {
-  loading: "Connecting…",
-  playing: "Live",
-  error: "This station isn't streaming right now. Try another one."
+  loading: "office.jukebox.connecting",
+  playing: "office.jukebox.live",
+  error: "office.jukebox.stationError"
 };
 
 function RadioView() {
+  const { t: tr } = useTranslation();
   const player = useRadio();
   const [stations, setStations] = useState<RadioStation[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -127,11 +131,11 @@ function RadioView() {
   return (
     <div className="flex flex-col gap-4 p-6">
       <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-4">
-        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">Now playing</div>
+        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">{tr("office.jukebox.nowPlaying")}</div>
         {station ? (
           <div className="flex items-center gap-4">
             <ControlButton
-              label={on ? "Stop" : "Play"}
+              label={on ? tr("office.jukebox.stop") : tr("office.jukebox.play")}
               large
               onClick={() => (on ? radio.stop() : radio.play(station))}
             >
@@ -140,7 +144,7 @@ function RadioView() {
             <div className="min-w-0 flex-1">
               <div className="truncate font-semibold text-white">{station.name}</div>
               <div className={`truncate text-sm ${player.status === "error" ? "text-red-300" : "text-slate-400"}`}>
-                {RADIO_STATUS[player.status] ?? "Stopped"}
+                {RADIO_STATUS[player.status] ? tr(RADIO_STATUS[player.status]) : tr("office.jukebox.stopped")}
               </div>
             </div>
             <label className="flex items-center gap-2 text-slate-400">
@@ -151,7 +155,7 @@ function RadioView() {
                 max={1}
                 step={0.05}
                 value={player.volume}
-                aria-label="Volume"
+                aria-label={tr("office.jukebox.volume")}
                 onChange={(e) => radio.setVolume(Number(e.target.value))}
                 className="w-24 accent-cyan-400"
               />
@@ -165,13 +169,13 @@ function RadioView() {
       <ErrorBox text={error} />
       {error && (
         <button type="button" onClick={() => void load()} className="self-start text-xs text-cyan-400 underline underline-offset-2">
-          Try again
+          {tr("office.jukebox.tryAgain")}
         </button>
       )}
 
       <div>
         <label htmlFor="radio-search" className="mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">
-          Philippine stations
+          {tr("office.jukebox.stations")}
         </label>
         <input
           id="radio-search"
@@ -179,7 +183,7 @@ function RadioView() {
           value={query}
           maxLength={100}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Love Radio, Barangay LS, DZRH, news, Cebu…"
+          placeholder={tr("office.jukebox.stationSearch")}
           className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
         />
         {!stations && !error && <p className="mt-2 text-xs text-slate-500">Loading stations…</p>}
@@ -205,7 +209,7 @@ function RadioView() {
                     onClick={() => radio.play(s)}
                     className="shrink-0 rounded-full border border-cyan-500/30 px-3 py-1 text-xs font-medium text-cyan-400 transition hover:bg-cyan-500/10 disabled:opacity-50"
                   >
-                    {current ? "On air" : "Play"}
+                    {current ? tr("office.jukebox.onAir") : tr("office.jukebox.play")}
                   </button>
                 </li>
               );
@@ -225,6 +229,7 @@ function RadioView() {
 
 // ─── Setup: Client ID + browser sign-in ──────────────────────────────────────
 function SetupView({ status, onConnected }: { status: Status; onConnected: () => void }) {
+  const { t: tr } = useTranslation();
   const [clientId, setClientId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -253,12 +258,12 @@ function SetupView({ status, onConnected }: { status: Status; onConnected: () =>
   return (
     <div className="space-y-6 p-6">
       <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
-        <h3 className="mb-3 text-sm font-semibold text-amber-300">Before you connect</h3>
+        <h3 className="mb-3 text-sm font-semibold text-amber-300">{tr("office.jukebox.beforeConnect")}</h3>
         <ol className="space-y-3 text-sm text-slate-300">
           <li className="flex gap-2">
             {step(1)}
             <span>
-              Open{" "}
+              {tr("office.jukebox.step1a")}{" "}
               <button
                 type="button"
                 onClick={() => void cth().openExternal("https://developer.spotify.com/dashboard")}
@@ -266,12 +271,12 @@ function SetupView({ status, onConnected }: { status: Status; onConnected: () =>
               >
                 developer.spotify.com/dashboard
               </button>{" "}
-              and create an app. Tick <strong className="text-white">Web API</strong>.
+              <Trans t={tr} i18nKey="office.jukebox.step1b" components={{ b: <strong className="text-white" /> }} />
             </span>
           </li>
           <li className="flex gap-2">
             {step(2)}
-            <span>In the app settings, add this <strong className="text-white">Redirect URI</strong> exactly:</span>
+            <span><Trans t={tr} i18nKey="office.jukebox.step2" components={{ b: <strong className="text-white" /> }} /></span>
           </li>
           <li className="ml-7">
             <code className="block w-full break-all rounded-lg border border-cyan-500/20 bg-slate-900 px-3 py-2 font-mono text-xs text-cyan-300">
@@ -282,32 +287,32 @@ function SetupView({ status, onConnected }: { status: Status; onConnected: () =>
               onClick={() => void navigator.clipboard.writeText(status.redirectUri)}
               className="mt-1.5 text-xs text-slate-500 hover:text-slate-300"
             >
-              Copy
+              {tr("common.copy")}
             </button>
           </li>
           <li className="flex gap-2">
             {step(3)}
-            <span>Copy the app's <strong className="text-white">Client ID</strong> and paste it below. No client secret is needed.</span>
+            <span><Trans t={tr} i18nKey="office.jukebox.step3" components={{ b: <strong className="text-white" /> }} /></span>
           </li>
           <li className="flex gap-2">
             {step(4)}
-            <span>Playback control needs <strong className="text-white">Spotify Premium</strong> and Spotify open on one of your devices.</span>
+            <span><Trans t={tr} i18nKey="office.jukebox.step4" components={{ b: <strong className="text-white" /> }} /></span>
           </li>
         </ol>
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="spotify-client-id" className="block text-sm font-medium text-slate-300">Spotify Client ID</label>
+        <label htmlFor="spotify-client-id" className="block text-sm font-medium text-slate-300">{tr("office.jukebox.clientId")}</label>
         <input
           id="spotify-client-id"
           type="text"
           value={clientId}
           onChange={(e) => setClientId(e.target.value)}
-          placeholder={status.hasClientId ? "Saved. Paste a new one to replace it." : "32 letters and numbers"}
+          placeholder={status.hasClientId ? tr("office.jukebox.clientIdSaved") : tr("office.jukebox.clientIdHint")}
           spellCheck={false}
           className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-2.5 font-mono text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
         />
-        <p className="text-xs text-slate-500">Stored encrypted on this computer. Only sent to Spotify.</p>
+        <p className="text-xs text-slate-500">{tr("office.jukebox.clientIdStored")}</p>
       </div>
 
       <ErrorBox text={error} />
@@ -319,7 +324,7 @@ function SetupView({ status, onConnected }: { status: Status; onConnected: () =>
           onClick={() => void connect()}
           className="flex-1 rounded-xl bg-[#1DB954] py-3 text-sm font-semibold text-black transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {busy ? "Finish signing in in your browser…" : "Connect with Spotify"}
+          {busy ? tr("office.jukebox.finishSignIn") : tr("office.jukebox.connect")}
         </button>
         {busy && (
           <button
@@ -327,7 +332,7 @@ function SetupView({ status, onConnected }: { status: Status; onConnected: () =>
             onClick={() => void cth().spotifyDisconnect()}
             className="rounded-xl border border-white/10 px-4 text-sm text-slate-300 hover:bg-white/5"
           >
-            Cancel
+            {tr("common.cancel")}
           </button>
         )}
       </div>
@@ -343,6 +348,7 @@ function PlayerView({
   onPlayback?: (p: SpotifyPlayback | null) => void;
   onDisconnected: () => void;
 }) {
+  const { t: tr } = useTranslation();
   const [playback, setPlayback] = useState<SpotifyPlayback | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState("");
@@ -406,9 +412,9 @@ function PlayerView({
       {notice && <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-2 text-sm text-cyan-200">{notice}</div>}
 
       <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-4">
-        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">Now playing</div>
+        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">{tr("office.jukebox.nowPlaying")}</div>
         {!loaded ? (
-          <p className="text-sm text-slate-500">Loading player…</p>
+          <p className="text-sm text-slate-500">{tr("office.jukebox.loadingPlayer")}</p>
         ) : track ? (
           <div className="min-w-0">
             <div className="truncate font-semibold text-white">{track.name}</div>
@@ -418,23 +424,23 @@ function PlayerView({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Nothing is playing. Open Spotify on a device, then press play or pick a song below.</p>
+          <p className="text-sm text-slate-500">{tr("office.jukebox.nothingPlaying")}</p>
         )}
 
         <div className="mt-4 flex items-center justify-center gap-4">
-          <ControlButton label="Previous" onClick={() => void run(() => cth().spotifyPrevious())}>
+          <ControlButton label={tr("office.jukebox.previous")} onClick={() => void run(() => cth().spotifyPrevious())}>
             <SkipBack className="h-4 w-4" />
           </ControlButton>
           {playback?.isPlaying ? (
-            <ControlButton label="Pause" large onClick={() => void run(() => cth().spotifyPause())}>
+            <ControlButton label={tr("office.jukebox.pause")} large onClick={() => void run(() => cth().spotifyPause())}>
               <Pause className="h-5 w-5" />
             </ControlButton>
           ) : (
-            <ControlButton label="Play" large onClick={() => void run(() => cth().spotifyPlay())}>
+            <ControlButton label={tr("office.jukebox.play")} large onClick={() => void run(() => cth().spotifyPlay())}>
               <Play className="h-5 w-5" />
             </ControlButton>
           )}
-          <ControlButton label="Next" onClick={() => void run(() => cth().spotifyNext())}>
+          <ControlButton label={tr("office.jukebox.next")} onClick={() => void run(() => cth().spotifyNext())}>
             <SkipForward className="h-4 w-4" />
           </ControlButton>
         </div>
@@ -442,7 +448,7 @@ function PlayerView({
 
       <div>
         <label htmlFor="spotify-search" className="mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">
-          Search songs
+          {tr("office.jukebox.searchSongs")}
         </label>
         <input
           id="spotify-search"
@@ -450,7 +456,7 @@ function PlayerView({
           value={query}
           maxLength={200}
           onChange={(e) => onSearch(e.target.value)}
-          placeholder="Artist, song or album…"
+          placeholder={tr("office.jukebox.songSearch")}
           className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
         />
         {searching && <p className="mt-2 text-xs text-slate-500">Searching…</p>}
@@ -464,9 +470,9 @@ function PlayerView({
                 </div>
                 <button
                   type="button"
-                  title="Add to queue"
+                  title={tr("office.jukebox.addToQueue")}
                   aria-label={`Add ${t.name} to queue`}
-                  onClick={() => void run(() => cth().spotifyQueue(t.uri), `Added "${t.name}" to the queue.`)}
+                  onClick={() => void run(() => cth().spotifyQueue(t.uri), tr("office.jukebox.queued", { name: t.name }))}
                   className="shrink-0 rounded-full border border-white/10 p-1.5 text-slate-300 transition hover:bg-white/10"
                 >
                   <ListPlus className="h-4 w-4" />
@@ -490,7 +496,7 @@ function PlayerView({
           onClick={() => void disconnect()}
           className="text-xs text-slate-600 underline underline-offset-2 hover:text-slate-400"
         >
-          Disconnect Spotify
+          {tr("office.jukebox.disconnect")}
         </button>
       </div>
     </div>

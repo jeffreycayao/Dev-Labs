@@ -117,6 +117,12 @@ full license text in a `LICENSE` file.
   (https://github.com/cloudflare/security-audit-skill), Copyright (c) 2025-2026 Cloudflare, Inc.,
   MIT License.
 
+The skills **game-dev-3d**, **threejs**, **animejs**, **ui-ux-review**, **devops-runbooks** and
+**security-research** are written by the DevLabs maintainers (MIT, with the app). They describe and
+link to Three.js (MIT, mrdoob and contributors), React Three Fiber and drei (MIT, Poimandres),
+Anime.js (MIT, Julian Garnier), Babylon.js (Apache-2.0) and Godot (MIT); no code or text from
+those projects is bundled in them.
+
 ---
 
 ## Other open-source components

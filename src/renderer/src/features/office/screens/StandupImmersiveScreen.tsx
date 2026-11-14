@@ -1,6 +1,7 @@
 // Ported from Claw3D. DevLabs cards come from the hive task board and git
 // (src/shared/office/standup.ts): tasks replace Jira tickets, no manual notes.
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { StandupMeeting } from "@/lib/office/standup/types";
 
@@ -15,6 +16,7 @@ export function StandupImmersiveScreen({
   meeting: StandupMeeting;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const speaker = meeting.cards.find((card) => card.agentId === meeting.currentSpeakerAgentId);
   return (
     <div className="fixed inset-0 z-50 bg-[var(--color-office-bg-0)]/96 text-white">
@@ -22,14 +24,14 @@ export function StandupImmersiveScreen({
         <div className="flex items-center justify-between border-b border-cyan-500/15 px-6 py-4">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-cyan-200/85">
-              Standup board
+              {t("office.standup.title")}
             </div>
             <div className="mt-1 font-mono text-[12px] text-white/50">
               {meeting.phase === "gathering"
-                ? "Everyone is walking to the meeting table."
+                ? t("office.standup.gathering")
                 : meeting.phase === "in_progress"
-                  ? "Each agent is giving their update."
-                  : "Standup is over. This is what everyone said."}
+                  ? t("office.standup.inProgress")
+                  : t("office.standup.over")}
             </div>
           </div>
           <button
@@ -38,14 +40,14 @@ export function StandupImmersiveScreen({
             className="inline-flex items-center gap-2 rounded border border-white/10 bg-white/5 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-white/70 transition-colors hover:border-white/20 hover:text-white"
           >
             <X className="h-4 w-4" />
-            Close
+            {t("common.close")}
           </button>
         </div>
 
         <div className="grid gap-4 border-b border-cyan-500/10 px-6 py-4 font-mono text-[11px] text-white/60 md:grid-cols-2">
-          <div>Speaking: {speaker?.agentName ?? "Nobody yet"}</div>
+          <div>{t("office.standup.speaking", { name: speaker?.agentName ?? t("office.standup.nobody") })}</div>
           <div>
-            {meeting.arrivedAgentIds.length}/{meeting.participantOrder.length} at the table
+            {t("office.standup.atTable", { n: meeting.arrivedAgentIds.length, total: meeting.participantOrder.length })}
           </div>
         </div>
 
@@ -73,12 +75,12 @@ export function StandupImmersiveScreen({
 
                   <div className="mt-4 space-y-4">
                     <div>
-                      <div className={label}>Working on</div>
+                      <div className={label}>{t("office.standup.workingOn")}</div>
                       <div className="mt-1 text-sm leading-6 text-white/85">{card.currentTask}</div>
                     </div>
 
                     <div>
-                      <div className={label}>Tasks on the board</div>
+                      <div className={label}>{t("office.standup.tasksOnBoard")}</div>
                       <div className="mt-2 space-y-2">
                         {card.activeTickets.length === 0 ? (
                           <div className={empty}>No open tasks.</div>
@@ -94,7 +96,7 @@ export function StandupImmersiveScreen({
                     </div>
 
                     <div>
-                      <div className={label}>Recent commits</div>
+                      <div className={label}>{t("office.standup.recentCommits")}</div>
                       <div className="mt-2 space-y-2">
                         {card.recentCommits.length === 0 ? (
                           <div className={empty}>No recent commits.</div>

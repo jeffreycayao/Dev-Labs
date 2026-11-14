@@ -92,6 +92,7 @@ import { parseHireDeepLink, type HireManifest } from '../shared/hire';
 import { isDeliveryId, isDeliveryStatus, canOpenWithSystemApp } from '../shared/delivery';
 import { buildOpenCodeConfig } from '../shared/opencodeConfig';
 import { parseFloorDeepLink, validateFloorManifest, floorFileName, FLOOR_MAX_BYTES, BUILDING_MAX_FLOORS, canAddFloor } from '../shared/floor';
+import { validateOfficeTheme, officeThemeFileName, OFFICE_THEME_MAX_BYTES, type OfficeTheme } from '../shared/officeTheme';
 import { ClosingTimeController } from './closingTime';
 import {
   argsWithAutoModeFlag,
@@ -2547,6 +2548,46 @@ ipcMain.handle('floor:save', async (_evt, payload: unknown) => {
   try {
     writeFileSync(res.filePath, text, 'utf8');
     return { ok: true, path: res.filePath };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+});
+
+// Office themes (Settings → General → Features → Office themes). Main validates
+// on BOTH sides: it never writes a file an importer would refuse, and the
+// renderer only ever sees an already-validated theme.
+ipcMain.handle('office:themeSave', async (_evt, payload: unknown) => {
+  const v = validateOfficeTheme(payload);
+  if (!v.ok || !v.theme) return { ok: false, error: `invalid theme: ${v.errors.join('; ')}` };
+  const text = JSON.stringify(v.theme, null, 2) + '\n';
+  if (Buffer.byteLength(text, 'utf8') > OFFICE_THEME_MAX_BYTES) return { ok: false, error: 'theme too large' };
+  const res = await dialog.showSaveDialog({
+    title: 'Export office theme',
+    defaultPath: officeThemeFileName(v.theme.name),
+    filters: [{ name: 'DevLabs office theme', extensions: ['json'] }]
+  });
+  if (res.canceled || !res.filePath) return { ok: false, error: 'cancelled' };
+  try {
+    writeFileSync(res.filePath, text, 'utf8');
+    return { ok: true, path: res.filePath };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+});
+ipcMain.handle('office:themeOpen', async (): Promise<{ ok: true; theme: OfficeTheme; path: string } | { ok: false; error: string }> => {
+  const res = await dialog.showOpenDialog({
+    title: 'Import an office theme',
+    filters: [{ name: 'DevLabs office theme', extensions: ['json'] }],
+    properties: ['openFile']
+  });
+  if (res.canceled || res.filePaths.length === 0) return { ok: false, error: 'cancelled' };
+  const p = res.filePaths[0];
+  try {
+    if (!lstatSync(p).isFile()) return { ok: false, error: 'not a file' };
+    if (statSync(p).size > OFFICE_THEME_MAX_BYTES) return { ok: false, error: `theme file is larger than ${OFFICE_THEME_MAX_BYTES / 1024} KB` };
+    const v = validateOfficeTheme(readFileSync(p, 'utf8'));
+    if (!v.ok || !v.theme) return { ok: false, error: v.errors.join('; ') };
+    return { ok: true, theme: v.theme, path: p };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) };
   }

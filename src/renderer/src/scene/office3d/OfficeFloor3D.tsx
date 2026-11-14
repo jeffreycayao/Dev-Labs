@@ -10,6 +10,7 @@ import { EditAgentModal } from '@/components/EditAgentModal';
 import type { PickChatter } from '@/features/retro-office/systems/chatter';
 import { pickExchange, pickSoloLine, type CafeteriaLines } from '@/scene/office/cafeteriaLines';
 import { useFeatures } from '@/lib/useFeatures';
+import { OfficeThemePanel } from './OfficeThemePanel';
 import { featureOn } from '@shared/features';
 import { useOfficeFeed, type OfficeFeedEvent } from './useOfficeFeed';
 import { useOfficeStandup } from './useOfficeStandup';
@@ -108,6 +109,11 @@ export function OfficeFloor3D() {
   });
   const [level, setLevel] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
+  // Office themes (floor bar → theme): the scene remounts (key bump) after an
+  // import or undo, since it reads the saved layout only on mount.
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [themeRev, setThemeRev] = useState(0);
+  const themeAgents = useStore(useShallow((s) => s.agents.map((a) => ({ id: a.id, name: a.name }))));
 
   // Subscriptions are narrow on purpose: an update to an agent on another floor
   // (every tool call changes its action) must not re-render this office.
@@ -263,7 +269,7 @@ export function OfficeFloor3D() {
       overflow: 'hidden', background: '#0b0d10'
     }}>
       <RetroOffice3D
-        key={level}
+        key={`${level}:${themeRev}`}
         agents={officeAgents}
         {...standup}
         atmAnalytics={ATM_ANALYTICS}
@@ -307,6 +313,26 @@ export function OfficeFloor3D() {
         onToggleFullscreen={toggleFullscreen}
       />
 
+      {themeOpen && featureOn(features, 'officeThemes') && (
+        <OfficeThemePanel
+          namespace={levelNamespace(level)}
+          desks={desks}
+          agents={themeAgents}
+          onClose={() => setThemeOpen(false)}
+          onApplied={(seats, mode) => {
+            // Seats travel with the layout: back them up on import, bring them back on undo.
+            const dk = lsDesks(level);
+            if (mode === 'apply') { writeJson(`${dk}:theme-backup`, desks); setDesks(seats); writeJson(dk, seats); }
+            else {
+              const prev = readJson<Record<string, string>>(`${dk}:theme-backup`, {});
+              setDesks(prev); writeJson(dk, prev);
+              try { localStorage.removeItem(`${dk}:theme-backup`); } catch { /* ignore */ }
+            }
+            setThemeRev((r) => r + 1);
+          }}
+        />
+      )}
+
       {/* Floor switcher — bottom right, one line, so it never covers the office's
           status line (bottom left); scrolls sideways when there are many floors. */}
       <div style={{
@@ -342,6 +368,20 @@ export function OfficeFloor3D() {
         >
           + {t('office.levels.addFloor')}
         </button>
+        {featureOn(features, 'officeThemes') && (
+          <button
+            type="button"
+            onClick={() => setThemeOpen((o) => !o)}
+            aria-pressed={themeOpen}
+            title={t('office.theme.title')}
+            style={{
+              padding: '4px 8px', borderRadius: 6, cursor: 'pointer', border: `1px dashed ${BRAND.line}`, whiteSpace: 'nowrap',
+              background: themeOpen ? BRAND.lime : 'transparent', color: themeOpen ? BRAND.dark : BRAND.lime, font: 'inherit', letterSpacing: 'inherit'
+            }}
+          >
+            ◈ {t('office.theme.button')}
+          </button>
+        )}
         {level > 0 && (
           <button
             type="button"

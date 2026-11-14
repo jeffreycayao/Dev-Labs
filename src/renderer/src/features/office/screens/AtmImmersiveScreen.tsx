@@ -2,6 +2,7 @@
 // from the local cost ledger through window.cth.officeUsageAnalytics.
 import { Check, Landmark, Lock, RefreshCw, Wallet } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   type OfficeUsageAnalyticsParams,
   useOfficeUsageAnalyticsViewModel,
@@ -21,6 +22,7 @@ const readPin = (): string | null => {
 };
 
 export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
+  const { t } = useTranslation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pinMode] = useState<'setup' | 'verify'>(() => (readPin() ? 'verify' : 'setup'));
   const [inputPin, setInputPin] = useState('');
@@ -146,7 +148,7 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
             </button>
             <button
               type="button"
-              aria-label="Unlock"
+              aria-label={t('office.atm.unlock')}
               onClick={() => handleKeyPad('submit')}
               className="flex h-16 w-24 items-center justify-center rounded-xl border border-emerald-500/20 bg-[var(--color-office-bg-2)]/60 text-emerald-200 transition-all hover:bg-emerald-900/40 active:scale-95"
             >
@@ -169,11 +171,11 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
               <Landmark className="h-4 w-4" />
               DevLabs Treasury ATM
             </div>
-            <div className="mt-3 text-[13px] uppercase tracking-[0.24em] text-[var(--color-office-lime-300)]/62">Token usage</div>
+            <div className="mt-3 text-[13px] uppercase tracking-[0.24em] text-[var(--color-office-lime-300)]/62">{t('office.atm.tokenUsage')}</div>
             <div className="mt-2 text-[44px] font-semibold tracking-[0.08em] text-[var(--color-office-lime-100)]">
               {formatNumber(totals?.totalTokens)}
             </div>
-            <div className="mt-2 text-[15px] uppercase tracking-[0.28em] text-[var(--color-office-lime-300)]/72">Total tokens used</div>
+            <div className="mt-2 text-[15px] uppercase tracking-[0.28em] text-[var(--color-office-lime-300)]/72">{t('office.atm.totalTokens')}</div>
             <div className="mt-4 inline-flex items-center rounded-full border border-[var(--color-office-lime-300)]/20 bg-black/20 px-4 py-2 text-[13px] uppercase tracking-[0.24em] text-[var(--color-office-lime-300)]/85">
               Spent {formatCurrency(totals?.totalCost)}
             </div>
@@ -204,14 +206,14 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
               ))}
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <DateField label="From" value={startDate} max={endDate} onChange={setStartDate} />
-              <DateField label="To" value={endDate} min={startDate} onChange={setEndDate} />
+              <DateField label={t('office.atm.from')} value={startDate} max={endDate} onChange={setStartDate} />
+              <DateField label={t('office.atm.to')} value={endDate} min={startDate} onChange={setEndDate} />
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <SummaryCard label="Input" value={formatNumber(totals?.input)} />
-              <SummaryCard label="Output" value={formatNumber(totals?.output)} />
-              <SummaryCard label="Cache read" value={formatNumber(totals?.cacheRead)} />
-              <SummaryCard label="Cache write" value={formatNumber(totals?.cacheWrite)} />
+              <SummaryCard label={t('office.atm.input')} value={formatNumber(totals?.input)} />
+              <SummaryCard label={t('office.atm.output')} value={formatNumber(totals?.output)} />
+              <SummaryCard label={t('office.atm.cacheRead')} value={formatNumber(totals?.cacheRead)} />
+              <SummaryCard label={t('office.atm.cacheWrite')} value={formatNumber(totals?.cacheWrite)} />
             </div>
             <div className="mt-4 rounded-2xl border border-[var(--color-office-lime-300)]/12 bg-[var(--color-office-bg-1)]/80 px-4 py-3 text-[12px] uppercase tracking-[0.18em] text-[var(--color-office-lime-300)]/76">
               {lastRefreshedAt ? `Updated ${new Date(lastRefreshedAt).toLocaleTimeString()}` : 'Loading spending'}
@@ -221,8 +223,8 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
 
         <div className="mt-7 space-y-6">
           <SectionCard
-            title="Overview"
-            subtitle="What your agents spent in the selected dates."
+            title={t('office.atm.overview')}
+            subtitle={t('office.atm.overviewSub')}
             action={
               <button
                 type="button"
@@ -242,11 +244,11 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
             </div>
           </SectionCard>
 
-          <SectionCard title="Daily spend" subtitle="Cost for the last seven days of the range.">
+          <SectionCard title={t('office.atm.daily')} subtitle={t('office.atm.dailySub')}>
             {loading && !data ? (
-              <EmptyPanelState message="Loading spending." />
+              <EmptyPanelState message={t('office.atm.loading')} />
             ) : chartMax === 0 ? (
-              <EmptyPanelState message="No spending in these days." />
+              <EmptyPanelState message={t('office.atm.noSpend')} />
             ) : (
               <div className="grid grid-cols-7 gap-3">
                 {recentCostDaily.map((entry) => {
@@ -272,7 +274,7 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
           </SectionCard>
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <SectionCard title="Agent spending" subtitle="Agents ranked by cost.">
+            <SectionCard title={t('office.atm.agentSpend')} subtitle={t('office.atm.agentSpendSub')}>
               <div className="space-y-3">
                 {data?.byAgent.map((entry, index) => (
                   <ListRow
@@ -282,11 +284,11 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
                     secondary={`${formatNumber(entry.totals.totalTokens)} tokens · ${formatNumber(entry.sessions)} ${entry.sessions === 1 ? 'session' : 'sessions'}`}
                   />
                 ))}
-                {!data?.byAgent.length ? <EmptyPanelState message="No agent spending in these days." /> : null}
+                {!data?.byAgent.length ? <EmptyPanelState message={t('office.atm.noAgentSpend')} /> : null}
               </div>
             </SectionCard>
 
-            <SectionCard title="Model spending" subtitle="Cost by model.">
+            <SectionCard title={t('office.atm.modelSpend')} subtitle={t('office.atm.modelSpendSub')}>
               <div className="space-y-3">
                 {data?.byModel.map((entry, index) => (
                   <ListRow
@@ -296,12 +298,12 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
                     secondary={`${formatNumber(entry.totals.totalTokens)} tokens`}
                   />
                 ))}
-                {!data?.byModel.length ? <EmptyPanelState message="No model spending in these days." /> : null}
+                {!data?.byModel.length ? <EmptyPanelState message={t('office.atm.noModelSpend')} /> : null}
               </div>
             </SectionCard>
           </div>
 
-          <SectionCard title="Spending by day" subtitle="Days with activity, newest first.">
+          <SectionCard title={t('office.atm.byDay')} subtitle={t('office.atm.byDaySub')}>
             <div className="space-y-3">
               {activeDays.map((entry) => (
                 <ListRow
@@ -311,7 +313,7 @@ export function AtmImmersiveScreen(props: OfficeUsageAnalyticsParams) {
                   secondary={`${formatNumber(entry.totals.totalTokens)} tokens · ${formatNumber(entry.totals.input)} in · ${formatNumber(entry.totals.output)} out · ${formatNumber(entry.totals.cacheRead + entry.totals.cacheWrite)} cache`}
                 />
               ))}
-              {activeDays.length === 0 ? <EmptyPanelState message="No activity in these days." /> : null}
+              {activeDays.length === 0 ? <EmptyPanelState message={t('office.atm.noActivity')} /> : null}
             </div>
           </SectionCard>
         </div>

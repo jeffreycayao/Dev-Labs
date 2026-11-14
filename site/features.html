@@ -362,9 +362,15 @@
       <tr><td><b>skill-inspector</b> (NVIDIA)</td><td>Checks whether a skill is safe before you install it.</td><td>"is this skill safe to install?"</td></tr>
       <tr><td><b>ponytail</b> + review, audit, debt, gain, help</td><td>Keeps code changes small and simple.</td><td>"ponytail", "/ponytail-review"</td></tr>
       <tr><td><b>security-audit</b> (Cloudflare)</td><td>Looks for security holes in a codebase.</td><td>"security audit this codebase"</td></tr>
+      <tr><td><b>game-dev-3d</b> (DevLabs)</td><td>Game loop, scenes, assets, basic physics, and which engine to pick (Three.js, Babylon.js, Godot).</td><td>"make a small 3D game"</td></tr>
+      <tr><td><b>threejs</b> (DevLabs)</td><td>Three.js and React Three Fiber as this app uses them (versions, API notes, performance rules, how the office is built).</td><td>"add a lamp to the 3D office"</td></tr>
+      <tr><td><b>animejs</b> (DevLabs)</td><td>Anime.js v4 for UI and SVG animation.</td><td>"animate this list"</td></tr>
+      <tr><td><b>ui-ux-review</b> (DevLabs)</td><td>Reviews a screen for clarity, consistency and accessibility; smallest fixes first.</td><td>"review the settings screen"</td></tr>
+      <tr><td><b>devops-runbooks</b> (DevLabs)</td><td>Fixes red builds, speeds up CI, writes runbooks and safe release steps.</td><td>"why is CI red?"</td></tr>
+      <tr><td><b>security-research</b> (DevLabs)</td><td>Threat models, CVE triage, plain-language risk reports. Research only: never attacks anything.</td><td>"does CVE-2026-1234 affect us?"</td></tr>
     </tbody>
   </table>
-  <p>Claude Code and Codex agents get these on every start. They come with DevLabs and update when DevLabs updates.</p>
+  <p>Claude Code and Codex agents get these on every start. They come with DevLabs and update when DevLabs updates. The six DevLabs-written skills have a switch in <span class="where">Settings → General → Features</span>.</p>
   <div class="lbl">How to add more</div>
   <ol class="steps"><li>Ramon → <b>skills</b> tab → <b>DevLabs Library</b>.</li><li>Read a skill's description, then install it. Every file is checked against its published fingerprint first.</li><li>Updates also need your approval.</li></ol>
   <div class="lbl">Good to know</div>
@@ -374,7 +380,7 @@
 <section class="feat searchable" id="connectors">
   <h3>Connectors <span class="tag setup">setup</span></h3>
   <div class="lbl">What it is</div>
-  <p>Links that let agents work inside other apps: Pancake POS, Webcake Landing, Fireflies.ai meeting notes, Obsidian, Discord, GitHub, databases, email &amp; calendar, web search.</p>
+  <p>Links that let agents work inside other apps: Pancake POS, Webcake Landing, Fireflies.ai meeting notes, systeme.io, GoHighLevel, Obsidian, Discord, GitHub, databases, email &amp; calendar, web search.</p>
   <div class="lbl">How to turn one on</div>
   <ol class="steps">
     <li><span class="where">Settings → Connections</span>. Each connector has a <b>How to set up</b> link with the exact steps.</li>
@@ -385,6 +391,8 @@
   <div class="lbl">Special cases</div>
   <ul>
     <li><b>Obsidian</b> needs no key: press <b>choose folder</b>, pick your vault, switch it on. Agents never overwrite or delete a note.</li>
+    <li><b>Systeme.io</b> wants an <b>MCP key</b> (systeme.io → Settings → MCP &amp; API keys → MCP keys), not the public API key. Keys last up to 90 days: when agents get a 401, make a new one.</li>
+    <li><b>GoHighLevel</b> wants a <b>Private Integration token</b> from the sub-account (Settings → Private Integrations); tick only the scopes agents need. The sub-account id field next to it is optional.</li>
     <li><b>Discord</b> needs your own bot: create it at discord.com/developers/applications, copy the bot token, turn on <i>Message Content Intent</i>, and invite it with View Channels, Send Messages and Read Message History.</li>
   </ul>
   <div class="lbl">Good to know</div>
@@ -424,6 +432,20 @@
     <li><b>edit</b> → <b>3D look</b> → change hair, clothes, colours → <b>Save avatar</b>.</li>
     <li>In the queue, press <b>prompts</b> to insert a saved instruction.</li>
   </ol>
+</section>
+
+<section class="feat searchable" id="attitude">
+  <h3>How agents talk to you (ATTITUDE.md) <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>One file with your own rules for <b>every</b> agent at once: tone, formality, how long answers should be, which language, what to always or never do. Personality is per agent; this is per you.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps">
+    <li><span class="where">Settings → Agents &amp; Models</span> → <b>How agents talk to you</b>.</li>
+    <li>Write your rules (up to 4 000 characters) and press <b>save</b>. <b>preview what agents get</b> shows the exact text added to their instructions.</li>
+    <li>Start an agent. Agents already running keep the text they started with.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Works for Claude Code, Codex, Gemini and Grok agents alike.</li><li>The file lives in the app's own folder, never in a project, so agents cannot edit it.</li><li>Switch: <span class="where">Settings → General → Features</span> → <b>Personal ATTITUDE.md</b>. Off keeps your text but stops sending it.</li></ul>
 </section>
 
 <!-- ───────────────────────── AUTOMATION ───────────────────────── -->
@@ -661,6 +683,22 @@
   </ol>
 </section>
 
+<section class="feat searchable" id="themes">
+  <h3>Office themes: export &amp; import <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>Your floor's look as one file: every object, its place, turn, size, lift and tint, and who sits at which desk. Share it, load someone else's, or have an AI design one.</p>
+  <div class="lbl">How to use it</div>
+  <ol class="steps">
+    <li>Press <b>theme</b> on the floor bar (bottom right).</li>
+    <li><b>export…</b> saves the current floor as <code>name.office-theme.json</code>.</li>
+    <li><b>import…</b> picks a theme file. DevLabs checks it (known objects only, numbers in range, no code or file paths, at most 256 KB) and shows a summary: objects before and after, added, removed, moved, seats. Press <b>apply</b>.</li>
+    <li>Changed your mind? <b>undo import</b> restores the previous layout and seats.</li>
+    <li><b>copy prompt</b> gives you a prompt with the rules, the JSON schema and your current layout. Paste it into any AI, save its answer as <code>.json</code>, import it.</li>
+  </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Seats are matched by agent name, so a shared theme seats your agents when the names match.</li><li>One backup is kept per floor; applying a second theme replaces it.</li><li>Switch: <span class="where">Settings → General → Features</span> → <b>Office themes</b>.</li></ul>
+</section>
+
 <section class="feat searchable" id="atm">
   <h3>ATM: what it costs <span class="tag on">on</span></h3>
   <div class="lbl">What it is</div>
@@ -689,6 +727,28 @@
     <li><b>Explain things simply</b>: agents brief you in plain language instead of technical shorthand.</li>
     <li><b>Arabic / RTL text in terminals</b>: makes Arabic join and read right to left in terminals (a little slower). It follows your app language unless you change it here.</li>
   </ol>
+  <div class="lbl">Good to know</div>
+  <ul><li>Office chatter (cafeteria small talk, gossip, cheers), the jukebox, the standup board, the ATM and the voice panel follow the language too. <b>Office chatter follows the app language</b> in Features keeps the original Taglish lines when off.</li></ul>
+</section>
+
+<section class="feat searchable" id="features">
+  <h3>Feature switches <span class="tag on">on</span></h3>
+  <div class="lbl">What it is</div>
+  <p>One on/off switch per optional feature, so the owner decides what runs. All are on to start with; off falls back cleanly and nothing is sent anywhere.</p>
+  <div class="lbl">Where</div>
+  <ol class="steps"><li><span class="where">Settings → General</span> → <b>Features</b>, then <b>Save</b>.</li></ol>
+  <table>
+    <thead><tr><th>Switch</th><th>Off means</th></tr></thead>
+    <tbody>
+      <tr><td>Personal ATTITUDE.md</td><td>Your text is kept but not sent to new agents.</td></tr>
+      <tr><td>DevLabs skills</td><td>game-dev-3d, threejs, animejs, ui-ux-review, devops-runbooks and security-research are not copied to new agents (earlier copies are removed on their next start).</td></tr>
+      <tr><td>Extra role templates</td><td>UI/UX Designer and Security Researcher disappear from Add agent → templates.</td></tr>
+      <tr><td>Office chatter follows the app language</td><td>Chatter stays in the original English/Taglish pool.</td></tr>
+      <tr><td>Office themes</td><td>The theme button on the floor bar is hidden; saved layouts are untouched.</td></tr>
+    </tbody>
+  </table>
+  <div class="lbl">Good to know</div>
+  <ul><li>Connectors have their own switches in <span class="where">Settings → Connections</span>; a keyed connector is never on by default.</li></ul>
 </section>
 
 <section class="feat searchable" id="updates">
@@ -736,6 +796,9 @@
     <tr><td>Memory search, knowledge base</td><td>Settings → Memory &amp; Knowledge (+ Prerequisites)</td><td>needs install</td></tr>
     <tr><td>Notifications, keep awake, auto-compact</td><td>Settings → General</td><td>off</td></tr>
     <tr><td>Language, plain words, Arabic terminals</td><td>Settings → General</td><td>English</td></tr>
+    <tr><td>Feature switches (ATTITUDE.md, DevLabs skills, extra templates, chatter language, office themes)</td><td>Settings → General → Features</td><td>all on</td></tr>
+    <tr><td>How agents talk to you (ATTITUDE.md)</td><td>Settings → Agents &amp; Models</td><td>on, empty</td></tr>
+    <tr><td>Office themes: export, import, undo</td><td>Office floor bar → theme</td><td>on</td></tr>
     <tr><td>Auto-update, usage stats</td><td>Settings → General</td><td>both on</td></tr>
     <tr><td>Project floors, reset, home folder</td><td>Settings → General</td><td>—</td></tr>
     <tr><td>Schedules, Discord trigger</td><td>Ramon → triggers tab</td><td>off</td></tr>

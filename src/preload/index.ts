@@ -8,6 +8,7 @@ import { spotifyApi } from './office/spotify';
 import { radioApi } from './office/radio';
 import type { AgentProvider } from '../shared/agentProvider';
 import type { HireManifest } from '../shared/hire';
+import type { OfficeTheme } from '../shared/officeTheme';
 export type { HireManifest } from '../shared/hire';
 import type { IntegrationRecord, IntegrationTemplate } from '../shared/integrations';
 export type { IntegrationRecord, IntegrationTemplate } from '../shared/integrations';
@@ -965,6 +966,11 @@ const api = {
   /** Save a floor (main re-validates before writing). */
   saveFloorFile: (floor: FloorManifest): Promise<{ ok: boolean; path?: string; error?: string }> =>
     ipcRenderer.invoke('floor:save', { floor }),
+  /** Office themes: save (main re-validates) and open (main reads + validates). */
+  officeThemeSave: (theme: OfficeTheme): Promise<{ ok: boolean; path?: string; error?: string }> =>
+    ipcRenderer.invoke('office:themeSave', theme),
+  officeThemeOpen: (): Promise<{ ok: true; theme: OfficeTheme; path: string } | { ok: false; error: string }> =>
+    ipcRenderer.invoke('office:themeOpen'),
   onHireError: (cb: (info: { error: string }) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, info: { error: string }) => cb(info);
     ipcRenderer.on('hire:error', listener);

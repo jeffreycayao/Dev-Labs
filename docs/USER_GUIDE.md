@@ -170,7 +170,7 @@ Click **add agent** (end of the bottom strip, or **add** at the top of the offic
 
 | Option | What it does |
 |---|---|
-| **Role templates** | Pick a ready-made role (Technical or Non-technical) and everything is filled in for you. |
+| **Role templates** | Pick a ready-made role (Technical or Non-technical) and everything is filled in for you. The **UI/UX Designer** and **Security Researcher** templates can be hidden in Settings → General → Features. |
 | **company builder** | Describe your business ("a small online plant shop that sells on Facebook") and get a whole planned team to review. Nobody is hired until you confirm. |
 | **import hire…** | Load one agent from a file someone shared. |
 | **import floor…** | Load a whole team from a floor file ([section 11](#11-whole-teams-in-one-file-floor-files)). |
@@ -267,6 +267,17 @@ Press the **pencil** (top right) to edit:
 4. **Reset** puts back the original layout. Press the pencil (now a ✓) again when you're done.
 
 Your layout is saved on your computer automatically.
+
+### Office themes: share a look
+
+Press **theme** on the floor bar (bottom right):
+
+- **export…** saves this floor's layout (every object, its place, turn, size, lift and tint, plus which agent sits at which desk) as one `.office-theme.json` file you can send to anyone.
+- **import…** loads a theme file. DevLabs checks it first (only known objects, numbers within range, no code, no file paths, at most 256 KB), then shows what would change: how many objects before and after, what is added, removed or moved, and how many seats it assigns. Press **apply** to use it.
+- **undo import** puts the previous layout (and seats) back. One backup is kept per floor.
+- **Ask an AI to design one:** press **copy prompt**, paste it into any AI chat (it contains the rules, the JSON schema and your current layout), save the answer as a `.json` file and import it. **copy schema** gives only the schema.
+
+Seats in a theme are matched by agent **name**, so a theme from another computer seats your agents when the names match and simply skips the rest. The feature has a switch in **Settings → General → Features**.
 
 ---
 
@@ -370,6 +381,8 @@ Connectors let agents work **inside other apps you use**. Set them up in **Setti
 |---|---|
 | **Pancake POS** | read and change orders, products, stock and sales |
 | **Fireflies.ai** | read your meeting notes: transcripts, summaries and action items |
+| **Systeme.io** | read and change contacts, tags, newsletters, campaigns, funnels, products, courses and automations (paste an **MCP key** from Settings → MCP & API keys; it expires after up to 90 days) |
+| **GoHighLevel** | read and change your HighLevel sub-account: contacts, conversations, opportunities, calendars (paste a **Private Integration token**; the sub-account id is optional) |
 | **Webcake Landing** | design, edit and publish landing pages |
 | **Obsidian** | save notes, lessons and decisions in your Obsidian vault, keep a daily note, search and read notes |
 | **Discord** | post in your channels, read recent messages, list channels |
@@ -399,11 +412,18 @@ Ramon's **triggers** tab lets work start without you typing it:
 ## 15. Extras: looks, personality, voice, music
 
 - **3D look:** click an agent → **edit** → **3D look**. Change hair, hats, clothes, glasses and colours, then press **Save avatar**. The office character changes right away.
+- **How agents talk to you (ATTITUDE.md):** **Settings → Agents & Models → How agents talk to you**. Write your own rules for every agent at once: tone, formality, how long answers should be, which language, what to always or never do. Press **save**; **preview what agents get** shows the exact text. It applies to agents you start afterwards, for every AI tool. Up to 4 000 characters, stored in the app's own folder. The switch is in **Settings → General → Features**.
 - **Personality:** **edit** → **personality**. Describe who the agent is, its vibe, its rules and how it talks. This is written into the agent's instruction file in its project folder (`CLAUDE.md`, `AGENTS.md` or `GEMINI.md`), as its own section; the rest of the file is left alone. The agent uses it from its next session.
 - **Company builder:** **add agent → company builder**. Describe your business, get a planned team, review and hire.
 - **Spoken replies:** press the **gear** at the top right of the office, switch **Voice replies** on, paste an **ElevenLabs** key (from elevenlabs.io → Profile → API keys), pick a voice and speed, and press **Preview**. The first sentences of each agent reply are then read out loud. Reply text is sent to ElevenLabs to make the audio.
 - **Jukebox (Radio):** click the jukebox in the office. The **Radio** tab lists live Philippine stations (from radio-browser.info). Type to search by name, city or genre, press **Play**, and set the volume. No account needed. The station keeps playing when you close the panel, and a small player at the bottom of the office lets you skip to the previous or next station or stop. While music plays, agents without a task dance and wander; agents with work stay at their desks.
 - **Jukebox (Spotify):** click the jukebox in the office and open the **Spotify** tab. You need **Spotify Premium** and Spotify open on one of your devices (phone, computer or speaker). The first time: create a free app at **developer.spotify.com**, add `http://127.0.0.1:43821/callback` as its redirect address, paste its **Client ID** into the jukebox, and press **Connect**. Then search songs, play, pause and skip.
+
+---
+
+### Switching optional features off
+
+**Settings → General → Features** lists every optional feature with its own on/off switch: the personal ATTITUDE.md, the DevLabs skills (3D game dev, Three.js, Anime.js, UI/UX review, DevOps runbooks, security research), the extra role templates, office chatter in your language, and office themes. All are on to start with. Switching one off takes effect for agents you start afterwards, hides the matching buttons, and never sends anything anywhere.
 
 ---
 

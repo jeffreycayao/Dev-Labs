@@ -843,12 +843,12 @@
   <p>A live voice conversation with Ramon: you speak, he answers out loud and can act on what you say.</p>
   <div class="lbl">How to turn it on</div>
   <ol class="steps">
-    <li>Get an OpenAI API key (this is separate from any Claude subscription).</li>
-    <li><span class="where">Settings → Voice</span> → <b>OpenAI API key · voice</b> → paste → <b>Save</b>. Choose your microphone and speaker there too.</li>
+    <li>Get a voice key, separate from any Claude subscription: a <b>Google AI Studio</b> key (<a href="https://aistudio.google.com/app/api-keys">aistudio.google.com/app/api-keys</a>, for Gemini Live) or an <b>OpenAI</b> API key (for OpenAI Realtime).</li>
+    <li><span class="where">Settings → Voice</span> → <b>Google AI Studio API key · voice</b> or <b>OpenAI API key · voice</b> → paste → <b>Save</b>. With both saved, <b>Voice provider</b> picks which one Ramon uses (Google by default). Choose your microphone and speaker there too.</li>
     <li>Press <b>talk</b> on Ramon's card. Press again to stop.</li>
   </ol>
   <div class="lbl">Good to know</div>
-  <ul><li><b>Idle auto-disconnect</b> (30 seconds to 10 minutes, or off) closes a silent session. A spending cap still stops a runaway session.</li><li>The key is encrypted on your computer; each session gets its own short-lived token.</li></ul>
+  <ul><li><b>Idle auto-disconnect</b> (30 seconds to 10 minutes, or off) closes a silent session. A spending cap still stops a runaway session.</li><li>The key is encrypted on your computer; each session gets its own short-lived token.</li><li>Ramon has the same tools and the same confirm step on both providers, and you can interrupt him mid-sentence. The Gemini option can be switched off in <b>Settings → General → Features → Gemini Live voice</b>.</li></ul>
 </section>
 
 <section class="feat searchable" id="voice-replies">

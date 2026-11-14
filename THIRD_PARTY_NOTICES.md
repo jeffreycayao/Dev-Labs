@@ -74,7 +74,7 @@ SOFTWARE.
 
 ## Online services used by optional office features
 
-The jukebox uses the Spotify Web API and is subject to the Spotify Developer Terms; Spotify content and trademarks belong to Spotify. Spoken replies use the ElevenLabs API. The Fireflies.ai connector uses Fireflies' hosted MCP server under Fireflies' terms. None is bundled; each runs only after you connect your own account.
+The jukebox uses the Spotify Web API and is subject to the Spotify Developer Terms; Spotify content and trademarks belong to Spotify. Spoken replies use the ElevenLabs API. Talking to Ramon uses the OpenAI Realtime API or Google's Gemini Live API (Gemini API Additional Terms of Service), whichever you pick, with your own key. The Fireflies.ai connector uses Fireflies' hosted MCP server under Fireflies' terms. None is bundled; each runs only after you connect your own account.
 
 ---
 

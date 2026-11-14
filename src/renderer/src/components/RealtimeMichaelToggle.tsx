@@ -88,6 +88,7 @@ export interface RealtimeMichaelToggleProps {
 export function RealtimeMichaelToggle({ compact = false }: RealtimeMichaelToggleProps) {
   const { t } = useTranslation();
   const hasOpenAiKey = useStore((s) => s.hasOpenAiKey);
+  const hasGoogleKey = useStore((s) => s.hasGoogleKey);
   const { status, error, connect, disconnect } = useRealtimeMichael();
   // Measured viewport coords, not a CSS offset. The agent dock clips its
   // children, so a popover positioned inside the card gets sliced at the card's
@@ -100,7 +101,8 @@ export function RealtimeMichaelToggle({ compact = false }: RealtimeMichaelToggle
   const hintOpen = hint !== null;
 
   const view = STATE_VIEW[status];
-  const noKey = !hasOpenAiKey;
+  // Either provider's key enables Talk (OpenAI Realtime or Google Gemini Live).
+  const noKey = !hasOpenAiKey && !hasGoogleKey;
 
   // Without a BYOK OpenAI key: stay visible but disabled (matches FreeFlowButton).
   // Talk mints an ephemeral token from the OpenAI key (apikey:openai) — the SAME

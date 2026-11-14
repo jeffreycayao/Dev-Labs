@@ -368,7 +368,16 @@
       "5m": "5 minutes",
       "10m": "10 minutes",
       "never": "Off (never)",
-      "idleDisconnectDesc": "How long the voice session stays open with no talking before it auto-closes. The spend cap still stops a runaway session even when this is off."
+      "idleDisconnectDesc": "How long the voice session stays open with no talking before it auto-closes. The spend cap still stops a runaway session even when this is off.",
+      "provider": "Voice provider",
+      "providerDesc": "Which service {{godName}}'s voice runs on. Google is picked for you once a Google AI Studio key is saved; the OpenAI key below keeps working when you pick OpenAI.",
+      "providerOpenai": "OpenAI Realtime",
+      "providerGoogle": "Google Gemini Live",
+      "providerNeedsKey": "(needs a key)",
+      "googleKey": "Google AI Studio API key · voice",
+      "googleKeyDesc": "Gemini Live ({{model}}) — speech in, speech out over a live WebSocket. The key is encrypted on this machine; each call mints a single-use token from it, so the key itself never reaches the app window. It is the same Google key listed under Agents & Models.",
+      "getKey": "Get a key",
+      "googlePlaceholder": "AIza…"
     },
     "saved": "Saved",
     "saving": "Saving…",
@@ -386,7 +395,9 @@
       "officeThemes": "Office themes: export and import",
       "officeThemesDesc": "The Theme button on the floor bar: save the furniture layout as a file, load one, or ask an AI to design one. Imports are checked and can be undone.",
       "agentBrowser": "Agent Browser (Vercel agent-browser)",
-      "agentBrowserDesc": "Lets agents drive a real headless Chrome: visit websites, read pages, click and fill forms. On by default; switch it off here or turn off the Agent Browser connector in Connections. Chrome for Testing is downloaded the first time an agent uses it."
+      "agentBrowserDesc": "Lets agents drive a real headless Chrome: visit websites, read pages, click and fill forms. On by default; switch it off here or turn off the Agent Browser connector in Connections. Chrome for Testing is downloaded the first time an agent uses it.",
+      "geminiVoice": "Gemini Live voice (Google)",
+      "geminiVoiceDesc": "Offer Google's Gemini Live API as a second voice provider for talking to Ramon, next to OpenAI Realtime. Off = OpenAI only and the provider picker is hidden."
     },
     "attitude": {
       "title": "How agents talk to you",
@@ -1650,7 +1661,7 @@
     "helpListening": "Listening — {{godName}} is hearing you (click to stop)",
     "helpSpeaking": "{{godName}} is speaking (click to stop)",
     "helpWorking": "{{godName}} is running a tool — mic muted (click to stop)",
-    "noKeyTitle": "Talk needs your OpenAI API key (used for the Realtime voice API). Add it in Settings → Voice.",
+    "noKeyTitle": "Talk needs a voice key: an OpenAI API key (Realtime) or a Google AI Studio key (Gemini Live). Add one in Settings → Voice.",
     "whyDisabled": "Why is Talk disabled?",
     "popoverBody": "An OpenAI API key is needed to use this feature.",
     "setItUpNow": "set it up now"

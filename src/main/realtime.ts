@@ -29,6 +29,15 @@ const OPENAI_KEY_REF = 'apikey:openai';
  *  user reads, so main and the UI must not be able to disagree about it. */
 export { REALTIME_MODEL } from '../shared/realtimePricing';
 import { REALTIME_MODEL } from '../shared/realtimePricing';
+import { GEMINI_LIVE_MODEL, GEMINI_TOKEN_URL, geminiErrorMessage } from '../shared/geminiLive';
+
+/** Google AI Studio key — the same broker slot Agents & Models writes for the
+ *  google backend (`providerKeyRef('google')` in index.ts). */
+const GOOGLE_KEY_REF = 'apikey:google';
+/** Token lifetime: long enough for a call (sessionResumption is not used, so a
+ *  session lives until it closes); a new session must start within a minute. */
+const GEMINI_TOKEN_TTL_MS = 30 * 60_000;
+const GEMINI_NEW_SESSION_MS = 60_000;
 
 /** GA ephemeral-secret mint endpoint. If an account/tier still answers the legacy
  *  beta shape, we fall back to /v1/realtime/sessions on a 404 and normalize both
@@ -109,6 +118,53 @@ export async function mintRealtimeToken(model: string = REALTIME_MODEL): Promise
   }
 }
 
+export type GeminiMintResult =
+  | { ok: true; token: string; expiresAt: number | null; model: string }
+  | { ok: false; error: string; code?: string };
+
+export function hasGoogleKey(): boolean {
+  return hasSecret(GOOGLE_KEY_REF);
+}
+
+/** Mint a single-use Gemini Live ephemeral token (v1beta auth_tokens). The real
+ *  Google key is decrypted main-only and is never part of the result. */
+export async function mintGeminiLiveToken(now: number = Date.now()): Promise<GeminiMintResult> {
+  const key = getSecret(GOOGLE_KEY_REF);
+  if (!key) {
+    return { ok: false, error: 'no Google AI Studio key set — add one in Settings → Voice', code: 'no_key' };
+  }
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), MINT_TIMEOUT_MS);
+  try {
+    const expireMs = now + GEMINI_TOKEN_TTL_MS;
+    const r = await fetch(GEMINI_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uses: 1,
+        expireTime: new Date(expireMs).toISOString(),
+        newSessionExpireTime: new Date(now + GEMINI_NEW_SESSION_MS).toISOString()
+      }),
+      signal: ac.signal
+    });
+    const text = await r.text();
+    if (!r.ok) {
+      const code = r.status === 429 ? 'quota' : r.status === 400 || r.status === 401 || r.status === 403 ? 'bad_key' : 'mint_failed';
+      return { ok: false, error: geminiErrorMessage(r.status, text), code };
+    }
+    let json: { name?: unknown } | undefined;
+    try { json = JSON.parse(text) as { name?: unknown }; } catch { /* non-JSON */ }
+    const token = typeof json?.name === 'string' ? json.name : '';
+    if (!token) return { ok: false, error: 'Google returned no ephemeral token', code: 'no_token' };
+    return { ok: true, token, expiresAt: Math.floor(expireMs / 1000), model: GEMINI_LIVE_MODEL };
+  } catch (e) {
+    const err = e instanceof Error ? (e.name === 'AbortError' ? 'Gemini token mint timed out' : e.message) : String(e);
+    return { ok: false, error: err, code: 'network' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Register the renderer-facing realtime IPC. A SINGLE call from index.ts (rather
  *  than per-handler `ipcMain.handle` lines there) keeps the index.ts footprint to
  *  one line — rt-1 COORD note (Oscar also edits index.ts). Neither handler ever
@@ -122,4 +178,6 @@ export function registerRealtimeIpc(): void {
     const model = typeof p.model === 'string' && p.model.trim() ? p.model.trim() : REALTIME_MODEL;
     return mintRealtimeToken(model);
   });
+  ipcMain.handle('geminiLive:hasKey', () => hasGoogleKey());
+  ipcMain.handle('geminiLive:mintToken', () => mintGeminiLiveToken());
 }

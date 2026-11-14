@@ -129,6 +129,9 @@ export function App() {
     window.cth.realtimeHasOpenAiKey().then(has => {
       if (!cancelled) useStore.getState().setHasOpenAiKey(has);
     });
+    window.cth.geminiLiveHasKey().then(has => {
+      if (!cancelled) useStore.getState().setHasGoogleKey(has);
+    });
     return () => { cancelled = true; };
   }, []);
 

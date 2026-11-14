@@ -24,6 +24,9 @@ export interface FeatureFlags {
    *  shell or through MCP. On by default (owner's call); agents can visit sites
    *  and fill forms, so switching it off removes connector and skill alike. */
   agentBrowser: boolean;
+  /** Google Gemini Live as a second voice provider for Ramon (Settings → Voice).
+   *  Off = OpenAI Realtime only, and the provider picker is hidden. */
+  geminiVoice: boolean;
 }
 
 export const FEATURE_DEFAULTS: Readonly<FeatureFlags> = {
@@ -32,7 +35,8 @@ export const FEATURE_DEFAULTS: Readonly<FeatureFlags> = {
   extraRoleTemplates: true,
   chatterFollowsLanguage: true,
   officeThemes: true,
-  agentBrowser: true
+  agentBrowser: true,
+  geminiVoice: true
 };
 
 export const FEATURE_KEYS = Object.keys(FEATURE_DEFAULTS) as (keyof FeatureFlags)[];

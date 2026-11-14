@@ -48,6 +48,7 @@ import { mergeTaskLedger } from '../shared/taskLedger';
 import { expandTilde } from './fs';
 import { resolveGodName } from '../shared/godIdentity';
 import { attitudePromptBlock } from '../shared/attitude';
+import { type ByokBackend, type ByokGrant, providerRoute } from '../shared/byokBroker';
 import {
   DELIVERY_LIMITS, deliveryKind, isDeliveryId, isDeliveryStatus, normalizeAttachments,
   safeFileName, uniqueName, extensionOf, MIME_BY_EXT,
@@ -901,6 +902,12 @@ export class HiveManager {
        *  MemPalace dir, which `mempalace` mutates). Absolute paths; ignored
        *  for providers without a sandbox. */
       extraWritableDirs?: string[];
+      /** BYOK broker grant (src/shared/byokBroker.ts): Crush's config and pi's
+       *  models.json point those providers at the broker route. Keys never come here. */
+      byok?: ByokGrant;
+      /** Proxy-tier upstream (qwen/Crush sidecar): the user's local endpoint or the
+       *  broker's OpenAI route. Falls back to the user's own env / the cloud default. */
+      proxyUpstream?: string;
     } = {}
   ): Promise<SpawnInjection> {
     const root = this.root();
@@ -1068,7 +1075,7 @@ export class HiveManager {
               // config.autoMode) gates the auto-allow — Pam guardrail #5.
               // LIVE-UNVERIFIED: the exact extension API surface needs BYOK keys to
               // prove; the renderer idle inbox-wake nudge is the guaranteed drain.
-              env.PI_CODING_AGENT_DIR = this.installPiHooks(dir);
+              env.PI_CODING_AGENT_DIR = this.installPiHooks(dir, opts.byok);
             }
             else if (desc.shim === 'opencode') {
               // OpenCode (anomalyco/opencode) has no Claude-shaped Stop hook, but its
@@ -1096,7 +1103,7 @@ export class HiveManager {
             // the user's configured value as the sidecar's UPSTREAM, then point the
             // CLI at the loopback proxy instead. Fall back to the cloud default if
             // the user hasn't set one.
-            const upstream = process.env[desc.baseUrlEnv]
+            const upstream = opts.proxyUpstream || process.env[desc.baseUrlEnv]
               || (desc.api === 'anthropic' ? 'https://api.anthropic.com' : 'https://api.openai.com/v1');
             // A loopback bind on port 0 fails only transiently (a busy moment, a
             // slow sidecar start past the 4s ceiling), so try a few times before
@@ -1118,7 +1125,7 @@ export class HiveManager {
                 // (captured above from the inert sentinel env or cloud default) is the
                 // proxy's real target. Per-agent CRUSH_GLOBAL_DATA isolates session
                 // state from the user's global ~/.config/crush.
-                const crush = this.installCrushConfig(dir, loopback, desc.api, opts.theme);
+                const crush = this.installCrushConfig(dir, loopback, desc.api, opts.theme, opts.byok);
                 env.CRUSH_GLOBAL_CONFIG = dir;
                 env.CRUSH_GLOBAL_DATA = crush.data;
               } else {
@@ -1130,6 +1137,13 @@ export class HiveManager {
               console.error(`[hive] proxy bridge for ${meta.id} did not bind — spawning without hive events`);
               this.appendLog({ kind: 'proxy-degraded', agentId: meta.id, name: meta.name, provider: meta.provider, attempts: PROXY_BIND_ATTEMPTS });
               this.emit?.('hive:degraded', { agentId: meta.id, name: meta.name, reason: 'proxy-bind', message: degraded });
+              // Its keys are broker tokens, so Crush must still reach the broker:
+              // the wire provider goes straight to the upstream instead of the sidecar.
+              if (meta.provider === 'crush' && opts.byok) {
+                const crush = this.installCrushConfig(dir, upstream, desc.api, opts.theme, opts.byok);
+                env.CRUSH_GLOBAL_CONFIG = dir;
+                env.CRUSH_GLOBAL_DATA = crush.data;
+              }
             }
           }
         } catch (e) { console.error(`[hive] install ${desc.kind} bridge failed:`, e); }
@@ -2782,7 +2796,7 @@ export class HiveManager {
    *  LIVE-UNVERIFIED: Pi's exact extension-discovery path + event API need BYOK keys
    *  to confirm; this is written best-effort and wrapped so a wrong guess can never
    *  break the spawn. The renderer nudge is the guaranteed drain regardless. */
-  private installPiHooks(dir: string): string {
+  private installPiHooks(dir: string, byok?: ByokGrant): string {
     const home = join(dir, '.pi-agent');
     try {
       // Pi discovers extensions under its agent dir; we write to the documented
@@ -2803,6 +2817,7 @@ export class HiveManager {
           if ((e as NodeJS.ErrnoException).code !== 'ENOENT') console.error(`[hive] installPiHooks copy ${fileName} failed:`, e);
         }
       }
+      if (byok?.backends.length) writePiBrokerRoutes(join(home, 'models.json'), byok);
     } catch (e) { console.error('[hive] installPiHooks failed:', e); }
     return home;
   }
@@ -2863,7 +2878,7 @@ export class HiveManager {
    *  time — for full synthesized events pick a model whose provider matches the
    *  configured upstream (or a local OpenAI-compatible endpoint). Cross-provider mixing
    *  is humanQA; the renderer nudge still delivers mail regardless. */
-  private installCrushConfig(dir: string, loopbackUrl: string, api: 'openai' | 'anthropic', theme?: 'light' | 'dark'): { config: string; data: string } {
+  private installCrushConfig(dir: string, loopbackUrl: string, api: 'openai' | 'anthropic', theme?: 'light' | 'dark', byok?: ByokGrant): { config: string; data: string } {
     const config = join(dir, 'crush.json');
     const data = join(dir, '.crush-data');
     try {
@@ -2881,7 +2896,15 @@ export class HiveManager {
       // match). Literal loopback (Dwight's b1 — no ${VAR} expansion edge cases);
       // Crush merges config so only base_url is rewritten.
       const wireProvider = api === 'anthropic' ? 'anthropic' : 'openai';
-      const providers: Record<string, { base_url: string }> = { [wireProvider]: { base_url: loopbackUrl } };
+      const providers: Record<string, { base_url: string }> = {};
+      // BYOK: every other provider with a stored key talks to the broker route
+      // directly (its key var holds the agent's token). OpenRouter is absent:
+      // Crush ignores its base_url (BYOK_DIRECT_KEY).
+      for (const b of byok?.backends ?? []) {
+        const route = CRUSH_BROKER_ROUTE[b];
+        if (route) providers[route.id] = { base_url: providerRoute(byok!.url, b) + route.suffix };
+      }
+      providers[wireProvider] = { base_url: loopbackUrl };
       // Theme: Crush ships one (dark) palette and no light theme, but
       // `options.tui.transparent` stops it painting its own background, so it
       // sits on xterm's, which follows the app theme. Set whenever the app
@@ -3803,6 +3826,40 @@ export const HiveBridge = async () => {
 };
 export default HiveBridge;
 `;
+
+/** Crush provider id + what its SDK expects after the broker route (Crush source:
+ *  internal/config + charmbracelet/fantasy). anthropic-sdk-go appends `v1/messages`,
+ *  go-genai appends `<version>/models/…`, groq is OpenAI-compatible on `/v1`.
+ *  OpenRouter is missing on purpose: Crush ignores its base_url. */
+const CRUSH_BROKER_ROUTE: Partial<Record<ByokBackend, { id: string; suffix: string }>> = {
+  anthropic: { id: 'anthropic', suffix: '/' },
+  openai: { id: 'openai', suffix: '/v1' },
+  google: { id: 'gemini', suffix: '' },
+  groq: { id: 'groq', suffix: '/v1' }
+};
+
+/** pi's base URL per provider, i.e. the provider default re-rooted at the broker
+ *  route (pi docs/models.md: `providers.<id>.baseUrl` overrides a built-in and
+ *  keeps its models; Gemini's base carries `/v1beta` because pi sets no version). */
+const PI_BROKER_SUFFIX: Record<ByokBackend, string> = {
+  anthropic: '', openai: '/v1', google: '/v1beta', openrouter: '/v1', groq: '/v1'
+};
+
+/** Point pi's built-in providers that have a stored key at the broker, merged into
+ *  the per-agent copy of the user's models.json. A literal `apiKey` there would be
+ *  sent to the broker instead of the token, so it is dropped for those providers. */
+function writePiBrokerRoutes(file: string, byok: ByokGrant): void {
+  let models: { providers?: Record<string, Record<string, unknown>> } = {};
+  try { models = JSON.parse(readFileSync(file, 'utf8')); } catch { /* none or unreadable: start fresh */ }
+  if (!models || typeof models !== 'object') models = {};
+  const providers = (models.providers && typeof models.providers === 'object') ? models.providers : {};
+  for (const b of byok.backends) {
+    const { apiKey: _drop, ...rest } = providers[b] ?? {};
+    providers[b] = { ...rest, baseUrl: providerRoute(byok.url, b) + PI_BROKER_SUFFIX[b] };
+  }
+  models.providers = providers;
+  writeFresh(file, JSON.stringify(models, null, 2));
+}
 
 // ─── proxy-bridge sidecar (written to <home>/hive-internal/bin/hive-proxy.cjs)
 // One per proxy-tier agent (qwen). A dependency-free, loopback-only reverse

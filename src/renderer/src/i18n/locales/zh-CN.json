@@ -1543,6 +1543,8 @@
     "providers": "AI 引擎提供商（BYOK）",
     "providersDesc": "OpenCode、Crush、pi.dev 和 Qwen 引擎的 API 密钥与本地端点。密钥只写存储（加密落盘；之后不再显示），且仅在那些引擎启动时使用。Claude Code 和 Codex 使用各自的登录。",
     "apiKeys": "API 密钥",
+    "keysBrokered": "智能体永远看不到这些密钥：每个智能体只拿到自己的令牌，DevLabs 在请求发往提供商官方 API 时才加入真实密钥。智能体停止后令牌即失效。",
+    "directKeyWarning": "⚠ {{engines}} 无法通过密钥代理发送 {{label}} 请求，因此 {{engines}} 智能体会直接拿到此密钥，并可能读取它。",
     "setCheck": "已设置 ✓",
     "keyStoredPlaceholder": "••••••••（已存储——输入以替换）",
     "keyPlaceholder": "粘贴 {{label}} 密钥",

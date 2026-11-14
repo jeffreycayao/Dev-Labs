@@ -96,6 +96,10 @@ import { fetchHireManifest, readHireManifestFiles, fetchFloorManifest, readFloor
 import { parseHireDeepLink, type HireManifest } from '../shared/hire';
 import { isDeliveryId, isDeliveryStatus, canOpenWithSystemApp } from '../shared/delivery';
 import { buildOpenCodeConfig } from '../shared/opencodeConfig';
+import {
+  BACKEND_KEY_ENV, BYOK_BACKENDS, BYOK_DIRECT_KEY, type ByokBackend, type ByokGrant,
+  byokEnv, isProviderBrokerId, providerBrokerId, providerBrokerRecord, providerRoute
+} from '../shared/byokBroker';
 import { parseFloorDeepLink, validateFloorManifest, floorFileName, FLOOR_MAX_BYTES, BUILDING_MAX_FLOORS, canAddFloor } from '../shared/floor';
 import { validateOfficeTheme, officeThemeFileName, OFFICE_THEME_MAX_BYTES, type OfficeTheme } from '../shared/officeTheme';
 import { ClosingTimeController } from './closingTime';
@@ -420,9 +424,10 @@ const liveWorkers = new Map<string, WorkerRec>();
  *  stays electron-free + unit-testable. Started in bootstrapHiveServices; each worker is
  *  granted a per-worker capability token at spawn (revoked in teardownPty). */
 const integrationBroker = new IntegrationBroker({
-  getRecord: (id) => mcpBrokerRecord(id) ?? integrations.getRecord(id),
+  getRecord: (id) => providerBrokerRecord(id) ?? mcpBrokerRecord(id) ?? integrations.getRecord(id),
   getSecret: integrations.getSecret,
-  isStreaming: (id) => id.startsWith('mcp-')
+  isStreaming: (id) => id.startsWith('mcp-'),
+  isModelRoute: isProviderBrokerId
 });
 
 /**
@@ -451,18 +456,39 @@ function mcpBrokerRecord(brokerId: string): IntegrationRecord | undefined {
   };
 }
 
-/** BYOK backend model-providers whose API keys the non-Claude CLI engines
- *  (OpenCode/Crush/pi/qwen) read from standard env vars. Keys are stored
- *  WRITE-ONLY in the same encrypted secret broker as integrations, under
- *  `apikey:<backend>`, and materialized MAIN-ONLY at spawn (never over IPC). */
-const BACKEND_KEY_ENV: Record<string, string> = {
-  anthropic: 'ANTHROPIC_API_KEY',
-  openai: 'OPENAI_API_KEY',
-  google: 'GEMINI_API_KEY',
-  openrouter: 'OPENROUTER_API_KEY',
-  groq: 'GROQ_API_KEY'
-};
+/** BYOK backend model-provider keys (OpenCode/Crush/pi/qwen) are stored WRITE-ONLY
+ *  in the same encrypted secret broker as integrations, under `apikey:<backend>`,
+ *  and never leave main: agents get a broker token instead (byokGrantFor). */
 const providerKeyRef = (backend: string): string => `apikey:${backend}`;
+
+/** The BYOK engines. Each gets a broker capability for the providers it may use
+ *  and the TOKEN where the key used to go; the broker injects the real key on the
+ *  way to the provider's official host. LEAST-PRIVILEGE (Pam/Jim NIT-2): only the
+ *  spawned model's provider when the `--model` prefix names one, else every
+ *  provider with a stored key; qwen only ever reads OPENAI_API_KEY. `grant` is
+ *  undefined when there is no such key or the broker is down (then no key is
+ *  passed at all). `direct` lists the BYOK_DIRECT_KEY exceptions (old path). */
+const BYOK_ENGINES = new Set(['opencode', 'crush', 'pi', 'qwen']);
+const MODEL_PREFIX_BACKEND: Record<string, ByokBackend> = {
+  anthropic: 'anthropic', openai: 'openai', google: 'google', gemini: 'google', groq: 'groq', openrouter: 'openrouter'
+};
+function byokGrantFor(ptyId: string, provider: string, args: string[] | undefined): { grant?: ByokGrant; direct: ByokBackend[] } {
+  const modelIdx = (args ?? []).indexOf('--model');
+  const modelSlug = modelIdx >= 0 ? (args?.[modelIdx + 1] ?? '') : '';
+  const scoped = MODEL_PREFIX_BACKEND[modelSlug.includes('/') ? modelSlug.split('/')[0].toLowerCase() : ''];
+  const wanted: ByokBackend[] = provider === 'qwen' ? ['openai'] : scoped ? [scoped] : BYOK_BACKENDS;
+  const stored = wanted.filter((b) => integrations.hasSecret(providerKeyRef(b)));
+  const directOnly = BYOK_DIRECT_KEY[provider] ?? [];
+  const direct = stored.filter((b) => directOnly.includes(b));
+  const backends = stored.filter((b) => !directOnly.includes(b));
+  if (!backends.length) return { direct };
+  if (!integrationBroker.running()) {
+    console.warn(`[byok] broker not running: ${ptyId} spawns without provider keys`);
+    return { direct };
+  }
+  const token = integrationBroker.extend(ptyId, backends.map(providerBrokerId));
+  return { grant: { url: integrationBroker.url(), token, backends }, direct };
+}
 
 /** A worker worktree that teardown PRESERVED because it held unintegrated work.
  *  Tracked so the GC sweep can reclaim it (+ its scratch dir) once the work lands
@@ -3119,15 +3145,17 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
     }
   }
   // Proxy-tier CLIs (qwen/crush) route their LLM traffic through a loopback sidecar
-  // whose UPSTREAM is read from the preset's bridge.baseUrlEnv inside hive.ensureAgent.
-  // For the local-LLM path, feed the user's configured base URL as that upstream so the
-  // proxy forwards to their endpoint (Ollama/LM Studio/vLLM). Set on process.env BEFORE
-  // ensureAgent reads it. (Crush's baseUrlEnv is an inert sentinel used ONLY as this
-  // upstream source; its real routing is the per-agent CRUSH_GLOBAL_CONFIG base_url.)
+  // whose UPSTREAM hive.ensureAgent sets. For the local-LLM path, feed the user's configured base URL as that upstream so the
+  // proxy forwards to their endpoint (Ollama/LM Studio/vLLM); with no local URL, an
+  // OpenAI key goes through the broker's route. Handed to ensureAgent as
+  // `proxyUpstream`, never written to process.env (every later PTY inherits that).
+  // (Crush's real routing is the per-agent CRUSH_GLOBAL_CONFIG base_url.)
+  const byokSpawn = opts.hive && BYOK_ENGINES.has(provider) ? byokGrantFor(opts.id, provider, opts.args) : undefined;
+  const byok = byokSpawn?.grant;
+  let proxyUpstream: string | undefined;
   if (opts.hive && (provider === 'crush' || provider === 'qwen')) {
-    const bridge = providerPreset(provider).bridge;
-    const baseUrl = readConfig().providerBaseUrls?.[provider];
-    if (bridge && bridge.kind === 'proxy' && baseUrl) process.env[bridge.baseUrlEnv] = baseUrl;
+    proxyUpstream = readConfig().providerBaseUrls?.[provider]
+      || (byok?.backends.includes('openai') ? `${providerRoute(byok.url, 'openai')}/v1` : undefined);
   }
   // If the agent carries hive metadata, provision its workspace and add
   // provider-specific spawn injection. Non-Claude providers get shared AGENT_*
@@ -3186,7 +3214,9 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
           attitude: featureOn(readConfig().features, 'attitudeFile') ? readAttitude() : '',
           // The shared palace is mutated by the agent's own `mempalace` calls, so
           // the OS sandbox must let it through (empty when memory is off).
-          extraWritableDirs: [memory.env().MEMPALACE_PALACE_PATH].filter((p): p is string => !!p)
+          extraWritableDirs: [memory.env().MEMPALACE_PALACE_PATH].filter((p): p is string => !!p),
+          byok,
+          proxyUpstream
         }
       );
       opts.args = [...(opts.args ?? []), ...inj.args];
@@ -3361,25 +3391,22 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
   if (opts.hive && (provider === 'opencode' || provider === 'crush' || provider === 'pi' || provider === 'qwen')) {
     const cfg = readConfig();
     const extra: Record<string, string> = {};
-    // 1) BYOK keys — LEAST-PRIVILEGE (Pam/Jim NIT-2): inject ONLY the key for the
-    //    spawned model's provider prefix when we can identify it; fall back to all
-    //    stored keys when the model/prefix is unknown (default model, qwen slugs,
-    //    custom). Reduces the blast radius vs handing every CLI all keys.
     const modelIdx = (opts.args ?? []).indexOf('--model');
     const modelSlug = modelIdx >= 0 ? (opts.args?.[modelIdx + 1] ?? '') : '';
     const prefix = modelSlug.includes('/') ? modelSlug.split('/')[0].toLowerCase() : '';
-    const PREFIX_BACKEND: Record<string, string> = {
-      anthropic: 'anthropic', openai: 'openai', google: 'google', gemini: 'google', groq: 'groq', openrouter: 'openrouter'
-    };
-    const scoped = PREFIX_BACKEND[prefix];
-    const backends = scoped ? [scoped] : Object.keys(BACKEND_KEY_ENV);
-    for (const backend of backends) {
-      const key = integrations.getSecret(providerKeyRef(backend));
-      if (!key) continue;
-      extra[BACKEND_KEY_ENV[backend]] = key;
-      // OpenCode/AI-SDK's Google provider reads GOOGLE_GENERATIVE_AI_API_KEY, not
-      // GEMINI_API_KEY — inject both so google/* authenticates (Jim NIT #1).
-      if (backend === 'google') extra.GOOGLE_GENERATIVE_AI_API_KEY = key;
+    // 1) BYOK: the broker TOKEN under each key var (byokGrantFor), never the key.
+    //    The base URLs pointing at the broker were set by ensureAgent (Crush
+    //    config, pi models.json, qwen sidecar) or below (OpenCode config).
+    if (byok) {
+      Object.assign(extra, byokEnv(byok));
+      // qwen without its sidecar (bind failed / hive off) talks to the upstream itself.
+      if (provider === 'qwen' && !opts.env?.OPENAI_BASE_URL && proxyUpstream) extra.OPENAI_BASE_URL = proxyUpstream;
+    }
+    // The one exception, by necessity (BYOK_DIRECT_KEY, warned in Settings): an
+    // engine that ignores this provider's base URL still gets the real key.
+    for (const b of byokSpawn?.direct ?? []) {
+      const key = integrations.getSecret(providerKeyRef(b));
+      if (key) extra[BACKEND_KEY_ENV[b]] = key;
     }
     // 2) Floor auto-state for pi's bundled extension auto-allow (guardrail #5): it
     //    only auto-approves tool calls when this is '1' (i.e. floor auto mode on).
@@ -3392,7 +3419,8 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
       const oc = buildOpenCodeConfig({
         autoMode: !!cfg.autoMode,
         baseUrl: cfg.providerBaseUrls?.opencode,
-        localModel: prefix === 'local' ? modelSlug.slice(6) : undefined
+        localModel: prefix === 'local' ? modelSlug.slice(6) : undefined,
+        byok
       });
       extra.OPENCODE_CONFIG_CONTENT = JSON.stringify(oc);
     }

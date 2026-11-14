@@ -27,3 +27,11 @@ test('templates leave the engine to the user default', () => {
     assert.equal(tpl.manifest.model, undefined, tpl.id);
   }
 });
+
+test('the extra role templates exist and are the ids the feature switch hides', () => {
+  const { EXTRA_TEMPLATE_IDS } = loadTs('src/shared/features.ts');
+  const ids = new Set(AGENT_TEMPLATES.map((t) => t.id));
+  for (const id of EXTRA_TEMPLATE_IDS) assert.ok(ids.has(id), `${id} is not a template`);
+  const researcher = AGENT_TEMPLATES.find((t) => t.id === 'security-researcher');
+  assert.match(researcher.manifest.goal, /never run exploits/i, 'research and report, not pentest');
+});

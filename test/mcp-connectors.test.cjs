@@ -257,3 +257,41 @@ test('extend on an unknown worker mints a fresh capability', () => {
   assert.equal(typeof t1, 'string');
   assert.ok(t1.length > 20);
 });
+
+// ── systeme.io + GoHighLevel (vendor-hosted, brokered) ───────────────────────
+
+test('systeme.io is the vendor-hosted endpoint with the documented X-MCP-Key header, key never in agent config', () => {
+  const SYS = 'systeme-mcp-key-DO-NOT-LEAK-777';
+  const e = cat.mcpCatalogEntry('systeme-io');
+  assert.deepEqual(e.spec, { transport: 'http', url: 'https://mcp.systeme.io/mcp' });
+  assert.deepEqual([e.secret.kind, e.secret.name], ['header', 'X-MCP-Key']);
+  assert.equal(e.tier, 'secret');
+  assert.equal(e.defaultEnabled, false);
+  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://mcp.systeme.io', authType: 'header', authHeader: 'X-MCP-Key' });
+  const r = cat.buildMcpServers({ cwd: '/w', consent: { 'systeme-io': { enabled: true } }, getSecret: () => SYS, broker });
+  assert.equal(r.servers['atmt-systeme-io'].url, 'http://127.0.0.1:5555/i/mcp-systeme-io/mcp');
+  assert.ok(!JSON.stringify(r.servers).includes(SYS), 'key must never reach agent config');
+});
+
+test('GoHighLevel goes through the broker as a Bearer PIT; locationId is a plain optional header', () => {
+  const PIT = 'pit-DO-NOT-LEAK-888';
+  const e = cat.mcpCatalogEntry('gohighlevel');
+  assert.equal(e.defaultEnabled, false);
+  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://services.leadconnectorhq.com', authType: 'bearer' });
+  // Without a location id the header is left out (the token is scoped to one sub-account).
+  const bare = cat.buildMcpServers({ cwd: '/w', consent: { gohighlevel: { enabled: true } }, getSecret: () => PIT, broker });
+  const s = bare.servers['atmt-gohighlevel'];
+  assert.equal(s.url, 'http://127.0.0.1:5555/i/mcp-gohighlevel/mcp/');
+  assert.deepEqual(s.headers, { authorization: 'Bearer cap-token' });
+  assert.deepEqual(bare.skipped, []);
+  // With one, it rides along as a plain header the broker forwards; the PIT still never appears.
+  const withLoc = cat.buildMcpServers({ cwd: '/w', consent: { gohighlevel: { enabled: true } }, getSecret: () => PIT, broker, vars: { 'ghl-location-id': 'loc_123' } });
+  assert.deepEqual(withLoc.servers['atmt-gohighlevel'].headers, { locationId: 'loc_123', authorization: 'Bearer cap-token' });
+  assert.ok(!JSON.stringify(withLoc.servers).includes(PIT), 'token must never reach agent config');
+});
+
+test('a catalog header can never shadow the broker capability token', () => {
+  const e = { ...cat.mcpCatalogEntry('fireflies'), id: 'x-test', spec: { transport: 'http', url: 'https://x.test/mcp', headers: { Authorization: 'Bearer stolen' } } };
+  const r = cat.buildMcpServers({ cwd: '/w', consent: { 'x-test': { enabled: true } }, getSecret: () => 'k', broker, catalog: [e] });
+  assert.deepEqual(r.servers['atmt-x-test'].headers, { authorization: 'Bearer cap-token' });
+});

@@ -48,6 +48,8 @@ const TITLE_MAP: Record<string, PromptCategory> = {
   'devops engineer': 'engineering',
   'technical writer': 'engineering',
   'security auditor': 'security',
+  'ui/ux designer': 'engineering',
+  'security researcher': 'security',
   'scrum master': 'operations',
   'marketing executive': 'marketing',
   'marketing executive (feature launch)': 'marketing',

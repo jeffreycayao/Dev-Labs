@@ -54,6 +54,15 @@ export interface McpHttpSpec {
   /** How the broker sends the key. Default 'header': the raw key in the
    *  secret's header; 'bearer': `Authorization: Bearer <key>`. */
   authType?: 'header' | 'bearer';
+  /**
+   * Extra NON-secret request headers (e.g. HighLevel's `locationId`). They are
+   * written into the agent's config and the broker forwards them untouched. A
+   * `<name>` placeholder is filled from `BuildMcpServersInput.vars`
+   * (`config.mcpVars`, typed by the user in Settings → Connections); a header
+   * whose placeholder has no value is LEFT OUT, so only optional headers belong
+   * here. Never a credential: those go in `secret`.
+   */
+  headers?: Record<string, string>;
 }
 
 export type McpSpec = McpStdioSpec | McpHttpSpec;
@@ -89,6 +98,9 @@ export interface McpCatalogEntry {
   spec: McpSpec;
   /** The credential this server needs, if any (write/secret tiers only). */
   secret?: McpSecret;
+  /** Plain, non-secret values the user types in Settings → Connections (stored
+   *  in `config.mcpVars`), offered to the spec as `<name>` placeholders. */
+  vars?: { name: string; label: string }[];
   tier: McpTier;
   /** Seed for `config.mcpDefaults[id].enabled`. Always === (tier === 'safe-readonly'). */
   defaultEnabled: boolean;
@@ -214,6 +226,33 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     description: 'Read your Fireflies meeting notes: transcripts, summaries and action items. Can also rename, share or move meetings, within the key\'s permissions.',
     spec: { transport: 'http', url: 'https://api.fireflies.ai/mcp', authType: 'bearer' },
     secret: { kind: 'header', name: 'Authorization', label: 'Fireflies API key (Settings → Developer Settings)', helpUrl: 'https://docs.fireflies.ai/getting-started/mcp-configuration' },
+    tier: 'secret',
+    defaultEnabled: false
+  },
+  {
+    // systeme.io's own hosted MCP server. Key in the "X-MCP-Key" header per
+    // developer.systeme.io/docs/mcp-server (an MCP key, not the REST API key;
+    // Settings → MCP & API keys, valid up to 90 days).
+    id: 'systeme-io',
+    label: 'Systeme.io',
+    description: 'Your systeme.io account: contacts, tags, newsletters, campaigns, funnels, products, courses and automations. Can also make changes, within the key\'s permissions.',
+    spec: { transport: 'http', url: 'https://mcp.systeme.io/mcp' },
+    secret: { kind: 'header', name: 'X-MCP-Key', label: 'systeme.io MCP key (Settings → MCP & API keys)', helpUrl: 'https://developer.systeme.io/docs/mcp-server' },
+    tier: 'secret',
+    defaultEnabled: false
+  },
+  {
+    // HighLevel's hosted MCP server (the token endpoint; the /v2 ones are OAuth
+    // sign-in flows the broker cannot drive). "Authorization: Bearer pit-…" with
+    // a Private Integration Token from the sub-account's Settings → Private
+    // Integrations. The optional `locationId` header names the sub-account; the
+    // token is already scoped to one, so it is filled only when the user sets it.
+    id: 'gohighlevel',
+    label: 'GoHighLevel',
+    description: 'Your HighLevel sub-account: contacts, conversations, opportunities, calendars and payments. Can also make changes, within the token\'s scopes.',
+    spec: { transport: 'http', url: 'https://services.leadconnectorhq.com/mcp/', authType: 'bearer', headers: { locationId: '<ghl-location-id>' } },
+    secret: { kind: 'header', name: 'Authorization', label: 'HighLevel Private Integration token (pit-…)', helpUrl: 'https://marketplace.gohighlevel.com/docs/other/mcp' },
+    vars: [{ name: 'ghl-location-id', label: 'Sub-account (location) ID, optional' }],
     tier: 'secret',
     defaultEnabled: false
   },
@@ -351,17 +390,6 @@ export function buildMcpServers(input: BuildMcpServersInput): {
     const secret = e.secret ? input.getSecret(e.id) : undefined;
     if (e.secret && !secret) { skipped.push({ id: e.id, reason: 'no_secret' }); continue; }
     const key = `atmt-${e.id}`;
-    if (isHttpSpec(e.spec)) {
-      if (!input.broker) { skipped.push({ id: e.id, reason: 'broker_offline' }); continue; }
-      const { path } = mcpUpstream(e.spec);
-      servers[key] = {
-        type: 'http',
-        url: `${input.broker.url}/i/${encodeURIComponent(mcpBrokerId(e.id))}/${path}`,
-        headers: { authorization: `Bearer ${input.broker.token}` }
-      };
-      brokerIds.push(mcpBrokerId(e.id));
-      continue;
-    }
     const vars: Record<string, string> = { ...input.vars, cwd: input.cwd };
     let missing = false;
     const fill = (s: string): string => s.replace(/<([a-z-]+)>/g, (m, name: string) => {
@@ -369,6 +397,25 @@ export function buildMcpServers(input: BuildMcpServersInput): {
       missing = true;
       return m;
     });
+    if (isHttpSpec(e.spec)) {
+      if (!input.broker) { skipped.push({ id: e.id, reason: 'broker_offline' }); continue; }
+      const { path } = mcpUpstream(e.spec);
+      // The capability token always wins; a plain header without its value is dropped.
+      const headers: Record<string, string> = {};
+      for (const [h, v] of Object.entries(e.spec.headers ?? {})) {
+        missing = false;
+        const filled = fill(v);
+        if (!missing && h.toLowerCase() !== 'authorization') headers[h] = filled;
+      }
+      headers.authorization = `Bearer ${input.broker.token}`;
+      servers[key] = {
+        type: 'http',
+        url: `${input.broker.url}/i/${encodeURIComponent(mcpBrokerId(e.id))}/${path}`,
+        headers
+      };
+      brokerIds.push(mcpBrokerId(e.id));
+      continue;
+    }
     const command = fill(e.spec.command);
     const args = e.spec.args.map(fill);
     const env: Record<string, string> = {};

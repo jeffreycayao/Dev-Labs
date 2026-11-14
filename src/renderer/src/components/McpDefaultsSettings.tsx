@@ -171,6 +171,39 @@ function ObsidianVault({ vault, onChanged }: { vault?: string; onChanged: (msg: 
   );
 }
 
+/** A connector's plain (non-secret) value, e.g. HighLevel's sub-account id.
+ *  Stored in `config.mcpVars` and filled into the catalog spec at spawn. */
+function ConnectorVar({ name, label, config, onChanged }: { name: string; label: string; config: HarnessConfig; onChanged: (msg: string) => void }) {
+  const { t } = useTranslation();
+  const [value, setValue] = useState(config.mcpVars?.[name] ?? '');
+  const save = async () => {
+    const next = { ...(config.mcpVars ?? {}) };
+    const v = value.trim().replace(/[\r\n]/g, '').slice(0, 200);
+    if (v) next[name] = v; else delete next[name];
+    try {
+      await window.cth.updateConfig({ mcpVars: next });
+      onChanged(v ? t('mcpDefaults.vars.savedNote', { label }) : t('mcpDefaults.vars.clearedNote', { label }));
+    } catch { onChanged(t('mcpDefaults.couldNotSave')); }
+  };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={label}
+        aria-label={label}
+        style={{
+          flex: '1 1 180px', minWidth: 0, padding: '3px 6px', fontSize: 12,
+          fontFamily: 'var(--cth-font-mono)', border: 'none',
+          boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', background: 'var(--cth-paper-50, #fff)', color: 'var(--cth-ink-900)'
+        }}
+      />
+      <button type="button" onClick={() => { void save(); }} style={smallButton}>{t('mcpDefaults.vars.save')}</button>
+    </div>
+  );
+}
+
 export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
   const { t } = useTranslation();
   const [note, setNote] = useState('');
@@ -265,6 +298,9 @@ export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
                       {entry.secret && on && !keys[entry.id] && (
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--cth-coral)' }}>{t('mcpDefaults.key.needsKey')}</span>
                       )}
+                      {entry.vars?.map((v) => (
+                        <ConnectorVar key={v.name} name={v.name} label={v.label} config={config} onChanged={flash} />
+                      ))}
                       {entry.id === 'obsidian' && <ObsidianVault vault={config.obsidianVault} onChanged={flash} />}
                       {entry.id === 'obsidian' && on && !config.obsidianVault && (
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--cth-coral)' }}>{t('mcpDefaults.vault.needsVault')}</span>

@@ -337,6 +337,10 @@ export interface HarnessConfig {
   slackPort?: number;
   slackProactivePosting?: boolean;
   obsidianVault?: string;
+  /** Plain connector values (e.g. a HighLevel location id). */
+  mcpVars?: Record<string, string>;
+  /** Owner feature switches (src/shared/features.ts). */
+  features?: Partial<import('../shared/features').FeatureFlags>;
   webhookEnabled?: boolean;
   webhookSecret?: string;
   webhookPort?: number;
@@ -823,6 +827,11 @@ const api = {
     ipcRenderer.invoke('skills:reveal', path),
   searchMemory: (query: string, wing?: string): Promise<{ ok: boolean; output: string; error?: string }> =>
     ipcRenderer.invoke('hive:searchMemory', query, wing),
+
+  // ─── ATTITUDE.md: how every agent talks to the user ───────────────────────
+  attitudeGet: (): Promise<string> => ipcRenderer.invoke('attitude:get'),
+  attitudeSet: (text: string): Promise<{ ok: true; text: string } | { ok: false; error: string }> =>
+    ipcRenderer.invoke('attitude:set', text),
 
   // ─── Enterprise Knowledge Graph (multimodal context for agents) ───────────
   kgStatus: (): Promise<KnowledgeStatus> => ipcRenderer.invoke('kg:status'),

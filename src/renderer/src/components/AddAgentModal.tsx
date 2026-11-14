@@ -9,6 +9,7 @@ import { ProviderLogo } from './ProviderLogo';
 import { useStore, type Agent } from '@/store/store';
 import { OFFICE_CAST, CAST_BY_NAME, DEFAULT_CHARACTER, type OfficeCharacterName } from '@/scene/office/cast';
 import { templatesFor, type TemplateTrack } from '@shared/agentTemplates';
+import { EXTRA_TEMPLATE_IDS, featureOn } from '@shared/features';
 import { type AccentColorName } from '@/design/tokens';
 import type { HireManifest } from '@shared/hire';
 import { hireQueueProgress } from '@shared/hireQueue';
@@ -1201,7 +1202,7 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
                   {tr('addAgent.roleTemplatesHint')}
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {templatesFor(templateTrack).map((tpl) => (
+                  {templatesFor(templateTrack).filter((tpl) => featureOn(config.features, 'extraRoleTemplates') || !EXTRA_TEMPLATE_IDS.includes(tpl.id)).map((tpl) => (
                     <button
                       key={tpl.id}
                       onClick={() => { applyManifest(tpl.manifest); setTemplateId(tpl.id); }}

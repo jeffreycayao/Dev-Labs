@@ -46,6 +46,7 @@ import { preferredAgentRole } from '../shared/agentRole';
 import { mergeTaskLedger } from '../shared/taskLedger';
 import { expandTilde } from './fs';
 import { resolveGodName } from '../shared/godIdentity';
+import { attitudePromptBlock } from '../shared/attitude';
 import {
   DELIVERY_LIMITS, deliveryKind, isDeliveryId, isDeliveryStatus, normalizeAttachments,
   safeFileName, uniqueName, extensionOf, MIME_BY_EXT,
@@ -878,6 +879,11 @@ export class HiveManager {
        *  copied into the agent's `.claude/skills/` per spawn; undefined or missing
        *  is a no-op (tolerated until Kevin populates the resource dir). */
       skillsDir?: string;
+      /** Bundled skill folder ids NOT to copy (owner switched them off). */
+      skillsExclude?: readonly string[];
+      /** The user's ATTITUDE.md text (already normalised). Empty/undefined →
+       *  no line. Read once at spawn, so it is prompt-cache-stable. */
+      attitude?: string;
       /** Extra directories the agent's sandbox may write (e.g. the shared
        *  MemPalace dir, which `mempalace` mutates). Absolute paths; ignored
        *  for providers without a sandbox. */
@@ -908,7 +914,7 @@ export class HiveManager {
     // app-resources skills/ dir on every spawn (same policy as identity.md), so an
     // agent always rides with the shipped safe skill set. Tolerant: a missing or
     // partial source dir is a no-op (Kevin populates the resource dir in lp-manifest).
-    if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(dir, '.claude', 'skills'), dir);
+    if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(dir, '.claude', 'skills'), dir, opts.skillsExclude);
 
     createOnce(join(dir, 'memory.md'), `# Memory — ${meta.name} (${meta.id})\n\n_Append durable facts, decisions, and context below._\n`);
     ensureMineIgnore(dir); // keep settings.json / cursor / messages out of mempalace's index
@@ -996,7 +1002,7 @@ export class HiveManager {
     if (!isHiveAwareProvider(meta.provider)) {
       const preset = providerPreset(meta.provider ?? 'claude');
       const flag = preset.initialPromptFlag;
-      const prompt = this.injectedPrompt(meta, dir, root, opts.semanticMemory ?? false, opts.knowledgeGraph ?? false, opts.kgCliPath);
+      const prompt = this.injectedPrompt(meta, dir, root, opts.semanticMemory ?? false, opts.knowledgeGraph ?? false, opts.kgCliPath, opts.attitude);
       // agy, codex, and grok expose a Claude-style lifecycle-hook surface, so each
       // gets the SAME live status + Stop→inbox-drain Claude does — selected by the
       // preset's `hookBridge`. agy needs a translating shim (its hook stdin/stdout
@@ -1025,7 +1031,7 @@ export class HiveManager {
               // Codex never reads .claude/skills; it still scans the (deprecated)
               // $CODEX_HOME/skills, and that home is per-agent, so the bundled set
               // goes there without touching the user's ~/.agents/skills.
-              if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(env.CODEX_HOME, 'skills'), dir);
+              if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(env.CODEX_HOME, 'skills'), dir, opts.skillsExclude);
               // Codex refuses to run hooks from a config dir without persisted
               // "hook trust" (normally an interactive gate). Our hooks.json is
               // hive-authored inside an isolated CODEX_HOME, so we bypass that gate
@@ -1149,7 +1155,7 @@ export class HiveManager {
     // permissions.additionalDirectories grants file access but loads no skills.
     // --add-dir is variadic, so it goes first: the next token is always a flag.
     if (opts.skillsDir) args.push('--add-dir', dir);
-    args.push('--append-system-prompt', this.injectedPrompt(meta, dir, root, opts.semanticMemory ?? false, opts.knowledgeGraph ?? false, opts.kgCliPath));
+    args.push('--append-system-prompt', this.injectedPrompt(meta, dir, root, opts.semanticMemory ?? false, opts.knowledgeGraph ?? false, opts.kgCliPath, opts.attitude));
 
     // Phase 1 — autonomy: attach lifecycle hooks via --settings (no edits to the
     // user's repo) so the agent reports activity and drains its inbox on Stop.
@@ -1478,9 +1484,10 @@ export class HiveManager {
    * is ever deleted recursively, so a race won between two steps can at worst
    * replace one file with a bundled one, never wipe a folder.
    */
-  private copyBundledSkills(srcDir: string, destDir: string, agentDir: string): void {
+  private copyBundledSkills(srcDir: string, destDir: string, agentDir: string, exclude: readonly string[] = []): void {
     try {
       if (!existsSync(srcDir)) return;
+      const skip = new Set(exclude);
       const copyFile = (s: string, d: string): void => {
         rmSync(d, { force: true }); // throws on a real directory → copy aborts
         copyFileSync(s, d, fsConstants.COPYFILE_EXCL);
@@ -1490,6 +1497,9 @@ export class HiveManager {
         if (!entries.length) return;
         realDir(to);
         for (const ent of entries) {
+          // A switched-off skill folder is left out at the top level only; a stale
+          // copy from an earlier spawn is removed so the switch takes effect.
+          if (from === srcDir && ent.isDirectory() && skip.has(ent.name)) { rmSync(join(to, ent.name), { recursive: true, force: true }); continue; }
           const s = join(from, ent.name);
           const d = join(to, ent.name);
           if (ent.isDirectory()) copyTree(s, d);
@@ -1672,8 +1682,12 @@ export class HiveManager {
     root: string,
     semanticMemory: boolean,
     knowledgeGraph: boolean,
-    kgCliPath?: string
+    kgCliPath?: string,
+    attitude?: string
   ): string {
+    // The user's ATTITUDE.md (shared/attitude.ts). Stable for the agent's lifetime:
+    // read once at spawn, never re-read, so the prefix stays cache-friendly.
+    const attitudeLine = attitudePromptBlock(attitude);
     // Native-separator path helpers — see the 🪟 note above.
     const inDir = (...parts: string[]): string => join(dir, ...parts);
     const inRoot = (...parts: string[]): string => join(root, ...parts);
@@ -1759,6 +1773,7 @@ export class HiveManager {
       runtimeLine,
       slackLine,
       ctxLine,
+      attitudeLine,
       `Env vars available to you: AGENT_ID, AGENT_NAME, HIVE_ROOT, AGENT_DIR.`
     ].filter(Boolean).join('\n');
   }

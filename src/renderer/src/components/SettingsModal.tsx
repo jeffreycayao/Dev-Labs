@@ -20,6 +20,8 @@ import { Icon } from './Icon';
 import { McpDefaultsSettings } from './McpDefaultsSettings';
 import { IntegrationsRegistry } from './IntegrationsRegistry';
 import { AiEnginesSettings } from './AiEnginesSettings';
+import { AttitudeEditor } from './AttitudeEditor';
+import { FEATURE_KEYS, featureOn, type FeatureFlags } from '@shared/features';
 import { REALTIME_MODEL } from '@shared/realtimePricing';
 import { RealtimeDevicePicker } from '@/realtime/DevicePicker';
 import { CostHud } from '@/realtime/CostHud';
@@ -314,6 +316,14 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
     const n = maxTurnsVal.trim() === '' ? undefined : Number(maxTurnsVal);
     return { maxTurns: Number.isFinite(n as number) && (n as number) > 0 ? Math.round(n as number) : undefined } as Partial<HarnessConfig>;
   };
+  // Owner feature switches (src/shared/features.ts). Staged like the rest.
+  const [features, setFeatures] = useState<Partial<FeatureFlags>>(config.features ?? {});
+  const toggleFeature = (key: keyof FeatureFlags) => {
+    const next = { ...features, [key]: !featureOn(features, key) };
+    setFeatures(next);
+    stage({ features: next });
+  };
+
   const [semMemOn, setSemMemOn] = useState<boolean>(cfgX.semanticMemory !== false);
   const toggleSemMem = async () => {
     const next = !semMemOn;
@@ -1293,6 +1303,32 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                         </div>
                       </div>
 
+                      <div style={sectionRule} />
+
+                      {/* FEATURES — one owner switch per optional feature */}
+                      <div>
+                        <div style={sectionHead}>{t('settings.general.features')}</div>
+                        <span style={{ display: 'block', fontSize: 12, lineHeight: '16px', color: 'var(--cth-ink-500)', marginBottom: 10 }}>
+                          {t('settings.general.featuresDesc')}
+                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          {FEATURE_KEYS.map((key) => {
+                            const on = featureOn(features, key);
+                            return (
+                              <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                  <span style={{ fontSize: 13, lineHeight: '20px', color: 'var(--cth-ink-900)' }}>{t(`settings.features.${key}`)}</span>
+                                  <span style={{ fontSize: 12, lineHeight: '16px', color: 'var(--cth-ink-500)' }}>{t(`settings.features.${key}Desc`)}</span>
+                                </div>
+                                <PixelButton variant={on ? 'primary' : 'secondary'} size="sm" onClick={() => toggleFeature(key)}>
+                                  {on ? t('common.on') : t('common.off')}
+                                </PixelButton>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                     </>
                   )}
 
@@ -1370,6 +1406,14 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
                           />
                           <span style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}>{t('settings.agentsModels.blankUnlimited')}</span>
                         </div>
+                      </div>
+
+                      <div style={{ height: 1, background: 'var(--cth-ink-300)' }} />
+
+                      {/* ATTITUDE.md — how every agent talks to this user */}
+                      <div>
+                        <div style={sectionHead}>{t('settings.attitude.title')}</div>
+                        <AttitudeEditor enabled={featureOn(features, 'attitudeFile')} />
                       </div>
                     </>
                   )}

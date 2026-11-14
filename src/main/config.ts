@@ -14,6 +14,7 @@ import { MAX_AGENT_TOKEN_CAP } from '../shared/tokenCaps';
 import { expandTilde, normalizeHiveHome } from './fs';
 import type { IntegrationRecord } from '../shared/integrations';
 import type { DiscordTriggerConfig } from '../shared/discord';
+import type { FeatureFlags } from '../shared/features';
 import {
   DEFAULT_CONTEXT_TRIGGER,
   DEFAULT_ORG_TRIGGER,
@@ -358,6 +359,12 @@ export interface HarnessConfig {
   /** Absolute path of the Obsidian vault the `obsidian` connector writes to.
    *  The connector is skipped at spawn until this is set. */
   obsidianVault?: string;
+  /** Plain (non-secret) connector values typed in Settings → Connections, keyed
+   *  by the catalog `vars` name (e.g. `ghl-location-id`). Keys never go here. */
+  mcpVars?: Record<string, string>;
+  /** Owner feature switches (Settings → General → Features). A missing key is
+   *  its default in `FEATURE_DEFAULTS` (src/shared/features.ts). */
+  features?: Partial<FeatureFlags>;
   /** Discord @-mention → Ramon's queue (Triggers tab). The bot token is the
    *  Discord connector's key in the encrypted secret store, never here. */
   discordTrigger?: DiscordTriggerConfig;

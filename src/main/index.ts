@@ -34,6 +34,8 @@ import { CircuitBreaker, type BreakerInput } from './breaker';
 import { CumulativeSampleGate, type UsageProvider } from './usage';
 import { MemoryManager } from './memory';
 import { KnowledgeManager } from './knowledge';
+import { readAttitude, writeAttitude } from './attitude';
+import { EXTRA_SKILL_IDS, featureOn } from '../shared/features';
 import { MemoryReflector, type ReflectSettings } from './reflect';
 import { PersistStore } from './db';
 import { readContextTokens, seedSessionTranscript, resolveSessionCwd } from './transcript';
@@ -3109,6 +3111,8 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
           // Bundled connectors run on the app's own Node (ELECTRON_RUN_AS_NODE in
           // their spec) from the resources dir; Obsidian also needs its vault.
           mcpVars: {
+            // User-typed plain values first; the app's own paths win on a clash.
+            ...(readConfig().mcpVars ?? {}),
             node: process.execPath,
             resources: bundledResourcesDir(),
             ...(readConfig().obsidianVault ? { 'obsidian-vault': readConfig().obsidianVault! } : {})
@@ -3117,6 +3121,10 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
             for (const s of skipped) console.warn(`[mcp] ${s.id} not attached to ${opts.id}: ${s.reason}`);
           },
           skillsDir: skillsResourceDir(),
+          // Owner switches (Settings → General → Features): drop the DevLabs-written
+          // skills when off; inject ATTITUDE.md only when on AND it has text.
+          skillsExclude: featureOn(readConfig().features, 'extraSkills') ? [] : EXTRA_SKILL_IDS,
+          attitude: featureOn(readConfig().features, 'attitudeFile') ? readAttitude() : '',
           // The shared palace is mutated by the agent's own `mempalace` calls, so
           // the OS sandbox must let it through (empty when memory is off).
           extraWritableDirs: [memory.env().MEMPALACE_PALACE_PATH].filter((p): p is string => !!p)
@@ -4157,6 +4165,10 @@ ipcMain.handle('hive:searchMemory', (_evt, query: unknown, wing: unknown) => {
 });
 
 // ─── IPC: enterprise Knowledge Graph (multimodal context for agents) ─────────
+// The user's ATTITUDE.md (Settings → Agents & Models → How agents talk to you).
+ipcMain.handle('attitude:get', () => readAttitude());
+ipcMain.handle('attitude:set', (_evt, text: unknown) => writeAttitude(text));
+
 ipcMain.handle('kg:status', () => knowledge.status());
 // Open a multi-file picker and ingest the chosen artifacts in one round-trip.
 ipcMain.handle('kg:addFiles', async (evt) => {

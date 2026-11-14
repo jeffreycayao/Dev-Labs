@@ -13,7 +13,8 @@ const EXPECTED = {
   'scrum-master': 'operations', 'launch-marketer': 'marketing', 'marketing-executive': 'marketing',
   'social-media': 'marketing', 'content-writer': 'marketing', 'customer-support': 'support',
   'sales-researcher': 'sales', 'market-researcher': 'research', 'operations-admin': 'operations',
-  'hr-recruitment': 'hr', 'finance-bookkeeper': 'finance'
+  'hr-recruitment': 'hr', 'finance-bookkeeper': 'finance',
+  'ux-designer': 'engineering', 'security-researcher': 'security'
 };
 
 test('every role template maps to its intended category', () => {

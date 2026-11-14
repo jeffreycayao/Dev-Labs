@@ -15,6 +15,7 @@ import type {
   WebhookTrigger
 } from '@shared/triggers';
 import { isNewer } from '@shared/updateState';
+import type { FeatureFlags } from '@shared/features';
 import modelCatalog from '@shared/modelCatalog.json';
 import type { CatalogModel, ModelCatalog } from '@shared/modelCatalogPayload';
 
@@ -109,6 +110,10 @@ export interface HarnessConfig {
   slackProactivePosting?: boolean;
   /** Obsidian vault folder for the `obsidian` connector (mirrors src/main/config.ts). */
   obsidianVault?: string;
+  /** Plain connector values (e.g. a HighLevel location id); mirrors src/main/config.ts. */
+  mcpVars?: Record<string, string>;
+  /** Owner feature switches; a missing key is its default (src/shared/features.ts). */
+  features?: Partial<FeatureFlags>;
   /** Free Flow voice dictation (mirrors src/main/config.ts). */
   freeflowEnabled?: boolean;
   groqApiKey?: string;

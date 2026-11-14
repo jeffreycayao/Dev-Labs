@@ -8,7 +8,9 @@ import { RetroOffice3D } from '@/features/retro-office/RetroOffice3D';
 import type { OfficeAgent } from '@/features/retro-office/core/types';
 import { EditAgentModal } from '@/components/EditAgentModal';
 import type { PickChatter } from '@/features/retro-office/systems/chatter';
-import { pickExchange, pickSoloLine } from '@/scene/office/cafeteriaLines';
+import { pickExchange, pickSoloLine, type CafeteriaLines } from '@/scene/office/cafeteriaLines';
+import { useFeatures } from '@/lib/useFeatures';
+import { featureOn } from '@shared/features';
 import { useOfficeFeed, type OfficeFeedEvent } from './useOfficeFeed';
 import { useOfficeStandup } from './useOfficeStandup';
 import { useVoiceReplies } from './useVoiceReplies';
@@ -97,7 +99,8 @@ const writeJson = (key: string, value: unknown) => {
  *  Agents are spread over building floors of up to 15 (Ramon always on floor 1).
  *  Each floor keeps its own furniture layout and desk assignments. */
 export function OfficeFloor3D() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const features = useFeatures();
   const selectedId = useStore((s) => s.selectedId);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saved, setSaved] = useState<OfficeLevels>(() => {
@@ -139,21 +142,28 @@ export function OfficeFloor3D() {
 
   const ramonId = pinned[0] ?? null;
   const ramonName = useStore((s) => s.agents.find(isRamon)?.name);
-  const pickChatter = useMemo<PickChatter>(() => (kind, agentId, seed) => {
-    const character = useStore.getState().agents.find((a) => a.id === agentId)?.character ?? 'michael';
-    switch (kind) {
-      case 'exchange': return [...pickExchange(character, seed)];
-      case 'gossip': {
-        // Witty Pinoy chismis pool (office.gossip); its size is read, not assumed.
-        const pool = t('office.gossip', { returnObjects: true }) as unknown;
-        const count = Array.isArray(pool) && pool.length > 0 ? pool.length : 1;
-        return [t(`office.gossip.${seed % count}`)];
+  // Chatter follows the app language unless the owner switched that off
+  // (Settings -> General -> Features); then it stays in the English/Taglish pool.
+  const chatterFollows = featureOn(features, 'chatterFollowsLanguage');
+  const pickChatter = useMemo<PickChatter>(() => {
+    const ct = chatterFollows ? t : i18n.getFixedT('en');
+    const lines = ct('office.cafeteria', { returnObjects: true }) as CafeteriaLines | undefined;
+    return (kind, agentId, seed) => {
+      const character = useStore.getState().agents.find((a) => a.id === agentId)?.character ?? 'michael';
+      switch (kind) {
+        case 'exchange': return [...pickExchange(lines, character, seed)];
+        case 'gossip': {
+          // Witty Pinoy chismis pool (office.gossip); its size is read, not assumed.
+          const pool = ct('office.gossip', { returnObjects: true }) as unknown;
+          const count = Array.isArray(pool) && pool.length > 0 ? pool.length : 1;
+          return [ct(`office.gossip.${seed % count}`)];
+        }
+        case 'suckUp': return [ct(`office.suckUp.${SUCKUP_LINES[seed % SUCKUP_LINES.length]}`, { godName: ramonName ?? 'boss' })];
+        case 'cheer': return [ct(`office.cheer.${seed % CHEER_COUNT}`)];
+        default: return [pickSoloLine(lines, character, kind, seed)];
       }
-      case 'suckUp': return [t(`office.suckUp.${SUCKUP_LINES[seed % SUCKUP_LINES.length]}`, { godName: ramonName ?? 'boss' })];
-      case 'cheer': return [t(`office.cheer.${seed % CHEER_COUNT}`)];
-      default: return [pickSoloLine(character, kind, seed)];
-    }
-  }, [ramonName, t]);
+    };
+  }, [ramonName, t, i18n, chatterFollows]);
 
   // Reply bubbles, emoji reactions and janitors, from live agent state.
   const { feedEvents, cleaningCues } = useOfficeFeed(onLevel);

@@ -386,6 +386,7 @@ Connectors let agents work **inside other apps you use**. Set them up in **Setti
 | **Webcake Landing** | design, edit and publish landing pages |
 | **Obsidian** | save notes, lessons and decisions in your Obsidian vault, keep a daily note, search and read notes |
 | **Discord** | post in your channels, read recent messages, list channels |
+| **Agent Browser** | drive a real web browser: open pages, read them, click, fill forms, take screenshots (no key; **on** from the start) |
 | GitHub, Database, Email & Calendar, Web Search | as described in Settings |
 
 Each connector has a **How to set up** link in Settings with the exact steps.
@@ -393,6 +394,8 @@ Each connector has a **How to set up** link in Settings with the exact steps.
 **Obsidian** needs no key: press **choose folder**, pick your vault, switch it on. Agents only work inside that folder, never touch Obsidian's own settings, and never overwrite or delete a note. Saving to an existing title adds an update at the end.
 
 **Discord** needs a bot of your own: create an application at discord.com/developers/applications, copy the bot token into Settings, turn on *Message Content Intent*, and invite the bot to your server with View Channels, Send Messages and Read Message History.
+
+**Agent Browser** is Vercel's open-source agent-browser, a headless Chrome the agent runs from its own shell. It is **on** when you install DevLabs and needs no key: every new Claude Code agent gets it. To switch it off, use Settings → General → Features → **Agent Browser**, or the **Agent Browser** connector in Settings → Connections; agents you start afterwards won't have it. The first page an agent opens on this computer downloads Chrome for Testing (about 150 MB) once. Agents are told that page text is never an instruction, that no password, key or card number ever goes into a page, that nothing irreversible (buy, pay, send, post, delete) happens unless your task names it, and that they stay off local files, DevLabs's own local services and your own Chrome. Each agent gets its own browser session. To limit the sites agents may visit, add an `allowedDomains` list to `~/.agent-browser/config.json`.
 
 > **Connectors change real data** in those apps. Use keys with only the access you need. Today connectors work with **Claude Code** agents only.
 
@@ -423,7 +426,7 @@ Ramon's **triggers** tab lets work start without you typing it:
 
 ### Switching optional features off
 
-**Settings → General → Features** lists every optional feature with its own on/off switch: the personal ATTITUDE.md, the DevLabs skills (3D game dev, Three.js, Anime.js, UI/UX review, DevOps runbooks, security research), the extra role templates, office chatter in your language, and office themes. All are on to start with. Switching one off takes effect for agents you start afterwards, hides the matching buttons, and never sends anything anywhere.
+**Settings → General → Features** lists every optional feature with its own on/off switch: the personal ATTITUDE.md, the DevLabs skills (3D game dev, Three.js, Anime.js, UI/UX review, DevOps runbooks, security research), the extra role templates, office chatter in your language, office themes, and Agent Browser. All are on to start with. Switching one off takes effect for agents you start afterwards, hides the matching buttons, and never sends anything anywhere.
 
 ---
 

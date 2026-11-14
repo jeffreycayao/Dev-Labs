@@ -88,6 +88,17 @@ are not reproduced here.
 
 ---
 
+## Browser automation — agent-browser by Vercel (Apache-2.0, used, not bundled)
+
+The optional **Agent Browser** capability runs **agent-browser** (https://github.com/vercel-labs/agent-browser,
+Copyright Vercel, Inc., Apache License 2.0) from npm on your computer, pinned to one version. It is on by default
+and can be switched off in Settings → General → Features or Settings → Connections. It in turn downloads
+**Chrome for Testing** (Google; Chromium's BSD-style license plus Google's terms) into `~/.agent-browser`.
+DevLabs ships neither; the `agent-browser` skill under `resources/skills/` is written by the DevLabs
+maintainers (MIT, with the app) and copies no text from the project.
+
+---
+
 ## Brand colors
 
 The DevLabs brand colors are by **Vee Trimidal** (https://www.facebook.com/veetrimidal).

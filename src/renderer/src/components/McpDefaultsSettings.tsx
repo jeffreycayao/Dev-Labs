@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { HarnessConfig } from '@/store/config';
-import { MCP_CATALOG, type McpCatalogEntry, type McpTier } from '@shared/mcpCatalog';
+import { MCP_CATALOG, mcpCatalogFor, type McpCatalogEntry, type McpTier } from '@shared/mcpCatalog';
 
 export interface McpDefaultsSettingsProps {
   config: HarnessConfig;
 }
 
-const TIER_ORDER: McpTier[] = ['safe-readonly', 'write', 'secret'];
+const TIER_ORDER: McpTier[] = ['safe-readonly', 'write', 'secret', 'browser'];
 const TIER_LABEL_KEY: Record<McpTier, string> = {
   'safe-readonly': 'mcpDefaults.tiers.safeReadonly',
   'write': 'mcpDefaults.tiers.write',
-  'secret': 'mcpDefaults.tiers.secret'
+  'secret': 'mcpDefaults.tiers.secret',
+  'browser': 'mcpDefaults.tiers.browser'
 };
 const TIER_NOTE_KEY: Record<McpTier, string> = {
   'safe-readonly': 'mcpDefaults.tiers.safeReadonlyNote',
   'write': 'mcpDefaults.tiers.writeNote',
-  'secret': 'mcpDefaults.tiers.secretNote'
+  'secret': 'mcpDefaults.tiers.secretNote',
+  'browser': 'mcpDefaults.tiers.browserNote'
 };
 
 const labelStyle: React.CSSProperties = {
@@ -235,7 +237,8 @@ export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
     }
   };
 
-  const byTier = (tier: McpTier) => MCP_CATALOG.filter((e) => e.tier === tier);
+  // An entry behind a switched-off feature (Settings → General → Features) is not shown.
+  const byTier = (tier: McpTier) => mcpCatalogFor(config.features).filter((e) => e.tier === tier);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

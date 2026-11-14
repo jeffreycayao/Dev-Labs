@@ -41,6 +41,7 @@ import {
   type AgentProvider
 } from '../shared/agentProvider';
 import { buildMcpServers, type McpSkipReason } from '../shared/mcpCatalog';
+import type { FeatureFlags } from '../shared/features';
 import { selectBroadcastTargets } from '../shared/broadcast';
 import { preferredAgentRole } from '../shared/agentRole';
 import { mergeTaskLedger } from '../shared/taskLedger';
@@ -873,6 +874,8 @@ export class HiveManager {
       /** Values for `<name>` placeholders in catalog specs (app Node, resources
        *  dir, Obsidian vault). Missing → servers that need them are skipped. */
       mcpVars?: Record<string, string>;
+      /** Owner feature switches: a catalog entry behind an off switch is not offered. */
+      features?: Partial<FeatureFlags>;
       /** Told which enabled servers were left out and why (no key, broker down). */
       onMcpSkipped?: (skipped: { id: string; reason: McpSkipReason }[]) => void;
       /** App-resources `skills/` source dir (W3). The bundled read-only skills are
@@ -1179,7 +1182,9 @@ export class HiveManager {
       consent: opts.mcpDefaults,
       getSecret: (id) => opts.mcpSecret?.(id),
       broker: opts.mcpBroker,
-      vars: opts.mcpVars
+      // `<agent>` gives per-agent servers (the browser session) their own name.
+      vars: { ...opts.mcpVars, agent: meta.id },
+      features: opts.features
     });
     if (mcp.skipped.length) opts.onMcpSkipped?.(mcp.skipped);
     if (Object.keys(mcp.servers).length) {

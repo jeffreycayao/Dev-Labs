@@ -4,6 +4,8 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.5.0 — 2026-11-14
+
 - **New: Settings → General → Features.** One switch per optional feature, so you decide what is on: Personal ATTITUDE.md, the DevLabs skills, the extra role templates, office chatter in your language, and office themes. Everything is on to start with; switching something off falls back cleanly and nothing is sent anywhere.
 - **New connectors: Systeme.io and GoHighLevel.** Agents can work in your systeme.io account (contacts, tags, newsletters, campaigns, funnels, products, courses, automations) and your HighLevel sub-account (contacts, conversations, opportunities, calendars). Paste the key in Settings → Connections and switch it on; like Fireflies, both go through the local proxy, so agents never see the key. HighLevel's sub-account id is an optional plain field next to the token.
 - **New: a personal ATTITUDE.md.** Settings → Agents & Models → **How agents talk to you**: write how every agent should talk to you (tone, formality, length, language, your rules) and press save. It is added to the instructions of every agent you start afterwards, for Claude Code, Codex, Gemini and Grok alike, with a preview of the exact text. Up to 4 000 characters; the file lives in the app's own folder, not in any project.

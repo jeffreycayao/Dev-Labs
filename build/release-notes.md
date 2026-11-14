@@ -1,3 +1,5 @@
-- New Fireflies.ai connector: agents can read your meeting notes and action items.
-- Your Fireflies key stays encrypted; agents only get a local proxy link.
-- New Help → Credits page, also a button in the About box.
+- Office themes: export, import and undo.
+- Smooth 3D zoom, far less CPU when idle.
+- Agents match their cards, with status badges.
+- 268 agency personas, freelancer roles, ATTITUDE.md.
+- Systeme.io and GoHighLevel connectors.

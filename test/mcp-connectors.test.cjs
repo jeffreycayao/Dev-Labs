@@ -13,6 +13,10 @@ const http = require('node:http');
 const loadTs = require('./load-ts.cjs');
 
 const cat = loadTs('src/shared/mcpCatalog.ts');
+// These tests are about the keyed/brokered connectors; the default-on browser
+// (needs an `<agent>` var) has its own file, test/agent-browser.test.cjs.
+const buildAll = cat.buildMcpServers;
+cat.buildMcpServers = (input) => buildAll({ features: { agentBrowser: false }, ...input });
 const { IntegrationBroker } = loadTs('src/main/integrationBroker.ts');
 const { HiveManager } = loadTs('src/main/hive.ts');
 
@@ -64,7 +68,8 @@ test('catalog invariants: secrets only on consent tiers, never baked into specs,
     } else {
       assert.match(e.spec.url, /^https:\/\//, e.id);
     }
-    assert.equal(e.defaultEnabled, e.tier === 'safe-readonly', e.id);
+    // Only read-only servers and the owner-switched browser start on; never a keyed one.
+    assert.equal(e.defaultEnabled, e.tier === 'safe-readonly' || e.tier === 'browser', e.id);
   }
 });
 

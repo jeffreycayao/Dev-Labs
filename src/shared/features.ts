@@ -21,7 +21,8 @@ export interface FeatureFlags {
   /** The office theme export/import panel (floor bar → Theme). */
   officeThemes: boolean;
   /** Vercel's agent-browser: a real (headless) Chrome the agent drives from the
-   *  shell or through MCP. Off by default: agents can visit sites and fill forms. */
+   *  shell or through MCP. On by default (owner's call); agents can visit sites
+   *  and fill forms, so switching it off removes connector and skill alike. */
   agentBrowser: boolean;
 }
 
@@ -31,7 +32,7 @@ export const FEATURE_DEFAULTS: Readonly<FeatureFlags> = {
   extraRoleTemplates: true,
   chatterFollowsLanguage: true,
   officeThemes: true,
-  agentBrowser: false
+  agentBrowser: true
 };
 
 export const FEATURE_KEYS = Object.keys(FEATURE_DEFAULTS) as (keyof FeatureFlags)[];

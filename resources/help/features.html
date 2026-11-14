@@ -597,14 +597,14 @@
 </section>
 
 <section class="feat searchable" id="agent-browser">
-  <h3>Agent Browser <span class="tag setup">setup</span></h3>
+  <h3>Agent Browser <span class="tag on">on</span></h3>
   <div class="lbl">What it is</div>
   <p>A real web browser agents can drive: open a page, read it, click, fill forms, take screenshots. It is Vercel's open-source <a href="https://github.com/vercel-labs/agent-browser">agent-browser</a> (Apache-2.0), a headless Chrome run from the agent's own shell. Useful for checking a deployed app, reading documentation that blocks plain fetches, or testing a web UI.</p>
-  <div class="lbl">How to turn it on</div>
+  <div class="lbl">How it works</div>
   <ol class="steps">
-    <li><span class="where">Settings → General → Features</span> → <b>Agent Browser</b> on. It is <b>off</b> when you install DevLabs, because a browser can visit any website and fill in forms.</li>
-    <li><span class="where">Settings → Connections</span> → under <b>Browser</b>, switch <b>Agent Browser</b> on. No key is needed.</li>
-    <li><b>Start a new agent.</b> The first time an agent opens a page on this computer it downloads Chrome for Testing (about 150 MB) into <code>~/.agent-browser</code>, once.</li>
+    <li>It is <b>on</b> when you install DevLabs and needs no key. Every new Claude Code agent gets it.</li>
+    <li>The first time an agent opens a page on this computer it downloads Chrome for Testing (about 150 MB) into <code>~/.agent-browser</code>, once.</li>
+    <li>To switch it off: <span class="where">Settings → General → Features</span> → <b>Agent Browser</b>, or <span class="where">Settings → Connections</span> → under <b>Browser</b>, <b>Agent Browser</b>. A browser can visit any website and fill in forms, so turn it off if your agents don't need one.</li>
   </ol>
   <div class="lbl">What agents are told</div>
   <ul>
@@ -957,7 +957,7 @@
 <section class="feat searchable" id="features">
   <h3>Feature switches <span class="tag on">on</span></h3>
   <div class="lbl">What it is</div>
-  <p>One on/off switch per optional feature, so the owner decides what runs. All are on to start with except Agent Browser; off falls back cleanly and nothing is sent anywhere.</p>
+  <p>One on/off switch per optional feature, so the owner decides what runs. All are on to start with; off falls back cleanly and nothing is sent anywhere.</p>
   <div class="lbl">Where</div>
   <ol class="steps"><li><span class="where">Settings → General</span> → <b>Features</b>, then <b>Save</b>.</li></ol>
   <table>
@@ -968,7 +968,7 @@
       <tr><td>Extra role templates</td><td>UI/UX Designer and Security Researcher disappear from Add agent → templates.</td></tr>
       <tr><td>Office chatter follows the app language</td><td>Chatter stays in the original English/Taglish pool.</td></tr>
       <tr><td>Office themes</td><td>The theme button on the floor bar is hidden; saved layouts are untouched.</td></tr>
-      <tr><td>Agent Browser (<b>off</b> to start with)</td><td>The browser connector disappears from Connections and new agents get neither it nor the agent-browser skill.</td></tr>
+      <tr><td>Agent Browser</td><td>The browser connector disappears from Connections and new agents get neither it nor the agent-browser skill (earlier copies are removed on their next start).</td></tr>
     </tbody>
   </table>
   <div class="lbl">Good to know</div>
@@ -1020,7 +1020,7 @@
     <tr><td>Memory search, knowledge base</td><td>Settings → Memory &amp; Knowledge (+ Prerequisites)</td><td>needs install</td></tr>
     <tr><td>Notifications, keep awake, auto-compact</td><td>Settings → General</td><td>off</td></tr>
     <tr><td>Language, plain words, Arabic terminals</td><td>Settings → General</td><td>English</td></tr>
-    <tr><td>Feature switches (ATTITUDE.md, DevLabs skills, extra templates, chatter language, office themes, Agent Browser)</td><td>Settings → General → Features</td><td>all on except Agent Browser</td></tr>
+    <tr><td>Feature switches (ATTITUDE.md, DevLabs skills, extra templates, chatter language, office themes, Agent Browser)</td><td>Settings → General → Features</td><td>all on</td></tr>
     <tr><td>How agents talk to you (ATTITUDE.md)</td><td>Settings → Agents &amp; Models</td><td>on, empty</td></tr>
     <tr><td>Office themes: export, import, undo</td><td>Office floor bar → theme</td><td>on</td></tr>
     <tr><td>Auto-update, usage stats</td><td>Settings → General</td><td>both on</td></tr>

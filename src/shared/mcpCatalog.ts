@@ -11,8 +11,9 @@
  *                       consent-gated.
  *   - 'secret'        → needs an API key / token / connection string; OFF by default,
  *                       consent-gated.
- *   - 'browser'       → drives a real browser (visits sites, fills forms); OFF by
- *                       default, consent-gated, and behind an owner feature switch.
+ *   - 'browser'       → drives a real browser (visits sites, fills forms); ON by
+ *                       default (owner's call), behind an owner feature switch, and
+ *                       turned off by either that switch or its own consent toggle.
  *
  * The actual merge (catalog ∩ enabled, cwd-scoping of filesystem/git, id namespacing,
  * non-fatal resolution) is Workstream 3's `buildDefaultMcpServers`/`hookSettings`
@@ -105,7 +106,8 @@ export interface McpCatalogEntry {
    *  in `config.mcpVars`), offered to the spec as `<name>` placeholders. */
   vars?: { name: string; label: string }[];
   tier: McpTier;
-  /** Seed for `config.mcpDefaults[id].enabled`. Always === (tier === 'safe-readonly'). */
+  /** Seed for `config.mcpDefaults[id].enabled`. True only for 'safe-readonly' and
+   *  'browser' entries; a keyed (secret) entry is never on by default. */
   defaultEnabled: boolean;
   /** Owner feature switch (Settings → General → Features) that must be on for
    *  this entry to exist at all: hidden in Settings and never written to an
@@ -318,12 +320,13 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     // agent so two agents never drive the same tab. The npm package has no
     // Chromium: the first `open` tells the agent to run `agent-browser install`.
     // file:// stays off (its default) and MCP tool calls cannot turn it on.
+    // On by default at the owner's request; Features or Connections turn it off.
     id: 'agent-browser',
     label: 'Agent Browser',
     description: 'A real headless Chrome the agent drives: open pages, read them, click, fill forms, take screenshots. Visits any website you have not blocked.',
     spec: { command: 'npx', args: ['-y', 'agent-browser@0.43.0', 'mcp'], env: { AGENT_BROWSER_SESSION: 'devlabs-<agent>' } },
     tier: 'browser',
-    defaultEnabled: false,
+    defaultEnabled: true,
     feature: 'agentBrowser'
   }
 ];
@@ -396,6 +399,7 @@ export interface BuildMcpServersInput {
  * The per-agent `mcpServers` map, from catalog ∩ consent. Pure, so every rule is
  * unit-tested (test/mcp-connectors.test.cjs):
  *   - write/secret servers need an EXPLICIT `enabled: true` (never a default);
+ *     a default-on entry (safe-readonly, browser) runs until switched off;
  *   - filesystem/git are scoped to the agent cwd;
  *   - ids are namespaced `atmt-<id>` so a user's own servers are never clobbered;
  *   - a server whose credential is missing is SKIPPED (reported), never launched
@@ -419,7 +423,7 @@ export function buildMcpServers(input: BuildMcpServersInput): {
     const consented = input.consent?.[e.id]?.enabled;
     const enabled = consented ?? e.defaultEnabled;
     if (!enabled) continue;
-    if (e.tier !== 'safe-readonly' && consented !== true) continue;
+    if (!e.defaultEnabled && consented !== true) continue;
     const secret = e.secret ? input.getSecret(e.id) : undefined;
     if (e.secret && !secret) { skipped.push({ id: e.id, reason: 'no_secret' }); continue; }
     const key = `atmt-${e.id}`;
@@ -477,7 +481,7 @@ export function mcpCatalogEntry(id: string): McpCatalogEntry | undefined {
 }
 
 /** Seed for `DEFAULTS.mcpDefaults` — derived from the catalog so the two never
- *  drift (safe-readonly ON, write/secret OFF). */
+ *  drift (safe-readonly and browser ON, write/secret OFF). */
 export function defaultMcpDefaults(): Record<string, { enabled: boolean }> {
   const out: Record<string, { enabled: boolean }> = {};
   for (const e of MCP_CATALOG) out[e.id] = { enabled: e.defaultEnabled };

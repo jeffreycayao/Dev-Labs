@@ -25,39 +25,43 @@ const SKILLS = path.join(__dirname, '..', 'resources', 'skills');
 const consent = { 'agent-browser': { enabled: true } };
 const build = (feats) => cat.buildMcpServers({ cwd: '/w', consent, getSecret: () => undefined, vars: { agent: 'ana-1' }, features: feats });
 
-test('the catalog entry: pinned npx package, browser tier, off, behind the agentBrowser switch', () => {
+test('the catalog entry: pinned npx package, browser tier, on by default, behind the agentBrowser switch', () => {
   const e = cat.mcpCatalogEntry('agent-browser');
   assert.equal(e.spec.command, 'npx');
   assert.match(e.spec.args.join(' '), /^-y agent-browser@\d+\.\d+\.\d+ mcp$/, 'never an unpinned/latest install');
   assert.equal(e.spec.env.AGENT_BROWSER_SESSION, 'devlabs-<agent>', 'one browser per agent');
   assert.equal(e.tier, 'browser');
-  assert.equal(e.defaultEnabled, false);
+  assert.equal(e.defaultEnabled, true, 'on out of the box (owner decision)');
   assert.equal(e.secret, undefined, 'no key: nothing to store');
   assert.equal(e.feature, 'agentBrowser');
-  assert.equal(features.FEATURE_DEFAULTS.agentBrowser, false, 'drives a real browser: off until the owner flips it');
+  assert.equal(features.FEATURE_DEFAULTS.agentBrowser, true, 'on out of the box; the owner can switch it off');
   for (const flag of ['--allow-file-access', '--cdp', '--auto-connect', '--profile']) {
     assert.ok(!e.spec.args.includes(flag), `${flag} is never baked in`);
   }
 });
 
-test('switch off = not offered to agents, even with consent on; switch on + consent = a per-agent session', () => {
+test('default = offered with a per-agent session; switch off = not offered even with consent on; consent off = not offered', () => {
   const off = build({ agentBrowser: false });
   assert.equal(off.servers['atmt-agent-browser'], undefined);
   assert.deepEqual(off.skipped, [], 'hidden, not "skipped": nothing to warn about');
-  assert.equal(build(undefined).servers['atmt-agent-browser'], undefined, 'the default is off');
+  const dflt = cat.buildMcpServers({ cwd: '/w', consent: undefined, getSecret: () => undefined, vars: { agent: 'ana-1' }, features: undefined });
+  assert.equal(dflt.servers['atmt-agent-browser'].env.AGENT_BROWSER_SESSION, 'devlabs-ana-1', 'on with no stored switch or consent');
 
   const on = build({ agentBrowser: true });
   assert.deepEqual(on.servers['atmt-agent-browser'], {
     command: 'npx', args: ['-y', 'agent-browser@0.43.0', 'mcp'], env: { AGENT_BROWSER_SESSION: 'devlabs-ana-1' }
   });
-  // Consent is still required: the switch alone offers nothing.
-  const noConsent = cat.buildMcpServers({ cwd: '/w', consent: undefined, getSecret: () => undefined, vars: { agent: 'a' }, features: { agentBrowser: true } });
-  assert.equal(noConsent.servers['atmt-agent-browser'], undefined);
+  // The connector's own toggle still turns it off with the feature on.
+  const consentOff = cat.buildMcpServers({ cwd: '/w', consent: { 'agent-browser': { enabled: false } }, getSecret: () => undefined, vars: { agent: 'a' }, features: { agentBrowser: true } });
+  assert.equal(consentOff.servers['atmt-agent-browser'], undefined);
+  // Default-on is the browser tier only: keyed/write entries still need an explicit yes.
+  const keyed = cat.buildMcpServers({ cwd: '/w', consent: undefined, getSecret: () => 'k', vars: { agent: 'a' } });
+  for (const e of cat.MCP_CATALOG.filter((x) => x.tier === 'write' || x.tier === 'secret')) assert.equal(keyed.servers['atmt-' + e.id], undefined, e.id);
 });
 
 test('Settings shows the entry only while the switch is on', () => {
   assert.ok(!cat.mcpCatalogFor({ agentBrowser: false }).some((e) => e.id === 'agent-browser'));
-  assert.ok(!cat.mcpCatalogFor(undefined).some((e) => e.id === 'agent-browser'));
+  assert.ok(cat.mcpCatalogFor(undefined).some((e) => e.id === 'agent-browser'), 'shown by default');
   assert.ok(cat.mcpCatalogFor({ agentBrowser: true }).some((e) => e.id === 'agent-browser'));
   assert.equal(cat.mcpCatalogFor({ agentBrowser: true }).length, cat.MCP_CATALOG.length, 'nothing else is gated by it');
 });
@@ -66,7 +70,8 @@ test('every skill a switch controls is a bundled folder; off switches list their
   for (const ids of Object.values(features.FEATURE_SKILLS)) {
     for (const id of ids) assert.ok(fs.existsSync(path.join(SKILLS, id, 'SKILL.md')), id);
   }
-  assert.ok(features.excludedSkillIds(undefined).includes('agent-browser'), 'off by default');
+  assert.ok(!features.excludedSkillIds(undefined).includes('agent-browser'), 'installed by default');
+  assert.ok(features.excludedSkillIds({ agentBrowser: false }).includes('agent-browser'));
   assert.ok(!features.excludedSkillIds(undefined).includes('game-dev-3d'), 'extraSkills is on by default');
   assert.deepEqual(features.excludedSkillIds({ agentBrowser: true }), []);
   assert.ok(features.excludedSkillIds({ extraSkills: false, agentBrowser: true }).includes('game-dev-3d'));

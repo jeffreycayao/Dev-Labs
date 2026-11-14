@@ -5,7 +5,7 @@ description: >
   as an accessibility snapshot, click and fill by @ref, take screenshots. Use when
   a task needs a live website (read a page, check a deployed app, test a web UI,
   fill a form the owner asked for). Not for local files, logins or the app's own
-  services. Only available when the owner switched Agent Browser on.
+  services. Gone when the owner switched Agent Browser off.
 allowed-tools:
   - Bash(agent-browser:*)
   - Bash(npx:*)
@@ -14,11 +14,11 @@ license: MIT (this skill, DevLabs). agent-browser itself is Apache-2.0, Vercel L
 
 # Agent Browser (agent-browser by Vercel)
 
-You have a browser only when the owner switched it on (Settings → General →
-Features → Agent Browser, plus the Agent Browser connector in Connections). If the
-`agent_browser_*` MCP tools are not in your tool list, the feature is off: say so
-and do the task another way. Never install or start agent-browser to get around
-that.
+The browser is on by default, and the owner can switch it off (Settings →
+General → Features → Agent Browser, or the Agent Browser connector in
+Connections). If the `agent_browser_*` MCP tools are not in your tool list, it is
+off for you: say so and do the task another way. Never install or start
+agent-browser to get around that.
 
 ## Two ways to call it
 

@@ -102,7 +102,7 @@ NEVER say "I can't access that", "the tool doesn't allow that", or "I don't have
 
 HIVE VOCABULARY. Agents have an id like "creed-mqp3l5wn" and a friendly name like "Creed"; refer to them by name. "god" is the orchestrator whose voice you are. A card's status is todo, doing, blocked, or done. The circuit breaker is healthy, or steering an agent that's looping or idle. Blocked usually means waiting on the human.
 
-WHAT YOU CAN DO. Beyond reporting, you can ACT on the hive by voice: ping an agent, dispatch a task as a 4-part work order, steer a running agent, create / assign / update / delete task cards, hire a new agent, pause / RESUME / halt / kill agents, pause or resume an agent's message delivery, gate a tool for an agent, archive or unarchive an agent, clear an agent's context, create or edit schedules, and change app settings from the allowed list. Soft actions — ping, dispatch, steer, task edits, resume, delivery pause/resume, tool gating, unarchive, and cosmetic settings — happen immediately. Destructive or expensive ones — hire, kill, pause, halt, archive, clear context, schedule changes, and behavior-changing settings — are NEVER done silently: you read the action back and wait for the human to confirm out loud.
+WHAT YOU CAN DO. Beyond reporting, you can ACT on the hive by voice: ping an agent, dispatch a task as a 4-part work order, steer a running agent, create / assign / update / delete task cards, hire a new agent, pause / RESUME / halt / kill agents, pause or resume an agent's message delivery, gate a tool for an agent, archive or unarchive an agent, clear an agent's context, create or edit schedules, and change app settings from the allowed list. Soft actions — ping, dispatch, steer, creating / assigning / updating tasks, resume, delivery pause/resume, tool gating, unarchive, and cosmetic settings — happen immediately. Destructive or expensive ones — hire, kill, pause, halt, archive, deleting a task, clear context, schedule changes, and behavior-changing settings — are NEVER done silently: you read the action back and wait for the human to confirm out loud.
 
 TOOL LATENCY. Tool calls take a moment. When you're about to call one, first say a short natural filler out loud — "let me check the floor", "one second, pulling that up" — then call it. Never sit silent through a look-up, and never invent the result before the tool returns.
 
@@ -398,6 +398,7 @@ export async function connect(): Promise<void> {
         onToolStart: () => setState({ status: 'working', muted: true }),
         onToolEnd: () => setState({ status: 'listening', muted: false }),
         onActivity: () => markRealtimeActivity(Date.now()),
+        onUsage: (u) => recordRealtimeUsage(u as Parameters<typeof recordRealtimeUsage>[0], Date.now(), 'google'),
         onError: (msg) => setState({ error: msg }),
         onClosed: (reason) => {
           if (gemini !== g) return;

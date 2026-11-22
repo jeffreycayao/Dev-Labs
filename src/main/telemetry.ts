@@ -126,6 +126,11 @@ export interface TelemetryCollectorOptions {
    *  cwd (the common case for hive workers) pulls in every other agent's and
    *  every past session's history too. */
   resolveSessionId?: (agentId: string) => string | undefined;
+  /** Map the `x-devlabs-agent` OTLP header (the agent's hook token) to its agent
+   *  id. When set, a batch without a valid token is refused (401) and records
+   *  claiming any other agent.id are dropped, so one agent can't forge usage or
+   *  api_errors for another and walk its breaker. */
+  resolveAgent?: (token: string) => string | undefined;
 }
 
 export class TelemetryCollector {
@@ -136,6 +141,7 @@ export class TelemetryCollector {
   private readonly emit?: (channel: string, payload: unknown) => void;
   private readonly resolveCwd?: (agentId: string) => string | null;
   private readonly resolveSessionId?: (agentId: string) => string | undefined;
+  private readonly resolveAgent?: (token: string) => string | undefined;
 
   /** sessionId → running accumulation. */
   private readonly sessions = new Map<string, SessionAccum>();
@@ -155,6 +161,7 @@ export class TelemetryCollector {
     this.emit = opts.emit;
     this.resolveCwd = opts.resolveCwd;
     this.resolveSessionId = opts.resolveSessionId;
+    this.resolveAgent = opts.resolveAgent;
   }
 
   /** Bind the loopback OTLP listener. The handler is live the instant this
@@ -268,6 +275,12 @@ export class TelemetryCollector {
 
   private handleRequest(req: IncomingMessage, res: ServerResponse): void {
     if (req.method !== 'POST') { res.writeHead(405); res.end(); return; }
+    let caller: string | undefined;
+    if (this.resolveAgent) {
+      const token = req.headers['x-devlabs-agent'];
+      caller = typeof token === 'string' && token ? this.resolveAgent(token) : undefined;
+      if (!caller) { res.writeHead(401); res.end(); req.resume(); return; }
+    }
     const chunks: Buffer[] = [];
     let size = 0;
     let aborted = false;
@@ -287,8 +300,8 @@ export class TelemetryCollector {
       const url = req.url ?? '';
       try {
         const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-        if (url.includes('/v1/metrics')) this.ingestMetrics(body);
-        else if (url.includes('/v1/logs')) this.ingestLogs(body);
+        if (url.includes('/v1/metrics')) this.ingestMetrics(body, caller);
+        else if (url.includes('/v1/logs')) this.ingestLogs(body, caller);
       } catch { /* malformed batch — drop it, never throw into the socket */ }
       // OTLP success response is an empty JSON ExportServiceResponse.
       res.writeHead(200, { 'content-type': 'application/json' });
@@ -302,7 +315,8 @@ export class TelemetryCollector {
 
   // ─── OTLP decode → normalize → accumulate ──────────────────────────────────
 
-  private ingestMetrics(body: unknown): void {
+  /** `caller`: the agent the request's token proved; records for any other agent are dropped. */
+  private ingestMetrics(body: unknown, caller?: string): void {
     const root = body as { resourceMetrics?: ResourceMetrics[] };
     if (!Array.isArray(root?.resourceMetrics)) return;
     const touched = new Set<string>(); // agentIds with new data this batch
@@ -315,7 +329,7 @@ export class TelemetryCollector {
             const attrs = flattenAttrs(dp.attributes);
             const agentId = str(attrs['agent.id']) || str(resAttrs['agent.id']);
             const sessionId = str(attrs['session.id']);
-            if (!agentId || !sessionId) continue;
+            if (!agentId || !sessionId || (caller && agentId !== caller)) continue;
             const accum = this.session(agentId, sessionId);
             const model = normalizeModel(str(attrs['model']));
             if (model) accum.model = model;
@@ -340,7 +354,7 @@ export class TelemetryCollector {
     for (const agentId of touched) this.publishUsage(agentId);
   }
 
-  private ingestLogs(body: unknown): void {
+  private ingestLogs(body: unknown, caller?: string): void {
     const root = body as { resourceLogs?: ResourceLogs[] };
     if (!Array.isArray(root?.resourceLogs)) return;
     for (const rl of root.resourceLogs) {
@@ -351,7 +365,7 @@ export class TelemetryCollector {
           const name = str(attrs['event.name']) || str(lr.body?.stringValue);
           const agentId = str(attrs['agent.id']) || str(resAttrs['agent.id']);
           const sessionId = str(attrs['session.id']);
-          if (!agentId) continue;
+          if (!agentId || (caller && agentId !== caller)) continue;
           if (name === 'tool_result') {
             const span: ToolSpan = {
               agentId,

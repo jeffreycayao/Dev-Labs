@@ -1,6 +1,5 @@
 "use client";
 
-import { Billboard, Text } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import * as THREE from "three";
@@ -18,7 +17,6 @@ import {
 } from "@/features/retro-office/core/geometry";
 import type {
   FurnitureItem,
-  OfficeAgent,
   RenderAgent,
 } from "@/features/retro-office/core/types";
 
@@ -175,7 +173,8 @@ export function TrailSystem({
     if (frameRef.current % 8 === 0 || changed) {
       const nextPoints: TrailPoint[] = [];
       for (const trailPoints of trails.values()) nextPoints.push(...trailPoints);
-      setPoints([...nextPoints]);
+      // Ages fade the points, so a non-empty trail redraws; an empty one stays put.
+      setPoints((prev) => (prev.length === 0 && nextPoints.length === 0 ? prev : nextPoints));
     }
   });
 
@@ -196,88 +195,6 @@ export function TrailSystem({
           />
         </mesh>
       ))}
-    </>
-  );
-}
-
-export function DeskNameplates({
-  deskLocations,
-  agents,
-  deskByAgentRef,
-}: {
-  deskLocations: { x: number; y: number }[];
-  agents: OfficeAgent[];
-  deskByAgentRef: RefObject<Map<string, number>>;
-}) {
-  const [deskEntries, setDeskEntries] = useState<Array<[string, number]>>([]);
-  const deskSignatureRef = useRef("");
-  const agentById = useMemo(
-    () => new Map(agents.map((agent) => [agent.id, agent])),
-    [agents],
-  );
-  const deskAgentByIndex = useMemo(
-    () => new Map(deskEntries.map(([agentId, deskIndex]) => [deskIndex, agentId])),
-    [deskEntries],
-  );
-
-  useEffect(() => {
-    const syncDeskEntries = () => {
-      const nextEntries = [...(deskByAgentRef.current?.entries() ?? [])].sort(
-        (left, right) => left[0].localeCompare(right[0]),
-      );
-      const nextSignature = nextEntries
-        .map(([agentId, deskIndex]) => `${agentId}:${deskIndex}`)
-        .join("|");
-      if (nextSignature === deskSignatureRef.current) {
-        return;
-      }
-      deskSignatureRef.current = nextSignature;
-      setDeskEntries(nextEntries);
-    };
-    syncDeskEntries();
-    const intervalId = window.setInterval(syncDeskEntries, 400);
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [deskByAgentRef]);
-
-  return (
-    <>
-      {deskLocations.map((desk, index) => {
-        const agentId = deskAgentByIndex.get(index);
-        if (!agentId) return null;
-        const agent = agentById.get(agentId);
-        if (!agent) return null;
-        const [wx, , wz] = toWorld(desk.x, desk.y);
-
-        return (
-          <Billboard key={`nameplate-${index}`} position={[wx, 1.02, wz]}>
-            <mesh position={[0, 0, -0.001]}>
-              <planeGeometry args={[0.74, 0.16]} />
-              <meshBasicMaterial color="#050403" transparent opacity={0.86} />
-            </mesh>
-            <mesh position={[-0.35, 0, 0]}>
-              <planeGeometry args={[0.035, 0.16]} />
-              <meshBasicMaterial color={agent.color} />
-            </mesh>
-            <Text
-              position={[0.01, 0.002, 0.001]}
-              fontSize={0.11}
-              color="#fff6d8"
-              anchorX="center"
-              anchorY="middle"
-              maxWidth={0.64}
-              outlineWidth={0.007}
-              outlineColor="#16110a"
-              font={undefined}
-              overflowWrap="break-word"
-              whiteSpace="nowrap"
-            >
-              {agent.name.length > 14 ? agent.name.slice(0, 13) + "…" : agent.name}
-            </Text>
-          </Billboard>
-        );
-      })}
     </>
   );
 }

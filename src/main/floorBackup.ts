@@ -61,7 +61,13 @@ function claudeSessionIds(hiveRoot: string): string[] {
       .filter((agent) => agent.provider === undefined || agent.provider === 'claude')
       .map((a) => a.sessionId)
       .filter((id): id is string => typeof id === 'string' && /^[A-Za-z0-9_-]+$/.test(id)))];
-  } catch { return []; }
+  } catch (e) {
+    // The hive folder itself is still archived; only the external transcripts are left out.
+    if ((e as NodeJS.ErrnoException).code !== 'ENOENT') {
+      console.warn('[floor-backup] registry.json unreadable; Claude transcripts not included:', e instanceof Error ? e.message : e);
+    }
+    return [];
+  }
 }
 
 export interface FloorBackupResult {

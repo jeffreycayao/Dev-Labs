@@ -118,7 +118,8 @@ const VERBS: Record<string, { tier: Tier; confirmWord: string; agentTargeted: bo
   resume: { tier: 'soft', confirmWord: 'resume', agentTargeted: true },
   auto_delivery: { tier: 'soft', confirmWord: 'delivery', agentTargeted: true },
   gate_tool: { tier: 'soft', confirmWord: 'gate', agentTargeted: true },
-  delete_task: { tier: 'soft', confirmWord: 'delete', agentTargeted: false },
+  // Destructive: hiveDeleteTask is permanent and the card match is fuzzy.
+  delete_task: { tier: 'destructive', confirmWord: 'delete', agentTargeted: false },
   unarchive: { tier: 'soft', confirmWord: 'unarchive', agentTargeted: true },
   clear_context: { tier: 'destructive', confirmWord: 'clear', agentTargeted: true },
   archive: { tier: 'destructive', confirmWord: 'archive', agentTargeted: true },
@@ -499,17 +500,27 @@ function execGateTool(deps: RealtimeActionDeps, a: Record<string, unknown>): Act
   return { ok: true, spoken: `${on ? 'Gated' : 'Un-gated'} the ${toolName} tool for ${r.name}.` };
 }
 
-function execDeleteTask(deps: RealtimeActionDeps, a: Record<string, unknown>): ActionResult {
+/** Stages a task delete behind the verbal confirm: the delete is permanent and
+ *  findCard is a fuzzy match, so the echo-back names the exact card first. */
+function proposeDeleteTask(deps: RealtimeActionDeps, a: Record<string, unknown>): ActionResult {
   const ref = str(a.taskId) || str(a.task) || str(a.title);
   if (!ref) return { ok: false, spoken: 'Which task should I delete?' };
   const { card, ambiguous } = findCard(deps, ref);
   if (ambiguous) return { ok: false, spoken: `Which one — ${ambiguous.map((c) => `"${c.title}"`).join(', or ')}?` };
   if (!card) return { ok: false, spoken: `I couldn't find a task matching "${ref}".` };
-  if (!deps.hiveDeleteTask(card.id)) {
-    return { ok: false, spoken: `I couldn't delete "${card.title}" right now.` };
-  }
-  attribute(deps, 'delete_task', card.id, { title: card.title.slice(0, 120) });
-  return { ok: true, spoken: `Deleted the task "${card.title}". Recreate it any time if that was wrong.` };
+  pending = {
+    verb: 'delete_task', confirmWord: 'delete', targetLabel: card.title, createdAt: Date.now(),
+    commit: async () => {
+      if (!deps.hiveDeleteTask(card.id)) return `I couldn't delete "${card.title}" right now.`;
+      attribute(deps, 'delete_task', card.id, { title: card.title.slice(0, 120) });
+      return `Deleted the task "${card.title}".`;
+    }
+  };
+  return {
+    ok: true,
+    needsConfirm: true,
+    spoken: `You want to delete the task "${card.title}". That can't be undone. To go ahead, say "confirm" or "delete". Say "cancel" to stop.`
+  };
 }
 
 function execUnarchive(deps: RealtimeActionDeps, a: Record<string, unknown>): ActionResult {
@@ -664,6 +675,8 @@ function proposeDestructive(deps: RealtimeActionDeps, verb: string, a: Record<st
     };
   }
 
+  if (verb === 'delete_task') return proposeDeleteTask(deps, a);
+
   // edit_schedule
   if (verb === 'edit_schedule') {
     const missions = deps.listMissions();
@@ -797,7 +810,6 @@ function runAction(deps: RealtimeActionDeps, verb: string, a: Record<string, unk
       case 'resume': return execResume(deps, a);
       case 'auto_delivery': return execAutoDelivery(deps, a);
       case 'gate_tool': return execGateTool(deps, a);
-      case 'delete_task': return execDeleteTask(deps, a);
       case 'unarchive': return execUnarchive(deps, a);
       default: return { ok: false, spoken: `I don't know how to ${verb}.` };
     }

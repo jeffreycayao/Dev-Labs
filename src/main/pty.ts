@@ -3,7 +3,7 @@ import type { WebContents } from 'electron';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { delimiter, dirname, join, win32 } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { ensureKilled, hardKillTree, killPtyTree } from './procKill';
+import { ensureKilled, flushPendingTreeKills, hardKillTree, killPtyTree } from './procKill';
 import { expandTilde } from './fs';
 import { buildPtyEnv } from './ptyEnv';
 import {
@@ -836,5 +836,8 @@ export class PtyManager {
       }
     }
     this.sessions.clear();
+    // Agents fired moments ago are gone from sessions but may still be waiting
+    // in the async taskkill queue.
+    if (sweepNow) flushPendingTreeKills();
   }
 }

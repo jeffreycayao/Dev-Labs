@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Play, SkipBack, SkipForward, Square } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
@@ -102,6 +102,9 @@ const rideStyle = (ride: Ride | null): CSSProperties => {
 const LS_LEVELS = 'devlabs.office3d.levels';
 const lsDesks = levelDesksKey;
 
+const selectAgent = (id: string) => useStore.getState().select(id);
+const openAddAgent = () => useStore.getState().setAddAgentOpen(true);
+
 const readJson = <T,>(key: string, fallback: T): T => {
   try {
     const raw = localStorage.getItem(key);
@@ -132,7 +135,12 @@ export function OfficeFloor3D() {
   // import or undo, since it reads the saved layout only on mount.
   const [themeOpen, setThemeOpen] = useState(false);
   const [themeRev, setThemeRev] = useState(0);
-  const themeAgents = useStore(useShallow((s) => s.agents.map((a) => ({ id: a.id, name: a.name }))));
+  // Primitive strings, so useShallow matches and status updates don't re-render the office.
+  const themeKeys = useStore(useShallow((s) => s.agents.map((a) => `${a.id}\n${a.name}`)));
+  const themeAgents = useMemo(() => themeKeys.map((k) => {
+    const i = k.indexOf('\n');
+    return { id: k.slice(0, i), name: k.slice(i + 1) };
+  }), [themeKeys]);
   const [ride, setRide] = useState<Ride | null>(null);
   const rideTimers = useRef<number[]>([]);
   const stopRide = () => { rideTimers.current.forEach((id) => window.clearTimeout(id)); rideTimers.current = []; };
@@ -236,7 +244,7 @@ export function OfficeFloor3D() {
   // Focus mode and the IDE cover the office: no point drawing it.
   const coveredByOverlay = useStore((s) => Boolean(s.fullscreenAgentId) || s.ideOpen);
   const [fullscreen, setFullscreen] = useState(false);
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     if (fullscreen) {
       setFullscreen(false);
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
@@ -245,7 +253,7 @@ export function OfficeFloor3D() {
       // OS full screen too; if the window refuses, the office still fills it.
       void document.documentElement.requestFullscreen?.().catch(() => {});
     }
-  };
+  }, [fullscreen]);
   useEffect(() => {
     if (!fullscreen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFullscreen(false); };
@@ -262,6 +270,16 @@ export function OfficeFloor3D() {
   // The floor bar needs only the selected agent's name (Ramon can't be moved).
   const selectedName = useStore((s) => s.agents.find((a) => a.id === s.selectedId && !isRamon(a))?.name);
   const editing = useStore((s) => (editingId ? s.agents.find((a) => a.id === editingId) : undefined));
+
+  const { setOpen: setJukeboxOpen } = jukebox;
+  const onJukeboxInteract = useCallback(() => setJukeboxOpen(true), [setJukeboxOpen]);
+  const onDeskAssignmentChange = useCallback((deskUid: string, agentId: string | null) => {
+    const next = { ...desks };
+    for (const [uid, id] of Object.entries(next)) if (id === agentId) delete next[uid];
+    if (agentId) next[deskUid] = agentId; else delete next[deskUid];
+    setDesks(next);
+    writeJson(lsDesks(level), next);
+  }, [desks, level]);
 
   const moveSelected = (to: number) => {
     if (!selectedId) return;
@@ -335,18 +353,12 @@ export function OfficeFloor3D() {
         monitorAgentId={monitors.monitorAgentId}
         monitorByAgentId={monitors.monitorByAgentId}
         onMonitorSelect={monitors.onMonitorSelect}
-        onJukeboxInteract={() => jukebox.setOpen(true)}
+        onJukeboxInteract={onJukeboxInteract}
         deskAssignmentByDeskUid={desks}
-        onDeskAssignmentChange={(deskUid, agentId) => {
-          const next = { ...desks };
-          for (const [uid, id] of Object.entries(next)) if (id === agentId) delete next[uid];
-          if (agentId) next[deskUid] = agentId; else delete next[deskUid];
-          setDesks(next);
-          writeJson(lsDesks(level), next);
-        }}
-        onAgentChatSelect={(id) => useStore.getState().select(id)}
+        onDeskAssignmentChange={onDeskAssignmentChange}
+        onAgentChatSelect={selectAgent}
         onAgentEdit={setEditingId}
-        onAddAgent={() => useStore.getState().setAddAgentOpen(true)}
+        onAddAgent={openAddAgent}
         fullscreen={fullscreen}
         paused={coveredByOverlay}
         selectedAgentId={selectedId}

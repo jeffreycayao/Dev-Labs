@@ -71,7 +71,6 @@ export function PingPongBall({
   const ballRef = useRef<THREE.Mesh>(null);
   const shadowRef = useRef<THREE.Mesh>(null);
   const shadowMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const invalidate = useThree((state) => state.invalidate);
 
   useFrame(() => {
     if (!ballRef.current || !shadowRef.current || !shadowMatRef.current) return;
@@ -147,7 +146,6 @@ export function PingPongBall({
         THREE.MathUtils.lerp(bounceY, paddleY, t) + Math.sin(t * Math.PI) * 0.03;
     }
 
-    invalidate();
     ballRef.current.visible = true;
     ballRef.current.position.set(ballX, ballY, ballZ);
     shadowRef.current.visible = true;

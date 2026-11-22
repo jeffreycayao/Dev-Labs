@@ -157,9 +157,15 @@ jobs:
           #   APPLE_CERTIFICATE_PASSWORD  = that .p12's export password (REQUIRED if P12 set,
           #                                 else electron-builder imports with an empty
           #                                 password and fails "MAC verification failed")
+          # Windows code signing uses its OWN secrets on the Windows runner only
+          # (RELEASE.md → "Code signing (Windows)"):
+          #   WIN_CSC_LINK          = base64 of the Authenticode .pfx
+          #   WIN_CSC_KEY_PASSWORD  = that .pfx's password
+          # A signed build stamps the cert's publisher into app-update.yml, and
+          # electron-updater then refuses any update not signed by that publisher.
           # All optional: with the secrets unset every runner builds unsigned and stays green.
-          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE_P12 || '' }}
-          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE_P12 || startsWith(matrix.os, 'windows') && secrets.WIN_CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE_PASSWORD || startsWith(matrix.os, 'windows') && secrets.WIN_CSC_KEY_PASSWORD || '' }}
           APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_ID || '' }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
           APPLE_TEAM_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_TEAM_ID || '' }}

@@ -173,6 +173,13 @@ dmg:
 # ---- Windows ----
 win:
   icon: build/icon.ico
+  # Signing: CI signs when the WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD secrets exist
+  # (RELEASE.md → "Code signing (Windows)"). A signed build records the cert's
+  # publisher in app-update.yml and electron-updater verifies every update
+  # against it. To pin it explicitly, uncomment and set it to the cert subject's
+  # CN exactly — a wrong value makes every update fail verification:
+  # signtoolOptions:
+  #   publisherName: ["<certificate subject CN>"]
   target:
     - target: nsis
       arch: [x64]

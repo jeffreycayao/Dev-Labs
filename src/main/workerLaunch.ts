@@ -61,3 +61,13 @@ export function buildWorkerLaunch(opts: {
   const args = [...flags, ...(model && !flags.includes('--model') ? ['--model', model] : [])];
   return { bin, args, command };
 }
+
+/** May a spawn-request start this executable? Only a known agent CLI
+ *  (`claude`, `codex`, `cursor-agent`, …), bare or as an absolute path whose
+ *  file name is one, with at most an .exe/.cmd suffix. A shell, `node -e`, or
+ *  any other program is refused: the request file is agent-reachable input. */
+export function isAllowedWorkerBin(bin: string): boolean {
+  const leaf = bin.split(/[\\/]/).pop() ?? '';
+  const m = /^([A-Za-z0-9_-]+)(?:\.exe|\.cmd)?$/i.exec(leaf);
+  return !!m && inferAgentProvider(m[1]) !== 'custom';
+}

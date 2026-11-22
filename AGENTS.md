@@ -21,7 +21,7 @@ There is no account, sign-in or license check. Agents start as soon as the app i
 |---|---|
 | `src/main/` | Electron main process: PTYs (`pty.ts`), hive/agent coordination (`hive.ts`), MCP proxy (`integrationBroker.ts`), hires/floors I/O (`hire.ts`), IPC (`index.ts`) |
 | `src/preload/index.ts` | The **only** renderer↔main bridge (`window.cth`), fully typed |
-| `src/renderer/src/` | React 18 + zustand UI; office scene (Pixi.js); `components/`; `i18n/locales/{en,zh-CN,ar}.json` |
+| `src/renderer/src/` | React 18 + zustand UI; 3D office scene (three + @react-three/fiber + drei); `components/`; `i18n/locales/{en,zh-CN,ar}.json` |
 | `src/shared/` | Pure, dependency-light modules shared by main and renderer: validators (`hire.ts`, `floor.ts`), MCP catalog (`mcpCatalog.ts`) brand (`brand.ts`) |
 | `test/*.test.cjs` | App tests (`node --test`, TS loaded via `test/load-ts.cjs`) |
 | `docs/`, `.documentations/` | Contributor docs / user- and owner-facing guides |

@@ -35,9 +35,11 @@ export function listRecords(): IntegrationRecord[] {
   return readConfig().integrations ?? [];
 }
 
-/** Look up one record by id. */
+/** Look up one record by id. config.json is agent-writable, so the secretRef is
+ *  re-derived from the id: a record can never point at another key's ref. */
 export function getRecord(id: string): IntegrationRecord | undefined {
-  return listRecords().find((r) => r.id === id);
+  const r = listRecords().find((rec) => rec.id === id);
+  return r && { ...r, secretRef: authTypeNeedsSecret(r.authType) ? secretRefFor(r.id) : undefined };
 }
 
 /** Ids of integrations a worker may use right now (enabled, and — for secret auth —
@@ -91,6 +93,27 @@ function secretsPath(): string {
   return join(app.getPath('userData'), 'integration-secrets.json');
 }
 
+// An integration key (`int:<id>`) is sealed together with the origin it was saved for.
+// config.json is agent-writable, so an edited baseUrl must not receive the old key.
+const BOUND = '\u0001origin:';
+const isIntegrationRef = (ref: string): boolean => ref.startsWith(secretRefFor(''));
+
+function originOf(url: string | undefined): string | undefined {
+  try { return url ? new URL(url).origin : undefined; } catch { return undefined; }
+}
+
+const sealBound = (origin: string, secret: string): string =>
+  safeStorage.encryptString(`${BOUND}${origin}\n${secret}`).toString('base64');
+
+/** Thrown by getSecret when an integration's address no longer matches its key. */
+export class SecretOriginMismatchError extends Error {
+  readonly code = 'origin_mismatch';
+  constructor() {
+    super('This connection\'s address changed after its key was saved, so the key was not sent. '
+      + 'Re-save the key in Settings → Connections.');
+  }
+}
+
 let secretsCopy: string | undefined; // one copy per run, not one per refused write
 
 /** `forWrite` throws instead of returning {} when the file exists but cannot be
@@ -132,9 +155,14 @@ export function setSecret(secretRef: string, plaintext: string): { ok: boolean; 
     if (!safeStorage.isEncryptionAvailable()) {
       return { ok: false, error: 'OS secret encryption is unavailable; refusing to store a secret in plaintext' };
     }
-    const cipher = safeStorage.encryptString(plaintext).toString('base64');
     const blob = readSecretBlob(true);
-    blob[secretRef] = cipher;
+    if (isIntegrationRef(secretRef)) {
+      const origin = originOf(listRecords().find((r) => secretRefFor(r.id) === secretRef)?.baseUrl);
+      if (!origin) return { ok: false, error: 'Save the connection first, then add its key.' };
+      blob[secretRef] = sealBound(origin, plaintext);
+    } else {
+      blob[secretRef] = safeStorage.encryptString(plaintext).toString('base64');
+    }
     writeSecretBlob(blob);
     return { ok: true };
   } catch (e) {
@@ -143,16 +171,56 @@ export function setSecret(secretRef: string, plaintext: string): { ok: boolean; 
 }
 
 /** Decrypt a secret. MAIN-INTERNAL ONLY — never expose this over IPC. Returns
- *  undefined if absent or undecryptable (the broker maps that to 503 no_secret). */
+ *  undefined if absent or undecryptable (the broker maps that to 503 no_secret).
+ *  Throws SecretOriginMismatchError when an integration key is read while the
+ *  record's baseUrl points at a different origin than the one it was saved for. */
 export function getSecret(secretRef: string | undefined): string | undefined {
   if (!secretRef) return undefined;
   const cipher = readSecretBlob()[secretRef];
   if (!cipher) return undefined;
+  let plain: string;
   try {
     if (!safeStorage.isEncryptionAvailable()) return undefined;
-    return safeStorage.decryptString(Buffer.from(cipher, 'base64'));
+    plain = safeStorage.decryptString(Buffer.from(cipher, 'base64'));
   } catch {
     return undefined;
+  }
+  if (!plain.startsWith(BOUND)) {
+    // An unbound integration key is one bindLegacySecrets has not sealed yet.
+    if (isIntegrationRef(secretRef)) throw new SecretOriginMismatchError();
+    return plain;
+  }
+  const nl = plain.indexOf('\n', BOUND.length);
+  const origin = plain.slice(BOUND.length, nl);
+  if (isIntegrationRef(secretRef)) {
+    const rec = listRecords().find((r) => secretRefFor(r.id) === secretRef);
+    if (!rec || originOf(rec.baseUrl) !== origin) throw new SecretOriginMismatchError();
+  }
+  return plain.slice(nl + 1);
+}
+
+/** One-time startup migration: seal integration keys saved before origin binding to
+ *  the origin config.json names right now. Run in main before any agent starts;
+ *  tampering that happened before this release can't be detected. */
+export function bindLegacySecrets(): void {
+  try {
+    if (!safeStorage.isEncryptionAvailable()) return;
+    const blob = readSecretBlob(true);
+    let changed = false;
+    for (const r of listRecords()) {
+      const ref = secretRefFor(r.id);
+      const origin = originOf(r.baseUrl);
+      if (!blob[ref] || !origin) continue;
+      try {
+        const plain = safeStorage.decryptString(Buffer.from(blob[ref], 'base64'));
+        if (plain.startsWith(BOUND)) continue;
+        blob[ref] = sealBound(origin, plain);
+        changed = true;
+      } catch { /* undecryptable: leave it; getSecret returns undefined for it */ }
+    }
+    if (changed) writeSecretBlob(blob);
+  } catch (e) {
+    console.warn('[integrations] could not bind saved connector keys:', e instanceof Error ? e.message : e);
   }
 }
 

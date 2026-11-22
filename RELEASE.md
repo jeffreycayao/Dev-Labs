@@ -58,6 +58,26 @@ publishes it. No extra token or second repository is needed.
 
 Before each release, edit `build/release-notes.md` (3–5 bullets, ≤280 chars) — it is the in-app "What's new" toast.
 
+## Code signing (Windows)
+
+Windows builds are unsigned until a code-signing certificate is added, so
+Windows auto-updates are not signature-checked yet. To sign them, add two
+repository secrets:
+
+| Secret | Value |
+| --- | --- |
+| `WIN_CSC_LINK` | base64 of the Authenticode `.pfx` certificate |
+| `WIN_CSC_KEY_PASSWORD` | the `.pfx` password |
+
+The release workflow passes them to electron-builder on the Windows runner only
+(the Apple secrets stay on the macOS runner). A signed build writes the
+certificate's publisher into `app-update.yml`, and the installed app then
+refuses any update that is not signed by that publisher. Optionally pin it:
+uncomment `signtoolOptions.publisherName` under `win:` in `electron-builder.yml`
+and set it to the certificate subject's CN exactly; a wrong value makes every
+update fail verification. Without the secrets, Windows builds stay unsigned and
+the release still succeeds.
+
 ## Auto-update destination
 
 Packaged clients from v3.0.4 on update from this repository's releases

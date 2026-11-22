@@ -340,6 +340,26 @@ export function readPlain(p: string): string {
     } finally { closeSync(fd); }
   } catch { return ''; }
 }
+const JSON_STORE_CAP = 64 * 1024 * 1024;
+/** The parsed JSON store at `p` for a read-modify-write: `fallback` only when
+ *  the file is missing. A store that is there but unreadable, oversized or not
+ *  valid JSON throws, so the caller never writes the fallback back over the
+ *  board or roster it failed to read (readPlain's 4 MB tail can't parse). */
+export function readJsonStrict<T>(p: string, fallback: T): T {
+  try { lstatSync(p); } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return fallback;
+    throw e;
+  }
+  const fd = openSync(p, READ_NOFOLLOW);
+  try {
+    const st = fstatSync(fd);
+    if (!st.isFile()) throw new Error(`${p} is not a regular file`);
+    if (st.size > JSON_STORE_CAP) throw new Error(`${p} is larger than ${JSON_STORE_CAP} bytes`);
+    const buf = Buffer.alloc(st.size);
+    const n = readSync(fd, buf, 0, st.size, 0);
+    return JSON.parse(buf.toString('utf8', 0, n)) as T;
+  } finally { closeSync(fd); }
+}
 // POSIX-only flags; on Windows the lstat above is the guard (no FIFOs there).
 const READ_NOFOLLOW = fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0) | (fsConstants.O_NONBLOCK ?? 0);
 // O_NOFOLLOW is POSIX-only; on Windows the lstat in appendPlain is the guard.
@@ -575,6 +595,10 @@ export class HiveManager {
     const bin = this.binDir();
     return bin ? join(bin, 'cth-fire.cjs') : null;
   }
+  private spawnPath(): string | null {
+    const bin = this.binDir();
+    return bin ? join(bin, 'cth-spawn.cjs') : null;
+  }
   /** The proxy-bridge sidecar (qwen). Pure-Node loopback reverse-proxy that
    *  observes a hookless CLI's LLM traffic and synthesizes the same HIVE_SOCK
    *  payloads the hook shims emit. Written in ensureHive alongside cth-hook.cjs. */
@@ -772,6 +796,8 @@ export class HiveManager {
     // The orchestrator's fire command: signs a fire-request with his hook token
     // so the token itself never lands in the agent-writable hive root.
     writeFresh(this.firePath()!, FIRE_SHIM);
+    // …and his spawn command, signed the same way (a spawn runs a command).
+    writeFresh(this.spawnPath()!, SPAWN_SHIM);
     // The proxy-bridge sidecar for hookless CLIs (qwen). Same refresh policy.
     writeFresh(this.proxyShimPath()!, PROXY_BRIDGE_SHIM);
     // The bundled-node launcher every shim above is invoked through — MUST be
@@ -921,7 +947,7 @@ export class HiveManager {
     // Resolve role BEFORE writing identity.md. A restart passes the floor
     // roster's `description`, which can be a status caption ("on standby").
     // identity.md and registry.role are the durable job from the hire.
-    const reg = this.registry();
+    const reg = this.registryForWrite(root);
     const prev = reg.agents[meta.id];
     if (meta.cwd) meta = { ...meta, cwd: expandTilde(meta.cwd) };
     const role = preferredAgentRole(meta.role, prev?.role, !!meta.isGod);
@@ -1172,7 +1198,10 @@ export class HiveManager {
       env.OTEL_EXPORTER_OTLP_ENDPOINT = this._otelEndpoint;
       env.OTEL_METRIC_EXPORT_INTERVAL = '5000'; // 5s — near-live without spamming
       env.OTEL_LOGS_EXPORT_INTERVAL = '2000';
-      env.OTEL_RESOURCE_ATTRIBUTES = `agent.id=${meta.id},agent.name=${meta.name}`;
+      // Percent-encoded per the OTEL spec: a name holding `,agent.id=x` can't add an attribute.
+      env.OTEL_RESOURCE_ATTRIBUTES = `agent.id=${encodeURIComponent(meta.id)},agent.name=${encodeURIComponent(meta.name)}`;
+      // The collector credits a batch only to the agent this token belongs to.
+      env.OTEL_EXPORTER_OTLP_HEADERS = `x-devlabs-agent=${env.HIVE_HOOK_TOKEN}`;
     }
     const args: string[] = [];
     if (!claudeProvider) return { args, env };
@@ -1231,7 +1260,7 @@ export class HiveManager {
     const next = role.trim();
     if (!next) return { ok: false, error: 'empty role' };
     try {
-      const reg = this.registry();
+      const reg = this.registryForWrite(root);
       const agent = reg.agents[id];
       if (!agent) return { ok: false, error: 'unknown agent' };
       if (agent.role === next) return { ok: true };
@@ -1255,7 +1284,7 @@ export class HiveManager {
     const root = this.root();
     if (!root) return false;
     try {
-      const reg = this.registry();
+      const reg = this.registryForWrite(root);
       const agent = reg.agents[id];
       if (!agent) return false;
       if (agent.archived === archived) return true;
@@ -1277,7 +1306,10 @@ export class HiveManager {
       this.appendLog({ kind: 'archive', agentId: id, archived });
       this.commit(`hive: ${archived ? 'archive' : 'unarchive'} ${id}`);
       return true;
-    } catch { return false; /* never crash a lifecycle handler */ }
+    } catch (e) {
+      console.error(`[hive] setArchived ${id} skipped:`, e instanceof Error ? e.message : e);
+      return false; // never crash a lifecycle handler
+    }
   }
 
   /** A CLI exited, but nobody fired this agent. Keep the registry identity and
@@ -1286,7 +1318,7 @@ export class HiveManager {
     const root = this.root();
     if (!root) return;
     try {
-      const reg = this.registry();
+      const reg = this.registryForWrite(root);
       const agent = reg.agents[id];
       if (!agent || agent.archived || agent.status === 'gone') return;
       agent.status = 'gone';
@@ -1302,7 +1334,10 @@ export class HiveManager {
       }
       this.appendLog({ kind: 'agent-stopped', agentId: id });
       this.commit(`hive: stopped ${id}`);
-    } catch { /* a PTY exit must never crash the app */ }
+    } catch (e) {
+      // A PTY exit must never crash the app; an unreadable registry is left as is.
+      console.error(`[hive] setStopped ${id} skipped:`, e instanceof Error ? e.message : e);
+    }
   }
 
   /**
@@ -1325,7 +1360,7 @@ export class HiveManager {
     const root = this.root();
     if (!root) return { ok: false, error: 'hive disabled (no harnessHome)' };
     try {
-      const reg = this.registry();
+      const reg = this.registryForWrite(root);
       const agent = reg.agents[id];
       if (!agent) return { ok: false, error: 'Agent not found' };
       if (!!agent.onHold === hold) return { ok: true, onHold: hold };
@@ -1358,7 +1393,7 @@ export class HiveManager {
     if (!nextName) return { ok: false, error: 'Name is required' };
 
     try {
-      const reg = this.registry();
+      const reg = this.registryForWrite(root);
       const agent = reg.agents[id];
       if (!agent) return { ok: false, error: 'Agent not found' };
       if (agent.name === nextName) return { ok: true, name: nextName };
@@ -1404,7 +1439,7 @@ export class HiveManager {
     // (through cmd.exe on Windows): only the plain shape every provider uses.
     if (!root || !/^[A-Za-z0-9_-]{1,200}$/.test(sessionId)) return;
     try {
-      const reg = this.registry();
+      const reg = this.registryForWrite(root);
       const agent = reg.agents[agentId];
       if (!agent || agent.sessionId === sessionId) return; // unknown agent or unchanged → no write
       agent.sessionId = sessionId;
@@ -1763,7 +1798,7 @@ export class HiveManager {
     // saying nothing, and COMMANDS.md documents it either way for the case where
     // the operator turns it on after god was already running.
     const spawnQueueLine = meta.isGod && this.orchestratorMaySpawn()
-      ? `SPAWNING AN AGENT: write ONE JSON file into ${inRoot('spawn-requests')}/<id>.json. Required: \`objective\` (what the agent must do) and \`cwd\` (the repo it runs in). Optional: \`name\`, \`command\`, \`provider\`, \`model\`, \`isolate\` (default true = its own git worktree), \`tokenCap\`, and \`slack\` ({channel, thread_ts}) to route failures back to a thread. The agent remains hired and available after finishing or becoming idle; only the human or you may explicitly fire it. Set \`ephemeral: true\` ONLY for a clearly one-off worker that should exit and leave the floor when done or after its idle timeout. The harness polls that directory, spawns \`worker-<id>\`, and moves the request to \`spawn-requests/.done/\` on success or \`.failed/\` with a reason. This is the ONLY way you can spawn; a hire manifest under research/hires/ needs the human to confirm it in the UI. Reuse an existing agent first — every new agent is a fresh spend.`
+      ? `SPAWNING AN AGENT: write the request as ONE JSON file named <id>.json OUTSIDE spawn-requests/ (your own agent folder is fine), then run \`${this.nodeRun(this.spawnPath()!)} <that file>\`: it signs the request with your own credentials and queues it in ${inRoot('spawn-requests')}/ (a request written there any other way is refused, and a signed one expires after 5 minutes). Required: \`objective\` (what the agent must do) and \`cwd\` (the repo it runs in). Optional: \`name\`, \`command\`, \`provider\`, \`model\`, \`isolate\` (default true = its own git worktree), \`tokenCap\`, and \`slack\` ({channel, thread_ts}) to route failures back to a thread. The agent remains hired and available after finishing or becoming idle; only the human or you may explicitly fire it. Set \`ephemeral: true\` ONLY for a clearly one-off worker that should exit and leave the floor when done or after its idle timeout. The harness polls that directory, spawns \`worker-<id>\`, and moves the request to \`spawn-requests/.done/\` on success or \`.failed/\` with a reason. The command must be a known agent CLI (claude, codex, gemini, cursor-agent, …); anything else is refused. This is the ONLY way you can spawn; a hire manifest under research/hires/ needs the human to confirm it in the UI. Reuse an existing agent first — every new agent is a fresh spend.`
       : '';
     // Without this Ramon edited registry.json by hand, which the floor never sees.
     const fireQueueLine = meta.isGod
@@ -1920,63 +1955,69 @@ export class HiveManager {
     // intent, so a bounced or dropped message can never read as delivered.
     const delivered: string[] = [];
     for (const t of targets) {
-      // The send-only prep assistant must never be a delivery target: it doesn't
-      // drain an inbox, so direct mail to it would rot unread (observed live: a
-      // task brief plus the follow-up reprimand about the unread inbox, both
-      // unread for hours). Bounce such mail to god instead, so the sender's intent
-      // surfaces immediately and nothing is silently lost.
-      if (reg.agents[t]?.isAssistant) {
-        this.deliver({
-          ...msg,
-          to: godId,
-          subject: `[bounced — "${t}" is the send-only prep assistant; route work to a real agent] ${msg.subject}`
-        }, godId, { createInbox: true });
-        continue;
-      }
-      // A provider without safe-idle lifecycle state (a hookless custom command)
-      // would let direct mail rot unread. Claude and bridged Antigravity/Codex
-      // receive directly into inbox/ for guarded renderer delivery. Otherwise try
-      // a terminal work-order handoff to its REPL (#53);
-      // if the renderer is unavailable, bounce to god to relay. God is exempt
-      // (the bounce target).
-      if (t !== godId && !canReceiveInbox(reg.agents[t]?.provider)) {
-        if (!this.emitTerminalHandoff(msg, t)) {
+      // One recipient's failed write (disk full, a planted file) must not cost
+      // the rest of the fan-out their copy: the outbox is already in .sent.
+      try {
+        // The send-only prep assistant must never be a delivery target: it doesn't
+        // drain an inbox, so direct mail to it would rot unread (observed live: a
+        // task brief plus the follow-up reprimand about the unread inbox, both
+        // unread for hours). Bounce such mail to god instead, so the sender's intent
+        // surfaces immediately and nothing is silently lost.
+        if (reg.agents[t]?.isAssistant) {
           this.deliver({
             ...msg,
             to: godId,
-            subject: `[undeliverable — "${t}" runs ${reg.agents[t]?.provider ?? 'a hookless CLI'} and the terminal handoff failed (renderer unavailable); relay this to it] ${msg.subject}`
+            subject: `[bounced — "${t}" is the send-only prep assistant; route work to a real agent] ${msg.subject}`
           }, godId, { createInbox: true });
-        } else delivered.push(t);
-        continue;
-      }
-      // 1d — proxy-tier providers (qwen) CAN receive inbox, but only via a
-      // SYNTHESIZED Stop, which just advances the cursor — the sidecar observes the
-      // CLI's stream and can't inject a drain reason back into its turn. So the real
-      // mail rides the terminal work-order path verbatim, exactly like a hookless
-      // provider; the synthesized Stop→drain keeps the cursor in step.
-      const proxyDesc = bridgeOf(reg.agents[t]?.provider);
-      if (t !== godId && proxyDesc?.kind === 'proxy' && proxyDesc.inboxDelivery === 'terminal') {
-        if (!this.emitTerminalHandoff(msg, t)) {
+          continue;
+        }
+        // A provider without safe-idle lifecycle state (a hookless custom command)
+        // would let direct mail rot unread. Claude and bridged Antigravity/Codex
+        // receive directly into inbox/ for guarded renderer delivery. Otherwise try
+        // a terminal work-order handoff to its REPL (#53);
+        // if the renderer is unavailable, bounce to god to relay. God is exempt
+        // (the bounce target).
+        if (t !== godId && !canReceiveInbox(reg.agents[t]?.provider)) {
+          if (!this.emitTerminalHandoff(msg, t)) {
+            this.deliver({
+              ...msg,
+              to: godId,
+              subject: `[undeliverable — "${t}" runs ${reg.agents[t]?.provider ?? 'a hookless CLI'} and the terminal handoff failed (renderer unavailable); relay this to it] ${msg.subject}`
+            }, godId, { createInbox: true });
+          } else delivered.push(t);
+          continue;
+        }
+        // 1d — proxy-tier providers (qwen) CAN receive inbox, but only via a
+        // SYNTHESIZED Stop, which just advances the cursor — the sidecar observes the
+        // CLI's stream and can't inject a drain reason back into its turn. So the real
+        // mail rides the terminal work-order path verbatim, exactly like a hookless
+        // provider; the synthesized Stop→drain keeps the cursor in step.
+        const proxyDesc = bridgeOf(reg.agents[t]?.provider);
+        if (t !== godId && proxyDesc?.kind === 'proxy' && proxyDesc.inboxDelivery === 'terminal') {
+          if (!this.emitTerminalHandoff(msg, t)) {
+            this.deliver({
+              ...msg,
+              to: godId,
+              subject: `[undeliverable — "${t}" runs ${reg.agents[t]?.provider ?? 'a proxy-tier CLI'} and the terminal handoff failed (renderer unavailable); relay this to it] ${msg.subject}`
+            }, godId, { createInbox: true });
+          } else delivered.push(t);
+          continue;
+        }
+        if (this.deliver(msg, t, { createInbox: t === godId })) { delivered.push(t); continue; }
+        // No agents/<t>/inbox — an id that isn't on the floor. This was the one
+        // delivery failure with neither bounce nor log, so the sender saw a routed
+        // message and the mail simply ceased to exist. Record the drop beside the
+        // hop-cap one and bounce to god, mirroring the undeliverable bounces above.
+        this.appendLog({ kind: 'drop', reason: 'no-inbox', from: msg.from, to: t, id: msg.id });
+        if (t !== godId) {
           this.deliver({
             ...msg,
             to: godId,
-            subject: `[undeliverable — "${t}" runs ${reg.agents[t]?.provider ?? 'a proxy-tier CLI'} and the terminal handoff failed (renderer unavailable); relay this to it] ${msg.subject}`
+            subject: `[undeliverable — no agent "${t}" on this floor; check the id against the roster] ${msg.subject}`
           }, godId, { createInbox: true });
-        } else delivered.push(t);
-        continue;
-      }
-      if (this.deliver(msg, t, { createInbox: t === godId })) { delivered.push(t); continue; }
-      // No agents/<t>/inbox — an id that isn't on the floor. This was the one
-      // delivery failure with neither bounce nor log, so the sender saw a routed
-      // message and the mail simply ceased to exist. Record the drop beside the
-      // hop-cap one and bounce to god, mirroring the undeliverable bounces above.
-      this.appendLog({ kind: 'drop', reason: 'no-inbox', from: msg.from, to: t, id: msg.id });
-      if (t !== godId) {
-        this.deliver({
-          ...msg,
-          to: godId,
-          subject: `[undeliverable — no agent "${t}" on this floor; check the id against the roster] ${msg.subject}`
-        }, godId, { createInbox: true });
+        }
+      } catch (e) {
+        this.appendLog({ kind: 'drop', reason: 'write-failed', from: msg.from, to: t, id: msg.id, error: e instanceof Error ? e.message : String(e) });
       }
     }
     this.appendLog({ kind: 'message', from: msg.from, to: msg.to, act: msg.act, subject: msg.subject, id: msg.id, delivered });
@@ -2302,6 +2343,14 @@ export class HiveManager {
     const root = this.root();
     return root ? this.readJson(join(root, 'tasks.json'), { tasks: [] }) : { tasks: [] };
   }
+  /** registry.json / tasks.json for a read-modify-write: throws on a store that
+   *  exists but can't be read, instead of handing back an empty one to save. */
+  private registryForWrite(root: string): Registry {
+    return readJsonStrict<Registry>(join(root, 'registry.json'), { godId: null, agents: {} });
+  }
+  private tasksForWrite(root: string): { tasks?: HiveTask[] } {
+    return readJsonStrict<{ tasks?: HiveTask[] }>(join(root, 'tasks.json'), { tasks: [] });
+  }
 
   /** Persist the task ledger to hive/tasks.json and commit it. Mirrors the
    *  board/message persist pattern: write JSON, log the change, single-commit.
@@ -2321,7 +2370,7 @@ export class HiveManager {
     if (!root) return;
     this.ensureHive();
     const path = join(root, 'tasks.json');
-    const current = this.readJson<{ tasks?: unknown }>(path, { tasks: [] });
+    const current = this.tasksForWrite(root);
     const merged = mergeTaskLedger(current?.tasks, tasks);
     this.writeJson(path, { tasks: merged });
     this.appendLog({ kind: 'tasks', count: merged.length });
@@ -2332,7 +2381,9 @@ export class HiveManager {
    *  use this instead of re-writing a collection they read before another
    *  source (webhook, Slack, god, voice) added work. Idempotent by task id. */
   addTask(task: HiveTask): boolean {
-    const ledger = this.tasks() as { tasks?: HiveTask[] };
+    const root = this.root();
+    if (!root) return false;
+    const ledger = this.tasksForWrite(root);
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     if (tasks.some((current) => current?.id === task.id)) return false;
     this.writeTasks([...tasks, task]);
@@ -2342,7 +2393,9 @@ export class HiveManager {
   /** Patch one card against the latest on-disk ledger, preserving unrelated
    *  cards and fields (notably webhook.tokenHash and Slack thread metadata). */
   patchTask(id: string, patch: Partial<Omit<HiveTask, 'id'>>): boolean {
-    const ledger = this.tasks() as { tasks?: HiveTask[] };
+    const root = this.root();
+    if (!root) return false;
+    const ledger = this.tasksForWrite(root);
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     const index = tasks.findIndex((task) => task?.id === id);
     if (index < 0) return false;
@@ -2354,7 +2407,9 @@ export class HiveManager {
 
   /** Delete only the named card from the latest on-disk ledger. */
   deleteTask(id: string): boolean {
-    const ledger = this.tasks() as { tasks?: HiveTask[] };
+    const root = this.root();
+    if (!root) return false;
+    const ledger = this.tasksForWrite(root);
     const tasks = Array.isArray(ledger?.tasks) ? ledger.tasks : [];
     const next = tasks.filter((task) => task?.id !== id);
     if (next.length === tasks.length) return false;
@@ -2755,8 +2810,9 @@ export class HiveManager {
 
   /** Remove rollout directories moved under the user's standard Codex scan
    *  roots before a full hive reset removes the isolated CODEX_HOME links. */
-  removeExposedCodexData(): void {
-    const root = this.root();
+  /** `root` overrides the live hive root: a floor reset calls this after the
+   *  hive folder was staged elsewhere for deletion. */
+  removeExposedCodexData(root: string | null = this.root()): void {
     if (!root) return;
     const agents = join(root, 'agents');
     if (!existsSync(agents)) return;
@@ -3530,8 +3586,8 @@ Claude Code command reference (slash = your own session only; CLI = your shell, 
 is in \`COMMANDS.md\` in the hive root.
 
 ## Spawning an agent (orchestrator)
-You can hire an agent yourself. Write ONE JSON file into \`spawn-requests/<id>.json\` in
-the hive root:
+You can hire an agent yourself. Write the request as ONE JSON file named \`<id>.json\` somewhere
+OUTSIDE \`spawn-requests/\` (your own agent folder is fine):
 
 \`\`\`json
 {
@@ -3550,6 +3606,18 @@ the hive root:
 }
 \`\`\`
 
+Then queue it with the \`cth-spawn\` command (\`hive-internal/bin/cth-spawn.cjs\`, the exact command
+line is in your instructions):
+
+\`\`\`sh
+<node> <home>/hive-internal/bin/cth-spawn.cjs <path to your <id>.json>
+\`\`\`
+
+It signs the request with your own credentials and writes it into \`spawn-requests/\` in the hive
+root. Every agent can write that folder, so a request written there by hand, or by anyone else, is
+refused. A signed request expires after 5 minutes, and \`command\` must start with a known agent CLI
+(claude, codex, gemini, cursor-agent, …): a shell or any other program is refused.
+
 The harness polls that directory, spawns \`worker-<id>\`, and moves the request to
 \`spawn-requests/.done/\` once it starts or to \`spawn-requests/.failed/\` with a reason. \`isolate\`
 defaults to true, giving the worker its own git worktree. \`slack\` routes its failures back to a
@@ -3566,8 +3634,9 @@ the name and the face should differ. An unrecognised value falls back rather tha
 
 **It can be switched off.** The operator controls this under Settings → Autonomy & Budgets, and it is
 OFF by default, because every worker you start spends tokens nobody approved. While it is off your
-request is NOT failed or deleted, it waits in \`spawn-requests/\` and runs if the operator turns it on.
-If a request of yours has sat there without moving, that is why, and it is a decision to raise with the
+request is NOT picked up, it waits in \`spawn-requests/\`. Its signature still expires after 5 minutes,
+so if the operator turns spawning on later it fails as expired and you run \`cth-spawn\` again. If a
+request of yours has sat there without moving, that is why, and it is a decision to raise with the
 human rather than retry. Route work to an agent already on the floor first either way.
 
 ## Firing an agent (orchestrator)
@@ -3617,6 +3686,30 @@ const file = path.join(dir, nonce + '.json');
 fs.writeFileSync(file + '.tmp', JSON.stringify({ id, ts, nonce, sig }));
 fs.renameSync(file + '.tmp', file);
 console.log('Fire request queued for ' + id + '. Check fire-requests/.done/ or .failed/ in a few seconds.');
+`;
+
+// ─── cth-spawn shim (written to <home>/hive-internal/bin/cth-spawn.cjs) ───
+// The orchestrator runs `cth-spawn <request.json>`. It signs the file's exact
+// text (format shared with src/main/fireAuth.ts spawnSignature) and queues
+// `{ body, ts, nonce, sig }` in HIVE_ROOT/spawn-requests/ under the same name.
+const SPAWN_SHIM = `#!/usr/bin/env node
+'use strict';
+const fs = require('fs'), path = require('path'), crypto = require('crypto');
+const src = process.argv[2];
+const token = process.env.HIVE_HOOK_TOKEN, root = process.env.HIVE_ROOT;
+if (!src || !token || !root) { console.error('usage: cth-spawn <request.json>  (run it from your own agent shell)'); process.exit(1); }
+const body = fs.readFileSync(src, 'utf8');
+try { JSON.parse(body); } catch (e) { console.error('Not valid JSON: ' + e.message); process.exit(1); }
+const ts = Date.now(), nonce = crypto.randomBytes(12).toString('hex');
+const sig = crypto.createHmac('sha256', token).update('spawn\\n' + ts + '\\n' + nonce + '\\n' + body).digest('hex');
+const dir = path.join(root, 'spawn-requests');
+fs.mkdirSync(dir, { recursive: true });
+let name = path.basename(src).replace(/\\.json$/i, '').replace(/[^A-Za-z0-9._-]/g, '-') || nonce;
+if (fs.existsSync(path.join(dir, name + '.json'))) name += '-' + nonce.slice(0, 6);
+const file = path.join(dir, name + '.json');
+fs.writeFileSync(file + '.tmp', JSON.stringify({ body, ts, nonce, sig }));
+fs.renameSync(file + '.tmp', file);
+console.log('Spawn request queued as ' + name + '. Check spawn-requests/.done/ or .failed/ in a few seconds.');
 `;
 
 // ─── cth-hook shim (written to <home>/hive-internal/bin/cth-hook.cjs) ─────

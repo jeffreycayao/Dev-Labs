@@ -47,10 +47,6 @@ export const CAST_BY_NAME: Record<OfficeCharacterName, CastMember> =
 
 export const DEFAULT_CHARACTER: OfficeCharacterName = 'jim';
 
-export function hexToNumber(hex: string): number {
-  return parseInt(hex.replace('#', ''), 16);
-}
-
 /**
  * Paint a character's static portrait for cards / the picker (delegates to the
  * custom procedural composer in portraitArt.ts).

@@ -152,6 +152,10 @@ export interface AnalyticsInitOptions {
   appVersion: string;
   /** The user's `telemetryEnabled` config at boot (default true = opt-out). */
   enabled: boolean;
+  /** config.onboardingComplete at boot. False holds the boot events until
+   *  flushHeld(), so unticking "Share anonymous usage stats" during onboarding
+   *  sends nothing at all. Omitted = true. */
+  onboarded?: boolean;
 }
 
 function dntSet(): boolean {
@@ -177,6 +181,8 @@ export class Analytics {
   /** Session-scoped dedup for feature_used. */
   private readonly featuresSeen = new Set<string>();
   private common: Record<string, string> = {};
+  /** Boot events held until onboarding finishes (see AnalyticsInitOptions.onboarded). */
+  private held: Array<[string, Record<string, string>]> | null = null;
 
   /** Boot the client (no-op without a build-time key / with DNT set). Returns
    *  whether this boot minted a fresh install id (first run ever). */
@@ -225,12 +231,23 @@ export class Analytics {
       if (previous !== opts.appVersion) writeVersionStamp(opts.stateDir, opts.appVersion);
     }
 
-    if (this.firstRun) this.track('first_run');
+    const boot: Array<[string, Record<string, string>]> = [];
+    if (this.firstRun) boot.push(['first_run', {}]);
     if (transition) {
       const via = updateVia(readUpdaterLogTail(opts.stateDir), transition.to_version);
-      this.track('update_applied', { ...transition, via });
+      boot.push(['update_applied', { ...transition, via }]);
     }
-    this.track('app_launched');
+    boot.push(['app_launched', {}]);
+    if (opts.onboarded === false) this.held = boot;
+    else for (const [event, props] of boot) this.track(event, props);
+  }
+
+  /** Onboarding just finished: send the held boot events, which track() drops if
+   *  the user unticked sharing in the wizard. Idempotent. */
+  flushHeld(): void {
+    const held = this.held;
+    this.held = null;
+    for (const [event, props] of held ?? []) this.track(event, props);
   }
 
   /** Live opt-in/out from Settings. Turning off stops sends instantly; nothing

@@ -83,10 +83,10 @@ import type { IntegrationRecord } from '../shared/integrations';
 import { validateBaseUrl, buildAuthHeaders, resolveUpstreamUrl, secretRefFor, INTEGRATION_TEMPLATES } from '../shared/integrations';
 import { RosterStore, rosterPath } from './roster';
 import { firedStillOnFloor, parseFireRequest } from '../shared/fireRequest';
-import { verifyFireRequest } from './fireAuth';
+import { verifyFireRequest, verifySpawnRequest } from './fireAuth';
 import { prepareProjectFloorSelections, settingsForFloorSwitch } from './projectFloor';
 import { createFloorBackup, restoreStagedFloor, stageFloorData } from './floorBackup';
-import { buildWorkerLaunch } from './workerLaunch';
+import { buildWorkerLaunch, isAllowedWorkerBin } from './workerLaunch';
 import { isEphemeralSpawnRequest } from '../shared/workerLifecycle';
 import { ControlRegistry } from './control';
 import { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';
@@ -288,7 +288,9 @@ const telemetry = new TelemetryCollector({
   resolveCwd: (agentId) => hive.registry().agents[agentId]?.cwd ?? null,
   // D11: scopes the transcript fallback to this agent's own session instead of
   // summing every transcript in a (routinely shared) cwd.
-  resolveSessionId: (agentId) => hive.lastSession(agentId)
+  resolveSessionId: (agentId) => hive.lastSession(agentId),
+  // Only the agent holding a hook token may report usage, and only for itself.
+  resolveAgent: (token) => hive.hookAgent(undefined, token)
 });
 // Usage provider (Seam 1) — the INTEGRATION swap: Oscar's telemetry collector (#7)
 // IS the provider, replacing Lane A's interim StubUsageProvider. Same
@@ -1273,8 +1275,8 @@ function breakerToast(title: string, body: string): void {
 /** One circuit-breaker beat: pull a fresh usage sample per active agent, append
  *  it to the durable cost ledger (the SOLE durable cost store), tick the breaker,
  *  emit each BreakerState on control:breakerState (Seam 2), and enforce any
- *  escalation. God is in the LEDGER (cost visibility) but NOT the breaker inputs
- *  (the heartbeat manages god; we never auto-steer/kill the orchestrator). */
+ *  escalation. God's usage counts toward the floor budget, but as an `exempt`
+ *  input: the heartbeat manages god, so it is never steered, stopped or blamed. */
 function runBreakerBeat(progressWindowMs: number): void {
   if (!hive.enabled()) return;
   const reg = hive.registry();
@@ -1316,7 +1318,10 @@ function runBreakerBeat(progressWindowMs: number): void {
     // same liveness gate; recordSession writes only on change, so this is a
     // no-op once the hooks are flowing.
     if (sample?.sessionId) hive.recordSession(id, sample.sessionId);
-    if (id === reg.godId) continue;            // breaker skips god
+    // God spends from the same floor budget, so its tokens/dollars count toward
+    // the cap; `exempt` keeps the breaker from ever acting on the orchestrator.
+    const usage = withLedgerUsage(sample, sample?.sessionId ? costTotals.sessionUsage(id, sample.sessionId) : null);
+    if (id === reg.godId) { inputs.push({ agentId: id, sample: usage, progressing: true, exempt: true }); continue; }
     // Progress = fresh coordination files OR a recent OTel tool span. The span
     // leg closes the background-work blind spot: subagent/Workflow tool calls
     // never reach the parent session's PostToolUse hook (so the breaker's own
@@ -1330,7 +1335,7 @@ function runBreakerBeat(progressWindowMs: number): void {
       agentId: id,
       // The in-memory sample restarts near 0 when DevLabs restarts; the ledger
       // still holds what this session spent before, and the caps judge that.
-      sample: withLedgerUsage(sample, sample?.sessionId ? costTotals.sessionUsage(id, sample.sessionId) : null),
+      sample: usage,
       progressing: now - lastCoordinationAt(id) < progressWindowMs || now - lastSpanAt < progressWindowMs,
       // Work, as distinct from coordination. The breaker decides what to do
       // with it; the beat only reports it.
@@ -3557,8 +3562,11 @@ ipcMain.handle('terminal:openAtFolder', async (_evt, cwd: unknown) => {
   try { if (!statSync(cwd).isDirectory()) throw new Error(); } catch { return { ok: false, error: 'That folder does not exist.' }; }
   if (process.platform !== 'darwin') {
     // The folder goes in as the process cwd, never into a command line.
+    // Absolute cmd.exe: with cwd = the chosen folder, a bare `cmd.exe` would run
+    // a planted cmd.exe in that folder first.
+    const winCmd = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'cmd.exe');
     const [cmd, args]: [string, string[]] = process.platform === 'win32'
-      ? ['cmd.exe', ['/c', 'start', '', 'cmd.exe']]
+      ? [winCmd, ['/c', 'start', '', winCmd]]
       : ['x-terminal-emulator', []];
     return new Promise<{ ok: boolean; error?: string }>((resolve) => {
       const p = spawn(cmd, args, { cwd, detached: true, stdio: 'ignore' });
@@ -3656,7 +3664,9 @@ ipcMain.handle('integrations:test', async (_evt, payload: unknown) => {
   // is ever materialized, so a bad path never even decrypts it.
   const target = resolveUpstreamUrl(rec.baseUrl, typeof p.path === 'string' ? p.path : '');
   if (!target) return { ok: false, error: 'path escapes the integration baseUrl', code: 'bad_request' };
-  const secret = integrations.getSecret(rec.secretRef);
+  let secret: string | undefined;
+  try { secret = integrations.getSecret(rec.secretRef); }
+  catch (e) { return { ok: false, error: e instanceof Error ? e.message : String(e), code: 'origin_mismatch' }; }
   const headers = buildAuthHeaders(rec.authType, rec.authHeader, secret);
   try {
     const ac = new AbortController();
@@ -3701,6 +3711,7 @@ ipcMain.handle('config:update', (_evt, raw: Partial<HarnessConfig>) => {
   // the launch → first-agent funnel. `provider` is the engine chosen in the wizard.
   // Fired here (main), not in the renderer, so it rides the same allowlist as the rest.
   if (!wasOnboarded && next.onboardingComplete) {
+    analytics.flushHeld(); // first_run/app_launched waited for the wizard's sharing choice
     analytics.track('onboarding_completed', { provider: next.godProvider ?? 'claude' });
   }
   // Keep the hive's mirror of the spawn gate current. The queue itself reads
@@ -4103,25 +4114,33 @@ ipcMain.handle('hive:deliveryReveal', (_evt, id: unknown, name: unknown) => {
   shell.showItemInFolder(join(dir, id, 'delivery.json'));
   return { ok: true };
 });
+/** A task-ledger write for IPC: an unreadable tasks.json is reported, never
+ *  overwritten (Hive refuses to save over a ledger it couldn't parse). */
+function taskWrite(write: () => boolean): { ok: boolean; error?: string } {
+  try { return { ok: write() }; } catch (e) {
+    console.error('[hive] task write refused:', e instanceof Error ? e.message : e);
+    return { ok: false, error: 'The task board file could not be read, so nothing was saved. Check hive/tasks.json.' };
+  }
+}
 ipcMain.handle('hive:addTask', (_evt, task: unknown) => {
   if (!task || typeof task !== 'object' || Array.isArray(task)
     || typeof (task as { id?: unknown }).id !== 'string') {
     return { ok: false, error: 'invalid task' };
   }
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
-  return { ok: hive.addTask(task as HiveTask) };
+  return taskWrite(() => hive.addTask(task as HiveTask));
 });
 ipcMain.handle('hive:patchTask', (_evt, id: unknown, patch: unknown) => {
   if (typeof id !== 'string' || !id || !patch || typeof patch !== 'object' || Array.isArray(patch)) {
     return { ok: false, error: 'invalid task patch' };
   }
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
-  return { ok: hive.patchTask(id, patch as Partial<Omit<HiveTask, 'id'>>) };
+  return taskWrite(() => hive.patchTask(id, patch as Partial<Omit<HiveTask, 'id'>>));
 });
 ipcMain.handle('hive:deleteTask', (_evt, id: unknown) => {
   if (typeof id !== 'string' || !id) return { ok: false, error: 'invalid task id' };
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
-  return { ok: hive.deleteTask(id) };
+  return taskWrite(() => hive.deleteTask(id));
 });
 ipcMain.handle('hive:setArchived', (_evt, id: unknown, archived: unknown) => {
   if (typeof id !== 'string') return { ok: false, error: 'invalid id' };
@@ -4511,7 +4530,8 @@ ipcMain.handle('app:resetFloor', async (_evt, backupPath: unknown) => {
     app.exit(0);
     return { ok: false, error: detail };
   }
-  try { hive.removeExposedCodexData(); } catch (e) { console.error('[floor-reset] removeExposedCodexData:', e); }
+  // stageFloorData moved hive/ to <stage>/hive, so look for the Codex links there.
+  try { hive.removeExposedCodexData(join(stage, 'hive')); } catch (e) { console.error('[floor-reset] removeExposedCodexData:', e); }
   try { rmSync(stage, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 }); }
   catch (e) { console.error('[floor-reset] could not delete staged floor:', stage, e); }
   app.relaunch();
@@ -5233,11 +5253,13 @@ interface SpawnRequest {
 function fireAgent(id: string): { ok: boolean; error?: string } {
   // A hire's terminal is `pty-<id>`, not the agent id: kill the PTY that owns it,
   // or the CLI and its MCP servers keep running behind an archived card.
+  // Record the decision first: a kill whose archive then failed left a dead
+  // agent showing as live on the floor.
+  if (!hive.setArchived(id, true)) return { ok: false, error: 'Could not save the fire decision.' };
   const ptyId = ptyForAgent(id) ?? id;
   const r = ptyManager.kill(ptyId);
   if (!r.ok && !/^no pty:/.test(r.error ?? '')) return r;
   teardownPty(ptyId);
-  if (!hive.setArchived(id, true)) return { ok: false, error: 'Could not save the fire decision.' };
   try { liveWebContents()?.send('hive:agentArchived', { id }); } catch { /* window torn down */ }
   return { ok: true };
 }
@@ -5248,7 +5270,7 @@ function fireRequestsDir(): string | null {
   return root ? join(root, 'fire-requests') : null;
 }
 
-/** Nonces of fire-requests already acted on (replay guard, pruned by age). */
+/** Nonces of fire- and spawn-requests already acted on (replay guard, pruned by age). */
 const usedFireNonces = new Map<string, number>();
 
 /** Fire every queued request. Not behind orchestratorMaySpawn: firing spends
@@ -5378,15 +5400,25 @@ function workerSignaledDone(workerId: string, spawnedAt: number): boolean {
  *  registered (for done-scan / reaping / safe teardown) and dispatched its
  *  objective via the standard inbox path. */
 async function processSpawnRequest(filePath: string): Promise<void> {
-  let raw: SpawnRequest;
+  let file: unknown;
   try {
-    raw = JSON.parse(readFileSync(filePath, 'utf8')) as SpawnRequest;
+    file = JSON.parse(readFileSync(filePath, 'utf8'));
   } catch (e) {
     console.error('[worker] unparseable spawn-request:', filePath, e);
     informGod('[worker spawn rejected] unparseable request', `Could not parse spawn-request ${basename(filePath)} — ${String(e)}`);
     archiveRequest(filePath, '.failed');
     return;
   }
+  // Any agent can write this folder, and a request runs a command: only one
+  // signed with the orchestrator's own hook token (by the cth-spawn shim) counts.
+  const auth = verifySpawnRequest(file, trustedGodId ? hive.hookTokenOf(trustedGodId) : undefined, Date.now(), usedFireNonces);
+  if (!auth.ok || !auth.request || typeof auth.request !== 'object' || Array.isArray(auth.request)) {
+    const reason = auth.ok ? 'the signed request is not a JSON object' : auth.reason;
+    informGod(`[worker spawn rejected] ${reason}`, `Spawn-request ${basename(filePath)} rejected: ${reason}.`);
+    archiveRequest(filePath, '.failed');
+    return;
+  }
+  const raw = auth.request as SpawnRequest;
   const slack = raw.slack && typeof raw.slack.channel === 'string' && typeof raw.slack.thread_ts === 'string'
     ? { channel: raw.slack.channel, thread_ts: raw.slack.thread_ts } : undefined;
   const fail = (reason: string): void => {
@@ -5427,6 +5459,10 @@ async function processSpawnRequest(filePath: string): Promise<void> {
   // it validate the same thing in depth.
   if (!isSafeCommandName(bin) && !isAbsolute(bin)) {
     fail(`refusing spawn: engine command "${bin}" is not a plain command name or an absolute path`);
+    return;
+  }
+  if (!isAllowedWorkerBin(bin)) {
+    fail(`refusing spawn: "${bin}" is not a known agent CLI (claude, codex, gemini, cursor-agent, …)`);
     return;
   }
   // Missing-CLI → FAIL FAST. A headless worker has no human to watch an installer,
@@ -5522,12 +5558,14 @@ async function processSpawnRequest(filePath: string): Promise<void> {
   archiveRequest(filePath, '.done');
 }
 
-/** Total tokens (input+output+cache) a worker has burned so far, from the usage
- *  provider — 0 when unknown. Mirrors the breaker's `tokensOf`. Used only by the
- *  (default-off) per-worker token cap. */
+/** Tokens a worker's own work has put through the model (input + output +
+ *  cache writes), from the usage provider — 0 when unknown. Mirrors the
+ *  breaker's per-agent `workTokensOf`: cache READS are left out, since they grow
+ *  with the request count against a fixed context, not with the work. Used only
+ *  by the (default-off) per-worker token cap. */
 function workerTokensUsed(workerId: string): number {
   const s = usageProvider.getAgentUsage(workerId);
-  return s ? s.input + s.output + s.cacheRead + s.cacheCreation : 0;
+  return s ? s.input + s.output + s.cacheCreation : 0;
 }
 
 /** Throttle for the GC sweep — git checks are cheap but pointless every 1.5s tick. */
@@ -6020,6 +6058,8 @@ app.whenReady().then(() => {
     set: (ref, value) => integrations.setSecret(ref, value).ok,
     del: integrations.deleteSecret
   });
+  // Seal connector keys saved before origin binding to their current address, before any agent runs.
+  integrations.bindLegacySecrets();
   // Realtime Ramon mic-gate hygiene (rt-8 / Pam rt-10 nit): the voice session
   // opens the mic permission gate by persisting realtimeVoiceEnabled=true and
   // closes it on disconnect — but a hard crash/reload mid-session skips that
@@ -6034,7 +6074,8 @@ app.whenReady().then(() => {
   analytics.init({
     stateDir: app.getPath('userData'),
     appVersion: app.getVersion(),
-    enabled: readConfig().telemetryEnabled !== false
+    enabled: readConfig().telemetryEnabled !== false,
+    onboarded: readConfig().onboardingComplete === true
   });
 
   // Warm the model catalog cache before any picker opens. The renderer reads

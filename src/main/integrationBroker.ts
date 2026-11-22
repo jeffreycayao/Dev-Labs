@@ -75,7 +75,8 @@ export interface IntegrationBrokerDeps {
   isModelRoute?: (id: string) => boolean;
   /** Resolve an integration record by id (injected — the registry). */
   getRecord: (id: string) => IntegrationRecord | undefined;
-  /** Decrypt a secret by ref (injected — the secret store). Main-internal. */
+  /** Decrypt a secret by ref (injected — the secret store). Main-internal. May throw an
+   *  error with code 'origin_mismatch' (answered 409) when the key was saved for another origin. */
   getSecret: (secretRef: string | undefined) => string | undefined;
 }
 
@@ -243,7 +244,15 @@ export class IntegrationBroker {
     // 7) Secret (decrypted ONLY here, used ONLY to inject the upstream header).
     let secret: string | undefined;
     if (authTypeNeedsSecret(rec.authType)) {
-      secret = this.deps.getSecret(rec.secretRef);
+      try {
+        secret = this.deps.getSecret(rec.secretRef);
+      } catch (e) {
+        // The store refuses a key whose saved origin differs from rec.baseUrl's.
+        if ((e as { code?: string })?.code === 'origin_mismatch') {
+          return IntegrationBroker.sendError(res, 409, 'origin_mismatch', (e as Error).message);
+        }
+        return IntegrationBroker.sendError(res, 503, 'no_secret', 'the key for this integration could not be read');
+      }
       if (!secret) return IntegrationBroker.sendError(res, 503, 'no_secret', 'no secret configured for this integration');
     }
 

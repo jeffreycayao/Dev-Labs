@@ -296,7 +296,7 @@ export function realtimeActionTools(): ReturnType<typeof tool>[] {
     tool({
       name: 'delete_task',
       description:
-        'Delete one task card from the board by title or id. Soft action — runs immediately (recreate it if wrong).',
+        'Delete one task card from the board by title or id. Permanent. DESTRUCTIVE — returns an echo-back and asks for verbal confirmation. After the user confirms, call confirm_action.',
       parameters: {
         type: 'object',
         properties: { taskId: { type: 'string', description: 'Task title or id to delete.' } },

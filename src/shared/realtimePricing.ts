@@ -27,6 +27,17 @@ export const REALTIME_MODEL = 'gpt-realtime-2.1';
 export const REALTIME_AUDIO_INPUT_PER_MTOK = 32;
 export const REALTIME_AUDIO_OUTPUT_PER_MTOK = 64;
 
+/** USD per 1,000,000 tokens on Gemini Live, priced the same conservative way
+ *  (every token at the audio rate).
+ *  shortcut: no published price for GEMINI_LIVE_MODEL ('gemini-3.8-live') was
+ *  found; these are the highest Live audio rates on ai.google.dev/gemini-api/
+ *  docs/pricing as of 2026-11-21 (Gemini 3.5 Live Translate: $3.50 in, $21 out).
+ *  Re-check that page and replace them once the model is listed. */
+export const GEMINI_LIVE_INPUT_PER_MTOK = 3.5;
+export const GEMINI_LIVE_OUTPUT_PER_MTOK = 21;
+
+export type RealtimeProvider = 'openai' | 'google';
+
 /**
  * A usage delta as reported by the realtime session. Accepts both the SDK's
  * camelCase (`inputTokens`) and the raw realtime API's snake_case
@@ -39,6 +50,12 @@ export interface RealtimeUsage {
   input_tokens?: number;
   output_tokens?: number;
   total_tokens?: number;
+  /** Gemini Live `usageMetadata` (per turn). Thinking tokens bill as output,
+   *  tool-use prompt tokens as input. */
+  promptTokenCount?: number;
+  responseTokenCount?: number;
+  thoughtsTokenCount?: number;
+  toolUsePromptTokenCount?: number;
 }
 
 /** Pull input/output token counts out of either casing; missing ⇒ 0. */
@@ -48,8 +65,8 @@ export function normalizeRealtimeUsage(u: RealtimeUsage | null | undefined): {
 } {
   const n = (v: number | undefined): number => (typeof v === 'number' && isFinite(v) && v > 0 ? v : 0);
   return {
-    inputTokens: n(u?.inputTokens) || n(u?.input_tokens),
-    outputTokens: n(u?.outputTokens) || n(u?.output_tokens)
+    inputTokens: n(u?.inputTokens) || n(u?.input_tokens) || n(u?.promptTokenCount) + n(u?.toolUsePromptTokenCount),
+    outputTokens: n(u?.outputTokens) || n(u?.output_tokens) || n(u?.responseTokenCount) + n(u?.thoughtsTokenCount)
   };
 }
 
@@ -58,11 +75,12 @@ export function normalizeRealtimeUsage(u: RealtimeUsage | null | undefined): {
  * token is priced at the audio-input rate and every output token at the
  * audio-output rate (see file header).
  */
-export function computeRealtimeUsd(u: RealtimeUsage | null | undefined): number {
+export function computeRealtimeUsd(u: RealtimeUsage | null | undefined, provider: RealtimeProvider = 'openai'): number {
   const { inputTokens, outputTokens } = normalizeRealtimeUsage(u);
+  const google = provider === 'google';
   return (
-    (inputTokens / 1_000_000) * REALTIME_AUDIO_INPUT_PER_MTOK +
-    (outputTokens / 1_000_000) * REALTIME_AUDIO_OUTPUT_PER_MTOK
+    (inputTokens / 1_000_000) * (google ? GEMINI_LIVE_INPUT_PER_MTOK : REALTIME_AUDIO_INPUT_PER_MTOK) +
+    (outputTokens / 1_000_000) * (google ? GEMINI_LIVE_OUTPUT_PER_MTOK : REALTIME_AUDIO_OUTPUT_PER_MTOK)
   );
 }
 

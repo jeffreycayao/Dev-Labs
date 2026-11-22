@@ -4,6 +4,25 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.8.0 — 2026-11-22
+
+- **Fixed: a damaged task list or agent list is no longer wiped.** If `tasks.json` or `registry.json` had a typo (for example after a hand edit) or grew past 4 MB, the next save quietly replaced it with an almost empty file. Now the app refuses to save over a file it can't read, logs it, and leaves your data as it was.
+- **Fixed: costs and token limits counted each Claude reply two to three times.** When live usage wasn't available, the app added up every line of the transcript, and Claude Code writes several lines per reply. Each reply now counts once, so costs are right and agents are no longer stopped early by their token caps.
+- **Security: a connector's key can only go to the address it was saved for.** An agent that edited `config.json` could point a connection at its own server and receive your real key. Keys are now sealed together with their address; if the address changes, the key is not sent and Settings → Connections asks you to save it again. Keys saved before this version are sealed to their current address when the app starts.
+- **Security: tighter checks between agents.**
+  - Ramon's worker spawn requests are now signed like fire requests, and may only start a known agent program (no shells or scripts).
+  - The usage collector only accepts reports an agent makes about itself, so one agent can't push another into a stop.
+  - Agents can only reply in Slack threads that came in from Slack.
+  - On Windows, "Open terminal here" always runs the real `cmd.exe`, never one placed in the folder.
+- **Fixed: Ramon kept repeating the floor activity in voice chat.** Every short pause in an agent's output was reported as "went quiet" and then "started producing output", so Ramon heard (and re-read) the same news every few seconds. Now an agent is mentioned only after a full minute of silence following work, once per stretch, and the same sentence is never sent twice within five minutes. On Google Gemini Live, floor updates also cut Ramon off mid-sentence so he started over; they now wait until he finishes speaking.
+- **Voice: deleting a task now asks first.** Ramon reads back the exact task and waits for "confirm" or "delete"; a plain "yes" is not enough.
+- **Voice: the spend limit now works with Google Gemini Live.** Gemini usage is counted in the voice cost meter. The Gemini price is an estimate until Google lists the model.
+- **Budgets:** a worker's token cap no longer counts cached context (matching the per-agent cap), and Ramon's own tokens now count toward the floor budget (he is never the one stopped).
+- **Fixed:** a message to several agents is no longer lost for everyone after one failed delivery; "Reset floor" now also removes Codex session data; on Windows, agents fired just before quitting no longer keep running; firing an agent saves the decision before stopping it.
+- **Privacy:** on a first launch, anonymous usage events wait until onboarding is finished, so unticking sharing there means nothing is sent.
+- **Faster office:** the 3D office no longer re-draws on every status update from any agent, ping-pong stays within the 30 fps cap, and about 470 lines of unused 3D code are gone.
+- For contributors: `readJsonStrict` in `src/main/hive.ts` (test `test/hive-json-corrupt.test.cjs`); origin-bound secrets and `bindLegacySecrets` in `src/main/integrations.ts` (test `test/main-audit-fixes.test.cjs`); `spawnSignature`/`verifySpawnRequest` in `src/main/fireAuth.ts` and the `cth-spawn` helper; `isAllowedWorkerBin` in `src/main/workerLaunch.ts`; `BreakerInput.exempt` in `src/main/breaker.ts`; Gemini pricing in `src/shared/realtimePricing.ts` (test `test/realtime-pricing.test.cjs`); shared `fireAgent` in `src/renderer/src/components/fireAgent.ts`. Windows code signing is wired in the release workflow (secrets `WIN_CSC_LINK`, `WIN_CSC_KEY_PASSWORD`; see RELEASE.md) but stays off until a certificate is added.
+
 ## v4.7.0 — 2026-11-15
 
 - **Fixed: Ramon can fire agents, and fired agents leave the floor.** Asking Ramon to fire someone used to do nothing visible: he had no fire command, so he could only edit the hive's own list, and the floor kept every card. Ramon now has a fire queue that does exactly what the Fire button does (stops the terminal, archives the agent, moves the card to Archived, undoable from there). Agents marked fired some other way are moved off the floor on their own, and Restore Team or a restart no longer brings a fired agent back.

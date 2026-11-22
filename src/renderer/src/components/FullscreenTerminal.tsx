@@ -18,7 +18,8 @@ import { useStore, type Agent } from '@/store/store';
 import { usePtyParser } from '@/hooks/usePtyParser';
 import { useRestoreTeam } from '@/hooks/useRestoreTeam';
 import { useTerminalFontSize } from './terminalFontSize';
-import { useHasTerminalDraft, disposeTerminal, reflowTerminal, notifyThemeChangeAll } from './terminalPool';
+import { useHasTerminalDraft, reflowTerminal, notifyThemeChangeAll } from './terminalPool';
+import { fireAgent } from './fireAgent';
 import { useAppTheme, toggleAppTheme } from '@/design/theme';
 import type { HarnessConfig } from '@/store/config';
 import { useRtl } from '@/i18n/useDirection';
@@ -908,7 +909,6 @@ function SidebarRow({
 function Header({ agent, onEdit }: { agent: Agent; onEdit: () => void }) {
   const { t } = useTranslation();
   const typing = useHasTerminalDraft(agent.ptyId);
-  const archiveAgent = useStore((st) => st.archiveAgent);
   const [openState, setOpenState] = useState<'idle' | 'opening' | 'ok' | 'error'>('idle');
 
   /** Same action as the docked panel: open the OS terminal in this agent's
@@ -923,27 +923,10 @@ function Header({ agent, onEdit }: { agent: Agent; onEdit: () => void }) {
     setTimeout(() => setOpenState('idle'), 1500);
   };
 
-  /** Kill + archive, mirroring AgentDetailPanel. Confirmed, because it ends a
+  /** Kill + archive (shared with AgentDetailPanel). Confirmed, because it ends a
    *  running process. God is exempt: the floor respawns it immediately, so the
    *  button would read as "restart Ramon" while looking like "close". */
-  const onKill = async () => {
-    if (!confirm(t('agentDetail.killConfirm', { name: agent.name }))) return;
-    if (agent.ptyId) {
-      const result = await window.cth.killPty(agent.ptyId);
-      if (!result.ok && !/^no pty:/.test(result.error ?? '')) {
-        alert(result.error ?? 'Could not fire the agent. Try again.');
-        return;
-      }
-    }
-    const fired = await window.cth.hiveSetArchived(agent.id, true);
-    if (!fired.ok) { alert(fired.error ?? 'Could not fire the agent. Try again.'); return; }
-    if (agent.ptyId) disposeTerminal(agent.ptyId);
-    // archiveAgent re-homes focus mode to the next agent, and only leaves it when
-    // the last one is gone. Hard-nulling here threw that away, which is why
-    // closing an agent from inside focus mode still dropped you to the sidebar
-    // even after the store was fixed.
-    archiveAgent(agent.id);
-  };
+  const onKill = () => fireAgent(agent, t);
 
   return (
     <div style={{

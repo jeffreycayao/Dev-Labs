@@ -448,4 +448,27 @@ test('a healthy beat de-escalates one level', () => {
   assert.equal(d.state.level, 'healthy');
 });
 
+// ── the orchestrator's spend counts toward the floor budget ─────────────────
+
+test('an exempt agent (Ramon) counts toward the floor budget but is never the one stopped', () => {
+  const b = makeBreaker({ costCapTokens: 100_000, costCapUsd: 10 });
+  const god = { ...sample('god', T0, 90_000, 0), usd: 9 };
+  const worker = { ...sample('w', T0, 20_000, 0), usd: 2 };
+  const ds = b.tick([
+    { agentId: 'god', sample: god, progressing: true, exempt: true },
+    { agentId: 'w', sample: worker, progressing: true }
+  ], T0);
+  // 110k tokens / $11 only cross the caps because god's share is counted.
+  assert.equal(ds.length, 1, 'no decision is emitted for the exempt agent');
+  assert.equal(ds[0].state.agentId, 'w');
+  assert.equal(ds[0].state.level, 'steering', `reason: ${ds[0].state.reason}`);
+  assert.match(ds[0].state.reason, /^(cost|token) cap: floor total/);
+});
+
+test('an exempt agent alone over the budget trips nobody', () => {
+  const b = makeBreaker({ costCapTokens: 100_000 });
+  const ds = b.tick([{ agentId: 'god', sample: sample('god', T0, 500_000, 0), progressing: false, exempt: true }], T0);
+  assert.deepEqual(ds, []);
+});
+
 process.exit(failures ? 1 : 0);

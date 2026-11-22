@@ -10,7 +10,7 @@ const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const loadTs = require('./load-ts.cjs');
 
-const { descendantsOf, killTreeAsync, ensureKilled, isAlive } = loadTs('src/main/procKill.ts');
+const { descendantsOf, killTreeAsync, ensureKilled, isAlive, flushPendingTreeKills } = loadTs('src/main/procKill.ts');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -65,4 +65,15 @@ test('killTreeAsync runs many kills without blocking the event loop', { skip: pr
   await sleep(300);
   const alive = trees.flatMap((t) => [t.root, t.child, t.grand]).filter(isAlive);
   assert.deepEqual(alive, []);
+});
+
+test('app quit reaps trees still queued behind the 4-at-a-time taskkill limit', { skip: process.platform !== 'win32', timeout: 30_000 }, async () => {
+  const trees = await Promise.all([spawnTree(), spawnTree(), spawnTree(), spawnTree(), spawnTree(), spawnTree()]);
+  for (const t of trees) t.proc.stdout.destroy();
+  // Fire all six (two wait in the queue), then quit before any taskkill finishes.
+  const queued = trees.map((t) => killTreeAsync(t.root));
+  flushPendingTreeKills();
+  const alive = trees.flatMap((t) => [t.root, t.child, t.grand]).filter(isAlive);
+  assert.deepEqual(alive, [], 'every fired tree is gone when killAll returns');
+  await Promise.all(queued); // the skipped queue entries still settle
 });

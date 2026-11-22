@@ -16,7 +16,7 @@
 import { existsSync, statSync, readdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
-import { ensureKilled } from './procKill';
+import { killPtyTree } from './procKill';
 import { quarantineDirsToReap, quarantineStampMs, nextMineDelayMs } from './palaceReap';
 
 /** Non-memory files `mempalace mine` must not ingest: the Claude Code hooks
@@ -375,8 +375,9 @@ export class MemoryManager {
       // because the first run may lazily download the embedding model.
       const timer = setTimeout(() => {
         console.error(`[memory] mine ${id} timed out after ${MINE_TIMEOUT_MS / 60000}min — killing`);
-        try { proc.kill('SIGTERM'); } catch { /* gone */ }
-        ensureKilled(proc.pid); // SIGKILL sweep if SIGTERM is ignored
+        // Windows: taskkill /T first, while the tree is intact (a bare kill
+        // orphans the children); POSIX: SIGTERM, then the SIGKILL sweep.
+        killPtyTree(proc);
       }, MINE_TIMEOUT_MS);
       timer.unref?.();
       proc.on('close', (code) => {
@@ -418,8 +419,7 @@ export class MemoryManager {
       proc.stdout?.on('data', (d: string) => { out += d; });
       proc.stderr?.on('data', (d: string) => { err += d; });
       const timer = setTimeout(() => {
-        try { proc.kill('SIGTERM'); } catch { /* gone */ }
-        ensureKilled(proc.pid);
+        killPtyTree(proc); // the tree, not just the parent (see mine above)
         settle({ ok: false, output: out, error: `${label} timed out` });
       }, 120_000);
       timer.unref?.();

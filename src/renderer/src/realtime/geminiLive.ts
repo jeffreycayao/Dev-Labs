@@ -47,6 +47,8 @@ export interface GeminiLiveOptions {
   onToolStart(): void;
   onToolEnd(): void;
   onActivity(): void;
+  /** One turn's `usageMetadata` (promptTokenCount / responseTokenCount / …). */
+  onUsage(usage: Record<string, unknown>): void;
   onError(msg: string): void;
   /** The socket closed after setup (not via close()). */
   onClosed(reason: string): void;
@@ -78,7 +80,23 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
   const ws = new WebSocket(`${GEMINI_LIVE_WS_URL}?access_token=${encodeURIComponent(o.token)}`);
   let closedByUs = false;
   let ready = false;
+  let turnUsage: Record<string, unknown> | null = null;
+  let turnDone = false;
   let muted = false;
+  // Gemini treats any clientContent as a cut-in: sent mid-answer it interrupts
+  // Ramon and he starts over. Silent context waits here until his turn ends.
+  let modelTurnOpen = false;
+  let heldSilent: string[] = [];
+  const sendSilent = (texts: string[]): void => {
+    if (!texts.length) return;
+    send({ clientContent: { turns: [{ role: 'user', parts: texts.map((text) => ({ text })) }], turnComplete: false } });
+  };
+  const flushSilent = (): void => {
+    if (modelTurnOpen || muted) return;
+    const texts = heldSilent;
+    heldSilent = [];
+    sendSilent(texts);
+  };
 
   // ── playback (24 kHz) ─────────────────────────────────────────────────────
   const outCtx = new AudioContext({ sampleRate: GEMINI_OUTPUT_RATE });
@@ -161,6 +179,7 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
     send({ toolResponse: { functionResponses } });
     muted = false;
     o.onToolEnd();
+    flushSilent();
   };
 
   const handle: GeminiLiveHandle = {
@@ -170,10 +189,15 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
       teardown();
     },
     injectSilent(text) {
-      send({ clientContent: { turns: [{ role: 'user', parts: [{ text }] }], turnComplete: false } });
+      heldSilent.push(text);
+      flushSilent();
     },
     speak(text) {
-      send({ clientContent: { turns: [{ role: 'user', parts: [{ text }] }], turnComplete: true } });
+      // Anything held rides along ahead of the spoken turn, in one message.
+      const texts = [...heldSilent, text];
+      heldSilent = [];
+      modelTurnOpen = true;
+      send({ clientContent: { turns: [{ role: 'user', parts: texts.map((t) => ({ text: t })) }], turnComplete: true } });
     }
   };
 
@@ -210,9 +234,19 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
       if (sc) {
         // Barge-in: the user talked over Ramon — stop his audio right away.
         if (sc.interrupted) { flushPlayback(); o.onIdle(); }
+        if (sc.modelTurn) modelTurnOpen = true;
+        // A new turn's audio means the last turn's usage isn't coming: don't
+        // let its stale turnDone bill this turn's first partial total.
+        if (sc.modelTurn && !sc.turnComplete) turnDone = false;
         for (const p of sc.modelTurn?.parts ?? []) if (p.inlineData?.data) play(fromBase64(p.inlineData.data));
-        if (sc.turnComplete) o.onActivity();
+        if (sc.turnComplete || sc.interrupted) { modelTurnOpen = false; flushSilent(); }
+        if (sc.turnComplete) { o.onActivity(); turnDone = true; }
       }
+      // usageMetadata may ride several messages of one turn as a running total,
+      // so keep only the latest and bill it once per turn (when the turn has
+      // completed and usage has been seen, in either order).
+      if (msg.usageMetadata && typeof msg.usageMetadata === 'object') turnUsage = msg.usageMetadata as Record<string, unknown>;
+      if (turnDone && turnUsage) { o.onUsage(turnUsage); turnUsage = null; turnDone = false; }
       const tc = msg.toolCall as { functionCalls?: { id?: string; name?: string; args?: unknown }[] } | undefined;
       if (tc?.functionCalls?.length) void runTools(tc.functionCalls);
       if (msg.goAway) o.onError('Gemini Live session is ending soon (server goAway) — reconnect if it drops.');

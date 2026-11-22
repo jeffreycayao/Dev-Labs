@@ -269,6 +269,7 @@ export class SlackWebhookServer {
           if (!isDuplicate) {
             const msg: SlackInboundMessage = { text, channel, ts, thread_ts };
             if (rawFiles.length > 0) msg._rawFiles = rawFiles;
+            rememberSlackThread(channel, thread_ts);
             try { void this.onMessage(msg); } catch { /* delivery is best-effort */ }
           }
         }
@@ -394,6 +395,26 @@ export function postSlackReply(opts: {
   });
 }
 
+// The reply token is shared by every agent, so the endpoint only posts into threads
+// a verified inbound Slack trigger opened. Insertion-ordered: oldest entry first.
+const KNOWN_THREAD_CAP = 500;
+const KNOWN_THREAD_TTL_MS = 24 * 60 * 60_000;
+const knownThreads = new Map<string, number>(); // `${channel}:${thread_ts}` → seen at
+
+/** Remember a thread an inbound trigger came from, so agents may reply into it. */
+export function rememberSlackThread(channel: string, thread_ts: string, now = Date.now()): void {
+  const key = `${channel}:${thread_ts}`;
+  knownThreads.delete(key); // re-insert so the map stays oldest-first
+  knownThreads.set(key, now);
+  if (knownThreads.size > KNOWN_THREAD_CAP) knownThreads.delete(knownThreads.keys().next().value as string);
+}
+
+/** Whether an inbound trigger opened this thread in the last 24 hours. */
+export function isKnownSlackThread(channel: string, thread_ts: string, now = Date.now()): boolean {
+  const at = knownThreads.get(`${channel}:${thread_ts}`);
+  return at !== undefined && now - at < KNOWN_THREAD_TTL_MS;
+}
+
 /** Per-session shared secret + lazy bot-token accessor for the reply endpoint. */
 export interface SlackReplyServerOptions {
   /** Secret the helper must echo in the `x-md-reply-token` header. */
@@ -480,6 +501,11 @@ export class SlackReplyServer {
         res.writeHead(400); res.end(JSON.stringify({ ok: false, error: 'channel, thread, text required' })); return;
       }
       const thread_ts = parsed.thread_ts;
+      if (!isKnownSlackThread(parsed.channel, thread_ts)) {
+        res.writeHead(403, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Agents can only reply in a Slack thread that messaged DevLabs in the last 24 hours. Reply in that thread instead.' }));
+        return;
+      }
       postSlackReply({ botToken, channel: parsed.channel, thread_ts, text: parsed.text })
         .then((r) => {
           // A successful DIRECT reply means the agent already answered this thread —

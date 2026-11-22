@@ -10,10 +10,14 @@
  * Signals (all owned by main — no renderer trust):
  *   - roster: agents appearing / archiving (hive registry)
  *   - tasks: status transitions on the kanban ledger
- *   - activity: a pty flipping between quiet and streaming (≈ idle ↔ working)
- * Deltas are debounced (≥ MIN_PUSH_GAP_MS between pushes) and coalesced into
- * one parenthetical line, capped in length. When no session is live, nothing
- * is emitted and nothing queues — the next connect takes a fresh snapshot.
+ *   - activity: an agent that worked and then stayed silent for QUIET_MS
+ *     (≈ done or idle). Working agents pause between bursts of output all the
+ *     time, so raw quiet↔streaming flips are NOT reported: they made Ramon
+ *     repeat "X started producing output / X went quiet" every few seconds.
+ * Deltas are debounced (≥ MIN_PUSH_GAP_MS between pushes), coalesced into one
+ * parenthetical line, capped in length, and a line already pushed within
+ * REPEAT_WINDOW_MS is dropped. When no session is live, nothing is emitted and
+ * nothing queues — the next connect takes a fresh snapshot.
  */
 
 interface RegistryLike {
@@ -27,11 +31,17 @@ export interface FloorWatcherDeps {
   tasks(): unknown;
   ptys(): Array<{ id: string; lastOutputAt: number }>;
   push(text: string): void;
+  /** Clock for tests. */
+  now?: () => number;
 }
 
 const POLL_MS = 5_000;
 const MIN_PUSH_GAP_MS = 12_000;
 const ACTIVE_WINDOW_MS = 8_000;
+/** Silence that counts as "done or idle" rather than a pause between outputs. */
+const QUIET_MS = 60_000;
+/** The same sentence is never repeated to Ramon within this window. */
+const REPEAT_WINDOW_MS = 5 * 60_000;
 const MAX_PUSH_CHARS = 600;
 
 export class RealtimeFloorWatcher {
@@ -42,7 +52,10 @@ export class RealtimeFloorWatcher {
   private buffer: string[] = [];
   private prevAgents = new Map<string, { archived: boolean; name: string }>();
   private prevTasks = new Map<string, { status: string; title: string }>();
-  private prevActive = new Map<string, boolean>();
+  /** Agents seen producing output since their last "went quiet" line. */
+  private workedSinceQuiet = new Set<string>();
+  /** Sentence → when it was last pushed, for the repeat filter. */
+  private recentLines = new Map<string, number>();
   private primed = false;
 
   constructor(deps: FloorWatcherDeps) {
@@ -64,10 +77,13 @@ export class RealtimeFloorWatcher {
     // A fresh session starts from a fresh snapshot — old buffered deltas would
     // duplicate what the snapshot already says.
     this.buffer = [];
+    this.workedSinceQuiet.clear();
+    this.recentLines.clear();
     this.primed = false; // re-prime so the first tick after connect diffs from NOW
   }
 
-  private tick(): void {
+  /** One poll. Public for tests; the interval calls it every POLL_MS. */
+  tick(): void {
     if (!this.deps.enabled()) return;
 
     const reg = this.deps.registry();
@@ -82,10 +98,10 @@ export class RealtimeFloorWatcher {
       if (typeof t?.id === 'string') tasks.set(t.id, { status: t.status ?? 'todo', title: t.title ?? t.id });
     }
 
-    const now = Date.now();
-    const active = new Map<string, boolean>();
+    const now = this.deps.now ? this.deps.now() : Date.now();
+    const silentFor = new Map<string, number>();
     for (const p of this.deps.ptys()) {
-      active.set(p.id.replace(/^pty-/, ''), now - p.lastOutputAt < ACTIVE_WINDOW_MS);
+      silentFor.set(p.id.replace(/^pty-/, ''), now - p.lastOutputAt);
     }
 
     if (this.primed && this.live) {
@@ -102,26 +118,32 @@ export class RealtimeFloorWatcher {
         if (!prev) this.buffer.push(`new task "${cur.title.slice(0, 60)}"`);
         else if (prev.status !== cur.status) this.buffer.push(`task "${cur.title.slice(0, 60)}" moved to ${cur.status}`);
       }
-      // activity flips (quiet ↔ streaming), named via the registry
-      for (const [id, isActive] of active) {
-        const prev = this.prevActive.get(id);
+      // "went quiet": once per stretch of work, after a real silence (not a pause)
+      for (const [id, silent] of silentFor) {
         const name = agents.get(id)?.name;
-        if (prev === undefined || !name || agents.get(id)?.archived) continue;
-        if (prev && !isActive) this.buffer.push(`${name} went quiet (likely done or idle)`);
-        else if (!prev && isActive) this.buffer.push(`${name} started producing output`);
+        if (!name || agents.get(id)?.archived) continue;
+        if (silent < ACTIVE_WINDOW_MS) this.workedSinceQuiet.add(id);
+        else if (silent >= QUIET_MS && this.workedSinceQuiet.delete(id)) {
+          this.buffer.push(`${name} went quiet (likely done or idle)`);
+        }
       }
     }
 
     this.prevAgents = agents;
     this.prevTasks = tasks;
-    this.prevActive = active;
     this.primed = true;
 
     if (!this.live || this.buffer.length === 0) { if (!this.live) this.buffer = []; return; }
     if (now - this.lastPushAt < MIN_PUSH_GAP_MS) return;
 
-    const text = this.buffer.join('; ').slice(0, MAX_PUSH_CHARS);
+    // Drop repeats (within one push and of anything said recently).
+    for (const [line, at] of this.recentLines) if (now - at > REPEAT_WINDOW_MS) this.recentLines.delete(line);
+    const fresh = [...new Set(this.buffer)].filter((line) => !this.recentLines.has(line));
     this.buffer = [];
+    if (fresh.length === 0) return;
+    for (const line of fresh) this.recentLines.set(line, now);
+
+    const text = fresh.join('; ').slice(0, MAX_PUSH_CHARS);
     this.lastPushAt = now;
     this.deps.push(text);
   }

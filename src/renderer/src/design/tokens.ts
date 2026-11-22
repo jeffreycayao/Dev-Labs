@@ -1,4 +1,4 @@
-// Design tokens — single source of truth. Mirrors tokens.css for non-styled consumers (Pixi).
+// Design tokens — single source of truth. Mirrors tokens.css for non-styled consumers (the 3D office, canvas painters).
 // Any change here must also update tokens.css.
 
 export const colors = {

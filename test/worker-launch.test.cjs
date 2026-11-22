@@ -104,3 +104,15 @@ test('main and renderer split with the SAME tokenizer (shared module)', () => {
   // renderer's. One example locks the routing through the shared function.
   assert.deepEqual(tokenizeCommand(`a "b c" 'd e' f`), ['a', 'b c', 'd e', 'f']);
 });
+
+test('spawn-requests may only start a known agent CLI', () => {
+  const { isAllowedWorkerBin } = loadTs('src/main/workerLaunch.ts');
+  for (const ok of ['claude', 'codex', 'gemini', 'cursor-agent', 'claude.exe', 'codex.cmd',
+    '/usr/local/bin/claude', 'C:\\Users\\me\\AppData\\Roaming\\npm\\codex.cmd']) {
+    assert.equal(isAllowedWorkerBin(ok), true, ok);
+  }
+  for (const bad of ['bash', 'sh', 'cmd', 'cmd.exe', 'powershell', 'pwsh.exe', 'node', 'python3',
+    '/tmp/evil', 'C:\\tmp\\evil.exe', 'claude.bat', 'claude.ps1', 'claude.sh', '', 'cla ude']) {
+    assert.equal(isAllowedWorkerBin(bad), false, bad);
+  }
+});

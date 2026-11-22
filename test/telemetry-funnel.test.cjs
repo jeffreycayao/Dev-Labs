@@ -105,3 +105,29 @@ test('onboarding completion is reported on the false to true transition', () => 
   assert.match(main, /if \(!wasOnboarded && next\.onboardingComplete\) \{/);
   assert.match(main, /analytics\.track\('onboarding_completed', \{ provider: next\.godProvider \?\? 'claude' \}\);/);
 });
+
+// ── boot events wait for the onboarding sharing choice ────────────────────────
+
+test('first_run and app_launched are held until onboarding finishes', () => {
+  captured.length = 0;
+  const kept = new Analytics();
+  kept.init({ stateDir: freshDir(), appVersion: '0.4.7', enabled: true, onboarded: false });
+  assert.deepEqual(captured.map((c) => c.event), [], 'nothing leaves before the wizard');
+  kept.flushHeld();
+  assert.deepEqual(captured.map((c) => c.event), ['first_run', 'app_launched']);
+  kept.flushHeld();
+  assert.equal(captured.length, 2, 'flushHeld is idempotent');
+
+  captured.length = 0;
+  const unticked = new Analytics();
+  unticked.init({ stateDir: freshDir(), appVersion: '0.4.7', enabled: true, onboarded: false });
+  unticked.setEnabled(false); // "Share anonymous usage stats" unticked in the wizard
+  unticked.flushHeld();
+  assert.deepEqual(captured, [], 'unticking during onboarding sends nothing');
+});
+
+test('index.ts holds boot events until onboarding and flushes them on completion', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'src/main/index.ts'), 'utf8');
+  assert.match(src, /onboarded: readConfig\(\)\.onboardingComplete === true/);
+  assert.match(src, /if \(!wasOnboarded && next\.onboardingComplete\) \{\s*analytics\.flushHeld\(\);/);
+});

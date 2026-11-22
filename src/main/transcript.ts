@@ -177,6 +177,13 @@ interface FileUsageEntry {
    *  reads.) So the refresh-path clone is O(1), not O(sessions-ever-seen), and
    *  needs no pruning of its own; USAGE_CACHE_MAX bounds the file count. */
   perSession: Map<string, AgentUsage>;
+  /** `message.id`s already counted. Claude Code writes one JSONL line per
+   *  content block (thinking / text / tool_use) of one API response, each
+   *  repeating the same id and the same `usage` (verified identical across
+   *  16k repeated-id groups), so only the first line per id is counted.
+   *  Shared (not cloned) across incremental refreshes: the old entry is
+   *  always replaced, and a from-scratch re-parse starts a fresh set. */
+  seenMessageIds: Set<string>;
 }
 
 const usageCache = new Map<string, FileUsageEntry>();
@@ -202,7 +209,7 @@ function parseUsageLines(text: string, entry: FileUsageEntry): void {
     let rec: {
       type?: unknown;
       sessionId?: unknown;
-      message?: { model?: unknown; usage?: Record<string, unknown> };
+      message?: { id?: unknown; model?: unknown; usage?: Record<string, unknown> };
     };
     try {
       rec = JSON.parse(trimmed);
@@ -212,6 +219,11 @@ function parseUsageLines(text: string, entry: FileUsageEntry): void {
     if (rec.type !== 'assistant') continue;
     const u = rec.message?.usage;
     if (!u) continue;
+    const id = rec.message?.id;
+    if (typeof id === 'string' && id) {
+      if (entry.seenMessageIds.has(id)) continue;
+      entry.seenMessageIds.add(id);
+    }
     const model = typeof rec.message?.model === 'string' ? normalizeModel(rec.message.model) : undefined;
     const rIn = num(u.input_tokens);
     const rOut = num(u.output_tokens);
@@ -261,13 +273,14 @@ function readFileUsage(dir: string, file: string): FileUsageEntry | null {
   if (cached && cached.size === st.size && cached.mtimeMs === st.mtimeMs) return cached;
   const fromScratch = !cached || st.size < cached.offset;
   const entry: FileUsageEntry = fromScratch
-    ? { size: st.size, mtimeMs: st.mtimeMs, offset: 0, all: zero(), perSession: new Map() }
+    ? { size: st.size, mtimeMs: st.mtimeMs, offset: 0, all: zero(), perSession: new Map(), seenMessageIds: new Set() }
     : {
         size: st.size,
         mtimeMs: st.mtimeMs,
         offset: cached!.offset,
         all: { ...cached!.all },
-        perSession: new Map(Array.from(cached!.perSession, ([k, v]) => [k, { ...v }]))
+        perSession: new Map(Array.from(cached!.perSession, ([k, v]) => [k, { ...v }])),
+        seenMessageIds: cached!.seenMessageIds
       };
   try {
     const fd = openSync(full, 'r');

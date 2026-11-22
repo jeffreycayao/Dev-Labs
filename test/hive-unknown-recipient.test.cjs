@@ -80,3 +80,22 @@ test('an unknown recipient does not stop the rest of a broadcast', async (t) => 
   assert.deepEqual(msg.delivered, ['jim-1']);
   assert.equal(entries(hive, 'drop').filter((e) => e.to === 'ghost-1').length, 1);
 });
+
+test('one recipient whose inbox write throws does not stop the rest of a broadcast', async (t) => {
+  const { home, hive } = await floor(t);
+  await hive.ensureAgent({ id: 'pam-1', name: 'Pam', provider: 'claude', cwd: home });
+  // Jim's inbox write fails (disk full, permissions): deliver throws for him only.
+  const deliver = hive.deliver.bind(hive);
+  t.mock.method(hive, 'deliver', (msg, to, opts) => {
+    if (to === 'jim-1') throw new Error('ENOSPC');
+    return deliver(msg, to, opts);
+  });
+
+  hive.send({ to: 'broadcast', act: 'inform', subject: 'standup' }, 'god-1');
+
+  const failed = entries(hive, 'drop').filter((e) => e.reason === 'write-failed');
+  assert.equal(failed.length, 1);
+  assert.equal(failed[0].to, 'jim-1');
+  assert.ok(failed[0].error);
+  assert.equal(hive.inbox('pam-1').length, 1, 'later recipients still get their copy');
+});

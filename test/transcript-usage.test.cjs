@@ -47,6 +47,7 @@ function rec(output, opts = {}) {
   const r = {
     type: 'assistant',
     message: {
+      ...(opts.id ? { id: opts.id } : {}),
       model: opts.model ?? 'claude-haiku-4-5',
       usage: {
         input_tokens: opts.input ?? 10,
@@ -186,6 +187,28 @@ test('model is the last one seen (per current semantics)', () => {
   fs.writeFileSync(path.join(dir, 'a.jsonl'),
     rec(1, { model: 'claude-haiku-4-5' }) + '\n' + rec(2, { model: 'claude-opus-4-8' }) + '\n');
   assert.equal(readAgentUsage(cwd).model, 'claude-opus-4-8');
+});
+
+/* Claude Code writes one line per content block of a single API response,
+ * each repeating message.id and the same usage. Count each id once — also
+ * when the repeat arrives in a later appended chunk, and again after a
+ * shrink forces a from-scratch re-parse. Lines without an id still count. */
+test('repeated message.id lines are counted once, across appends and rewrites', () => {
+  const { cwd, dir } = makeProject();
+  const f = path.join(dir, 'a.jsonl');
+  const blk = (id) => rec(100, { id, cacheRead: 1000 });
+  const lines = (...ls) => ls.join('\n') + '\n';
+  fs.writeFileSync(f, lines(blk('msg_A'), blk('msg_A'), blk('msg_A'), rec(5)));
+  let u = readAgentUsage(cwd);
+  assert.equal(u.outputTokens, 105);
+  assert.equal(u.cacheReadTokens, 1000);
+  fs.appendFileSync(f, lines(blk('msg_A'), blk('msg_B'), blk('msg_B')));
+  u = readAgentUsage(cwd);
+  assert.equal(u.outputTokens, 205, 'appended repeat of msg_A not recounted; msg_B once');
+  assert.equal(u.cacheReadTokens, 2000);
+  assert.equal(readAgentUsage(cwd, { sessionId: 's1' }).outputTokens, 205, 'session bucket deduped too');
+  fs.writeFileSync(f, lines(blk('msg_A'))); // shrink -> fresh parse, fresh seen-set
+  assert.equal(readAgentUsage(cwd).outputTokens, 100);
 });
 
 test('missing project dir yields zeros', () => {

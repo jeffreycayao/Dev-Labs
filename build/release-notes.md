@@ -1,5 +1,5 @@
-- Talk to Ramon with Google Gemini Live.
-- Ramon can fire agents; nothing is left running.
-- Much lighter with many agents, plus a resource view.
-- Agents never get your AI provider keys.
-- Ride an elevator between office floors.
+- Ramon stops repeating floor activity in voice.
+- Damaged task lists are never wiped.
+- Costs count each Claude reply once.
+- Connector keys only go to their saved address.
+- Smoother office, safer agent checks.

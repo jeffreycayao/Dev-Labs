@@ -12,7 +12,7 @@ Two data planes feed one renderer:
 │                     Electron Renderer (React)                  │
 │   ┌──────────────────┐    ┌──────────────────────────────┐    │
 │   │ Office Floor      │    │ Terminal + Command Bar       │    │
-│   │ (Pixi.js)        │    │ Files + Git tabs (xterm.js)  │    │
+│   │ (three + R3F)    │    │ Files + Git tabs (xterm.js)  │    │
 │   └─────────▲────────┘    └────────────▲─────────────────┘    │
 │             │ avatar state             │ pty bytes / fs / git  │
 └─────────────┼──────────────────────────┼───────────────────────┘
@@ -68,7 +68,9 @@ src/
     TasksKanban,             dependency-aware kanban board (Tasks tab)
     ThreadsPanel,            hive message conversation viewer (Messages tab)
     MessageQueueComposer,    park messages for a busy agent
-    scene/office/            Pixi office floor: OfficeFloor, Character, Camera, cast, pathfinding, …
+    features/retro-office/   3D office (three + @react-three/fiber + drei): RetroOffice3D, objects, systems, core
+    scene/office3d/          OfficeFloor3D: binds the store to the 3D office (floors, feed, standup, voice)
+    scene/office/            cast, portraits, cafeteria chatter lines
     store/ · hooks/          zustand store, event loop, PTY parser, typewriter
     assets/                  tilesets, maps, character sheets (see ATTRIBUTION.md)
 docs/                        `logo.png`, `banner.png`, landing page (GitHub Pages → automatika.ph)

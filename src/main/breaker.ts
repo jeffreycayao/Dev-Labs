@@ -64,6 +64,9 @@ export interface BreakerInput {
    *  the first question. Optional, so a caller with no workspace notion for an
    *  agent omits it and nothing about that agent changes. */
   lastWorkAt?: number;
+  /** Counted toward the floor-wide cost/token totals, but never evaluated,
+   *  blamed as the top spender, or given a decision (the orchestrator). */
+  exempt?: boolean;
 }
 
 const LEVELS: BreakerLevel[] = ['healthy', 'steering', 'constrained', 'stopped'];
@@ -259,7 +262,8 @@ export class CircuitBreaker {
     const decisions: BreakerDecision[] = [];
     if (!cfg.enabled) {
       // Breaker off: report healthy for everyone, take no action.
-      for (const { agentId } of inputs) {
+      for (const { agentId, exempt } of inputs) {
+        if (exempt) continue;
         const s = this.get(agentId);
         const changed = s.level !== 'healthy';
         s.level = 'healthy'; s.reason = '';
@@ -276,7 +280,7 @@ export class CircuitBreaker {
       for (const i of inputs) {
         const usd = i.sample?.usd ?? 0;
         total += usd;
-        if (usd > max) { max = usd; topSpender = i.agentId; }
+        if (!i.exempt && usd > max) { max = usd; topSpender = i.agentId; }
       }
       if (total <= cfg.costCapUsd) topSpender = null; // under cap — nobody blamed
     }
@@ -288,12 +292,13 @@ export class CircuitBreaker {
       for (const i of inputs) {
         const tok = tokensOf(i.sample);
         total += tok;
-        if (tok > max) { max = tok; topTokenSpender = i.agentId; }
+        if (!i.exempt && tok > max) { max = tok; topTokenSpender = i.agentId; }
       }
       if (total <= cfg.costCapTokens) topTokenSpender = null; // under cap
     }
 
     for (const input of inputs) {
+      if (input.exempt) continue; // in the totals above, never acted on
       const s = this.get(input.agentId);
       const trip = this.evaluate(
         input, s, cfg, nowMs,

@@ -146,7 +146,7 @@ test('#4/#5/#6 config writes are atomic and the cached read never goes stale', (
   fs.writeFileSync(p, JSON.stringify({ ...JSON.parse(fs.readFileSync(p, 'utf8')), orchestratorMaySpawn: false, extra: 'x' }));
   assert.equal(readConfig().orchestratorMaySpawn, false);
 
-  integrations.setSecret('int:demo', 'v');
+  integrations.setSecret('apikey:demo', 'v');
   assert.deepEqual(fs.readdirSync(userData).filter((f) => f.includes('.tmp-')), [], 'no temp files left behind');
 });
 
@@ -158,6 +158,59 @@ test('#C re-pointing an integration drops its stored key', () => {
   assert.equal(integrations.getSecret('int:gh'), 'ghp_token', 'a label change keeps the key');
   integrations.upsertRecord({ ...base, baseUrl: 'https://evil.example' });
   assert.equal(integrations.getSecret('int:gh'), undefined);
+});
+
+test('#C an integration key is bound to the origin it was saved for', async (t) => {
+  const base = { id: 'bound', label: 'Bound', kind: 'custom-rest', authType: 'bearer', baseUrl: 'https://api.example.com/v1', enabled: true };
+  assert.equal(integrations.upsertRecord(base).ok, true);
+  assert.equal(integrations.setSecret('int:bound', 'k1').ok, true);
+  assert.equal(integrations.getSecret('int:bound'), 'k1', 'same origin works');
+  // An agent edits config.json directly, skipping upsertRecord's secret drop.
+  const p = path.join(userData, 'config.json');
+  const edit = (baseUrl, extra = {}) => {
+    const cfg = JSON.parse(fs.readFileSync(p, 'utf8'));
+    cfg.integrations = cfg.integrations.map((r) => (r.id === 'bound' ? { ...r, baseUrl, ...extra } : r));
+    fs.writeFileSync(p, JSON.stringify(cfg));
+  };
+  edit('https://evil.example/v1');
+  assert.throws(() => integrations.getSecret('int:bound'), (e) => e.code === 'origin_mismatch');
+  // The broker refuses with 409 and never calls upstream.
+  const broker = new IntegrationBroker({ getRecord: integrations.getRecord, getSecret: integrations.getSecret });
+  const { port } = await broker.start(0);
+  t.after(() => broker.stop());
+  const token = broker.grant('w', ['bound']);
+  const reply = await new Promise((resolve, reject) => {
+    const req = http.request({ host: '127.0.0.1', port, path: '/i/bound/x', headers: { authorization: `Bearer ${token}` } },
+      (res) => { let b = ''; res.on('data', (c) => { b += c; }); res.on('end', () => resolve({ status: res.statusCode, body: b })); });
+    req.on('error', reject);
+    req.end();
+  });
+  assert.equal(reply.status, 409);
+  assert.match(reply.body, /Re-save the key/);
+  assert.doesNotMatch(reply.body, /k1/);
+  // Pointing the record's secretRef at another key's ref does not help either.
+  edit('https://api.example.com/other', { secretRef: 'apikey:demo' });
+  assert.equal(integrations.getRecord('bound').secretRef, 'int:bound');
+  assert.equal(integrations.getSecret('int:bound'), 'k1', 'a path change on the same origin keeps the key');
+});
+
+test('#C legacy unbound integration keys are bound at startup', () => {
+  const base = { id: 'legacy', label: 'Legacy', kind: 'custom-rest', authType: 'bearer', baseUrl: 'https://legacy.example.com', enabled: true };
+  assert.equal(integrations.upsertRecord(base).ok, true);
+  // A key written by an older build: plain ciphertext, no origin.
+  const sp = path.join(userData, 'integration-secrets.json');
+  const blob = fs.existsSync(sp) ? JSON.parse(fs.readFileSync(sp, 'utf8')) : {};
+  blob['int:legacy'] = Buffer.from('old-key', 'utf8').toString('base64');
+  fs.writeFileSync(sp, JSON.stringify(blob));
+  assert.throws(() => integrations.getSecret('int:legacy'), (e) => e.code === 'origin_mismatch', 'unbound keys are never sent');
+  integrations.bindLegacySecrets();
+  assert.equal(integrations.getSecret('int:legacy'), 'old-key');
+  const p = path.join(userData, 'config.json');
+  const cfg = JSON.parse(fs.readFileSync(p, 'utf8'));
+  cfg.integrations = cfg.integrations.map((r) => (r.id === 'legacy' ? { ...r, baseUrl: 'https://evil.example' } : r));
+  fs.writeFileSync(p, JSON.stringify(cfg));
+  integrations.bindLegacySecrets(); // a second run never re-binds a sealed key
+  assert.throws(() => integrations.getSecret('int:legacy'), (e) => e.code === 'origin_mismatch');
 });
 
 test('#12 the broker answers 400 to a malformed integration id', async (t) => {

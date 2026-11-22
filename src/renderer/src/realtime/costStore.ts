@@ -16,7 +16,7 @@
  * which this store does not own).
  */
 import { useSyncExternalStore } from 'react';
-import { computeRealtimeUsd, normalizeRealtimeUsage, type RealtimeUsage } from '@shared/realtimePricing';
+import { computeRealtimeUsd, normalizeRealtimeUsage, type RealtimeProvider, type RealtimeUsage } from '@shared/realtimePricing';
 
 export interface RealtimeCostState {
   /** Running session cost in USD (conservative upper bound — see realtimePricing). */
@@ -76,10 +76,10 @@ export function endRealtimeCost(): void {
 }
 
 /** Accumulate one usage delta (Kevin: call on each realtime usage event). */
-export function recordRealtimeUsage(usage: RealtimeUsage, nowMs: number): void {
+export function recordRealtimeUsage(usage: RealtimeUsage, nowMs: number, provider: RealtimeProvider = 'openai'): void {
   const { inputTokens, outputTokens } = normalizeRealtimeUsage(usage);
   if (inputTokens === 0 && outputTokens === 0) return;
-  const usd = state.usd + computeRealtimeUsd(usage);
+  const usd = state.usd + computeRealtimeUsd(usage, provider);
   setState({
     usd,
     inputTokens: state.inputTokens + inputTokens,
@@ -89,8 +89,8 @@ export function recordRealtimeUsage(usage: RealtimeUsage, nowMs: number): void {
   });
 }
 
-/** Mark voice activity without a priced usage delta (Gemini Live: its usage is
- *  not priced here, but the idle guard still needs a heartbeat). */
+/** Mark voice activity without a priced usage delta (a Gemini turn that
+ *  carried no usageMetadata still feeds the idle guard). */
 export function markRealtimeActivity(nowMs: number): void {
   if (state.startedTs != null) setState({ lastActivityTs: nowMs });
 }

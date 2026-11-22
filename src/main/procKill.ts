@@ -129,20 +129,27 @@ function posixTable(): Map<number, { ppid: number; started: string }> | null {
 const MAX_PARALLEL_TREE_KILLS = 4;
 let runningTreeKills = 0;
 const treeKillQueue: Array<() => void> = [];
+/** Pids handed to killTreeAsync whose taskkill has not finished yet. */
+const pendingTreeKills = new Set<number>();
 
 /** Windows: `taskkill /T /F` the tree WITHOUT blocking the main process (the
  *  old path was a spawnSync per agent, up to 10s each, one after another).
  *  Resolves when taskkill exits. No-op elsewhere. */
 export function killTreeAsync(pid: number): Promise<void> {
   if (process.platform !== 'win32' || !Number.isInteger(pid) || pid <= 0) return Promise.resolve();
+  pendingTreeKills.add(pid);
   return new Promise<void>((resolveDone) => {
     const run = (): void => {
+      // Already hard-killed by flushPendingTreeKills (app quit): don't taskkill
+      // a pid that may since belong to someone else.
+      if (!pendingTreeKills.has(pid)) { treeKillQueue.shift()?.(); resolveDone(); return; }
       runningTreeKills++;
       let finished = false;
       const done = (): void => {
         if (finished) return;
         finished = true;
         runningTreeKills--;
+        pendingTreeKills.delete(pid);
         treeKillQueue.shift()?.();
         resolveDone();
       };
@@ -157,16 +164,27 @@ export function killTreeAsync(pid: number): Promise<void> {
   });
 }
 
+/** Windows app quit: synchronously tree-kill every pid still queued in (or
+ *  running through) killTreeAsync. kill() removes the session before its
+ *  taskkill runs, so killAll never sees it, and with 4 at a time the queue can
+ *  outlive the process when several agents were fired just before quit. */
+export function flushPendingTreeKills(): void {
+  const pids = [...pendingTreeKills];
+  pendingTreeKills.clear();
+  for (const pid of pids) hardKillTree(pid);
+}
+
 /** Stop a pty-hosted CLI and everything it started (MCP servers, `npx`
  *  wrappers, browsers). Windows kills the tree FIRST, while it is intact:
  *  closing ConPTY first ends the root, and a `taskkill /T` that runs after
  *  that cannot find the children any more — that is how fired agents left
  *  their MCP servers running. POSIX closes the pty (SIGHUP), then
- *  ensureKilled sweeps the group and any descendant that left it. */
-export function killPtyTree(proc: { pid: number; kill: () => void }): void {
+ *  ensureKilled sweeps the group and any descendant that left it. Also fits a
+ *  plain child_process (its kill() is SIGTERM). */
+export function killPtyTree(proc: { pid?: number; kill: () => void }): void {
   const pid = proc.pid;
   if (process.platform === 'win32') {
-    void killTreeAsync(pid).finally(() => { try { proc.kill(); } catch { /* already gone */ } });
+    void killTreeAsync(pid ?? 0).finally(() => { try { proc.kill(); } catch { /* already gone */ } });
     return;
   }
   try { proc.kill(); } catch { /* already gone */ }

@@ -20,6 +20,7 @@ import {
 import {
   type ComponentProps,
   Suspense,
+  memo,
   useCallback,
   useEffect,
   useMemo,
@@ -464,6 +465,36 @@ function CameraRig({ target }: { target: [number, number, number] }) {
 // `useAgentTick()` is the scene-side consumer of derived office state. Upstream modules decide
 // which room an agent should prefer; this hook turns those holds plus authored furniture into
 // concrete targets, paths, and per-frame actor motion.
+// DevLabs: idle agents also hang out around the kitchen and cafeteria tables.
+const SOCIAL_FURNITURE_TYPES = [
+  "couch",
+  "couch_v",
+  "beanbag",
+  "coffee_machine",
+  "water_cooler",
+  "fridge",
+  "vending",
+  "round_table",
+];
+const AWAY_FURNITURE_TYPES = ["couch", "couch_v", "beanbag"];
+
+const deriveFurnitureLists = (source: FurnitureItem[]) => {
+  const socialFurniture = source.filter((item) =>
+    SOCIAL_FURNITURE_TYPES.includes(item.type),
+  );
+  return {
+    source,
+    smsBoothItem: source.find((item) => item.type === "sms_booth") ?? null,
+    phoneBoothItem: source.find((item) => item.type === "phone_booth") ?? null,
+    socialFurniture,
+    coffeeMachines: source.filter((item) => item.type === "coffee_machine"),
+    awayFurniture: socialFurniture.filter((item) =>
+      AWAY_FURNITURE_TYPES.includes(item.type),
+    ),
+  };
+};
+type FurnitureLists = ReturnType<typeof deriveFurnitureLists>;
+
 function useAgentTick(
   agents: SceneActor[],
   deskLocations: { x: number; y: number }[],
@@ -488,6 +519,7 @@ function useAgentTick(
   standupMeeting: StandupMeeting | null = null,
 ) {
   const renderAgentsRef = useRef<RenderAgent[]>([]);
+  const furnitureListsRef = useRef<FurnitureLists | null>(null);
   const renderAgentLookupRef = useRef<Map<string, RenderAgent>>(new Map());
   const deskByAgentRef = useRef<Map<string, number>>(new Map());
   const gymByAgentRef = useRef<Map<string, number>>(new Map());
@@ -1390,29 +1422,17 @@ function useAgentTick(
     const grid = getNavGrid();
     const now = Date.now();
     const furnitureItems = furnitureRef.current ?? [];
-    const smsBoothItem =
-      furnitureItems.find((item) => item.type === "sms_booth") ?? null;
-    const phoneBoothItem =
-      furnitureItems.find((item) => item.type === "phone_booth") ?? null;
-    // DevLabs: idle agents also hang out around the kitchen and cafeteria tables.
-    const socialFurniture = furnitureItems.filter((item) =>
-      [
-        "couch",
-        "couch_v",
-        "beanbag",
-        "coffee_machine",
-        "water_cooler",
-        "fridge",
-        "vending",
-        "round_table",
-      ].includes(item.type),
-    );
-    const coffeeMachines = furnitureItems.filter(
-      (item) => item.type === "coffee_machine",
-    );
-    const awayFurniture = socialFurniture.filter((item) =>
-      ["couch", "couch_v", "beanbag"].includes(item.type),
-    );
+    // Derived lists only change with the furniture array, not every tick.
+    if (furnitureListsRef.current?.source !== furnitureItems) {
+      furnitureListsRef.current = deriveFurnitureLists(furnitureItems);
+    }
+    const {
+      smsBoothItem,
+      phoneBoothItem,
+      socialFurniture,
+      coffeeMachines,
+      awayFurniture,
+    } = furnitureListsRef.current;
     const moved = renderAgentsRef.current.map((agent) => {
       const isJanitor = "role" in agent && agent.role === "janitor";
       if (isJanitor && agent.janitorPauseUntil !== undefined) {
@@ -1913,7 +1933,7 @@ const buildInitialFurnitureLayout = (
     ),
   ), storageNamespace);
 
-export function RetroOffice3D({
+export const RetroOffice3D = memo(function RetroOffice3D({
   agents,
   officeCenterSignal = 0,
   animationState = null,
@@ -6852,4 +6872,4 @@ export function RetroOffice3D({
       `}</style>
     </div>
   );
-}
+});

@@ -392,6 +392,25 @@ test('reset cleanup removes only exposed DevLabs rollouts', (t) => {
   assert.equal(fs.readFileSync(personal, 'utf8'), 'personal\n', 'reset touched a personal Codex session');
 });
 
+test('floor reset cleanup finds exposed rollouts in the staged hive', (t) => {
+  const { harness } = isolatedHomes(t);
+  const hive = new HiveManager(() => harness);
+  hive.ensureHive();
+  const agentDir = path.join(harness, 'hive', 'agents', 'a1');
+  const isolated = path.join(agentDir, '.codex', 'sessions');
+  fs.mkdirSync(isolated, { recursive: true });
+  fs.writeFileSync(path.join(isolated, 'rollout-atmt.jsonl'), 'atmt\n', 'utf8');
+  hive.installCodexHooks(agentDir, 'a1');
+  const exposed = fs.realpathSync(isolated);
+
+  // The floor reset moves hive/ away before cleanup; the live root is empty then.
+  const { stageFloorData } = loadTs('src/main/floorBackup.ts');
+  const stage = stageFloorData(harness);
+  hive.removeExposedCodexData(path.join(stage, 'hive'));
+
+  assert.equal(fs.existsSync(exposed), false, 'floor reset left DevLabs rollout data in ~/.codex');
+});
+
 test('Gemini gets isolated lifecycle settings and an interactive protocol seed', async (t) => {
   const home = tmpHome();
   t.after(() => fs.rmSync(home, { recursive: true, force: true }));

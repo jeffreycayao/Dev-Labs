@@ -8,7 +8,7 @@ import { PtyTerminalView } from './PtyTerminalView';
 import { terminalInstanceKey } from './terminalRecovery';
 import { MessageQueueComposer } from './MessageQueueComposer';
 import { CommandCenterPanel } from './CommandCenterPanel';
-import { disposeTerminal } from './terminalPool';
+import { fireAgent } from './fireAgent';
 import { SidebarTabs } from './SidebarTabs';
 import { ThreadsPanel } from './ThreadsPanel';
 import { ToolWaterfall } from './ToolWaterfall';
@@ -75,7 +75,6 @@ export function AgentDetailPanel({ agent }: AgentDetailPanelProps) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const archiveAgent = useStore(s => s.archiveAgent);
   const updateAgent = useStore(s => s.updateAgent);
   const renameAgent = useStore(s => s.renameAgent);
   const setFullscreen = useStore(s => s.setFullscreen);
@@ -115,20 +114,7 @@ export function AgentDetailPanel({ agent }: AgentDetailPanelProps) {
     }
   };
 
-  const onKill = async () => {
-    if (!confirm(t('agentDetail.killConfirm', { name: agent.name }))) return;
-    if (agent.ptyId) {
-      const result = await window.cth.killPty(agent.ptyId);
-      if (!result.ok && !/^no pty:/.test(result.error ?? '')) {
-        alert(result.error ?? 'Could not fire the agent. Try again.');
-        return;
-      }
-    }
-    const fired = await window.cth.hiveSetArchived(agent.id, true);
-    if (!fired.ok) { alert(fired.error ?? 'Could not fire the agent. Try again.'); return; }
-    if (agent.ptyId) disposeTerminal(agent.ptyId);
-    archiveAgent(agent.id);
-  };
+  const onKill = () => fireAgent(agent, t);
 
   return (
     <PixelPanel

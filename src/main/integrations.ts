@@ -172,9 +172,12 @@ export function setSecret(secretRef: string, plaintext: string): { ok: boolean; 
 
 /** Decrypt a secret. MAIN-INTERNAL ONLY — never expose this over IPC. Returns
  *  undefined if absent or undecryptable (the broker maps that to 503 no_secret).
- *  Throws SecretOriginMismatchError when an integration key is read while the
- *  record's baseUrl points at a different origin than the one it was saved for. */
-export function getSecret(secretRef: string | undefined): string | undefined {
+ *  Throws SecretOriginMismatchError when an integration key's sealed origin is not
+ *  the one it is about to be sent to. Callers that SEND the key must pass
+ *  `sendOrigin` = the origin of the exact URL they will request: re-reading
+ *  config.json here would let an agent swap baseUrl between the caller's read
+ *  and this one. Without it, the record's current baseUrl is used (display only). */
+export function getSecret(secretRef: string | undefined, sendOrigin?: string): string | undefined {
   if (!secretRef) return undefined;
   const cipher = readSecretBlob()[secretRef];
   if (!cipher) return undefined;
@@ -193,8 +196,8 @@ export function getSecret(secretRef: string | undefined): string | undefined {
   const nl = plain.indexOf('\n', BOUND.length);
   const origin = plain.slice(BOUND.length, nl);
   if (isIntegrationRef(secretRef)) {
-    const rec = listRecords().find((r) => secretRefFor(r.id) === secretRef);
-    if (!rec || originOf(rec.baseUrl) !== origin) throw new SecretOriginMismatchError();
+    const target = sendOrigin ?? originOf(listRecords().find((r) => secretRefFor(r.id) === secretRef)?.baseUrl);
+    if (!target || target !== origin) throw new SecretOriginMismatchError();
   }
   return plain.slice(nl + 1);
 }

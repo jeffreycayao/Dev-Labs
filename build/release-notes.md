@@ -1,5 +1,3 @@
-- Ramon stops repeating floor activity in voice.
-- Damaged task lists are never wiped.
-- Costs count each Claude reply once.
-- Connector keys only go to their saved address.
-- Smoother office, safer agent checks.
+- Security fix for connector keys.
+- Keys go only to the exact saved address.
+- Includes all v4.8.0 fixes and voice updates.

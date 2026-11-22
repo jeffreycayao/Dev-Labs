@@ -192,6 +192,10 @@ test('#C an integration key is bound to the origin it was saved for', async (t) 
   edit('https://api.example.com/other', { secretRef: 'apikey:demo' });
   assert.equal(integrations.getRecord('bound').secretRef, 'int:bound');
   assert.equal(integrations.getSecret('int:bound'), 'k1', 'a path change on the same origin keeps the key');
+  // Race: config.json now shows the real origin again, but the caller is about to send
+  // to the attacker's origin it read a moment earlier. The send origin decides.
+  assert.throws(() => integrations.getSecret('int:bound', 'https://evil.example'), (e) => e.code === 'origin_mismatch');
+  assert.equal(integrations.getSecret('int:bound', 'https://api.example.com'), 'k1');
 });
 
 test('#C legacy unbound integration keys are bound at startup', () => {

@@ -4,6 +4,10 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.8.1 — 2026-11-22
+
+- **Security: closed a gap in the connector key check.** v4.8.0 sealed each key to its address, but checked it by reading `config.json` a second time. An agent that swapped the address back and forth between the two reads could still get the key sent to its own server. The key is now checked against the exact address the request goes to. For contributors: `getSecret(ref, sendOrigin)` in `src/main/integrations.ts`; the broker and `integrations:test` pass the upstream URL's origin (test in `test/main-audit-fixes.test.cjs`).
+
 ## v4.8.0 — 2026-11-22
 
 - **Fixed: a damaged task list or agent list is no longer wiped.** If `tasks.json` or `registry.json` had a typo (for example after a hand edit) or grew past 4 MB, the next save quietly replaced it with an almost empty file. Now the app refuses to save over a file it can't read, logs it, and leaves your data as it was.

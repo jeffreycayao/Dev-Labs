@@ -75,9 +75,10 @@ export interface IntegrationBrokerDeps {
   isModelRoute?: (id: string) => boolean;
   /** Resolve an integration record by id (injected — the registry). */
   getRecord: (id: string) => IntegrationRecord | undefined;
-  /** Decrypt a secret by ref (injected — the secret store). Main-internal. May throw an
-   *  error with code 'origin_mismatch' (answered 409) when the key was saved for another origin. */
-  getSecret: (secretRef: string | undefined) => string | undefined;
+  /** Decrypt a secret by ref (injected — the secret store). Main-internal. `sendOrigin` is
+   *  the origin of the exact upstream URL; it may throw an error with code 'origin_mismatch'
+   *  (answered 409) when the key was saved for another origin. */
+  getSecret: (secretRef: string | undefined, sendOrigin?: string) => string | undefined;
 }
 
 /** True for IPv4 loopback (127.0.0.0/8) and IPv6 ::1 (incl. v4-mapped). Mirrors slack.ts. */
@@ -245,7 +246,8 @@ export class IntegrationBroker {
     let secret: string | undefined;
     if (authTypeNeedsSecret(rec.authType)) {
       try {
-        secret = this.deps.getSecret(rec.secretRef);
+        // Bound to the URL we are about to call, not a fresh read of config.json.
+        secret = this.deps.getSecret(rec.secretRef, upstream.origin);
       } catch (e) {
         // The store refuses a key whose saved origin differs from rec.baseUrl's.
         if ((e as { code?: string })?.code === 'origin_mismatch') {

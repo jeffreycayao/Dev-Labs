@@ -3665,7 +3665,7 @@ ipcMain.handle('integrations:test', async (_evt, payload: unknown) => {
   const target = resolveUpstreamUrl(rec.baseUrl, typeof p.path === 'string' ? p.path : '');
   if (!target) return { ok: false, error: 'path escapes the integration baseUrl', code: 'bad_request' };
   let secret: string | undefined;
-  try { secret = integrations.getSecret(rec.secretRef); }
+  try { secret = integrations.getSecret(rec.secretRef, target.origin); }
   catch (e) { return { ok: false, error: e instanceof Error ? e.message : String(e), code: 'origin_mismatch' }; }
   const headers = buildAuthHeaders(rec.authType, rec.authHeader, secret);
   try {

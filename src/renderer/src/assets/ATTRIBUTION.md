@@ -32,6 +32,6 @@ reading old commits or an old copy of this file, that is the change you are look
 
 ## Tiled map
 
-`maps/office.tmj` and `maps/brooklyn99.tmj` are Tiled JSON maps built on the LimeZu tilesets
-above. Both are imported by `themeRegistry.ts`; a map that nothing imports is not shipped, and
-should be deleted rather than left to imply an asset is in use.
+The old 2D Tiled maps (`maps/office.tmj`, `maps/brooklyn99.tmj`) and their generators
+(`tools/gen-b99-map.cjs`, `tools/mapgen/`) were deleted once nothing imported them. The office
+is now the 3D scene.

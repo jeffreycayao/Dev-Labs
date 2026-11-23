@@ -82,6 +82,9 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
   let ready = false;
   let turnUsage: Record<string, unknown> | null = null;
   let turnDone = false;
+  // The current turn already ended by barge-in; a trailing turnComplete for it
+  // must not open a second billing slot.
+  let endedByInterrupt = false;
   let muted = false;
   // Gemini treats any clientContent as a cut-in: sent mid-answer it interrupts
   // Ramon and he starts over. Silent context waits here until his turn ends.
@@ -237,10 +240,12 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
         if (sc.modelTurn) modelTurnOpen = true;
         // A new turn's audio means the last turn's usage isn't coming: don't
         // let its stale turnDone bill this turn's first partial total.
-        if (sc.modelTurn && !sc.turnComplete) turnDone = false;
+        if (sc.modelTurn && !sc.turnComplete && !sc.interrupted) { turnDone = false; endedByInterrupt = false; }
         for (const p of sc.modelTurn?.parts ?? []) if (p.inlineData?.data) play(fromBase64(p.inlineData.data));
         if (sc.turnComplete || sc.interrupted) { modelTurnOpen = false; flushSilent(); }
-        if (sc.turnComplete) { o.onActivity(); turnDone = true; }
+        // An interrupted turn still cost tokens: it ends the turn for billing too.
+        if (sc.interrupted) { turnDone = true; endedByInterrupt = true; }
+        if (sc.turnComplete) { o.onActivity(); if (!endedByInterrupt) turnDone = true; }
       }
       // usageMetadata may ride several messages of one turn as a running total,
       // so keep only the latest and bill it once per turn (when the turn has

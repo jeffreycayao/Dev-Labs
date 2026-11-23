@@ -3,7 +3,7 @@
  * pure function: this exact translation silently killed real workers for days
  * while reporting success, which is what earned it a unit test.
  */
-import { autoModeFlagForProvider, hasAutoModeStance, inferAgentProvider } from '../shared/agentProvider';
+import { autoModeFlagForProvider, commandBinary, hasAutoModeStance, inferAgentProvider } from '../shared/agentProvider';
 import { tokenizeCommand } from '../shared/commandLine';
 
 export interface WorkerLaunch {
@@ -13,6 +13,9 @@ export interface WorkerLaunch {
   args: string[];
   /** The full effective command line, for display and floor cards. */
   command: string;
+  /** True when the request named its own command (untrusted, allowlisted);
+   *  false when it fell back to the user's configured default (trusted). */
+  fromRequest: boolean;
 }
 
 export function buildWorkerLaunch(opts: {
@@ -25,10 +28,10 @@ export function buildWorkerLaunch(opts: {
   /** The app's auto (skip-permissions) setting. */
   autoMode: boolean;
 }): WorkerLaunch {
-  let command =
-    typeof opts.requestCommand === 'string' && opts.requestCommand.trim()
-      ? opts.requestCommand.trim()
-      : (opts.defaultCommand ?? 'claude');
+  const fromRequest = typeof opts.requestCommand === 'string' && !!opts.requestCommand.trim();
+  let command = fromRequest
+    ? (opts.requestCommand as string).trim()
+    : (opts.defaultCommand ?? 'claude');
   // Inherit the app's auto (skip-permissions) mode when the request takes no
   // stance of its own: a headless worker has no human to click through tool
   // prompts, so without the flag it stalls at the first ask until the idle
@@ -59,15 +62,18 @@ export function buildWorkerLaunch(opts: {
   const model =
     typeof opts.requestModel === 'string' && opts.requestModel.trim() ? opts.requestModel.trim() : '';
   const args = [...flags, ...(model && !flags.includes('--model') ? ['--model', model] : [])];
-  return { bin, args, command };
+  return { bin, args, command, fromRequest };
 }
 
 /** May a spawn-request start this executable? Only a known agent CLI
- *  (`claude`, `codex`, `cursor-agent`, …), bare or as an absolute path whose
- *  file name is one, with at most an .exe/.cmd suffix. A shell, `node -e`, or
- *  any other program is refused: the request file is agent-reachable input. */
+ *  (`claude`, `codex`, `cursor-agent`, …) by bare name, looked up on PATH like
+ *  the app does. A path is refused outright — `/tmp/claude` is any program — as
+ *  is a shell, `node -e`, or anything else: the request file is agent-reachable
+ *  input. Applies only to a command the request names; the user's own
+ *  configured default is trusted. */
 export function isAllowedWorkerBin(bin: string): boolean {
-  const leaf = bin.split(/[\\/]/).pop() ?? '';
-  const m = /^([A-Za-z0-9_-]+)(?:\.exe|\.cmd)?$/i.exec(leaf);
-  return !!m && inferAgentProvider(m[1]) !== 'custom';
+  // shortcut: a path-qualified bin is refused even when it is the PATH copy; compare resolved paths if anyone needs it
+  if (/[\\/\s]/.test(bin)) return false;
+  const name = commandBinary(bin);
+  return /^[a-z0-9_-]+$/.test(name) && inferAgentProvider(name) !== 'custom';
 }

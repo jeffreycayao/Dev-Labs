@@ -3,7 +3,8 @@ import { useStore, type Agent } from '@/store/store';
 import { disposeTerminal } from './terminalPool';
 
 /** The UI "fire" button (agent panel and focus mode): confirm, kill the PTY,
- *  archive in the hive, then free the pooled xterm and drop the agent.
+ *  archive in the hive, then free the pooled xterm and drop the agent (even
+ *  when the archive save fails — it's reported, not left half-fired).
  *  archiveAgent re-homes focus mode to the next agent, so callers must not
  *  clear fullscreen themselves. */
 export async function fireAgent(agent: Pick<Agent, 'id' | 'name' | 'ptyId'>, t: TFunction): Promise<void> {
@@ -15,8 +16,10 @@ export async function fireAgent(agent: Pick<Agent, 'id' | 'name' | 'ptyId'>, t: 
       return;
     }
   }
+  // The terminal is already stopped, so the card goes even if the registry
+  // save fails; the error (registry.json path + why) tells the user what to fix.
   const fired = await window.cth.hiveSetArchived(agent.id, true);
-  if (!fired.ok) { alert(fired.error ?? 'Could not fire the agent. Try again.'); return; }
   if (agent.ptyId) disposeTerminal(agent.ptyId);
   useStore.getState().archiveAgent(agent.id);
+  if (!fired.ok) alert(`${agent.name} was stopped, but the fire wasn't saved: ${fired.error ?? 'unknown error'}`);
 }

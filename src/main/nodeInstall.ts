@@ -142,7 +142,8 @@ export async function resolveNodeInstaller(
     if (!indexRes.ok) return null;
     const index = JSON.parse(await indexRes.text()) as NodeDistEntry[];
     const lts = pickLatestLts(index);
-    if (!lts) return null;
+    // The version is spliced into shell commands and the URL — accept only `vN.N.N`.
+    if (!lts || !/^v\d+\.\d+\.\d+$/.test(lts.version)) return null;
 
     const artifact = nodeArtifactFor(lts.version, platform, arch);
     if (!artifact) return null;
@@ -169,9 +170,8 @@ export async function resolveNodeInstaller(
 /** The visible install script: download → VERIFY → install, aborting on any step.
  *
  *  POSIX form is newline-separated statements for `$SHELL -lc`. Windows form is
- *  ONE `&`-chained cmd.exe line with NO double quotes — it is wrapped verbatim in
- *  `cmd /d /s /c "<script>"`, where a single embedded quote would end the command
- *  line early and execute the remainder as garbage. */
+ *  ONE `&`-chained cmd.exe line, wrapped verbatim in `cmd /d /s /c "<script>"`.
+ *  `/s` strips only the outer quote pair, so inner quotes must stay balanced. */
 export function buildNodeInstallScript(installer: NodeInstaller, platform: string): string[] {
   const { version, url, sha256, file } = installer;
 
@@ -179,17 +179,21 @@ export function buildNodeInstallScript(installer: NodeInstaller, platform: strin
     // certutil is the only hashing tool guaranteed present; `findstr` does the
     // compare because cmd has no string equality on command output. msiexec's
     // own UAC prompt is the elevation — we never call it silently.
-    const f = `%TEMP%\\${file}`;
+    // Each `if` is parenthesized: a bare `if errorlevel 1 exit /b 1 & next` swallows
+    // every later `&` step into its body, so nothing after the download ever ran.
+    // The temp path is quoted for user names with spaces; balanced quotes survive
+    // `/s`, which strips only the outermost pair.
+    const f = `"%TEMP%\\${file}"`;
     return [
       `echo   Downloading Node.js ${version} ^(official installer^)...`,
       `curl -fSL ${url} -o ${f}`,
-      `if errorlevel 1 exit /b 1`,
+      `(if errorlevel 1 exit /b 1)`,
       `echo   Verifying checksum...`,
       `certutil -hashfile ${f} SHA256 | findstr /i /c:${sha256} >nul`,
-      `if errorlevel 1 (echo   [x] CHECKSUM MISMATCH - refusing to install ^& exit /b 1)`,
+      `(if errorlevel 1 (echo   [x] CHECKSUM MISMATCH - refusing to install & exit /b 1))`,
       `echo   Installing - approve the Windows prompt if it appears...`,
       `msiexec /i ${f} /passive /norestart`,
-      `if errorlevel 1 exit /b 1`,
+      `(if errorlevel 1 exit /b 1)`,
       `set PATH=%ProgramFiles%\\nodejs;%PATH%`
     ];
   }

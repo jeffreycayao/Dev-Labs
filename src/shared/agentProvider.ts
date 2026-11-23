@@ -632,7 +632,7 @@ export function canReceiveInbox(provider: AgentProvider | undefined): boolean {
 }
 
 /** The bare executable from a command string ('agy --model x' → 'agy'). */
-function commandBinary(command: string | undefined): string {
+export function commandBinary(command: string | undefined): string {
   const first = (command ?? '').trim().split(/\s+/)[0] ?? '';
   // strip a path + extension so 'C:\...\agy.exe' and '/usr/bin/claude' both map
   const leaf = first.split(/[\\/]/).pop() ?? first;

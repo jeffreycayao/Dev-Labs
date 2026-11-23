@@ -108,6 +108,20 @@ test('poller refuses to start without channels, a token, or anyone allowed', asy
   assert.match((await nobody.start()).error, /user ids allowed/);
 });
 
+test('the default team allowlist admits accepted members only, not pending invitees', async () => {
+  const fake = fakeDiscord([]);
+  const inner = fake.fetchImpl;
+  const team = { members: [
+    { membership_state: 2, user: { id: '222222222222222222' } },
+    { membership_state: 1, user: { id: '333333333333333333' } } // invited, not accepted
+  ] };
+  fake.fetchImpl = async (url, init) => (String(url).includes('/oauth2/') ? new Response(JSON.stringify({ owner: { id: USER }, team }), { status: 200 }) : inner(url, init));
+  const p = new DiscordPoller({ getToken: () => TOKEN, channelIds: [CH], allowedUserIds: [], onMessage: () => {}, intervalMs: 60_000, fetchImpl: fake.fetchImpl });
+  await p.start();
+  p.stop();
+  assert.deepEqual(p.allowed, ['222222222222222222', USER]);
+});
+
 test('posts reply to the message and never ping anyone', async () => {
   const fake = fakeDiscord([]);
   const r = await postDiscordMessage({ token: TOKEN, channelId: CH, content: 'Received', replyTo: '100000000000000001', fetchImpl: fake.fetchImpl });

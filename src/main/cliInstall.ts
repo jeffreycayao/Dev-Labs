@@ -73,7 +73,7 @@ export function buildMissingCliScript(
 
   if (platform === 'win32') {
     // ONE cmd.exe line: `&` chains steps, `^&` prints a literal ampersand, and the
-    // script carries NO double-quotes (it is wrapped verbatim in `/d /s /c "..."`).
+    // script keeps any double-quotes balanced (it is wrapped verbatim in `/d /s /c "..."`).
     // We avoid `if errorlevel` branching (untestable here) — a combined success/
     // failure hint after the install is robust and satisfies the manual-fallback DoD.
     const parts: string[] = ['echo.', `echo ${rule}`, `echo   Engine CLI not found:  ${safeBin}`, 'echo.'];

@@ -67,9 +67,15 @@ export function useOfficeMonitors(agents: readonly Agent[]): {
     return () => { live = false; };
   }, [monitorAgentId, lastFile]);
 
+  // Keyed on only the fields the monitor shows, so other agent updates (token
+  // counts, etc.) keep this object's identity and RetroOffice3D's memo holds.
+  const agentsKey = JSON.stringify(agents.map((a) => [
+    a.id, a.name, a.status, a.action, a.project, a.cwd,
+    a.lastPrompt?.slice(0, 280), a.recentAssistantText?.slice(0, 400)
+  ]));
   const monitorByAgentId = useMemo(() => {
     const out: Record<string, OfficeDeskMonitor> = {};
-    for (const a of agents) {
+    for (const a of agentsRef.current) {
       const evs = events[a.id] ?? [];
       const busy = BUSY.has(a.status);
       const entries: OfficeDeskMonitorEntry[] = evs.slice(-8).map((e) => ({
@@ -102,7 +108,8 @@ export function useOfficeMonitors(agents: readonly Agent[]): {
       };
     }
     return out;
-  }, [agents, events, file]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- agentsKey stands in for agents
+  }, [agentsKey, events, file]);
 
   return { monitorAgentId, monitorByAgentId, onMonitorSelect: setMonitorAgentId };
 }

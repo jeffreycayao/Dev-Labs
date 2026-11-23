@@ -577,30 +577,11 @@ export function SettingsModal({ config, onClose, initialSection }: SettingsModal
     (config as HarnessConfig).realtimeIdleDisconnectMs ?? 180_000
   );
 
-  // Re-seed every editable field from the on-disk config when the modal opens.
-  // App's `config` prop is loaded once and never refreshed after a save, so
-  // without this the saved budget / velocity / slack values show blank on reopen.
+  // Live status the config doesn't carry. Editable fields seed from the
+  // `config` prop: this modal mounts on open and App refreshes that prop on
+  // every save (config:changed), so no getConfig() re-seed is needed here.
   useEffect(() => {
     let alive = true;
-    window.cth.getConfig().then((c) => {
-      if (!alive) return;
-      const cc = c as BreakerCfgView;
-      setNotifications(cc.notifications === true);
-      setAgentBudget(cc.costCapTokens != null ? String(cc.costCapTokens) : '');
-      setVelocityCeiling(cc.circuitBreaker?.tokenVelocityPerMin != null ? String(cc.circuitBreaker.tokenVelocityPerMin) : '');
-      setSlackEnabled(cc.slackEnabled ?? false);
-      setSlackSecret(cc.slackSigningSecret ?? '');
-      setSlackBotToken(cc.slackBotToken ?? '');
-      setSlackChannel(cc.slackChannelId ?? '');
-      setSlackPort(String(cc.slackPort ?? 3847));
-      setSlackProactivePosting(cc.slackProactivePosting ?? false);
-      const kgOn = (cc as { knowledgeGraph?: { enabled?: boolean } }).knowledgeGraph?.enabled === true;
-      setKgEnabled(kgOn);
-      setFreeflowEnabled(cc.freeflowEnabled !== false);
-      setGroqKey(cc.groqApiKey ?? '');
-      setFreeflowModel(cc.freeflowModel ?? 'whisper-large-v3-turbo');
-      setIdleDisconnectMs((c as HarnessConfig).realtimeIdleDisconnectMs ?? 180_000);
-    }).catch(() => { /* keep prop-seeded values */ });
     window.cth.kgStatus().then((s) => { if (alive) setKgDocCount(s.docCount); })
       .catch(() => { /* status unavailable */ });
     // Hydrate live connection state + the persisted Request URL: the

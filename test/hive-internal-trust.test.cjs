@@ -212,3 +212,16 @@ test('global hook files naming another hive are left alone', async (t) => {
   hive.ensureHive();
   assert.equal(fs.readFileSync(grok, 'utf8'), theirs);
 });
+
+test('Gemini, Pi and OpenCode load their bridge code from hive-internal, not the hive', async (t) => {
+  const { home, root, hive } = setup(t);
+  const envKey = { gemini: 'GEMINI_CLI_SYSTEM_SETTINGS_PATH', pi: 'PI_CODING_AGENT_DIR', opencode: 'OPENCODE_CONFIG_DIR' };
+  for (const provider of Object.keys(envKey)) {
+    const id = `${provider}-1`;
+    const inj = await hive.ensureAgent({ id, name: provider, provider, cwd: path.join(home, 'proj') }, {});
+    const loaded = inj.env[envKey[provider]];
+    assert.equal(typeof loaded, 'string', `${provider}: no ${envKey[provider]}`);
+    assert.ok(inside(path.join(home, 'hive-internal', 'agents', id), loaded), `${provider}: ${loaded}`);
+    assert.ok(!inside(root, loaded), `${provider}: bridge dir is agent-writable: ${loaded}`);
+  }
+});

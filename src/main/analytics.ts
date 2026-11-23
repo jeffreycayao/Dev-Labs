@@ -31,7 +31,7 @@
  * Deliberately free of any `electron` import (paths/version are injected via
  * init) so it can be smoke-tested as a plain Node module, like telemetry.ts.
  */
-import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, writeFileSync } from 'node:fs';
+import { closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { PostHog } from 'posthog-node';
@@ -183,6 +183,7 @@ export class Analytics {
   private common: Record<string, string> = {};
   /** Boot events held until onboarding finishes (see AnalyticsInitOptions.onboarded). */
   private held: Array<[string, Record<string, string>]> | null = null;
+  private firstRunPendingFile = '';
 
   /** Boot the client (no-op without a build-time key / with DNT set). Returns
    *  whether this boot minted a fresh install id (first run ever). */
@@ -231,15 +232,20 @@ export class Analytics {
       if (previous !== opts.appVersion) writeVersionStamp(opts.stateDir, opts.appVersion);
     }
 
+    // A first run whose onboarding wasn't finished that session stays pending on
+    // disk, so a quit before the wizard ends doesn't lose first_run for good.
+    this.firstRunPendingFile = join(opts.stateDir, 'telemetry-first-run-pending');
     const boot: Array<[string, Record<string, string>]> = [];
-    if (this.firstRun) boot.push(['first_run', {}]);
+    if (this.firstRun || existsSync(this.firstRunPendingFile)) boot.push(['first_run', {}]);
     if (transition) {
       const via = updateVia(readUpdaterLogTail(opts.stateDir), transition.to_version);
       boot.push(['update_applied', { ...transition, via }]);
     }
     boot.push(['app_launched', {}]);
-    if (opts.onboarded === false) this.held = boot;
-    else for (const [event, props] of boot) this.track(event, props);
+    if (opts.onboarded === false) {
+      this.held = boot;
+      if (this.firstRun) { try { writeFileSync(this.firstRunPendingFile, ''); } catch { /* best-effort */ } }
+    } else this.flush(boot);
   }
 
   /** Onboarding just finished: send the held boot events, which track() drops if
@@ -247,7 +253,12 @@ export class Analytics {
   flushHeld(): void {
     const held = this.held;
     this.held = null;
-    for (const [event, props] of held ?? []) this.track(event, props);
+    if (held) this.flush(held);
+  }
+
+  private flush(boot: Array<[string, Record<string, string>]>): void {
+    for (const [event, props] of boot) this.track(event, props);
+    try { rmSync(this.firstRunPendingFile, { force: true }); } catch { /* best-effort */ }
   }
 
   /** Live opt-in/out from Settings. Turning off stops sends instantly; nothing

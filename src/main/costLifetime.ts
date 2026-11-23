@@ -242,15 +242,3 @@ export class CostLedgerTotals {
     this.warm = false;
   }
 }
-
-/**
- * One-shot fold of a ledger already in memory. Used by tests and by any caller
- * that wants the number without holding an incremental reader.
- */
-export function lifetimeUsdFromLedger(text: string): Map<string, number> {
-  const t = new CostLedgerTotals();
-  // Reuse the exact same fold path so the two can never disagree.
-  (t as unknown as { consume(b: Buffer): void }).consume(Buffer.from(text.endsWith('\n') ? text : `${text}\n`));
-  (t as unknown as { recompute(): void }).recompute();
-  return t.all();
-}

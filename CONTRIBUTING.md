@@ -155,7 +155,6 @@ someone who has.
 | `src/main/` | Electron main process — PTYs (`pty.ts`), fs/git bridges, the hive (`hive.ts`, `hooks.ts`, `memory.ts`), config. |
 | `src/preload/` | Context-bridge IPC surface. |
 | `src/renderer/` | React UI, Pixi.js office scene (`scene/office/`), components, design system, stores. |
-| `tools/mapgen/` | Python helpers for building/rendering the Tiled office map. |
 
 See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the data-flow overview,
 the module by module layout, and the design system.

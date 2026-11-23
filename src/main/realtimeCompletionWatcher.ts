@@ -460,9 +460,3 @@ export function getCompletionWatcher(): RealtimeCompletionWatcher {
   }
   return _instance;
 }
-
-/** Test seam: drop the singleton so a fresh instance can be initialized. */
-export function __resetCompletionWatcherForTest(): void {
-  _instance?.stop();
-  _instance = null;
-}

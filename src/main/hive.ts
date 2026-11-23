@@ -572,6 +572,15 @@ export class HiveManager {
   private agentDir(id: string): string {
     return join(this.root()!, 'agents', id);
   }
+  /** `<home>/hive-internal/agents/<id>/<parts>` as real dirs: per-agent files a CLI
+   *  loads and RUNS (hook scripts, plugins, extensions). Under the agent's hive
+   *  folder any other sandboxed agent could rewrite them. `agentHiveDir` is the
+   *  `<root>/agents/<id>` path the spawn already has. */
+  private trustedAgentDir(agentHiveDir: string, ...parts: string[]): string {
+    const internal = this.internalDir()!;
+    mkdirSync(internal, { recursive: true });
+    return realDirs(internal, 'agents', basename(agentHiveDir), ...parts);
+  }
   /** IPC endpoint the cth-hook shim talks to (Phase 1 autonomy).
    *  On POSIX this is a Unix-domain socket file under the hive root. On Windows,
    *  Node's `net` IPC uses named pipes (a flat `\\.\pipe\` namespace, not the
@@ -2597,10 +2606,10 @@ export class HiveManager {
    *  settings across layers, so auth and user settings remain in their normal
    *  GEMINI_CLI_HOME while this trusted bridge stays isolated. */
   private installGeminiHooks(dir: string): string {
-    const home = join(dir, '.gemini-hive');
-    const settingsPath = join(home, 'system-settings.json');
+    let settingsPath = join(dir, '.gemini-hive', 'system-settings.json');
     try {
-      realDirs(dir, '.gemini-hive');
+      const home = this.trustedAgentDir(dir, '.gemini-hive');
+      settingsPath = join(home, 'system-settings.json');
       const shim = join(home, 'gemini-hook.cjs');
       writeFresh(shim, GEMINI_HOOK_SHIM);
       const hook = (name: string, matcher?: string) => ({
@@ -2853,11 +2862,12 @@ export class HiveManager {
    *  to confirm; this is written best-effort and wrapped so a wrong guess can never
    *  break the spawn. The renderer nudge is the guaranteed drain regardless. */
   private installPiHooks(dir: string, byok?: ByokGrant): string {
-    const home = join(dir, '.pi-agent');
+    let home = join(dir, '.pi-agent');
     try {
       // Pi discovers extensions under its agent dir; we write to the documented
       // `extensions/` location (and keep it isolated per agent).
-      const extDir = realDirs(dir, '.pi-agent', 'extensions');
+      home = this.trustedAgentDir(dir, '.pi-agent');
+      const extDir = realDirs(home, 'extensions');
       writeFresh(join(extDir, 'hive-bridge.js'), PI_EXTENSION);
       // A manifest so Pi auto-loads the extension on start (best-effort; harmless if
       // Pi ignores it). Kept minimal and hive-authored.
@@ -2890,8 +2900,9 @@ export class HiveManager {
    *  BYOK keys to confirm; written best-effort, wrapped so it can't break the spawn.
    *  The renderer idle inbox-wake nudge is the guaranteed drain fallback. */
   private installOpenCodePlugin(dir: string, theme?: 'light' | 'dark'): string {
-    const home = join(dir, '.opencode');
+    let home = join(dir, '.opencode');
     try {
+      home = this.trustedAgentDir(dir, '.opencode');
       // Theme: OpenCode's `system` theme keeps the terminal's own fg/bg (xterm's,
       // which already follows the app theme) and builds its greys from the
       // detected background, so it reads right on light AND dark. Written to
@@ -2899,7 +2910,6 @@ export class HiveManager {
       // there and migrate it; the migration skips when tui.json already exists).
       // Per-agent dir only, the user's ~/.config/opencode is never touched.
       if (theme) {
-        realDirs(dir, '.opencode');
         const choice = { theme: 'system' };
         writeFresh(join(home, 'tui.json'), JSON.stringify({ $schema: 'https://opencode.ai/tui.json', ...choice }, null, 2));
         writeFresh(join(home, 'opencode.json'), JSON.stringify({ $schema: 'https://opencode.ai/config.json', ...choice }, null, 2));
@@ -2913,7 +2923,7 @@ export class HiveManager {
       // nudge. Writing the same ~2KB file twice costs nothing, is idempotent, and
       // is correct whichever directory the installed OpenCode actually scans.
       for (const name of ['plugin', 'plugins']) {
-        writeFresh(join(realDirs(dir, '.opencode', name), 'hive-bridge.js'), OPENCODE_PLUGIN);
+        writeFresh(join(realDirs(home, name), 'hive-bridge.js'), OPENCODE_PLUGIN);
       }
     } catch (e) { console.error('[hive] installOpenCodePlugin failed:', e); }
     return home;

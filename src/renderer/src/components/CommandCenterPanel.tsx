@@ -377,7 +377,6 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
 
 function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number }; onOpenTerminal: () => void }) {
   const { t } = useTranslation();
-  const rtl = useRtl();
   const agents = useStore((s) => s.agents);
   const godName = agents.find((a) => a.isGod)?.name ?? 'the orchestrator';
   const select = useStore((s) => s.select);
@@ -400,9 +399,9 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
   // new agent spawn on this, so the picker marks it — otherwise the only entry
   // reading "default" was the CLI's, which is a different thing entirely.
   const [defaultModel, setDefaultModel] = useState<string | undefined>(undefined);
-  const [dispatchTo, setDispatchTo] = useState<string>(''); // '' = Ramon decides
-  const [dispatchText, setDispatchText] = useState('');
-  const [dispatchMsg, setDispatchMsg] = useState<string | null>(null);
+  // Prefill for the DispatchBox (task-card assign or issue assign). The box owns
+  // its own text so keystrokes don't re-render every agent card below.
+  const [boxSeed, setBoxSeed] = useState<{ text: string; seq: number; clearOwner?: boolean }>({ text: '', seq: 0 });
   // ── ISSUES section state ──
   const [issueRepo, setIssueRepo] = useState<string>('');
   const [issues, setIssues] = useState<GHIssue[]>([]);
@@ -423,7 +422,7 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
   // Seed the dispatch box from a task-card "assign" (keyed on seq so repeat
   // assigns re-prefill). seq === 0 is the untouched initial state — skip it.
   useEffect(() => {
-    if (seed.seq > 0) setDispatchText(seed.text);
+    if (seed.seq > 0) setBoxSeed((b) => ({ text: seed.text, seq: b.seq + 1 }));
   }, [seed.seq, seed.text]);
 
   // Restart an agent's PTY in place. `resume:true` reattaches its prior Claude
@@ -700,31 +699,6 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
     }
   };
 
-  // ALL human dispatch flows through the god — never directly into a worker's
-  // inbox. Direct dispatch bypassed the orchestrator's whole job: no 4-part
-  // contract, no card in tasks.json, no board awareness — and the old
-  // 'broadcast' DEFAULT sent the same task to every worker at once. A worker
-  // picked in the dropdown is forwarded as a SUGGESTION the god may follow.
-  const dispatch = async () => {
-    const body = dispatchText.trim();
-    if (!body) return;
-    const suggested = dispatchTo ? agents.find((a) => a.id === dispatchTo) : undefined;
-    const full = suggested
-      ? `${body}\n\n${t('commandCenter.dispatchSuggestion', { name: suggested.name, id: suggested.id })}`
-      : body;
-    const res = await window.cth.hiveSend(
-      { to: 'god', act: 'request', subject: t('commandCenter.taskFromHuman'), body: full },
-      'human'
-    );
-    setDispatchText('');
-    setDispatchMsg(res.ok
-      ? suggested
-        ? t('commandCenter.sentToWithSuggestion', { godName, name: suggested.name })
-        : t('commandCenter.sentToMichael', { godName })
-      : t('commandCenter.dispatchFailed', { error: res.error ?? '?' }));
-    setTimeout(() => setDispatchMsg(null), 4000);
-  };
-
   const fetchIssues = async () => {
     const repo = issueRepo || repos[0];
     if (!repo) { setIssuesError('No repo selected.'); return; }
@@ -748,8 +722,9 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
 
   const assignIssue = (issue: GHIssue) => {
     const body = (issue.body ?? '').slice(0, 200);
-    setDispatchText(`GitHub Issue #${issue.number}: ${issue.title}\n\n${body}\n\nURL: ${issue.url}`);
-    setDispatchTo(''); // Ramon decomposes and assigns — no more broadcast blasts
+    // clearOwner: Ramon decomposes and assigns — no more broadcast blasts
+    const text = `GitHub Issue #${issue.number}: ${issue.title}\n\n${body}\n\nURL: ${issue.url}`;
+    setBoxSeed((b) => ({ text, seq: b.seq + 1, clearOwner: true }));
   };
 
   // Set/clear one agent's token limit atomically in main. Renderer config objects
@@ -791,33 +766,8 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
 
   return (
     <Scroll>
-      <Section title={t('commandCenter.dispatchViaMichael', { godName: godName.toUpperCase() })}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <span style={{ fontFamily: 'var(--cth-font-display)', fontSize: 8, color: 'var(--cth-ink-500)', flexShrink: 0 }}>
-            {t('commandCenter.suggestedOwner')}
-          </span>
-          <Select value={dispatchTo} onChange={setDispatchTo}>
-            <option value="">{t('commandCenter.michaelDecides', { godName })}</option>
-            {agents.filter((a) => !a.isGod).map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </Select>
-        </div>
-        <textarea
-          dir={rtl ? 'auto' : undefined}
-          value={dispatchText}
-          onChange={(e) => setDispatchText(e.target.value)}
-          rows={2}
-          placeholder={t('commandCenter.dispatchPlaceholder', { godName })}
-          style={textareaStyle}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-          <PixelButton variant="primary" size="sm" onClick={dispatch} disabled={!dispatchText.trim()}>
-            {t('commandCenter.dispatch')}
-          </PixelButton>
-          {dispatchMsg && <span style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}>{dispatchMsg}</span>}
-        </div>
-      </Section>
+      <DispatchBox agents={agents} godName={godName} seed={boxSeed} />
+
 
       <Section title={t('commandCenter.agents')}>
         {agents.map((a) => {
@@ -1172,6 +1122,81 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
 }
 
 // ─── Archived agents — retained + flagged, kept off the floor ────────────────
+
+// The dispatch text box lives in its own component so typing only re-renders
+// this box, not the whole agent roster (charts + model pickers) in FloorTab.
+function DispatchBox({ agents, godName, seed }: {
+  agents: Agent[];
+  godName: string;
+  seed: { text: string; seq: number; clearOwner?: boolean };
+}) {
+  const { t } = useTranslation();
+  const rtl = useRtl();
+  const [dispatchTo, setDispatchTo] = useState<string>(''); // '' = Ramon decides
+  const [dispatchText, setDispatchText] = useState('');
+  const [dispatchMsg, setDispatchMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (seed.seq === 0) return;
+    setDispatchText(seed.text);
+    if (seed.clearOwner) setDispatchTo('');
+  }, [seed]);
+
+  // ALL human dispatch flows through the god — never directly into a worker's
+  // inbox. Direct dispatch bypassed the orchestrator's whole job: no 4-part
+  // contract, no card in tasks.json, no board awareness — and the old
+  // 'broadcast' DEFAULT sent the same task to every worker at once. A worker
+  // picked in the dropdown is forwarded as a SUGGESTION the god may follow.
+  const dispatch = async () => {
+    const body = dispatchText.trim();
+    if (!body) return;
+    const suggested = dispatchTo ? agents.find((a) => a.id === dispatchTo) : undefined;
+    const full = suggested
+      ? `${body}\n\n${t('commandCenter.dispatchSuggestion', { name: suggested.name, id: suggested.id })}`
+      : body;
+    const res = await window.cth.hiveSend(
+      { to: 'god', act: 'request', subject: t('commandCenter.taskFromHuman'), body: full },
+      'human'
+    );
+    setDispatchText('');
+    setDispatchMsg(res.ok
+      ? suggested
+        ? t('commandCenter.sentToWithSuggestion', { godName, name: suggested.name })
+        : t('commandCenter.sentToMichael', { godName })
+      : t('commandCenter.dispatchFailed', { error: res.error ?? '?' }));
+    setTimeout(() => setDispatchMsg(null), 4000);
+  };
+
+  return (
+    <Section title={t('commandCenter.dispatchViaMichael', { godName: godName.toUpperCase() })}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <span style={{ fontFamily: 'var(--cth-font-display)', fontSize: 8, color: 'var(--cth-ink-500)', flexShrink: 0 }}>
+          {t('commandCenter.suggestedOwner')}
+        </span>
+        <Select value={dispatchTo} onChange={setDispatchTo}>
+          <option value="">{t('commandCenter.michaelDecides', { godName })}</option>
+          {agents.filter((a) => !a.isGod).map((a) => (
+            <option key={a.id} value={a.id}>{a.name}</option>
+          ))}
+        </Select>
+      </div>
+      <textarea
+        dir={rtl ? 'auto' : undefined}
+        value={dispatchText}
+        onChange={(e) => setDispatchText(e.target.value)}
+        rows={2}
+        placeholder={t('commandCenter.dispatchPlaceholder', { godName })}
+        style={textareaStyle}
+      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+        <PixelButton variant="primary" size="sm" onClick={dispatch} disabled={!dispatchText.trim()}>
+          {t('commandCenter.dispatch')}
+        </PixelButton>
+        {dispatchMsg && <span style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}>{dispatchMsg}</span>}
+      </div>
+    </Section>
+  );
+}
 
 function ArchivedSection() {
   const { t } = useTranslation();

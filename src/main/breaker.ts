@@ -280,9 +280,11 @@ export class CircuitBreaker {
       for (const i of inputs) {
         const usd = i.sample?.usd ?? 0;
         total += usd;
-        if (!i.exempt && usd > max) { max = usd; topSpender = i.agentId; }
+        if (usd > max) { max = usd; topSpender = i.agentId; }
       }
-      if (total <= cfg.costCapUsd) topSpender = null; // under cap — nobody blamed
+      // Under cap, or the top spender is exempt (Ramon): nobody blamed — a worker
+      // is never stopped for spend that isn't its own.
+      if (total <= cfg.costCapUsd || inputs.some((i) => i.exempt && i.agentId === topSpender)) topSpender = null;
     }
 
     // Token cap (the user-facing budget): same floor-wide logic on total tokens.
@@ -292,9 +294,9 @@ export class CircuitBreaker {
       for (const i of inputs) {
         const tok = tokensOf(i.sample);
         total += tok;
-        if (!i.exempt && tok > max) { max = tok; topTokenSpender = i.agentId; }
+        if (tok > max) { max = tok; topTokenSpender = i.agentId; }
       }
-      if (total <= cfg.costCapTokens) topTokenSpender = null; // under cap
+      if (total <= cfg.costCapTokens || inputs.some((i) => i.exempt && i.agentId === topTokenSpender)) topTokenSpender = null;
     }
 
     for (const input of inputs) {

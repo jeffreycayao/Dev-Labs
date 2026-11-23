@@ -4,6 +4,17 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.8.2 — 2026-11-23
+
+- **Security: Gemini, OpenCode and Pi hook files moved out of the shared hive.** Any agent could rewrite them and run code outside its sandbox the next time that agent started. They now live in `hive-internal/agents/<id>`, which only the app can write.
+- **Fixed: the Windows Node installer stopped right after the download.** A `cmd.exe` quirk swallowed every later step, and a checksum mismatch printed a message instead of stopping. Each check is now its own step, and the temp path is quoted for user names with spaces.
+- **Fixed: workers were stopped because of Ramon's spending.** The biggest spender is now picked across everyone; if it's Ramon, no worker is stopped.
+- **Fixed: a damaged `registry.json` made agents impossible to fire.** Firing now stops the agent first and saves second, and shows the file's path and error if the save fails. A failed hive setup at spawn now shows a notification.
+- **Security: spawn requests can't name a program by full path,** so a planted `claude.cmd` is refused. Your own default command (for example `ccr code`) works again.
+- **Fixed:** Slack replies work after a restart (known threads are saved, kept 30 days); Discord's default allowlist skips people with a pending invite; the onboarding Finish button shows save errors; the first-run event survives quitting during onboarding; Gemini voice counts usage when you interrupt Ramon; a malformed Node version from nodejs.org is refused.
+- **Faster:** typing in Command Center no longer redraws every agent card, and the office skips redraws that change nothing.
+- **Removed** about 1,360 lines of unused code: the old 2D maps and map tools, `installSkill`, `realtimeCost.ts`, and two unused helpers.
+
 ## v4.8.1 — 2026-11-22
 
 - **Security: closed a gap in the connector key check.** v4.8.0 sealed each key to its address, but checked it by reading `config.json` a second time. An agent that swapped the address back and forth between the two reads could still get the key sent to its own server. The key is now checked against the exact address the request goes to. For contributors: `getSecret(ref, sendOrigin)` in `src/main/integrations.ts`; the broker and `integrations:test` pass the upstream URL's origin (test in `test/main-audit-fixes.test.cjs`).

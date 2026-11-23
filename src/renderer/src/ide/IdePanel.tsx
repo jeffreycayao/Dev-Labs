@@ -286,11 +286,14 @@ export function IdePanel() {
   // ─── Git status (changed files) ───────────────────────────────────────────
   const refreshStatus = useCallback(async () => {
     if (!root) { setIsRepo(false); return; }
-    const repo = await window.cth.gitIsRepo(root);
-    setIsRepo(repo);
-    if (!repo) { setStatus(null); return; }
-    const s = await window.cth.gitStatus(root);
-    if (!('error' in s)) setStatus(s as GitStatusT);
+    // Polled every 4s: a failed git call keeps the last status, never an unhandled rejection.
+    try {
+      const repo = await window.cth.gitIsRepo(root);
+      setIsRepo(repo);
+      if (!repo) { setStatus(null); return; }
+      const s = await window.cth.gitStatus(root);
+      if (!('error' in s)) setStatus(s as GitStatusT);
+    } catch { /* keep last status */ }
   }, [root]);
 
   useEffect(() => {

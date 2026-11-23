@@ -96,7 +96,7 @@ test('opencode: theme lands in the per agent config dir as the system theme', as
   );
   const dir = injection.env.OPENCODE_CONFIG_DIR;
   assert.ok(dir, 'OPENCODE_CONFIG_DIR is set');
-  assert.ok(dir.startsWith(path.join(home, 'hive', 'agents', 'oc-1')), 'per agent dir, never ~/.config');
+  assert.ok(dir.startsWith(path.join(home, 'hive-internal', 'agents', 'oc-1')), 'per agent dir, never ~/.config');
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'tui.json'), 'utf8')).theme, 'system');
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'opencode.json'), 'utf8')).theme, 'system');
   assert.equal(injection.env.COLORFGBG, '0;15');

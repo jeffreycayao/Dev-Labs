@@ -111,8 +111,9 @@ export class DiscordPoller {
       this.botName = me.username ?? '';
       this.allowed = [...this.opts.allowedUserIds];
       if (!this.allowed.length) {
-        const app = await api('GET', '/oauth2/applications/@me') as { owner?: { id?: string }; team?: { members?: { user?: { id?: string } }[] } | null };
-        const team = (app.team?.members ?? []).map((m) => m.user?.id);
+        const app = await api('GET', '/oauth2/applications/@me') as { owner?: { id?: string }; team?: { members?: { membership_state?: number; user?: { id?: string } }[] } | null };
+        // membership_state 2 = ACCEPTED; 1 = INVITED (a pending invitee must not get in).
+        const team = (app.team?.members ?? []).filter((m) => m.membership_state === 2).map((m) => m.user?.id);
         this.allowed = [...team, app.owner?.id].filter((id): id is string => !!id && id !== this.botId);
       }
       if (!this.allowed.length) return { ok: false, error: 'Add the Discord user ids allowed to start work.' };

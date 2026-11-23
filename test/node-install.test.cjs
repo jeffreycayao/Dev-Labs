@@ -162,11 +162,15 @@ test('posix script uses the hashing tool that platform actually ships', () => {
 test('the Windows install script survives cmd /d /s /c quoting', () => {
   const parts = buildNodeInstallScript(WIN_INSTALLER, 'win32');
   const line = parts.join(' & ');
-  // Wrapped verbatim in `cmd /d /s /c "<script>"` — one embedded quote truncates it.
-  assert.ok(!line.includes('"'), 'double quote would end the command line early');
+  // Wrapped verbatim in `cmd /d /s /c "<script>"` — /s strips only the outer pair,
+  // so inner quotes must be balanced (the temp path is quoted for spaces).
+  assert.equal((line.match(/"/g) ?? []).length % 2, 0, 'unbalanced double quote');
+  assert.match(line, /-o "%TEMP%\\node-v24\.19\.0-x64\.msi"/);
   assert.ok(!line.includes('\n'), 'must stay a single line');
-  // Literal ampersands inside a parenthesized block have to be escaped.
-  assert.ok(!/[^^]&(?!\s)/.test(line.replace(/ & /g, ' ')), 'unescaped & inside a block');
+  // A bare `if ... & next` swallows every later step into the if body.
+  for (const p of parts.filter((p) => p.includes('errorlevel'))) {
+    assert.match(p, /^\(if errorlevel 1 .*\)$/, `unparenthesized if: ${p}`);
+  }
   assert.match(line, /certutil -hashfile .* SHA256 \| findstr \/i \/c:a{64}/);
   assert.match(line, /msiexec \/i .* \/passive \/norestart/);
   assert.ok(line.indexOf(SHA) < line.indexOf('msiexec'), 'elevates before verifying');
@@ -226,10 +230,38 @@ test('no installer resolvable (offline/unsupported) falls back, never fabricates
   }
 });
 
-test('the Windows node-then-npm script is still one quote-free line', () => {
+test('the Windows install chain really runs past each check in cmd.exe', { skip: process.platform !== 'win32' }, () => {
+  const { spawnSync } = require('node:child_process');
+  // Swap the network/installer steps for stubs; keep the real `if` checks.
+  const run = (certExit) => {
+    const parts = buildNodeInstallScript(WIN_INSTALLER, 'win32').map((p) =>
+      p.startsWith('curl ') ? 'cmd /c exit 0'
+        : p.startsWith('certutil ') ? `cmd /c exit ${certExit}`
+        : p.startsWith('msiexec ') ? 'echo MSIEXEC-RAN'
+        : p);
+    parts.push('echo CHAIN-END');
+    return spawnSync('cmd.exe', [`/d /s /c "${parts.join(' & ')}"`],
+      { windowsVerbatimArguments: true, encoding: 'utf8' });
+  };
+  const ok = run(0);
+  assert.match(ok.stdout, /MSIEXEC-RAN/);
+  assert.match(ok.stdout, /CHAIN-END/);
+  const bad = run(1);
+  assert.match(bad.stdout, /CHECKSUM MISMATCH/);
+  assert.ok(!bad.stdout.includes('MSIEXEC-RAN'), 'installed after a checksum mismatch');
+  assert.equal(bad.status, 1);
+});
+
+test('a malformed version from nodejs.org is refused, not spliced into the shell', async () => {
+  const evil = [{ version: 'v24.0.0 & calc', lts: 'Krypton', npm: '11.0.0' }];
+  const fetchImpl = async () => ({ ok: true, text: async () => JSON.stringify(evil) });
+  assert.equal(await resolveNodeInstaller('win32', 'x64', fetchImpl), null);
+});
+
+test('the Windows node-then-npm script is still one balanced-quote line', () => {
   const s = buildMissingCliScript('claude', 'claude', false, 'win32', WIN_INSTALLER);
   assert.ok(!s.includes('\n'), 'must stay a single line');
-  assert.ok(!s.includes('"'), 'double quote would end the command line early');
+  assert.equal((s.match(/"/g) ?? []).length % 2, 0, 'unbalanced double quote');
   assert.ok(s.indexOf('msiexec') < s.lastIndexOf('npm install -g'), 'Node must land before the CLI install');
   assert.match(s, /set PATH=%ProgramFiles%\\nodejs;%PATH%/);
 });

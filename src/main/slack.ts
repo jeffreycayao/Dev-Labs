@@ -21,6 +21,8 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 // NOTE: `tunnelmole` is an ESM-only package. The Electron main process is bundled
 // as CommonJS, so a static `import` gets externalized into `require('tunnelmole')`
 // and throws ERR_REQUIRE_ESM at load. It is imported dynamically inside
@@ -397,9 +399,41 @@ export function postSlackReply(opts: {
 
 // The reply token is shared by every agent, so the endpoint only posts into threads
 // a verified inbound Slack trigger opened. Insertion-ordered: oldest entry first.
+// Persisted to a main-only file (hive-internal, which agents cannot write) so a
+// restart doesn't lock agents out of threads whose tasks are still running.
 const KNOWN_THREAD_CAP = 500;
-const KNOWN_THREAD_TTL_MS = 24 * 60 * 60_000;
+const KNOWN_THREAD_TTL_MS = 30 * 24 * 60 * 60_000; // long tasks must still be able to reply
 const knownThreads = new Map<string, number>(); // `${channel}:${thread_ts}` → seen at
+let knownThreadsFile: string | null = null; // null ⇒ memory-only
+
+function saveKnownThreads(): void {
+  if (!knownThreadsFile) return;
+  try {
+    mkdirSync(dirname(knownThreadsFile), { recursive: true });
+    const tmp = `${knownThreadsFile}.${process.pid}.tmp`;
+    writeFileSync(tmp, JSON.stringify([...knownThreads]), 'utf8');
+    renameSync(tmp, knownThreadsFile);
+  } catch (e) { console.error('[slack] could not save known threads:', errMsg(e)); }
+}
+
+/** Load the persisted threads (merged under any already in memory) and save there
+ *  from now on. `file` null keeps the set memory-only. */
+export function useSlackThreadsFile(file: string | null, now = Date.now()): void {
+  knownThreadsFile = file;
+  if (!file) return;
+  let saved: unknown = [];
+  try { saved = JSON.parse(readFileSync(file, 'utf8')); } catch { /* missing or corrupt → start empty */ }
+  const current = [...knownThreads];
+  knownThreads.clear();
+  for (const e of Array.isArray(saved) ? saved : []) {
+    if (Array.isArray(e) && typeof e[0] === 'string' && typeof e[1] === 'number' && now - e[1] < KNOWN_THREAD_TTL_MS) {
+      knownThreads.delete(e[0]);
+      knownThreads.set(e[0], e[1]);
+    }
+  }
+  for (const [k, at] of current) { knownThreads.delete(k); knownThreads.set(k, at); }
+  while (knownThreads.size > KNOWN_THREAD_CAP) knownThreads.delete(knownThreads.keys().next().value as string);
+}
 
 /** Remember a thread an inbound trigger came from, so agents may reply into it. */
 export function rememberSlackThread(channel: string, thread_ts: string, now = Date.now()): void {
@@ -407,9 +441,10 @@ export function rememberSlackThread(channel: string, thread_ts: string, now = Da
   knownThreads.delete(key); // re-insert so the map stays oldest-first
   knownThreads.set(key, now);
   if (knownThreads.size > KNOWN_THREAD_CAP) knownThreads.delete(knownThreads.keys().next().value as string);
+  saveKnownThreads();
 }
 
-/** Whether an inbound trigger opened this thread in the last 24 hours. */
+/** Whether an inbound trigger opened this thread in the last 30 days. */
 export function isKnownSlackThread(channel: string, thread_ts: string, now = Date.now()): boolean {
   const at = knownThreads.get(`${channel}:${thread_ts}`);
   return at !== undefined && now - at < KNOWN_THREAD_TTL_MS;
@@ -425,6 +460,9 @@ export interface SlackReplyServerOptions {
    *  this loopback. Lets main record that the thread was already answered so the
    *  done-summary poller can skip it (the poller is a fallback, not a duplicator). */
   onReplied?: (thread_ts: string) => void;
+  /** Main-only file the known-threads set persists to (hive-internal). Null or
+   *  omitted keeps it memory-only. Loaded on start(). */
+  threadsFile?: string | null;
 }
 
 /**
@@ -441,17 +479,20 @@ export class SlackReplyServer {
   private readonly token: string;
   private readonly getBotToken: () => string | undefined;
   private readonly onReplied?: (thread_ts: string) => void;
+  private readonly threadsFile: string | null;
 
   constructor(opts: SlackReplyServerOptions) {
     this.token = opts.token;
     this.getBotToken = opts.getBotToken;
     this.onReplied = opts.onReplied;
+    this.threadsFile = opts.threadsFile ?? null;
   }
 
   /** Bind a loopback port (0 ⇒ OS-assigned). Resolves the actual bound port. */
   start(preferredPort = 0): Promise<{ ok: boolean; port?: number; error?: string }> {
     return new Promise((resolve) => {
       if (this.server) { resolve({ ok: false, error: 'already running' }); return; }
+      useSlackThreadsFile(this.threadsFile);
       const server = createServer((req, res) => this.handle(req, res));
       const onError = (e: Error): void => { server.off('listening', onListening); resolve({ ok: false, error: errMsg(e) }); };
       const onListening = (): void => {
@@ -503,7 +544,7 @@ export class SlackReplyServer {
       const thread_ts = parsed.thread_ts;
       if (!isKnownSlackThread(parsed.channel, thread_ts)) {
         res.writeHead(403, { 'content-type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'Agents can only reply in a Slack thread that messaged DevLabs in the last 24 hours. Reply in that thread instead.' }));
+        res.end(JSON.stringify({ ok: false, error: 'Agents can only reply in a Slack thread that messaged DevLabs in the last 30 days. Reply in that thread instead.' }));
         return;
       }
       postSlackReply({ botToken, channel: parsed.channel, thread_ts, text: parsed.text })

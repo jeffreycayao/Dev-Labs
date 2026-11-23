@@ -17,10 +17,16 @@ const body = (name) => {
   return src.slice(start, src.indexOf('\n}\n', start));
 };
 
-test('fireAgent records the archive before it kills the terminal', () => {
+test('fireAgent kills the terminal before it records the archive', () => {
   const fire = body('fireAgent');
-  assert.ok(fire.indexOf('hive.setArchived(id, true)') < fire.indexOf('ptyManager.kill('),
-    'a failed archive must leave the agent running, not dead-but-live');
+  assert.ok(fire.indexOf('ptyManager.kill(') < fire.indexOf('hive.setArchived(id, true)'),
+    'a registry.json that cannot be read must never leave a fired agent running');
+  assert.match(fire, /registryFault\(\)/, 'a failed save names registry.json and the error');
+});
+
+test('a spawn whose hive setup fails says so instead of continuing silently', () => {
+  const spawn = src.slice(src.indexOf("console.error('[hive] ensureAgent failed:'"));
+  assert.match(spawn.slice(0, 400), /breakerToast\(/);
 });
 
 test('the worker token cap leaves cache reads out, like the per-agent breaker', () => {
@@ -45,5 +51,5 @@ test('god is a breaker input (counted in the floor budget) but exempt', () => {
 test('spawn-requests are signature-checked and limited to agent CLIs', () => {
   const spawn = body('processSpawnRequest');
   assert.match(spawn, /verifySpawnRequest\(/);
-  assert.match(spawn, /isAllowedWorkerBin\(bin\)/);
+  assert.match(spawn, /launch\.fromRequest && !isAllowedWorkerBin\(bin\)/);
 });

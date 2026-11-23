@@ -126,6 +126,20 @@ test('first_run and app_launched are held until onboarding finishes', () => {
   assert.deepEqual(captured, [], 'unticking during onboarding sends nothing');
 });
 
+test('first_run survives a quit before onboarding finishes, and is sent only once', () => {
+  const dir = freshDir();
+  captured.length = 0;
+  new Analytics().init({ stateDir: dir, appVersion: '0.4.7', enabled: true, onboarded: false }); // quit mid-wizard
+  const relaunch = new Analytics();
+  relaunch.init({ stateDir: dir, appVersion: '0.4.7', enabled: true, onboarded: false });
+  relaunch.flushHeld();
+  assert.deepEqual(captured.map((c) => c.event), ['first_run', 'app_launched']);
+
+  captured.length = 0;
+  new Analytics().init({ stateDir: dir, appVersion: '0.4.7', enabled: true, onboarded: true });
+  assert.deepEqual(captured.map((c) => c.event), ['app_launched'], 'no second first_run');
+});
+
 test('index.ts holds boot events until onboarding and flushes them on completion', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src/main/index.ts'), 'utf8');
   assert.match(src, /onboarded: readConfig\(\)\.onboardingComplete === true/);

@@ -30,7 +30,7 @@ import {
   getLogGraph, getCommitFiles, getFileAtRev, compareRefs, checkoutRef, useNoHooksDir
 } from './git';
 import { linkWorktreeDeps, unlinkWorktreeDeps } from './worktreeDeps';
-import { HiveManager, readPlain, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
+import { HiveManager, readJsonStrict, readPlain, type AgentMeta, type HiveMessage, type HiveTask } from './hive';
 import { HookServer } from './hooks';
 import { CircuitBreaker, type BreakerInput } from './breaker';
 import { CumulativeSampleGate, type UsageProvider } from './usage';
@@ -1915,7 +1915,8 @@ async function startSlackReplyServer(): Promise<void> {
     getBotToken: () => readConfig().slackBotToken,
     // An agent posted a DIRECT substantive reply into this thread → record it so the
     // done-summary poller skips it (the poller is a fallback, not a duplicator).
-    onReplied: (thread_ts) => { directlyRepliedThreads.add(thread_ts); }
+    onReplied: (thread_ts) => { directlyRepliedThreads.add(thread_ts); },
+    threadsFile: hive.internalDir() ? join(hive.internalDir()!, 'slack-threads.json') : null
   });
   const r = await slackReplyServer.start();
   if (!r.ok || r.port === undefined) {
@@ -3234,8 +3235,11 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
       // enterprise knowledge store (both no-ops / empty when their flags are off).
       opts.env = { ...(opts.env ?? {}), ...inj.env, ...memory.env(), ...knowledge.env() };
     } catch (e) {
-      // Hive provisioning is best-effort; never block a spawn on it.
+      // Hive provisioning is best-effort; never block a spawn on it. But say so:
+      // without it the agent has no hook token (signed spawns, firing, usage).
       console.error('[hive] ensureAgent failed:', e);
+      breakerToast('Agent started without hive access',
+        `${opts.hive.name}: ${e instanceof Error ? e.message : String(e)} (check ${join(hive.root() ?? '', 'registry.json')})`);
     }
   }
   // Long-run guardrails + tiering (Lane A #6.4/#6.6). All additive to the args
@@ -4147,7 +4151,7 @@ ipcMain.handle('hive:setArchived', (_evt, id: unknown, archived: unknown) => {
   if (!hive.enabled()) return { ok: false, error: 'hive disabled (no harnessHome)' };
   return hive.setArchived(id, archived === true)
     ? { ok: true }
-    : { ok: false, error: 'Could not save the agent change. Try again.' };
+    : { ok: false, error: `Could not save the agent change: ${registryFault()}` };
 });
 ipcMain.handle('hive:patchAgentRole', (_evt, id: unknown, role: unknown) => {
   if (typeof id !== 'string') return { ok: false, error: 'invalid id' };
@@ -5253,15 +5257,25 @@ interface SpawnRequest {
 function fireAgent(id: string): { ok: boolean; error?: string } {
   // A hire's terminal is `pty-<id>`, not the agent id: kill the PTY that owns it,
   // or the CLI and its MCP servers keep running behind an archived card.
-  // Record the decision first: a kill whose archive then failed left a dead
-  // agent showing as live on the floor.
-  if (!hive.setArchived(id, true)) return { ok: false, error: 'Could not save the fire decision.' };
+  // Stop first: a registry.json that can't be read must never leave a fired
+  // agent running. The card goes either way; a failed save is reported.
   const ptyId = ptyForAgent(id) ?? id;
   const r = ptyManager.kill(ptyId);
   if (!r.ok && !/^no pty:/.test(r.error ?? '')) return r;
   teardownPty(ptyId);
+  const saved = hive.setArchived(id, true);
   try { liveWebContents()?.send('hive:agentArchived', { id }); } catch { /* window torn down */ }
-  return { ok: true };
+  return saved ? { ok: true } : { ok: false, error: `Stopped, but ${registryFault()}` };
+}
+
+/** Why registry.json can't be saved, in words for the user: its path and the
+ *  read error, so they can fix or remove the file. */
+function registryFault(): string {
+  const p = join(hive.root() ?? '', 'registry.json');
+  try { readJsonStrict(p, null); } catch (e) {
+    return `could not read ${p} (${e instanceof Error ? e.message : String(e)}). Fix or delete that file, then try again.`;
+  }
+  return `could not save ${p}. Try again.`;
 }
 
 /** HIVE_ROOT/fire-requests — the queue god drops `{ "id": "<agent id>" }` into. */
@@ -5461,7 +5475,9 @@ async function processSpawnRequest(filePath: string): Promise<void> {
     fail(`refusing spawn: engine command "${bin}" is not a plain command name or an absolute path`);
     return;
   }
-  if (!isAllowedWorkerBin(bin)) {
+  // Only a command the request names is untrusted; the user's own default
+  // (`ccr code`, a wrapper script) is theirs to choose.
+  if (launch.fromRequest && !isAllowedWorkerBin(bin)) {
     fail(`refusing spawn: "${bin}" is not a known agent CLI (claude, codex, gemini, cursor-agent, …)`);
     return;
   }

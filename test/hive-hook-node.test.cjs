@@ -424,7 +424,7 @@ test('Gemini gets isolated lifecycle settings and an interactive protocol seed',
 
   const settingsPath = injection.env.GEMINI_CLI_SYSTEM_SETTINGS_PATH;
   assert.equal(typeof settingsPath, 'string');
-  assert.ok(settingsPath.startsWith(path.join(home, 'hive', 'agents', 'gemini-1')));
+  assert.ok(settingsPath.startsWith(path.join(home, 'hive-internal', 'agents', 'gemini-1')));
   const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
   assert.deepEqual(
     Object.keys(settings.hooks),

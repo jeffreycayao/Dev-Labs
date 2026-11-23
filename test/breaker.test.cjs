@@ -452,8 +452,8 @@ test('a healthy beat de-escalates one level', () => {
 
 test('an exempt agent (Ramon) counts toward the floor budget but is never the one stopped', () => {
   const b = makeBreaker({ costCapTokens: 100_000, costCapUsd: 10 });
-  const god = { ...sample('god', T0, 90_000, 0), usd: 9 };
-  const worker = { ...sample('w', T0, 20_000, 0), usd: 2 };
+  const god = { ...sample('god', T0, 20_000, 0), usd: 2 };
+  const worker = { ...sample('w', T0, 90_000, 0), usd: 9 };
   const ds = b.tick([
     { agentId: 'god', sample: god, progressing: true, exempt: true },
     { agentId: 'w', sample: worker, progressing: true }
@@ -463,6 +463,18 @@ test('an exempt agent (Ramon) counts toward the floor budget but is never the on
   assert.equal(ds[0].state.agentId, 'w');
   assert.equal(ds[0].state.level, 'steering', `reason: ${ds[0].state.reason}`);
   assert.match(ds[0].state.reason, /^(cost|token) cap: floor total/);
+});
+
+test('when Ramon is the biggest spender, no worker is blamed for the floor budget', () => {
+  const b = makeBreaker({ costCapTokens: 100_000, costCapUsd: 10 });
+  const god = { ...sample('god', T0, 95_000, 0), usd: 9.5 };
+  const worker = { ...sample('w', T0, 6_000, 0), usd: 0.6 };
+  const ds = b.tick([
+    { agentId: 'god', sample: god, progressing: true, exempt: true },
+    { agentId: 'w', sample: worker, progressing: true }
+  ], T0);
+  assert.equal(ds.length, 1);
+  assert.equal(ds[0].state.level, 'healthy', `reason: ${ds[0].state.reason}`);
 });
 
 test('an exempt agent alone over the budget trips nobody', () => {

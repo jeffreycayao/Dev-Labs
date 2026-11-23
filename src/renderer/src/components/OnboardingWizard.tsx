@@ -210,23 +210,30 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
       setError(t('onboarding.errEngineNotInstalled', { label: providerPreset(godProvider).label }));
       setBusy(false); setStep('orchestrator'); return;
     }
-    const ensure = await window.cth.ensureHarnessHome(harnessHome);
-    if (!ensure.ok) {
-      setError(ensure.error ?? t('onboarding.errCreateHome'));
-      setBusy(false);
+    // A rejected IPC call must not leave Finish disabled with no message.
+    let next: Awaited<ReturnType<typeof window.cth.updateConfig>>;
+    try {
+      const ensure = await window.cth.ensureHarnessHome(harnessHome);
+      if (!ensure.ok) {
+        setError(ensure.error ?? t('onboarding.errCreateHome'));
+        return;
+      }
+      next = await window.cth.updateConfig({
+        onboardingComplete: true,
+        audience: audience ?? 'technical',
+        harnessHome, // the same trimmed value we just mkdir'd, not the raw field
+        registeredRepos: repos,
+        autoMode,
+        godProvider,
+        godModel,
+        telemetryEnabled: shareStats
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
       return;
+    } finally {
+      setBusy(false);
     }
-    const next = await window.cth.updateConfig({
-      onboardingComplete: true,
-      audience: audience ?? 'technical',
-      harnessHome, // the same trimmed value we just mkdir'd, not the raw field
-      registeredRepos: repos,
-      autoMode,
-      godProvider,
-      godModel,
-      telemetryEnabled: shareStats
-    });
-    setBusy(false);
     onComplete(next);
   };
 

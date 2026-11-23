@@ -107,12 +107,23 @@ test('main and renderer split with the SAME tokenizer (shared module)', () => {
 
 test('spawn-requests may only start a known agent CLI', () => {
   const { isAllowedWorkerBin } = loadTs('src/main/workerLaunch.ts');
+  // Same file-name rule as provider inference (commandBinary): .bat/.ps1 too.
   for (const ok of ['claude', 'codex', 'gemini', 'cursor-agent', 'claude.exe', 'codex.cmd',
-    '/usr/local/bin/claude', 'C:\\Users\\me\\AppData\\Roaming\\npm\\codex.cmd']) {
+    'claude.bat', 'claude.ps1']) {
     assert.equal(isAllowedWorkerBin(ok), true, ok);
   }
+  // Any path is refused: `/tmp/claude` could be any program.
   for (const bad of ['bash', 'sh', 'cmd', 'cmd.exe', 'powershell', 'pwsh.exe', 'node', 'python3',
-    '/tmp/evil', 'C:\\tmp\\evil.exe', 'claude.bat', 'claude.ps1', 'claude.sh', '', 'cla ude']) {
+    '/tmp/evil', 'C:\\tmp\\evil.exe', 'claude.sh', '', 'cla ude', 'claude x',
+    '/tmp/claude', '/usr/local/bin/claude', 'C:\\Users\\me\\AppData\\Roaming\\npm\\codex.cmd', './claude']) {
     assert.equal(isAllowedWorkerBin(bad), false, bad);
   }
+});
+
+test('only a command the request names is allowlisted; the configured default is trusted', () => {
+  assert.equal(launch({ requestCommand: 'claude', autoMode: false }).fromRequest, true);
+  const dflt = launch({ defaultCommand: 'ccr code', autoMode: false });
+  assert.equal(dflt.fromRequest, false);
+  assert.equal(dflt.bin, 'ccr');
+  assert.equal(launch({ requestCommand: '  ', defaultCommand: 'C:\\bin\\wrap.ps1', autoMode: false }).fromRequest, false);
 });

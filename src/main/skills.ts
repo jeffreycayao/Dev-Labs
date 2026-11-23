@@ -3,7 +3,7 @@
  * containing SKILL.md. The OpenCode and Codex directories are currently
  * reported as plugins by this discovery code.
  *
- * The community README parser and URL-based installer below are legacy helpers
+ * The community README parser and GitHub-source helpers below are legacy helpers
  * retained for their existing regression tests. They are no longer wired to IPC
  * or the renderer. The active first-party catalog and installer live in
  * skillsCatalog.ts, where installation accepts only a validated catalog ID.
@@ -238,34 +238,24 @@ export async function loadCatalog(
   }
 }
 
-/* ── Install / uninstall ──────────────────────────────────────────────────────
+/* ── Source helpers / uninstall ──────────────────────────────────────────────
  *
  * A skill is INSTRUCTIONS THAT RUN INSIDE AN AGENT holding the user's tools and
  * keys, so this half of the file is written as if the source is hostile, because
  * from the app's point of view it is: it is arbitrary content from a public list
  * that anyone can PR into.
  *
- * Every limit below exists to bound a specific abuse:
- *   - the destination name is sanitised, so `../../.claude/settings.json` cannot
- *     be a "skill name";
- *   - each downloaded path is re-checked to be inside the destination AFTER
- *     resolution, so a crafted API response cannot escape it;
- *   - file count, total bytes and depth are capped, so a repo cannot fill a disk;
- *   - only regular files are written — a `symlink` or `submodule` entry from the
- *     contents API is skipped, never followed.
+ * The GitHub-source helpers below sanitise the destination name, so
+ * `../../.claude/settings.json` cannot be a "skill name".
  *
- * Uninstall is the more dangerous verb and is treated as such: it deletes a
- * directory, so it refuses anything that is not INSIDE a known skills root and
+ * Uninstall deletes a directory and is treated as the dangerous verb: it
+ * refuses anything that is not INSIDE a known skills root and
  * does not itself contain a SKILL.md. A bundled skill can never be removed — it
  * ships inside the app and would reappear on the next spawn anyway.
  */
 
 /** GitHub's per-directory listing. Only the fields we actually consume. */
 interface GhEntry { name: string; path: string; type: string; size?: number; download_url?: string | null }
-
-const MAX_FILES = 60;
-const MAX_TOTAL_BYTES = 2 * 1024 * 1024;
-const MAX_DEPTH = 5;
 
 /**
  * A GitHub source URL → the pieces the contents API needs.
@@ -304,16 +294,12 @@ export function safeSkillDirName(raw: string): string | null {
   return base;
 }
 
-function getJson<T>(url: string): Promise<T> {
-  return getText(url).then((t) => JSON.parse(t) as T);
-}
-
 /**
  * For a repo-ROOT source, find the directory that actually holds the skill
  * BEFORE anything is walked or downloaded (issue #385).
  *
  * A root URL used to mean "the repo root IS the skill" unconditionally, so the
- * installer walked the entire repository — and MAX_FILES / MAX_TOTAL_BYTES,
+ * installer walked the entire repository — and the file/size caps,
  * meant to bound one skill folder, were applied to the whole repo. Any normal
  * repo that keeps its skill under `skills/<name>` failed with "larger than this
  * installer will fetch" even when the skill itself was a few KB.
@@ -362,118 +348,6 @@ export async function resolveRepoRootSkillDir(
     unsupported: true,
     error: "couldn't find the skill's SKILL.md in that repository — open Learn more to install it by hand"
   };
-}
-
-/** officialskills.sh pages are a rendering of a GitHub folder and link back to
- *  it. Resolving that link is one request and turns 578 otherwise un-installable
- *  catalog rows into installable ones. */
-async function resolveSourceUrl(url: string): Promise<string | null> {
-  if (parseGitHubSourceUrl(url)) return url;
-  if (!/^https:\/\/(www\.)?officialskills\.sh\//i.test(url)) return null;
-  try {
-    const html = await getText(url);
-    const m = /https:\/\/github\.com\/[^/"'\s]+\/[^/"'\s]+\/tree\/[^"'\s<>)]+/.exec(html);
-    return m ? m[0].replace(/[.,)]+$/, '') : null;
-  } catch { return null; }
-}
-
-/**
- * Download one skill folder into the user's Claude skills directory.
- *
- * Returns a structured refusal rather than throwing, so the UI can say WHY —
- * "not installable" and "install failed" are different answers for the user.
- */
-export async function installSkill(
-  entryUrl: string,
-  entryName: string
-): Promise<{ ok: true; path: string } | { ok: false; error: string; unsupported?: boolean }> {
-  const source = await resolveSourceUrl(entryUrl);
-  if (!source) {
-    return { ok: false, unsupported: true, error: 'No downloadable source — open Learn more to install it by hand.' };
-  }
-  const gh = parseGitHubSourceUrl(source);
-  if (!gh) return { ok: false, unsupported: true, error: 'Source is not a GitHub folder.' };
-
-  // An empty ref means "the repo's default branch" — omit the parameter entirely
-  // rather than guessing main vs master.
-  const api = (p: string) =>
-    `https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${p ? encodeURI(p) : ''}`
-    + (gh.ref ? `?ref=${encodeURIComponent(gh.ref)}` : '');
-  const listDir = async (p: string): Promise<GhEntry[]> => {
-    const res = await getJson<GhEntry[] | GhEntry>(api(p));
-    return Array.isArray(res) ? res : [res];
-  };
-
-  // A repo-root source names a repository, not necessarily a skill folder —
-  // locate the SKILL.md directory first so the size/file caps bound the skill,
-  // not the whole repo (issue #385). Tree URLs keep their explicit path.
-  let skillPath = gh.path;
-  if (!skillPath) {
-    const resolved = await resolveRepoRootSkillDir(listDir, entryName);
-    if ('error' in resolved) return { ok: false, error: resolved.error, unsupported: resolved.unsupported };
-    skillPath = resolved.path;
-  }
-
-  const dirName = safeSkillDirName(skillPath || entryName);
-  if (!dirName) return { ok: false, error: 'That skill has a name this app will not create a folder for.' };
-
-  const root = join(homedir(), '.claude', 'skills');
-  const dest = join(root, dirName);
-  if (existsSync(dest)) return { ok: false, error: `Already installed at ${dest}` };
-
-  const files: { path: string; url: string; size: number }[] = [];
-  let total = 0;
-  const walk = async (path: string, depth: number): Promise<string | null> => {
-    if (depth > MAX_DEPTH) return 'the folder nests deeper than this installer will follow';
-    let listing: GhEntry[];
-    try {
-      const res = await getJson<GhEntry[] | GhEntry>(api(path));
-      listing = Array.isArray(res) ? res : [res];
-    } catch (e) {
-      return e instanceof Error ? e.message : String(e);
-    }
-    for (const it of listing) {
-      if (files.length >= MAX_FILES) return 'that skill has more files than this installer will fetch';
-      if (it.type === 'dir') {
-        const err = await walk(it.path, depth + 1);
-        if (err) return err;
-        continue;
-      }
-      // Only regular files. A symlink/submodule entry is skipped, never followed.
-      if (it.type !== 'file' || !it.download_url) continue;
-      const size = it.size ?? 0;
-      total += size;
-      if (total > MAX_TOTAL_BYTES) return 'that skill is larger than this installer will fetch';
-      const rel = skillPath ? it.path.slice(skillPath.length).replace(/^\/+/, '') : it.path;
-      files.push({ path: rel, url: it.download_url, size });
-    }
-    return null;
-  };
-
-  const walkErr = await walk(skillPath, 0);
-  if (walkErr) return { ok: false, error: walkErr };
-  if (files.length === 0) return { ok: false, error: 'No files found at that source.' };
-
-  // Write only after the whole tree resolved, so a mid-download failure cannot
-  // leave a half-installed skill that an agent would then load.
-  const written: string[] = [];
-  try {
-    for (const f of files) {
-      const target = resolve(dest, f.path);
-      // Post-resolution containment: the only check that survives a crafted path.
-      if (target !== dest && !target.startsWith(dest + sep)) {
-        throw new Error(`refusing to write outside the skill folder: ${f.path}`);
-      }
-      const body = await getText(f.url);
-      mkdirSync(dirname(target), { recursive: true });
-      writeFileSync(target, body);
-      written.push(target);
-    }
-  } catch (e) {
-    try { rmSync(dest, { recursive: true, force: true }); } catch { /* best effort */ }
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
-  }
-  return { ok: true, path: dest };
 }
 
 /**

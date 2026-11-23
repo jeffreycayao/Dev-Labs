@@ -133,9 +133,9 @@ test('the injected prompt survives the Windows ARRAY argv path byte for byte', a
 test('the OpenCode plugin lands in BOTH plugin/ and plugins/', async (t) => {
   // Which directory the installed OpenCode scans is version-dependent and the
   // bridge is LIVE-UNVERIFIED; writing both is cheap and removes the coin flip.
-  const { dir } = await floor(t, { provider: 'opencode' });
+  const { home } = await floor(t, { provider: 'opencode' });
   for (const name of ['plugin', 'plugins']) {
-    const p = path.join(dir, '.opencode', name, 'hive-bridge.js');
+    const p = path.join(home, 'hive-internal', 'agents', 'god-1', '.opencode', name, 'hive-bridge.js');
     assert.ok(fs.existsSync(p), `missing ${p}`);
     assert.ok(fs.readFileSync(p, 'utf8').includes('HIVE_SOCK'), 'must be the real bridge');
   }

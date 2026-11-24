@@ -325,6 +325,37 @@ const PLAIN_READ_CAP = 4 * 1024 * 1024;
 /** A file's text, or '' when it is missing or not a regular file (a link, or a
  *  FIFO or device an agent left to hang or flood the main process). Past
  *  PLAIN_READ_CAP only the newest part is read: agents grow these files. */
+/** Give a Codex worker the user's login, and keep a COPIED login in step.
+ *  A symlink is the norm and needs nothing more: Codex writes through it to the
+ *  user's file. Where symlinks need privilege (Windows without Developer Mode) the
+ *  worker gets a copy instead, and Codex rotates refresh tokens — once either side
+ *  refreshes, the other holds a revoked token. So at every spawn a copy that
+ *  refreshed later for the SAME account is folded back into the user's file, then
+ *  the worker is re-linked (or re-copied) from it. A copy for another account
+ *  never overwrites the user's login. Links and non-files are left untouched.
+ *  shortcut: workers running at the same moment can still race a refresh; that
+ *  needs Developer Mode (symlinks), which this file cannot turn on. */
+export function syncCodexAuth(src: string, dest: string): void {
+  let st: ReturnType<typeof lstatSync> | null = null;
+  try { st = lstatSync(dest); } catch { /* absent */ }
+  if (st && !st.isFile()) return;
+  if (st) {
+    const read = (p: string): any => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
+    const mine = read(src), theirs = read(dest);
+    const account = (a: any): unknown => a?.tokens?.account_id;
+    const refreshed = (a: any): number => Date.parse(a?.last_refresh ?? '') || 0;
+    if (account(theirs) && account(theirs) === account(mine) && refreshed(theirs) > refreshed(mine)) {
+      const tmp = `${src}.${process.pid}.tmp`;
+      copyFileSync(dest, tmp);
+      renameSync(tmp, src);
+    }
+    unlinkSync(dest);
+  }
+  if (!existsSync(src)) return; // user logged out → so is the worker
+  try { symlinkSync(src, dest); }
+  catch { copyFileSync(src, dest, fsConstants.COPYFILE_EXCL); }
+}
+
 export function readPlain(p: string): string {
   try {
     if (!lstatSync(p).isFile()) return '';
@@ -2670,12 +2701,8 @@ export class HiveManager {
       // (config.toml is NOT symlinked — we write our own below, seeded from theirs,
       // because it must carry our [hooks] tables.) Fall back to copy where symlinks
       // need privilege (Windows). Idempotent — skip if already linked.
-      const authSrc = join(userHome, 'auth.json');
-      const authDest = join(home, 'auth.json');
-      if (existsSync(authSrc) && !taken(authDest)) {
-        try { symlinkSync(authSrc, authDest); }
-        catch { try { copyFileSync(authSrc, authDest, fsConstants.COPYFILE_EXCL); } catch { /* best-effort */ } }
-      }
+      try { syncCodexAuth(join(userHome, 'auth.json'), join(home, 'auth.json')); }
+      catch { /* best-effort — the worker just prompts for login */ }
       // The managed app-server daemon used by Codex Remote Control is launched
       // from the standalone install rooted at $CODEX_HOME/packages. Share the
       // user's installed binaries without duplicating them into every agent.

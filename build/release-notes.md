@@ -1,5 +1,3 @@
-- Security: agent hook files moved out of the shared hive.
-- Windows Node installer now runs every step.
-- Ramon's spending no longer stops workers.
-- Firing works even with a damaged agent list.
-- Slack replies survive restarts.
+- Codex workers stay signed in on Windows without Developer Mode.
+- Signing in to Codex again now reaches every worker.
+- A worker can never replace your Codex login with another account.

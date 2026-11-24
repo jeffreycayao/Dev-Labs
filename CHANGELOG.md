@@ -4,6 +4,10 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.8.3 — 2026-11-25
+
+- **Codex workers stay signed in on Windows without Developer Mode.** There, each worker got a copy of the Codex login, and once any copy refreshed, the others held a revoked token ("refresh token was revoked"). Each spawn now folds a newer same-account copy back into your login and re-syncs the worker from it. A copy for another account never overwrites yours.
+
 ## v4.8.2 — 2026-11-23
 
 - **Security: Gemini, OpenCode and Pi hook files moved out of the shared hive.** Any agent could rewrite them and run code outside its sandbox the next time that agent started. They now live in `hive-internal/agents/<id>`, which only the app can write.

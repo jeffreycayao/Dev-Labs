@@ -164,6 +164,20 @@ test('draining the inbox resets announcement memory', () => {
   })], later), ['alice']);
 });
 
+test('a compaction re-arms still-undrained mail, after the cooldown', () => {
+  const w = new WorkerWakeWatchdog();
+  w.noteSpawn('pty-alice', 0);
+  const now = 200_000;
+  assert.deepEqual(w.decide([fact()], now), ['alice']);
+  w.noteCompacted('alice');
+
+  const duringCooldown = now + WORKER_WAKE_COOLDOWN_MS - 1;
+  assert.deepEqual(w.decide([fact({ lastOutputAt: duringCooldown - WORKER_WAKE_IDLE_MS - 1 })], duringCooldown), []);
+
+  const afterCooldown = now + WORKER_WAKE_COOLDOWN_MS + 1;
+  assert.deepEqual(w.decide([fact({ lastOutputAt: afterCooldown - WORKER_WAKE_IDLE_MS - 1 })], afterCooldown), ['alice']);
+});
+
 test('forget clears cooldown + boot grace + HITL state', () => {
   const w = new WorkerWakeWatchdog();
   w.noteSpawn('pty-alice', Date.now());

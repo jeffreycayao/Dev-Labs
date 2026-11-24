@@ -347,7 +347,11 @@ const hookServer = new HookServer(
   control,
   breaker,
   standingGoalFromRoster,
-  (agentId, event, message) => workerWake.noteHook(agentId, event, message)
+  (agentId, event, message) => {
+    workerWake.noteHook(agentId, event, message);
+    // A compacted or restarted session may have lost the last nudge: re-arm it.
+    if (agentId && (event === 'PostCompact' || event === 'SessionStart')) workerWake.noteCompacted(agentId);
+  }
 );
 const memory = new MemoryManager(
   () => readConfig().harnessHome,

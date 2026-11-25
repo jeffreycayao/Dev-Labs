@@ -4,6 +4,8 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+## v4.8.4 — 2026-11-25
+
 ### New
 
 - **Any OpenRouter model per agent, free or paid.** Add Agent (OpenCode, Crush, Pi) lists OpenRouter's tool-capable models with a Free / Paid switch, search and the price per million input tokens.

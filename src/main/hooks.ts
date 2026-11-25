@@ -22,6 +22,16 @@ import { toolDetail, validateHookEvent } from '../shared/hookEvents';
 
 /** Maximum JSON payload bytes in one newline-delimited hook frame. */
 const MAX_HOOK_FRAME_BYTES = 256 * 1024;
+const ROSTER_REFRESH_MS = 15 * 60 * 1000;
+
+/** The roster text minus what changes every beat (ages, token and dollar
+ *  counts). Context occupancy only counts once it is high (>= 80%), because
+ *  that is when god should route around an agent. */
+export function rosterKey(roster: string): string {
+  return roster
+    .replace(/(?:active|snapshot) \d+[smh] ago|\d+k tok|\$\d+\.\d+/g, '')
+    .replace(/ctx (\d+)%/g, (_, n: string) => (Number(n) >= 80 ? 'ctx high' : ''));
+}
 
 interface HookPayload {
   hook_event_name?: string;
@@ -69,10 +79,22 @@ export class HookServer {
    *  prompt only bloats the transcript. One entry per agent is sufficient: an
    *  agent has one live session, and a new session id replaces the old entry. */
   private deliveredGoalByAgent = new Map<string, { sessionId: string | null; goal: string | null }>();
+  /** The roster last sent to god, as its routing key (see rosterKey). */
+  private deliveredRosterByAgent = new Map<string, { sessionId: string | null; key: string; at: number }>();
   /** `${agentId}\t${sessionId}` → running CostSample totals. The proxy sends one
    *  sample per response, but every ledger reader treats rows as CUMULATIVE per
    *  agent+session, so the row written is the running total, not the sample. */
   private costTotals = new Map<string, { input: number; output: number; cacheRead: number; cacheCreation: number; usd: number }>();
+
+  /** Drop everything kept for an agent whose terminal is gone (teardownPty).
+   *  A respawn starts clean: its goal and roster are re-sent on SessionStart. */
+  forget(agentId: string): void {
+    this.transcriptPaths.delete(agentId);
+    this.contextById.delete(agentId);
+    this.deliveredGoalByAgent.delete(agentId);
+    this.deliveredRosterByAgent.delete(agentId);
+    for (const key of this.costTotals.keys()) if (key.startsWith(`${agentId}\t`)) this.costTotals.delete(key);
+  }
 
   constructor(
     private hive: HiveManager,
@@ -222,10 +244,13 @@ export class HookServer {
     // accounting schema uniform). Pure telemetry — never feeds the loop detector.
     if (event === 'CostSample') {
       if (agentId && p.session_id) {
-        const input = p.input ?? 0;
-        const output = p.output ?? 0;
-        const cacheRead = p.cache_read ?? 0;
-        const cacheCreation = p.cache_creation ?? 0;
+        // Agent-supplied counts: only finite numbers >= 0 (a negative one would
+        // pull the floor total down past every cost cap).
+        const count = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 0);
+        const input = count(p.input);
+        const output = count(p.output);
+        const cacheRead = count(p.cache_read);
+        const cacheCreation = count(p.cache_creation);
         const key = `${agentId}\t${p.session_id}`;
         const t = this.costTotals.get(key) ?? { input: 0, output: 0, cacheRead: 0, cacheCreation: 0, usd: 0 };
         t.input += input;
@@ -327,9 +352,24 @@ export class HookServer {
     // Hand the roster the LIVE context-window occupancy (contextById) so each
     // agent line can carry a `ctx NN%` — god then sees whose context is nearly
     // full when it routes work, instead of guessing from cumulative token spend.
-    const roster = wantsRoster
+    let roster = wantsRoster
       ? this.hive.rosterContext((id) => this.contextFor(id))
       : null;
+    // The roster is re-sent only when something god routes on changed (hires,
+    // status, inbox, breaker, a nearly full context), on a new session, or every
+    // ROSTER_REFRESH_MS so timings stay roughly true. Sending it on every prompt
+    // grew god's transcript by one roster per message and made it compact sooner.
+    if (roster && agentId) {
+      const sessionId = p.session_id ?? null;
+      const key = rosterKey(roster);
+      const last = this.deliveredRosterByAgent.get(agentId);
+      const now = Date.now();
+      if (event !== 'SessionStart' && last && last.sessionId === sessionId && last.key === key && now - last.at < ROSTER_REFRESH_MS) {
+        roster = null;
+      } else {
+        this.deliveredRosterByAgent.set(agentId, { sessionId, key, at: now });
+      }
+    }
 
     // Standing goal (hire Briefing) — durable roster field, re-read every cycle so
     // an Edit Agent save is picked up on the next UserPromptSubmit without

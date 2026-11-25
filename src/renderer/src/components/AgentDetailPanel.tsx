@@ -257,7 +257,7 @@ export function AgentDetailPanel({ agent }: AgentDetailPanelProps) {
                   embedded
                 />
               </div>
-              <MessageQueueComposer agent={agent} />
+              <MessageQueueComposer key={agent.id} agent={agent} />
             </div>
             )
           ) : (

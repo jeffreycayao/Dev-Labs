@@ -23,7 +23,7 @@
 import {
   existsSync, mkdirSync, readFileSync, writeFileSync, renameSync,
   readdirSync, statSync, lstatSync, fstatSync, realpathSync, rmSync, appendFileSync,
-  symlinkSync, unlinkSync, copyFileSync, cpSync, openSync, readSync, closeSync,
+  symlinkSync, linkSync, unlinkSync, copyFileSync, cpSync, openSync, readSync, closeSync,
   constants as fsConstants
 } from 'node:fs';
 import { join, dirname, basename, isAbsolute, relative } from 'node:path';
@@ -40,12 +40,13 @@ import {
   bridgeOf,
   type AgentProvider
 } from '../shared/agentProvider';
-import { buildMcpServers, type BuildMcpServersInput, type McpSkipReason } from '../shared/mcpCatalog';
+import { buildMcpServers, type BuildMcpServersInput, type McpCatalogEntry, type McpSkipReason } from '../shared/mcpCatalog';
 import type { FeatureFlags } from '../shared/features';
 import { selectBroadcastTargets } from '../shared/broadcast';
 import { preferredAgentRole } from '../shared/agentRole';
 import { mergeTaskLedger } from '../shared/taskLedger';
 import { expandTilde } from './fs';
+import { trustedToolPath } from './shellEnv';
 import { resolveGodName } from '../shared/godIdentity';
 import { attitudePromptBlock } from '../shared/attitude';
 import { type ByokBackend, type ByokGrant, providerRoute } from '../shared/byokBroker';
@@ -252,7 +253,7 @@ const OUTBOX_SETTLE_MS = 2_000;
 
 /** Idempotently ensure `<agentDir>/.gitignore` excludes the non-memory files.
  *  Append-only: writes only the missing lines, leaving any existing entries. */
-function ensureMineIgnore(agentDir: string): void {
+export function ensureMineIgnore(agentDir: string): void {
   const path = join(agentDir, '.gitignore');
   const existing = readPlain(path);
   const have = new Set(existing.split('\n').map((l) => l.trim()));
@@ -321,39 +322,40 @@ function createOnce(p: string, data: string): void {
   try { writeFileSync(p, data, { encoding: 'utf8', flag: 'wx' }); }
   catch (e) { if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e; }
 }
-const PLAIN_READ_CAP = 4 * 1024 * 1024;
+export const PLAIN_READ_CAP = 4 * 1024 * 1024;
 /** A file's text, or '' when it is missing or not a regular file (a link, or a
  *  FIFO or device an agent left to hang or flood the main process). Past
  *  PLAIN_READ_CAP only the newest part is read: agents grow these files. */
-/** Give a Codex worker the user's login, and keep a COPIED login in step.
+/** Give a Codex worker the user's login, re-synced at every spawn.
  *  A symlink is the norm and needs nothing more: Codex writes through it to the
  *  user's file. Where symlinks need privilege (Windows without Developer Mode) the
- *  worker gets a copy instead, and Codex rotates refresh tokens — once either side
- *  refreshes, the other holds a revoked token. So at every spawn a copy that
- *  refreshed later for the SAME account is folded back into the user's file, then
- *  the worker is re-linked (or re-copied) from it. A copy for another account
- *  never overwrites the user's login. Links and non-files are left untouched.
- *  shortcut: workers running at the same moment can still race a refresh; that
- *  needs Developer Mode (symlinks), which this file cannot turn on. */
+ *  worker gets a copy, and a stale copy (user signed in again since) is replaced
+ *  here. ONE-WAY only: the agent can write its own CODEX_HOME, and nothing local
+ *  can prove a token belongs to the user's account, so data never flows from the
+ *  worker's copy back into the user's login. Links and non-files are left alone.
+ *  Without symlinks a HARD link comes next (no privilege needed on NTFS): Codex
+ *  rewrites auth.json in place, so a worker's token refresh lands in the user's
+ *  file too, exactly as through a symlink. A plain copy is the last resort.
+ *  shortcut: a copy (hive-internal on another volume than ~/.codex) that Codex
+ *  refreshes mid-run revokes the user's token; links are the only safe sync. */
 export function syncCodexAuth(src: string, dest: string): void {
   let st: ReturnType<typeof lstatSync> | null = null;
   try { st = lstatSync(dest); } catch { /* absent */ }
   if (st && !st.isFile()) return;
-  if (st) {
-    const read = (p: string): any => { try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; } };
-    const mine = read(src), theirs = read(dest);
-    const account = (a: any): unknown => a?.tokens?.account_id;
-    const refreshed = (a: any): number => Date.parse(a?.last_refresh ?? '') || 0;
-    if (account(theirs) && account(theirs) === account(mine) && refreshed(theirs) > refreshed(mine)) {
-      const tmp = `${src}.${process.pid}.tmp`;
-      copyFileSync(dest, tmp);
-      renameSync(tmp, src);
-    }
-    unlinkSync(dest);
-  }
+  if (st) unlinkSync(dest);
   if (!existsSync(src)) return; // user logged out → so is the worker
-  try { symlinkSync(src, dest); }
-  catch { copyFileSync(src, dest, fsConstants.COPYFILE_EXCL); }
+  try { symlinkSync(src, dest); return; } catch { /* needs privilege on Windows */ }
+  try { linkSync(src, dest); return; } catch { /* e.g. different volume */ }
+  copyFileSync(src, dest, fsConstants.COPYFILE_EXCL);
+}
+
+/** An absolute path in Claude Code permission-rule form. Its rules read `/x` as
+ *  relative to the settings file and only `//x` as absolute; Windows paths are
+ *  matched in POSIX form, so `C:\Users\a` is `//c/Users/a`. */
+export function claudeAbsoluteRulePath(abs: string): string {
+  const posix = abs.replace(/\\/g, '/');
+  const drive = /^([A-Za-z]):\//.exec(posix);
+  return drive ? `//${drive[1].toLowerCase()}/${posix.slice(3)}` : `/${posix}`;
 }
 
 export function readPlain(p: string): string {
@@ -527,6 +529,11 @@ export class HiveManager {
     private getHome: () => string | null,
     private emit?: (channel: string, payload: unknown) => boolean | void
   ) {}
+
+  /** Ramon's id, as set by the app when it spawned him. registry.json's godId
+   *  is agent-writable, so routing "human" mail or granting god rights never
+   *  reads it — an agent could otherwise name itself god and take that mail. */
+  private trustedGod: string | null = null;
 
   private routerTimer: NodeJS.Timeout | null = null;
 
@@ -801,9 +808,9 @@ export class HiveManager {
     }
     const userCodexHome = join(homedir(), '.codex');
     for (const [id, agent] of Object.entries(this.registry().agents)) {
-      const codexHome = join(root, 'agents', id, '.codex');
-      if (agent.provider === 'codex' && isRealDir(join(root, 'agents', id)) && isRealDir(codexHome)) {
-        this.exposeCodexDataDirs(codexHome, userCodexHome, id);
+      if (agent.provider !== 'codex' || !isRealDir(join(root, 'agents', id))) continue;
+      for (const codexHome of this.codexHomes(root, id)) {
+        if (isRealDir(codexHome)) this.exposeCodexDataDirs(codexHome, userCodexHome, id);
       }
     }
     createOnce(join(root, 'board.md'), '# Hive board\n\n_Shared plans live here. The god agent is the scribe._\n');
@@ -824,7 +831,7 @@ export class HiveManager {
     // log.jsonl gets the structured, non-sensitive fields; the dump stays local.
     // `deliveries/` holds finished files agents hand back (HTML, PDFs, images…):
     // potentially large binaries that would bloat a repo committed on every change.
-    const want = ['fleet.json', 'hooks.sock', 'cost-ledger.jsonl', 'crashes/', 'deliveries/', '.DS_Store', 'agents/*/mcp.json'];
+    const want = ['fleet.json', 'hooks.sock', 'cost-ledger.jsonl', 'log.jsonl', 'crashes/', 'deliveries/', '.DS_Store', 'agents/*/mcp.json'];
     const lines = readPlain(gitignore).split('\n');
     const missing = want.filter((w) => !lines.includes(w));
     if (missing.length) writeFresh(gitignore, [...lines.filter(Boolean), ...missing].join('\n') + '\n');
@@ -951,6 +958,8 @@ export class HiveManager {
       /** The installed copy of a server's pinned npm package (mcpPackages.ts),
        *  or undefined to launch it through npx. */
       mcpLocalPackage?: BuildMcpServersInput['localPackage'];
+      /** The catalog to build from (built-in plus the user's own servers). */
+      mcpCatalog?: readonly McpCatalogEntry[];
       /** Owner feature switches: a catalog entry behind an off switch is not offered. */
       features?: Partial<FeatureFlags>;
       /** Told which enabled servers were left out and why (no key, broker down). */
@@ -1028,7 +1037,7 @@ export class HiveManager {
       archived: false,
       lastSeen: Date.now()
     };
-    if (meta.isGod) reg.godId = meta.id;
+    if (meta.isGod) { reg.godId = meta.id; this.trustedGod = meta.id; }
     this.atomicWriteJson(join(root, 'registry.json'), reg);
 
     this.appendLog({ kind: 'spawn', agentId: meta.id, name: meta.name, isGod: !!meta.isGod });
@@ -1117,7 +1126,7 @@ export class HiveManager {
               // Codex never reads .claude/skills; it still scans the (deprecated)
               // $CODEX_HOME/skills, and that home is per-agent, so the bundled set
               // goes there without touching the user's ~/.agents/skills.
-              if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(env.CODEX_HOME, 'skills'), dir, opts.skillsExclude);
+              if (opts.skillsDir) this.copyBundledSkills(opts.skillsDir, join(env.CODEX_HOME, 'skills'), env.CODEX_HOME, opts.skillsExclude);
               // Codex refuses to run hooks from a config dir without persisted
               // "hook trust" (normally an interactive gate). Our hooks.json is
               // hive-authored inside an isolated CODEX_HOME, so we bypass that gate
@@ -1259,9 +1268,13 @@ export class HiveManager {
     const shim = this.shimPath();
     if (sock && shim) {
       env.HIVE_SOCK = sock;
-      const settingsPath = join(dir, 'settings.json');
-      this.writeJson(settingsPath, this.hookSettings(shim, opts.theme, this.sandboxWritableDirs(meta, dir, root, opts.extraWritableDirs)));
+      // In hive-internal: any agent may write the hive root, so a settings file
+      // there could be rewritten by another agent to add hooks that run unsandboxed.
+      const settingsPath = join(this.trustedAgentDir(dir), 'settings.json');
+      this.writeJson(settingsPath, this.hookSettings(shim, opts.theme,
+        this.sandboxWritableDirs(meta, dir, root, opts.extraWritableDirs), [join(this.internalDir()!, 'agents')]));
       args.push('--settings', settingsPath);
+      try { rmSync(join(dir, 'settings.json'), { force: true }); } catch { /* noop */ } // pre-move copy
     }
     // W3 — the MCP bundle. Claude Code ignores `mcpServers` inside a --settings
     // file (verified against claude 2.1.283: a stdio server listed there is never
@@ -1269,7 +1282,10 @@ export class HiveManager {
     // additive to the user's own servers. 0600: a stdio connector's key rides in
     // its env here. Vendor-hosted (http) connectors carry only the broker URL and
     // a revocable capability token, never the key.
-    const mcpPath = join(dir, 'mcp.json');
+    // Not in the agent's hive folder: every agent can read every hive folder, and
+    // this file holds broker tokens and stdio connector keys.
+    const mcpPath = join(this.trustedAgentDir(dir), 'mcp.json');
+    try { rmSync(join(dir, 'mcp.json'), { force: true }); } catch { /* noop */ } // pre-move copy
     const mcp = buildMcpServers({
       cwd: meta.cwd,
       consent: opts.mcpDefaults,
@@ -1278,7 +1294,8 @@ export class HiveManager {
       // `<agent>` gives per-agent servers (the browser session) their own name.
       vars: { ...opts.mcpVars, agent: meta.id },
       features: opts.features,
-      localPackage: opts.mcpLocalPackage
+      localPackage: opts.mcpLocalPackage,
+      ...(opts.mcpCatalog ? { catalog: opts.mcpCatalog } : {})
     });
     if (mcp.skipped.length) opts.onMcpSkipped?.(mcp.skipped);
     if (Object.keys(mcp.servers).length) {
@@ -1324,6 +1341,10 @@ export class HiveManager {
     const root = this.root();
     if (!root) return false;
     try {
+      // routeOnce skips archived folders, so deliver anything still in its
+      // outbox first (a final "done" written just before the archive). Before the
+      // registry read below, so a write routing makes is not overwritten.
+      if (archived) { try { this.routeOnce(); } catch { /* best-effort */ } }
       const reg = this.registryForWrite(root);
       const agent = reg.agents[id];
       if (!agent) return false;
@@ -1473,14 +1494,19 @@ export class HiveManager {
    * idempotent resume after a crash/restart AND the accounting/dedup key for cost
    * samples. Best-effort — never throws into a hook handler.
    */
+  private recordedSession = new Map<string, string>();
   recordSession(agentId: string, sessionId: string): void {
     const root = this.root();
     // The id comes from a hook frame and is later passed to the CLI on resume
     // (through cmd.exe on Windows): only the plain shape every provider uses.
     if (!root || !/^[A-Za-z0-9_-]{1,200}$/.test(sessionId)) return;
+    // Every hook event lands here; skip the registry read and parse when this
+    // process already recorded this exact session for the agent.
+    if (this.recordedSession.get(agentId) === sessionId) return;
     try {
       const reg = this.registryForWrite(root);
       const agent = reg.agents[agentId];
+      if (agent) this.recordedSession.set(agentId, sessionId);
       if (!agent || agent.sessionId === sessionId) return; // unknown agent or unchanged → no write
       agent.sessionId = sessionId;
       agent.lastSeen = Date.now();
@@ -1493,7 +1519,10 @@ export class HiveManager {
   /** The last known session_id for an agent, or undefined. Used to build a
    *  `claude --resume <id>` spawn so a restarted agent resumes its thread. */
   lastSession(agentId: string): string | undefined {
-    return this.registry().agents[agentId]?.sessionId;
+    // Same rule as recordSession: the registry is agent-writable and this id
+    // lands on a command line (cmd.exe on Windows), so re-check it on the way out.
+    const sid = this.registry().agents[agentId]?.sessionId;
+    return typeof sid === 'string' && /^[A-Za-z0-9_-]{1,200}$/.test(sid) ? sid : undefined;
   }
 
   /** Claude Code settings that route every relevant hook through the shim, plus
@@ -1518,7 +1547,7 @@ export class HiveManager {
     return Array.from(new Set(out));
   }
 
-  private hookSettings(shim: string, theme?: 'light' | 'dark', writableDirs: string[] = []): unknown {
+  private hookSettings(shim: string, theme?: 'light' | 'dark', writableDirs: string[] = [], secretDirs: string[] = []): unknown {
     // Bundled node, NOT bare `node` — see nodeLauncherPath(). Claude runs each of
     // these through `sh -c` with a stripped PATH, where `node` is often absent.
     const cmd = this.nodeRun(shim);
@@ -1557,8 +1586,14 @@ export class HiveManager {
       // runs as before rather than refusing to spawn.
       ...(writableDirs.length
         ? {
-            sandbox: { enabled: true, filesystem: { allowWrite: writableDirs } },
-            permissions: { additionalDirectories: writableDirs }
+            sandbox: { enabled: true, filesystem: { allowWrite: writableDirs, ...(secretDirs.length ? { denyRead: secretDirs } : {}) } },
+            permissions: {
+              additionalDirectories: writableDirs,
+              // Per-agent mcp.json files (broker tokens, stdio connector keys) live
+              // here: neither Bash children nor the Read tool may open them. The
+              // CLI itself still loads its own --mcp-config at startup.
+              ...(secretDirs.length ? { deny: secretDirs.map((d) => `Read(${claudeAbsoluteRulePath(d)}/**)`) } : {})
+            }
           }
         : {}),
       hooks: {
@@ -1711,36 +1746,6 @@ export class HiveManager {
   /** Kill every live proxy sidecar (app quit). Best-effort. */
   stopAllProxyBridges(): void {
     for (const id of [...this.proxyChildren.keys()]) this.stopProxyBridge(id);
-  }
-
-  /**
-   * Drain an agent's inbox for the Stop hook. Returns whether to block-to-continue
-   * and the message text to feed back. Uses the per-agent cursor so a message is
-   * surfaced exactly once (no infinite loop).
-   */
-  drainForStop(agentId: string): { block: boolean; reason?: string } {
-    const dir = this.agentDir(agentId);
-    if (!existsSync(dir)) return { block: false };
-    const cursorPath = join(dir, 'cursor.json');
-    const cursor = this.readJson<{ lastProcessed: string | null }>(cursorPath, { lastProcessed: null });
-    const fresh = this.inbox(agentId)
-      .filter((m) => !cursor.lastProcessed || m.id > cursor.lastProcessed)
-      .sort((a, b) => (a.id < b.id ? -1 : 1));
-    if (fresh.length === 0) return { block: false };
-
-    cursor.lastProcessed = fresh[fresh.length - 1].id;
-    this.atomicWriteJson(join(realDirs(this.root()!, 'agents', agentId), 'cursor.json'), cursor);
-    this.appendLog({ kind: 'drain', agentId, count: fresh.length });
-
-    const lines = fresh.map((m) => `- [from ${m.from}, ${m.act}] ${m.subject}: ${m.body}`).join('\n');
-    const reason = [
-      `You have ${fresh.length} new hive message(s) in your inbox. Address them before finishing:`,
-      lines,
-      // Native separators (join, not string-concatenated `/`) so a Windows agent is
-      // handed a path its own shell/tools accept, not `C:\…\agents\god/inbox/`.
-      `Open the files in ${join(dir, 'inbox')} for full detail, act on each, then move handled ones to ${join(dir, 'inbox', '.done')}. Reply via your outbox if a message requires it.`
-    ].join('\n');
-    return { block: true, reason };
   }
 
   // — agent-facing text —
@@ -1977,7 +1982,7 @@ export class HiveManager {
       return;
     }
     const reg = this.registry();
-    const godId = reg.godId ?? 'god';
+    const godId = this.trustedGod ?? 'god';
     // The hive has no separate human-approval queue — approvals are native to
     // each agent's Claude Code session (and approvable remotely). A message aimed
     // at "human" is handled by the god/orchestrator, the human's proxy here.
@@ -2219,15 +2224,28 @@ export class HiveManager {
     }
   }
 
+  private deliveryCache = new Map<string, { mtimeMs: number; d: Delivery | null }>();
   /** Newest first. Unreadable or malformed manifests are skipped. */
   deliveries(limit = 200): Delivery[] {
     const base = this.deliveriesDir();
     if (!base || !existsSync(base)) return [];
     const out: Delivery[] = [];
-    for (const id of readdirSync(base)) {
+    const ids = readdirSync(base);
+    for (const id of ids) {
       if (!isDeliveryId(id)) continue;
-      const d = this.readJson<Delivery | null>(join(base, id, 'delivery.json'), null);
+      const p = join(base, id, 'delivery.json');
+      // The tray badge polls this every 10s: re-parse a manifest only when its
+      // file changed, so a long-running floor with many deliveries stays cheap.
+      let mtimeMs: number;
+      try { mtimeMs = lstatSync(p).mtimeMs; } catch { continue; }
+      const hit = this.deliveryCache.get(id);
+      const d = hit && hit.mtimeMs === mtimeMs ? hit.d : this.readJson<Delivery | null>(p, null);
+      if (!hit || hit.mtimeMs !== mtimeMs) this.deliveryCache.set(id, { mtimeMs, d });
       if (d && d.id === id && Array.isArray(d.files)) out.push(d);
+    }
+    if (this.deliveryCache.size > ids.length) {
+      const live = new Set(ids);
+      for (const id of this.deliveryCache.keys()) if (!live.has(id)) this.deliveryCache.delete(id);
     }
     out.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
     return out.slice(0, limit);
@@ -2258,7 +2276,9 @@ export class HiveManager {
     const base = this.deliveriesDir();
     if (!base || !isDeliveryId(id) || typeof name !== 'string') return null;
     const d = this.readJson<Delivery | null>(join(base, id, 'delivery.json'), null);
-    if (!d || !d.files.some((f) => f.name === name)) return null;
+    // basename check: delivery.json is agent-written, and a "..\x" name would
+    // survive the realpath comparison below (both sides normalize the same way).
+    if (basename(name) !== name || !d || !d.files.some((f) => f.name === name)) return null;
     const p = join(base, id, name);
     try {
       const st = lstatSync(p);
@@ -2310,7 +2330,11 @@ export class HiveManager {
     const agentsDir = join(root, 'agents');
     if (!isRealDir(agentsDir)) return 0;
     let routed = 0;
+    // Archived workers can't post: skipping them keeps this 1.5s tick from
+    // stat-ing hundreds of dead folders on a floor that has run for weeks.
+    const archived = new Set(Object.entries(this.registry().agents).filter(([, a]) => a?.archived).map(([id]) => id));
     for (const id of readdirSync(agentsDir)) {
+      if (archived.has(id)) continue;
       const outbox = join(agentsDir, id, 'outbox');
       // A linked agent folder or outbox would have main move files around
       // wherever the link points.
@@ -2322,7 +2346,9 @@ export class HiveManager {
         // that has sat unchanged for a while; a fresh one is retried next tick.
         const settled = (): boolean => Date.now() - statSync(full).mtimeMs >= OUTBOX_SETTLE_MS;
         try {
-          const raw = readFileSync(full, 'utf8');
+          // readPlain: an agent can drop a FIFO here, and a plain read would block
+          // the main thread forever.
+          const raw = readPlain(full);
           let partial: Partial<HiveMessage>;
           try {
             partial = JSON.parse(raw) as Partial<HiveMessage>;
@@ -2486,12 +2512,6 @@ export class HiveManager {
         .filter((f) => f.endsWith('.json')).sort().map((f) => f.slice(0, -'.json'.length));
     } catch { return []; }
   }
-  /** Read an agent's OUTBOX (messages it has authored/sent). Symmetric with
-   *  inbox(); the router drains live outbox files into recipients' inboxes and
-   *  archives the original under outbox/.sent, so a sent message survives there. */
-  outbox(id: string): HiveMessage[] {
-    return this.listMessages(join(this.agentDir(id), 'outbox'));
-  }
 
   /**
    * Voice read-layer: recent message CONTENT (inbox + outbox bodies) for the
@@ -2621,7 +2641,9 @@ export class HiveManager {
         mkdirSync(dirname(p), { recursive: true });
         let existing: Record<string, unknown> = {};
         if (existsSync(p)) {
-          try { existing = JSON.parse(readFileSync(p, 'utf8')) as Record<string, unknown>; } catch { existing = {}; }
+          // An unparseable file is the user's (a comment, a trailing comma): leave
+          // it alone rather than rewrite it and lose their own hooks.
+          try { existing = JSON.parse(readFileSync(p, 'utf8')) as Record<string, unknown>; } catch { continue; }
         }
         existing['atmt-hive'] = group;
         writeFileSync(p, JSON.stringify(existing, null, 2), 'utf8');
@@ -2676,7 +2698,7 @@ export class HiveManager {
    *  Codex's hook contract is already Claude-shaped: snake_case stdin
    *  (hook_event_name/tool_name/tool_input/session_id/cwd) and a matching response
    *  contract, where `Stop` honoring {decision:'block',reason} means "continue,
-   *  using reason as the next prompt" — exactly what drainForStop() returns. So we
+   *  using reason as the next prompt" — the same contract as Claude's Stop hook. So we
    *  reuse the Claude `cth-hook` shim VERBATIM (no translator, unlike agy) and let
    *  HookServer handle everything unchanged.
    *
@@ -2690,13 +2712,24 @@ export class HiveManager {
    *  (login + model/provider/trust settings still apply).
    *  Returns the CODEX_HOME path for the caller to put in the worker's env. */
   private installCodexHooks(dir: string, agentId: string): string {
-    const home = join(dir, '.codex');
+    // CODEX_HOME holds config.toml with our [hooks] and is run with hook trust
+    // bypassed, so it lives in hive-internal (agents cannot write there) — not in
+    // the agent's hive dir, where any agent could append a hook or MCP server.
+    let home = join(dir, '.codex');
     try {
-      realDirs(dir, '.codex');
+      home = this.trustedAgentDir(dir, '.codex');
       // lstat, not existsSync: a planted dangling link must read as "taken",
       // never as a free name to copy the user's login through.
       const taken = (p: string): boolean => { try { lstatSync(p); return true; } catch { return false; } };
       const userHome = join(homedir(), '.codex');
+      // One-time carry-over from the old agent-writable home: ONLY Codex's session
+      // index (plain data, so `codex resume` still finds old sessions). Never its
+      // config, hooks, skills or plugins — the agent could have planted those.
+      for (const f of ['state_5.sqlite', 'state_5.sqlite-wal', 'state_5.sqlite-shm']) {
+        const from = join(dir, '.codex', f);
+        try { if (!taken(join(home, f)) && lstatSync(from).isFile()) copyFileSync(from, join(home, f)); }
+        catch { /* absent — a fresh agent */ }
+      }
       // Symlink the user's login so the isolated home authenticates as them.
       // (config.toml is NOT symlinked — we write our own below, seeded from theirs,
       // because it must carry our [hooks] tables.) Fall back to copy where symlinks
@@ -2720,7 +2753,7 @@ export class HiveManager {
       // this config.toml from the user's (their model/provider/trust settings carry
       // over) and append a `[[hooks.<Event>]]` group per event, each pointing at the
       // SAME cth-hook shim — reused verbatim (Codex's hook payload + response are
-      // already Claude-shaped, so HookServer/drainForStop run unchanged). Regenerated
+      // already Claude-shaped, so HookServer runs unchanged). Regenerated
       // each spawn (idempotent). Serialize the generated command as a TOML basic
       // string; JSON string escaping is compatible here and, on POSIX, preserves
       // the embedded quotes required when a user-selected hive path has spaces.
@@ -2763,9 +2796,20 @@ export class HiveManager {
       // Keep each worker's CODEX_HOME isolated while putting its rollout data
       // below Codex's standard scan roots. External usage tools can then discover
       // the sessions without understanding the hive's private directory layout.
+      // The old agent-writable home goes first: exposing it moves any sessions
+      // still sitting there into the shared target, which the new home then links.
+      const legacyHome = join(dir, '.codex');
+      if (isRealDir(legacyHome)) this.exposeCodexDataDirs(legacyHome, userHome, agentId);
       this.exposeCodexDataDirs(home, userHome, agentId);
     } catch (e) { console.error('[hive] installCodexHooks failed:', e); }
     return home;
+  }
+
+  /** An agent's Codex homes: the trusted one in hive-internal (a sibling of the
+   *  hive root, also when a floor reset has staged both elsewhere) and the old
+   *  agent-writable one, still read for its exposed session links. */
+  private codexHomes(root: string, id: string): string[] {
+    return [join(dirname(root), 'hive-internal', 'agents', id, '.codex'), join(root, 'agents', id, '.codex')];
   }
 
   private exposeCodexDataDirs(home: string, userHome: string, agentId: string): void {
@@ -2856,10 +2900,11 @@ export class HiveManager {
 
     for (const entry of readdirSync(agents, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
+      for (const codexHome of this.codexHomes(root, entry.name))
       for (const kind of ['sessions', 'archived_sessions'] as const) {
-        const source = join(agents, entry.name, '.codex', kind);
+        const source = join(codexHome, kind);
         try {
-          if (!isRealDir(join(agents, entry.name, '.codex')) || !lstatSync(source).isSymbolicLink()) continue;
+          if (!isRealDir(codexHome) || !lstatSync(source).isSymbolicLink()) continue;
           const target = realpathSync(source);
           const scanRoot = realpathSync(join(userHome, kind, 'atmt-labs'));
           const rel = relative(scanRoot, target);
@@ -3060,12 +3105,14 @@ export class HiveManager {
     try { this.atomicWriteJson(join(root, 'fleet.json'), snapshot); } catch { /* noop */ }
   }
 
+  /** The orchestrator's id as this process recorded it, never registry.json. */
+  godAgentId(): string {
+    return this.trustedGod ?? 'god';
+  }
+
   /** Is this agent the hive's god/orchestrator? */
   isGod(agentId: string): boolean {
-    try {
-      const reg = this.registry();
-      return reg.godId === agentId || !!reg.agents[agentId]?.isGod;
-    } catch { return false; }
+    return !!agentId && agentId === (this.trustedGod ?? 'god');
   }
 
   /**
@@ -3097,7 +3144,7 @@ export class HiveManager {
     const root = this.root();
     if (!root) return null;
     try {
-      const raw = readFileSync(join(root, 'fleet.json'), 'utf8');
+      const raw = readPlain(join(root, 'fleet.json'));
       const snap = JSON.parse(raw) as {
         ts?: number;
         agents?: Array<{
@@ -3174,11 +3221,15 @@ export class HiveManager {
     const p = root ? join(root, 'log.jsonl') : '';
     if (!p || !existsSync(p)) return [];
     // Polled every few seconds against a file that only grows: read the tail only.
-    const size = statSync(p).size;
-    const len = Math.min(size, LOG_TAIL_BYTES);
-    const buf = Buffer.alloc(len);
-    const fd = openSync(p, 'r');
-    try { readSync(fd, buf, 0, len, size - len); } finally { closeSync(fd); }
+    // Agent-writable: NOFOLLOW/NONBLOCK + fstat so a link or FIFO can't hang us.
+    const fd = openSync(p, READ_NOFOLLOW);
+    let size = 0, len = 0, buf = Buffer.alloc(0);
+    try {
+      const st = fstatSync(fd);
+      if (!st.isFile()) return [];
+      size = st.size; len = Math.min(size, LOG_TAIL_BYTES); buf = Buffer.alloc(len);
+      readSync(fd, buf, 0, len, size - len);
+    } finally { closeSync(fd); }
     let lines = buf.toString('utf8').split('\n');
     if (len < size) lines = lines.slice(1); // the first line is cut mid-record
     lines = lines.filter((l) => l.trim());
@@ -3342,15 +3393,15 @@ export class HiveManager {
   // reach) and the work tree is the hive root, which agents DO write. Hooks and
   // fsmonitor are switched off on top: they are the config keys that make git run
   // a program, and this process is not sandboxed.
-  private git(args: string[], root: string): { ok: boolean; out: string; err: string } {
-    const res = spawnSync('git', [
+  private git(args: string[], root: string): { ok: boolean; out: string; err: string; timedOut: boolean } {
+    const res = spawnSync(trustedToolPath('git'), [
       `--git-dir=${this.gitDir()}`, `--work-tree=${root}`,
       '-c', `core.hooksPath=${this.noHooksDir()}`, '-c', 'core.fsmonitor=false',
       '-c', 'commit.gpgsign=false', '-c', 'gc.autoDetach=false', '-c', 'user.name=Hive', '-c', 'user.email=hive@local', ...args
     ], {
       cwd: root, encoding: 'utf8', timeout: 8000
     });
-    return { ok: res.status === 0, out: res.stdout ?? '', err: res.stderr ?? '' };
+    return { ok: res.status === 0, out: res.stdout ?? '', err: res.stderr ?? '', timedOut: res.status === null };
   }
 
   /** Has the one-time cost-ledger untrack pass run in this process yet? */
@@ -3375,10 +3426,13 @@ export class HiveManager {
     this.untrackedCostLedger = true;
     // Probe before mutating: `rm --cached` on a repo that never tracked it
     // would still rewrite the index on every launch, inside the retry path.
-    const tracked = this.git(['ls-files', '--', 'cost-ledger.jsonl'], root);
-    if (!tracked.ok || !tracked.out.trim()) return;
-    this.git(['rm', '--cached', '-q', '--ignore-unmatch', '--', 'cost-ledger.jsonl'], root);
-    console.warn('[hive] untracked the cost ledger from the hive repo');
+    // log.jsonl too: it only grows, and each commit stored a whole new copy.
+    for (const file of ['cost-ledger.jsonl', 'log.jsonl']) {
+      const tracked = this.git(['ls-files', '--', file], root);
+      if (!tracked.ok || !tracked.out.trim()) continue;
+      this.git(['rm', '--cached', '-q', '--ignore-unmatch', '--', file], root);
+      console.warn(`[hive] untracked ${file} from the hive repo`);
+    }
   }
 
   /** Has the one-time Codex-home untrack pass run in this process yet? */
@@ -3419,6 +3473,10 @@ export class HiveManager {
 
   private commitTimer: NodeJS.Timeout | null = null;
   private pendingCommits: string[] = [];
+  /** After a git timeout, hive commits pause until this time. Each timeout blocks
+   *  the main thread for the full 8s, and while it is blocked the hook shims time
+   *  out to "allow" — so retrying would leave pause/halt gates open. */
+  private commitBackoffUntil = 0;
 
   /**
    * Record that the hive changed. The actual `git add -A && commit` (two
@@ -3445,13 +3503,25 @@ export class HiveManager {
     const root = this.root();
     const gitDir = this.gitDir();
     if (!root || !gitDir || !existsSync(gitDir)) return;
+    if (Date.now() < this.commitBackoffUntil) return;
     this.untrackCostLedger(root);
     this.untrackCodexHomes(root);
     for (let attempt = 0; attempt < 5; attempt++) {
       this.clearStaleLock(gitDir);
       const add = this.git(['add', '-A'], root);
+      if (add.timedOut) {
+        // A huge file in the hive: retrying only blocks again. Back off for 5 min.
+        this.commitBackoffUntil = Date.now() + 5 * 60_000;
+        console.warn('[hive] git add timed out; pausing hive commits for 5 minutes');
+        return;
+      }
       const commit = this.git(['commit', '-q', '-m', message], root);
       if (commit.ok) return;
+      if (commit.timedOut) {
+        this.commitBackoffUntil = Date.now() + 5 * 60_000;
+        console.warn('[hive] git commit timed out; pausing hive commits for 5 minutes');
+        return;
+      }
       if (/nothing to commit/i.test(commit.out + commit.err)) return;
       if (!add.ok || /index\.lock/i.test(commit.err)) { sleepSync(50 * (attempt + 1)); continue; }
       console.warn(`[hive] commit gave up after ${attempt + 1} attempts:`, commit.err || commit.out);

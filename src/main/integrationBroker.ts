@@ -32,6 +32,7 @@ import {
   resolveUpstreamUrl,
   authTypeNeedsSecret
 } from '../shared/integrations';
+import { isLoopback } from './netUtil';
 
 const MAX_BODY_BYTES = 10 * 1024 * 1024; // 10 MB request-body cap
 const UPSTREAM_TIMEOUT_MS = 30_000;
@@ -43,6 +44,11 @@ const MCP_UPSTREAM_TIMEOUT_MS = 10 * 60_000;
  *  the timeout only covers waiting for the response headers; after that the stream is
  *  bounded by the agent hanging up. */
 const MODEL_MAX_BODY_BYTES = 32 * 1024 * 1024;
+/** All request bodies held in memory at once, across every agent. Each body is
+ *  buffered until the upstream call is sent, so without this many parallel large
+ *  requests from one agent could exhaust main's memory and kill every terminal. */
+const MAX_BUFFERED_BYTES = 256 * 1024 * 1024;
+let bufferedBytes = 0;
 const MODEL_FIRST_BYTE_TIMEOUT_MS = 10 * 60_000;
 const DEFAULT_USER_AGENT = 'devlabs-broker/1';
 
@@ -82,11 +88,6 @@ export interface IntegrationBrokerDeps {
 }
 
 /** True for IPv4 loopback (127.0.0.0/8) and IPv6 ::1 (incl. v4-mapped). Mirrors slack.ts. */
-function isLoopback(addr: string): boolean {
-  const a = addr.replace(/^::ffff:/, '');
-  return a === '::1' || a.startsWith('127.');
-}
-
 export class IntegrationBroker {
   private server: Server | null = null;
   private port = 0;
@@ -286,9 +287,17 @@ export class IntegrationBroker {
         if ((e as Error).message === 'too_large') {
           return IntegrationBroker.sendError(res, 413, 'payload_too_large', 'request body too large');
         }
+        if ((e as Error).message === 'busy') {
+          return IntegrationBroker.sendError(res, 503, 'busy', 'too much request data in flight; retry shortly');
+        }
         return IntegrationBroker.sendError(res, 400, 'bad_request', 'could not read request body');
       }
     }
+    // The body counts against MAX_BUFFERED_BYTES until the upstream call is done
+    // sending it (readBodyCapped added it).
+    const held = body?.length ?? 0;
+    let released = false;
+    const release = (): void => { if (!released) { released = true; bufferedBytes -= held; } };
 
     // Sanitize worker headers, then inject the auth header(s). Injected auth ALWAYS
     // wins: the strip list removes any worker-supplied authorization/auth header.
@@ -319,7 +328,9 @@ export class IntegrationBroker {
         redirect: 'manual',
         signal: ac.signal
       });
+      release();
     } catch (e) {
+      release();
       clearTimeout(timer);
       // The message could in theory contain the URL but never the secret.
       return IntegrationBroker.sendError(res, 502, 'bad_gateway', `upstream request failed: ${(e as Error).message}`);
@@ -351,13 +362,22 @@ function readBodyCapped(req: IncomingMessage, maxBytes = MAX_BODY_BYTES): Promis
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let size = 0;
+    let failed = false;
+    // On failure, give back what this request had counted; on success the
+    // caller releases it once the body is sent.
+    const fail = (e: Error): void => { if (failed) return; failed = true; bufferedBytes -= size; reject(e); req.destroy(); };
     req.on('data', (c: Buffer) => {
+      if (failed) return;
+      if (size + c.length > maxBytes) return fail(new Error('too_large'));
+      if (bufferedBytes + c.length > MAX_BUFFERED_BYTES) return fail(new Error('busy'));
       size += c.length;
-      if (size > maxBytes) { reject(new Error('too_large')); req.destroy(); return; }
+      bufferedBytes += c.length;
       chunks.push(c);
     });
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', (e) => reject(e));
+    let ended = false;
+    req.on('end', () => { ended = true; if (!failed) resolve(Buffer.concat(chunks)); });
+    req.on('error', (e) => fail(e));
+    req.on('close', () => { if (!ended) fail(new Error('aborted')); }); // client hung up mid-body
   });
 }
 

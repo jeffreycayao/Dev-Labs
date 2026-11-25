@@ -85,6 +85,25 @@ export const ITEM_FOOTPRINT: Record<string, [number, number]> = {
   trash: [20, 20],
   mug: [14, 14],
   clock: [20, 20],
+  // DevLabs: nature and decor for office themes (objects/nature.tsx).
+  tree: [60, 60],
+  pine_tree: [50, 50],
+  bush: [40, 40],
+  hedge: [100, 20],
+  flower: [16, 16],
+  flower_bed: [80, 40],
+  mushroom: [24, 24],
+  rock: [30, 30],
+  stump: [30, 30],
+  log: [70, 20],
+  pond: [140, 90],
+  path: [120, 40],
+  fence: [100, 10],
+  lantern: [16, 16],
+  butterfly: [20, 20],
+  bird: [20, 20],
+  gift: [22, 22],
+  snowman: [34, 34],
 };
 
 export const getItemBaseSize = (item: FurnitureItem) => {
@@ -177,6 +196,25 @@ export const ITEM_METADATA: Record<string, { blocksNavigation: boolean; navPaddi
   trash:           { blocksNavigation: false }, // small bin
   clock:           { blocksNavigation: false }, // wall-mounted
   mug:             { blocksNavigation: false }, // desk item
+  // ── nature / decor (office themes) ────────────────────────────────────────
+  tree:            { blocksNavigation: true  },
+  pine_tree:       { blocksNavigation: true  },
+  bush:            { blocksNavigation: true  },
+  hedge:           { blocksNavigation: true, navPadding: 0 },
+  fence:           { blocksNavigation: true, navPadding: 0 },
+  flower_bed:      { blocksNavigation: true  },
+  mushroom:        { blocksNavigation: true  },
+  rock:            { blocksNavigation: true  },
+  stump:           { blocksNavigation: true  },
+  log:             { blocksNavigation: true  },
+  pond:            { blocksNavigation: true  },
+  flower:          { blocksNavigation: false }, // small; agents step past
+  path:            { blocksNavigation: false }, // flat floor marking
+  lantern:         { blocksNavigation: false }, // thin post
+  butterfly:       { blocksNavigation: false }, // airborne
+  bird:            { blocksNavigation: false }, // airborne
+  gift:            { blocksNavigation: false }, // small parcel
+  snowman:         { blocksNavigation: true  },
 };
 
 export const FURNITURE_ROTATION: Record<string, number> = {

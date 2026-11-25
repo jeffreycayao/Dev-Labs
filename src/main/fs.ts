@@ -1,4 +1,4 @@
-import { readdir, lstat, open, realpath, rename, rm, stat } from 'node:fs/promises';
+import { readdir, lstat, open, readFile, realpath, rename, rm, stat } from 'node:fs/promises';
 import type { FileHandle } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { basename, dirname, isAbsolute, join, normalize, relative, resolve, sep } from 'node:path';
@@ -273,11 +273,33 @@ export async function readFileBinary(root: string, rel: string, maxBytes = MAX_B
   }
 }
 
-export async function writeFileText(root: string, rel: string, content: string): Promise<{
+export async function writeFileText(root: string, rel: string, content: string, expected?: string): Promise<{
   ok: true; path: string;
 } | { ok: false; error: string }> {
   const abs = await safeResolve(root, rel);
   if (!abs) return { ok: false, error: 'path escapes root' };
+  // `expected` is the text the editor loaded. Agents edit the same files, so a
+  // file that changed since then is not overwritten — that would silently drop
+  // the agent's work.
+  // Checked through a no-follow, non-blocking handle: an agent can swap the file
+  // for a FIFO, and a plain read or stat of one hangs a threadpool thread forever.
+  let mode: number | undefined;
+  let current: string | null = null;
+  {
+    let rh: FileHandle | undefined;
+    try {
+      rh = await openForRead(abs);
+      const st = await rh.stat();
+      if (!st.isFile()) return { ok: false, error: 'not a regular file' };
+      mode = st.mode & 0o7777;
+      if (expected !== undefined) current = await rh.readFile('utf8');
+    } catch { /* missing: a new file */ } finally { await rh?.close().catch(() => {}); }
+  }
+  if (expected !== undefined) {
+    if (current !== expected) {
+      return { ok: false, error: 'This file changed on disk since you opened it. Copy your edits, reopen the file, then save again.' };
+    }
+  }
   // Write a temp file beside it, then rename over it: a crash or a full disk
   // mid-save leaves the old file whole instead of truncated. rename replaces
   // whatever sits at `abs` without following it, so a swapped-in symlink is
@@ -285,8 +307,6 @@ export async function writeFileText(root: string, rel: string, content: string):
   const tmp = join(dirname(abs), `.${basename(abs)}.tmp-${Math.random().toString(36).slice(2, 10)}`);
   let fh;
   try {
-    let mode: number | undefined;
-    try { mode = (await stat(abs)).mode & 0o7777; } catch { /* a new file gets the default mode */ }
     fh = await open(tmp, WRITE_FLAGS, 0o666);
     await fh.writeFile(content, 'utf8');
     if (mode !== undefined) await fh.chmod(mode);

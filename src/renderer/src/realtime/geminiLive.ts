@@ -52,6 +52,8 @@ export interface GeminiLiveOptions {
   onError(msg: string): void;
   /** The socket closed after setup (not via close()). */
   onClosed(reason: string): void;
+  /** One user utterance, transcribed: when it started, and its text. */
+  onHeard(at: number, text: string): void;
 }
 
 function toBase64(bytes: Uint8Array): string {
@@ -204,6 +206,13 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
     }
   };
 
+  let heardText = '';
+  let heardAt = 0;
+  /** Set when a tool call arrives before any of the user's words were
+   *  transcribed: those words were spoken BEFORE the call, so they are stamped
+   *  just before it. Otherwise "kill Bob" transcribed after the propose call
+   *  would look like speech after the action was staged, and count as its confirm. */
+  let spokenBefore = 0;
   return new Promise<GeminiLiveHandle>((resolve, reject) => {
     ws.onopen = () => {
       send({
@@ -214,6 +223,8 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: o.voice } } }
           },
           systemInstruction: { parts: [{ text: o.instructions }] },
+          // Transcribe the user's own speech: a voice confirm is judged on this.
+          inputAudioTranscription: {},
           tools: [{ functionDeclarations: toGeminiDeclarations(o.tools) }]
         }
       });
@@ -232,9 +243,20 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
         return;
       }
       const sc = msg.serverContent as
-        | { modelTurn?: { parts?: { inlineData?: { data?: string } }[] }; interrupted?: boolean; turnComplete?: boolean }
+        | { modelTurn?: { parts?: { inlineData?: { data?: string } }[] }; interrupted?: boolean; turnComplete?: boolean; inputTranscription?: { text?: string } }
         | undefined;
       if (sc) {
+        // The user's words stream in as chunks; one utterance ends when Ramon's
+        // reply starts or the turn completes.
+        const chunk = sc.inputTranscription?.text;
+        if (chunk) {
+          if (!heardText) heardAt = spokenBefore || Date.now();
+          heardText += chunk;
+          // Passed on as it grows: a confirm_action call waits on the tool result,
+          // so the model reply that would close this utterance never comes first.
+          o.onHeard(heardAt, heardText);
+        }
+        if (sc.modelTurn || sc.turnComplete) { heardText = ''; spokenBefore = 0; }
         // Barge-in: the user talked over Ramon — stop his audio right away.
         if (sc.interrupted) { flushPlayback(); o.onIdle(); }
         if (sc.modelTurn) modelTurnOpen = true;
@@ -253,7 +275,12 @@ export function openGeminiLive(o: GeminiLiveOptions): Promise<GeminiLiveHandle> 
       if (msg.usageMetadata && typeof msg.usageMetadata === 'object') turnUsage = msg.usageMetadata as Record<string, unknown>;
       if (turnDone && turnUsage) { o.onUsage(turnUsage); turnUsage = null; turnDone = false; }
       const tc = msg.toolCall as { functionCalls?: { id?: string; name?: string; args?: unknown }[] } | undefined;
-      if (tc?.functionCalls?.length) void runTools(tc.functionCalls);
+      if (tc?.functionCalls?.length) {
+        // Hand over what the user just said first: a confirm_action call usually
+        // arrives before the reply that would otherwise close the utterance.
+        if (!heardText) spokenBefore = Date.now() - 1;
+        void runTools(tc.functionCalls);
+      }
       if (msg.goAway) o.onError('Gemini Live session is ending soon (server goAway) — reconnect if it drops.');
     };
     ws.onerror = () => { /* the close event carries the reason */ };

@@ -46,3 +46,21 @@ test('empty or garbage output yields no entries', () => {
   assert.deepEqual(toOpencodeEntries(parseOpencodeModels('')), []);
   assert.deepEqual(toOpencodeEntries(parseOpencodeModels('command not found')), []);
 });
+
+test('OpenRouter list: tool-capable models only, free vs paid by price, unsafe ids dropped', () => {
+  const { parseOpenRouterModels } = loadTs('src/main/cliModels.ts');
+  const tools = ['tools', 'temperature'];
+  const models = parseOpenRouterModels({ data: [
+    { id: 'qwen/qwen3-coder:free', name: 'Qwen3 Coder (free)', pricing: { prompt: '0', completion: '0' }, context_length: 262000, supported_parameters: tools },
+    { id: 'z-ai/glm-4.6', name: 'GLM 4.6', pricing: { prompt: '0.0000006', completion: '0.0000022' }, supported_parameters: tools },
+    { id: 'some/chat-only', name: 'No tools', pricing: { prompt: '0', completion: '0' }, supported_parameters: ['temperature'] },
+    { id: 'openrouter/auto', name: 'Auto', pricing: { prompt: '-1', completion: '-1' }, supported_parameters: tools },
+    { id: 'evil/x" & calc', name: 'Bad', pricing: { prompt: '0', completion: '0' }, supported_parameters: tools }
+  ] });
+  assert.deepEqual(models.map((m) => [m.id, m.free]), [
+    ['openrouter/z-ai/glm-4.6', false],
+    ['openrouter/qwen/qwen3-coder:free', true]
+  ]);
+  assert.equal(models[0].inPerM.toFixed(2), '0.60');
+  assert.deepEqual(parseOpenRouterModels(null), []);
+});

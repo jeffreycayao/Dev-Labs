@@ -126,6 +126,14 @@ test('only files named in the manifest can be read', async (t) => {
   fs.unlinkSync(snapshot);
   fs.symlinkSync(path.join(project, 'r.md'), snapshot);
   assert.equal(hive.deliveryFilePath(id, 'r.md'), null, 'replaced snapshot symlinks cannot be exported');
+  // A forged manifest that LISTS a ".." name: realpath on both sides would agree,
+  // so the name itself must be a bare file name.
+  const manifest = path.join(home, 'hive', 'deliveries', id, 'delivery.json');
+  const forged = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+  const escape = path.join('..', '..', 'registry.json');
+  forged.files.push({ name: escape });
+  fs.writeFileSync(manifest, JSON.stringify(forged));
+  assert.equal(hive.deliveryFilePath(id, escape), null, 'a manifest-listed ".." name escapes the delivery');
   assert.match(fs.readFileSync(path.join(home, 'hive', '.gitignore'), 'utf8'), /^deliveries\/$/m);
 });
 
@@ -138,7 +146,7 @@ test('shared helpers: names, kinds, what may be opened', () => {
   assert.equal(deliveryKind('Report.DOCX'), 'word');
   assert.equal(deliveryKind('page.htm'), 'html');
   assert.equal(deliveryKind('tool.exe'), 'other');
-  for (const bad of ['setup.exe', 'app.dmg', 'run.sh', 'x.command', 'y.desktop', 'z.bat', 'noext']) {
+  for (const bad of ['setup.exe', 'app.dmg', 'run.sh', 'x.command', 'y.desktop', 'z.bat', 'noext', 'm.xls', 'm.doc', 'm.ppt', 'm.rtf', 'm.odt']) {
     assert.equal(canOpenWithSystemApp(bad), false, bad);
   }
   for (const good of ['a.html', 'b.md', 'c.pdf', 'd.docx', 'e.png', 'f.xlsx', 'g.pptx']) {

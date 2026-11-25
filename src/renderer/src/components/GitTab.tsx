@@ -4,6 +4,7 @@ import type { TFunction } from 'i18next';
 import { CommitGraph } from './git/CommitGraph';
 import { PixelButton } from './PixelButton';
 import { Icon } from './Icon';
+import { statusColor } from '@/lib/uiHelpers';
 
 interface GitCommit {
   sha: string;
@@ -29,15 +30,6 @@ function statusLabelKey(code: string): string {
     : code === '?' ? 'gitTab.untracked'
     : code === 'U' ? 'gitTab.unmerged'
     : code === ' ' ? '' : code;
-}
-
-function statusColor(code: string): string {
-  if (code === 'M') return 'var(--cth-lemon)';
-  if (code === 'A') return 'var(--cth-mint)';
-  if (code === 'D') return 'var(--cth-coral)';
-  if (code === 'R') return 'var(--cth-lilac)';
-  if (code === '?') return 'var(--cth-ink-300)';
-  return 'var(--cth-ink-500)';
 }
 
 export function GitTab({ cwd }: GitTabProps) {

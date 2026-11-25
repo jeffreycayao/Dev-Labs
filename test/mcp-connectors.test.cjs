@@ -40,11 +40,11 @@ test('Fireflies goes through the broker with the key as a Bearer token', () => {
   const FF = 'fireflies-key-DO-NOT-LEAK-321';
   const e = cat.mcpCatalogEntry('fireflies');
   assert.equal(e.defaultEnabled, false);
-  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://api.fireflies.ai', authType: 'bearer' });
+  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://api.fireflies.ai/mcp', authType: 'bearer' });
   const { buildAuthHeaders } = loadTs('src/shared/integrations.ts');
   assert.deepEqual(buildAuthHeaders('bearer', undefined, FF), { authorization: `Bearer ${FF}` });
   const r = cat.buildMcpServers({ cwd: '/w', consent: { fireflies: { enabled: true } }, getSecret: () => FF, broker });
-  assert.equal(r.servers['atmt-fireflies'].url, 'http://127.0.0.1:5555/i/mcp-fireflies/mcp');
+  assert.equal(r.servers['atmt-fireflies'].url, 'http://127.0.0.1:5555/i/mcp-fireflies/');
   assert.ok(!JSON.stringify(r.servers).includes(FF), 'key must never reach agent config');
 });
 
@@ -106,7 +106,7 @@ test('http connector points at the BROKER with the capability token; the key app
   const r = cat.buildMcpServers({ cwd: '/w', consent: { 'pancake-pos': { enabled: true } }, getSecret, broker });
   const s = r.servers['atmt-pancake-pos'];
   assert.equal(s.type, 'http');
-  assert.equal(s.url, 'http://127.0.0.1:5555/i/mcp-pancake-pos/mcp');
+  assert.equal(s.url, 'http://127.0.0.1:5555/i/mcp-pancake-pos/');
   assert.deepEqual(s.headers, { authorization: 'Bearer cap-token' });
   assert.ok(!JSON.stringify(r.servers).includes(KEY), 'vendor key must never reach agent config');
   assert.ok(!JSON.stringify(r.servers).includes('mcp-pos.pancake.biz'), 'agent never talks to the vendor directly');
@@ -275,9 +275,9 @@ test('systeme.io is the vendor-hosted endpoint with the documented X-MCP-Key hea
   assert.deepEqual([e.secret.kind, e.secret.name], ['header', 'X-MCP-Key']);
   assert.equal(e.tier, 'secret');
   assert.equal(e.defaultEnabled, false);
-  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://mcp.systeme.io', authType: 'header', authHeader: 'X-MCP-Key' });
+  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://mcp.systeme.io/mcp', authType: 'header', authHeader: 'X-MCP-Key' });
   const r = cat.buildMcpServers({ cwd: '/w', consent: { 'systeme-io': { enabled: true } }, getSecret: () => SYS, broker });
-  assert.equal(r.servers['atmt-systeme-io'].url, 'http://127.0.0.1:5555/i/mcp-systeme-io/mcp');
+  assert.equal(r.servers['atmt-systeme-io'].url, 'http://127.0.0.1:5555/i/mcp-systeme-io/');
   assert.ok(!JSON.stringify(r.servers).includes(SYS), 'key must never reach agent config');
 });
 
@@ -285,17 +285,61 @@ test('GoHighLevel goes through the broker as a Bearer PIT; locationId is a plain
   const PIT = 'pit-DO-NOT-LEAK-888';
   const e = cat.mcpCatalogEntry('gohighlevel');
   assert.equal(e.defaultEnabled, false);
-  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://services.leadconnectorhq.com', authType: 'bearer' });
+  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://services.leadconnectorhq.com/mcp/', authType: 'bearer' });
   // Without a location id the header is left out (the token is scoped to one sub-account).
   const bare = cat.buildMcpServers({ cwd: '/w', consent: { gohighlevel: { enabled: true } }, getSecret: () => PIT, broker });
   const s = bare.servers['atmt-gohighlevel'];
-  assert.equal(s.url, 'http://127.0.0.1:5555/i/mcp-gohighlevel/mcp/');
+  assert.equal(s.url, 'http://127.0.0.1:5555/i/mcp-gohighlevel/');
   assert.deepEqual(s.headers, { authorization: 'Bearer cap-token' });
   assert.deepEqual(bare.skipped, []);
   // With one, it rides along as a plain header the broker forwards; the PIT still never appears.
   const withLoc = cat.buildMcpServers({ cwd: '/w', consent: { gohighlevel: { enabled: true } }, getSecret: () => PIT, broker, vars: { 'ghl-location-id': 'loc_123' } });
   assert.deepEqual(withLoc.servers['atmt-gohighlevel'].headers, { locationId: 'loc_123', authorization: 'Bearer cap-token' });
   assert.ok(!JSON.stringify(withLoc.servers).includes(PIT), 'token must never reach agent config');
+});
+
+test('Meta Ads is off by default, a Bearer token through the broker, never in agent config', () => {
+  const TOK = 'EAA-meta-DO-NOT-LEAK-999';
+  const e = cat.mcpCatalogEntry('meta-ads');
+  assert.deepEqual(e.spec, { transport: 'http', url: 'https://mcp.facebook.com/ads', authType: 'bearer' });
+  assert.equal(e.tier, 'secret');
+  assert.equal(e.defaultEnabled, false);
+  assert.deepEqual(cat.defaultMcpDefaults()['meta-ads'], { enabled: false });
+  assert.deepEqual(cat.mcpBrokerTarget(e), { baseUrl: 'https://mcp.facebook.com/ads', authType: 'bearer' });
+  // Not consented → not written, even with a token saved.
+  assert.equal(cat.buildMcpServers({ cwd: '/w', consent: {}, getSecret: () => TOK, broker }).servers['atmt-meta-ads'], undefined);
+  // Consented but no token → skipped, never half-configured.
+  assert.deepEqual(cat.buildMcpServers({ cwd: '/w', consent: { 'meta-ads': { enabled: true } }, getSecret: () => undefined, broker }).skipped, [{ id: 'meta-ads', reason: 'no_secret' }]);
+  const r = cat.buildMcpServers({ cwd: '/w', consent: { 'meta-ads': { enabled: true } }, getSecret: () => TOK, broker });
+  assert.equal(r.servers['atmt-meta-ads'].url, 'http://127.0.0.1:5555/i/mcp-meta-ads/');
+  assert.deepEqual(r.servers['atmt-meta-ads'].headers, { authorization: 'Bearer cap-token' });
+  assert.ok(!JSON.stringify(r.servers).includes(TOK), 'token must never reach agent config');
+});
+
+test('the meta-ads-report skill reaches agents only while Meta Ads is switched on', () => {
+  assert.equal(cat.mcpCatalogEntry('meta-ads').skill, 'meta-ads-report');
+  assert.ok(cat.disabledConnectorSkills(undefined).includes('meta-ads-report'));
+  assert.ok(cat.disabledConnectorSkills({ 'meta-ads': { enabled: false } }).includes('meta-ads-report'));
+  assert.ok(!cat.disabledConnectorSkills({ 'meta-ads': { enabled: true } }).includes('meta-ads-report'));
+});
+
+test('the Meta Ads report template keeps its brand, PDF button, DevLabs footer and valid data', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const dir = path.join(__dirname, '..', 'resources', 'skills', 'meta-ads-report');
+  const html = fs.readFileSync(path.join(dir, 'template.html'), 'utf8');
+  assert.match(fs.readFileSync(path.join(dir, 'SKILL.md'), 'utf8'), /^---\nname: meta-ads-report\n/);
+  assert.match(html, /Report generated by <b>DevLabs<\/b>/);
+  assert.match(html, /id="save-pdf"[\s\S]*window\.print\(\)/);
+  assert.match(html, /--volt:#C8FF3D;/);
+  // Chart.js is pinned and integrity-checked, never a floating `latest`.
+  assert.match(html, /chart\.js@4\.6\.2\/dist\/chart\.umd\.min\.js" integrity="sha384-[A-Za-z0-9+/=]{64}"/);
+  // Data from the API is untrusted text: rendered with textContent, never innerHTML.
+  assert.ok(!/innerHTML/.test(html));
+  const data = JSON.parse(html.match(/id="report-data"[^>]*>([\s\S]*?)<\/script>/)[1]);
+  for (const k of ['account', 'currency', 'dateRange', 'kpis', 'daily', 'campaigns', 'adsets', 'ads', 'findings', 'issues', 'recommendations']) assert.ok(k in data, k);
+  // Ad sets name their campaign and ads their ad set, so the tables can show the parent.
+  assert.ok(data.adsets.every((a) => a.campaign) && data.ads.every((a) => a.adset));
 });
 
 test('a catalog header can never shadow the broker capability token', () => {

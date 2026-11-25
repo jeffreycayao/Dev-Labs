@@ -344,7 +344,7 @@ export function CommandCenterPanel({ agent, fullscreen = false }: { agent: Agent
                   embedded={!fullscreen}
                 />
               </div>
-              <MessageQueueComposer agent={agent} />
+              <MessageQueueComposer key={agent.id} agent={agent} />
             </>
           ) : (
             <Centered>{t('commandCenter.noTerminal', { name: agent.name })}</Centered>
@@ -863,7 +863,21 @@ function FloorTab({ seed, onOpenTerminal }: { seed: { text: string; seq: number 
                 which keeps growing forever and pins at 100% — that one is
                 spend, this one is headroom before compaction. */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ flex: 1 }} />
+              {/* Share of input served from the prompt cache (billed at ~10%).
+                  Red once the agent has read 100k+ input and under half of it hit
+                  the cache: something keeps changing the start of its context. */}
+              {(() => {
+                const inTok = sample ? sample.input + sample.cacheRead + sample.cacheCreation : 0;
+                if (inTok <= 0) return <span style={{ flex: 1 }} />;
+                const hit = Math.round((sample!.cacheRead / inTok) * 100);
+                const low = inTok >= 100_000 && hit < 50;
+                return (
+                  <span
+                    title={t('commandCenter.cacheHitTitle')}
+                    style={{ flex: 1, fontFamily: 'var(--cth-font-mono)', fontSize: 10, color: low ? 'var(--cth-coral)' : 'var(--cth-ink-500)' }}
+                  >{t('commandCenter.cacheHit', { pct: hit })}</span>
+                );
+              })()}
               <span style={{ fontFamily: 'var(--cth-font-mono)', fontSize: 10, color: 'var(--cth-ink-300)', flexShrink: 0 }}>{t('commandCenter.ctx')}</span>
               {a.contextTokens !== undefined && a.contextLimit ? (() => {
                 const cpct = Math.min(100, Math.round((a.contextTokens! / a.contextLimit!) * 100));

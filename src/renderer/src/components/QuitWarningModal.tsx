@@ -2,6 +2,11 @@ import { useState } from 'react';
 import { PixelPanel } from './PixelPanel';
 import { PixelButton } from './PixelButton';
 import { Icon } from './Icon';
+import { useStore } from '@/store/store';
+
+/** Statuses where an agent is mid-task. Idle, waiting for you, blocked or done
+ *  agents are open but not working, so the warning doesn't count them as busy. */
+const BUSY = new Set(['thinking', 'working', 'compacting', 'looping']);
 
 /** Renderer-side closing-time view state. Mirrors the main process's
  *  ClosingTimeEvent phases, plus a local 'error' for a failed start. */
@@ -25,6 +30,9 @@ export interface QuitWarningModalProps {
 
 export function QuitWarningModal({ ptyCount, closing, onCancel, onConfirm, onClosingTime }: QuitWarningModalProps) {
   const [busy, setBusy] = useState(false);
+  const working = useStore((s) => s.agents.filter((a) => BUSY.has(a.status)).length);
+  const idle = Math.max(0, ptyCount - working);
+  const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 
   const confirm = async () => {
     setBusy(true);
@@ -148,13 +156,24 @@ export function QuitWarningModal({ ptyCount, closing, onCancel, onConfirm, onClo
                       color: 'var(--cth-ink-900)',
                       marginBottom: 4
                     }}>
-                      {ptyCount} {ptyCount === 1 ? 'AGENT' : 'AGENTS'} STILL RUNNING
+                      {working > 0
+                        ? `${plural(working, 'AGENT', 'AGENTS')} STILL WORKING`
+                        : `${plural(ptyCount, 'AGENT', 'AGENTS')} OPEN — ALL IDLE`}
                     </div>
                     <div style={{ fontSize: 15, lineHeight: '22px', color: 'var(--cth-ink-700)' }}>
-                      Closing the harness will terminate{' '}
-                      {ptyCount === 1 ? 'the running claude session' : `all ${ptyCount} running claude sessions`}{' '}
-                      and discard any unsaved progress they were holding in memory. The conversation
-                      history inside each session is lost when the PTY exits.
+                      {working > 0 ? (
+                        <>
+                          {plural(working, 'agent is', 'agents are')} in the middle of a task
+                          {idle > 0 ? ` (${plural(idle, 'other is', 'others are')} idle)` : ''}. Quitting
+                          now stops {working === 1 ? 'it' : 'them'} mid-task and loses any unsaved progress.
+                        </>
+                      ) : (
+                        <>
+                          No agent is in the middle of a task. Quitting closes{' '}
+                          {ptyCount === 1 ? 'its session' : `all ${ptyCount} sessions`}; the conversation
+                          inside each one ends when its terminal closes.
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1,3 +1,4 @@
+import { errMsg, extractError } from './netUtil';
 /**
  * Groq chat completion for VDE AI assist, run only from Electron main.
  *
@@ -153,15 +154,3 @@ function containsSecret(text: string): boolean {
   ].some((re) => re.test(text));
 }
 
-function extractError(raw: string): string {
-  try {
-    const j = JSON.parse(raw) as { error?: { message?: string } | string };
-    if (typeof j.error === 'string') return j.error;
-    if (j.error && typeof j.error.message === 'string') return j.error.message;
-  } catch { /* not json */ }
-  return '';
-}
-
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}

@@ -173,3 +173,21 @@ export function resolveCommand(command: string): string {
   for (const c of candidates) if (existsSync(c)) return c;
   return command;
 }
+
+const toolPaths = new Map<string, string>();
+/** Absolute path of a .exe tool main runs inside folders agents can write (the
+ *  hive root, an agent's repo). On Windows a bare name is looked up in the
+ *  child's working folder before PATH, so an agent could plant `git.exe` there
+ *  and have main run it. Resolved once, from main's own working folder; POSIX
+ *  never searches the working folder, so the bare name is kept there. */
+export function trustedToolPath(name: 'git' | 'gh'): string {
+  if (process.platform !== 'win32') return name;
+  let hit = toolPaths.get(name);
+  if (!hit) {
+    const found = resolveCommand(name);
+    // Only a real .exe: a .cmd shim cannot be spawned without a shell.
+    hit = /\.exe$/i.test(found) && win32.isAbsolute(found) ? found : name;
+    toolPaths.set(name, hit);
+  }
+  return hit;
+}

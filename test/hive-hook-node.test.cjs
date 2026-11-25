@@ -126,7 +126,7 @@ test('the claude hook + statusLine commands run through the launcher', async (t)
   await hive.ensureAgent({ id: 'a1', name: 'A', provider: 'claude', cwd: home });
 
   const launcher = launcherIn(home);
-  const settings = JSON.parse(fs.readFileSync(path.join(home, 'hive/agents/a1/settings.json'), 'utf8'));
+  const settings = JSON.parse(fs.readFileSync(path.join(home, 'hive-internal/agents/a1/settings.json'), 'utf8'));
   const commands = [
     ...Object.values(settings.hooks).flatMap((matchers) => matchers.flatMap((m) => m.hooks.map((h) => h.command))),
     settings.statusLine.command
@@ -283,18 +283,21 @@ test('Codex rollouts remain isolated and are visible under the standard scan roo
   const hive = new HiveManager(() => harness);
   hive.ensureHive();
   const agentDir = path.join(harness, 'hive', 'agents', 'a1');
-  const codexHome = path.join(agentDir, '.codex');
+  // Sessions written under the OLD (agent-writable) home must carry over to the
+  // trusted home in hive-internal that the worker now runs with.
+  const legacyHome = path.join(agentDir, '.codex');
   const files = {
     sessions: path.join('2026', '08', '21', 'rollout-live.jsonl'),
     archived_sessions: 'rollout-archived.jsonl'
   };
   for (const [kind, relative] of Object.entries(files)) {
-    const file = path.join(codexHome, kind, relative);
+    const file = path.join(legacyHome, kind, relative);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, `${kind}\n`, 'utf8');
   }
 
-  hive.installCodexHooks(agentDir, 'a1');
+  const codexHome = hive.installCodexHooks(agentDir, 'a1');
+  assert.ok(codexHome.startsWith(hive.internalDir() + path.sep), codexHome);
 
   const targets = {};
   for (const [kind, relative] of Object.entries(files)) {
@@ -475,7 +478,7 @@ test('a hook fires with NO node on PATH, and its payload reaches HIVE_SOCK', { s
   // NOTE: async spawn, not spawnSync — the shim connects back to a socket THIS
   // process is serving, so a sync call would block our own event loop and
   // deadlock the handshake.
-  const settings = JSON.parse(fs.readFileSync(path.join(home, 'hive/agents/a1/settings.json'), 'utf8'));
+  const settings = JSON.parse(fs.readFileSync(path.join(home, 'hive-internal/agents/a1/settings.json'), 'utf8'));
   const after = await run(settings.hooks.Stop[0].hooks[0].command, env);
   assert.equal(after.code, 0, `hook failed under a stripped PATH: ${after.stderr}`);
 

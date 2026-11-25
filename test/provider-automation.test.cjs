@@ -139,3 +139,17 @@ test('continuous TUI repainting cannot block terminal readiness', () => {
   assert.equal(terminalReadyToReceive(true, 500, 'codex'), true);
   assert.equal(terminalReadyToReceive(undefined, 500, 'codex'), true);
 });
+
+test('handoff: write to memory.md, clear with the CLI\'s own verb, read it back', () => {
+  const { handoffStepsForProvider, HANDOFF_TAG, isCompactionCommand } = loadTs('src/shared/providerAutomation.ts');
+  const claude = handoffStepsForProvider('claude', 'keep the auth decisions');
+  assert.equal(claude.length, 3);
+  assert.ok(claude[0].startsWith(HANDOFF_TAG) && /memory\.md/.test(claude[0]) && claude[0].includes('keep the auth decisions'));
+  assert.equal(claude[1], '/clear');
+  assert.ok(claude[2].startsWith(HANDOFF_TAG) && /Handoff/.test(claude[2]));
+  assert.equal(handoffStepsForProvider('opencode')[1], '/new');
+  // No clear command: caller falls back to /compact.
+  assert.equal(handoffStepsForProvider('custom'), null);
+  // The handoff prompt is prose, not a compaction command the queue would dedupe.
+  assert.equal(isCompactionCommand(claude[0]), false);
+});

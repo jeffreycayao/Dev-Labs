@@ -35,10 +35,6 @@ function apply(): void {
 }
 apply();
 
-export function appTheme(): AppTheme {
-  return theme;
-}
-
 export function setAppTheme(next: AppTheme): void {
   if (next === theme) return;
   theme = next;

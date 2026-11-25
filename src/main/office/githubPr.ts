@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
 import { ipcMain } from 'electron';
-import { userShellPath } from '../shellEnv';
+import { trustedToolPath, userShellPath } from '../shellEnv';
 import { safeGitEnv } from '../git';
 import {
   buildInlineCommentArgs,
@@ -35,7 +35,7 @@ class GhError extends Error {}
 export function gh(cwd: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile(
-      'gh',
+      trustedToolPath('gh'),
       args,
       // userShellPath: macOS GUI apps don't inherit the shell PATH where Homebrew puts gh.
       { cwd, timeout: TIMEOUT_MS, maxBuffer: MAX_BUFFER, windowsHide: true, env: { ...process.env, ...safeGitEnv(), PATH: userShellPath(), GH_PROMPT_DISABLED: '1', NO_COLOR: '1' } },

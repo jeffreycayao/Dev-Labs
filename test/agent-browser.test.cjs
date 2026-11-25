@@ -83,7 +83,7 @@ test('the agent-browser skill is copied only when the switch is on, and the per-
   const hive = new HiveManager(() => home);
   const meta = { id: 'ana-1', name: 'Ana', provider: 'claude', cwd: home };
   const skill = path.join(home, 'hive', 'agents', 'ana-1', '.claude', 'skills', 'agent-browser', 'SKILL.md');
-  const mcpJson = path.join(home, 'hive', 'agents', 'ana-1', 'mcp.json');
+  const mcpJson = path.join(home, 'hive-internal', 'agents', 'ana-1', 'mcp.json');
   const servers = () => (fs.existsSync(mcpJson) ? JSON.parse(fs.readFileSync(mcpJson, 'utf8')).mcpServers : {});
 
   const off = { agentBrowser: false };

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useStore, selectedAgent } from '@/store/store';
 import { startMockLoop, stopMockLoop } from '@/store/mockEvents';
 import type { HarnessConfig } from '@/store/config';
-import { DEFAULT_ORG_TRIGGER } from '@shared/triggers';
 import { OfficeFloor3D } from '@/scene/office3d/OfficeFloor3D';
 import { useHive } from '@/hooks/useHive';
 import { useResolvedGodName } from '@/hooks/useResolvedGodName';
@@ -116,12 +115,11 @@ export function App() {
       // Triggers tab read one list, not two copies that drift — whichever surface
       // saves calls these same setters and the other repaints. No extra IPC: main
       // deep-fills both fields on every config read (withTriggerDefaults), so
-      // getConfig() already serves what listWebhooks()/getOrgTrigger() would.
+      // getConfig() already serves what listWebhooks() would.
       // `c` is typed as the PRELOAD's HarnessConfig, which hasn't picked the two
       // fields up yet (another lane's file); the renderer mirror type declares them.
       const withTriggers = c as HarnessConfig;
       useStore.getState().setWebhookTriggers(withTriggers.webhookTriggers ?? []);
-      useStore.getState().setOrgTrigger(withTriggers.orgTrigger ?? DEFAULT_ORG_TRIGGER);
     });
     // Mirror BYOK OpenAI key presence (boolean only; the key never leaves main) so the
     // Realtime Ramon voice toggle can gate on it. Lives in the secret broker, not

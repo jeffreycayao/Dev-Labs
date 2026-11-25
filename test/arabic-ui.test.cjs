@@ -209,6 +209,7 @@ test('no Arabic string is left as its English source', () => {
     'onboarding.providerBlurb.antigravity',
     'onboarding.providerBlurb.gemini',
     'addAgent.projectPlaceholder',           // /path/to/your/project — a filesystem path
+    'contextSection.methodCompact',          // /compact — the literal command
     'onboarding.home.placeholder',           // /path/to/HarnessAgents — same
     'mcpDefaults.toggleNote',                // "{{id}}: {{state}}" — pure interpolation
     'webhooksSection.summary',               // "{{count}} · {{state}}" — same

@@ -4,7 +4,6 @@ import {
   DEFAULT_WEBHOOK_SCHEMA,
   type ContextRule,
   type ContextTriggerConfig,
-  type OrgTriggerConfig,
   type WebhookTrigger
 } from '@shared/triggers';
 
@@ -33,7 +32,8 @@ function fillRule(partial: Partial<ContextRule> | undefined, fallback: ContextRu
     minContextPctLargeWindow: typeof partial?.minContextPctLargeWindow === 'number'
       ? partial.minContextPctLargeWindow
       : fallback.minContextPctLargeWindow,
-    message: typeof partial?.message === 'string' ? partial.message : fallback.message
+    message: typeof partial?.message === 'string' ? partial.message : fallback.message,
+    method: partial?.method === 'handoff' ? 'handoff' : 'compact'
   };
 }
 
@@ -138,17 +138,3 @@ export function newWebhook(secret: string, index: number): WebhookTrigger {
   };
 }
 
-/* ───────────────────────────── organisation ──────────────────────────────── */
-
-/** `null` on failure; the store mirror stands. */
-export async function getOrgTrigger(): Promise<OrgTriggerConfig | null> {
-  try {
-    return (await window.cth.getOrgTrigger()) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export function setOrgTrigger(cfg: OrgTriggerConfig): void {
-  void window.cth.setOrgTrigger(cfg).catch(() => { /* optimistic */ });
-}

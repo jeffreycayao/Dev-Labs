@@ -3,7 +3,7 @@
 /**
  * God has to know the LIVE floor across its own restarts — a roster it read once
  * goes stale, and it then messages agents that were archived or killed. So the
- * roster is PUSHED into god's context (SessionStart + every prompt) rather than
+ * roster is PUSHED into god's context (SessionStart, then whenever the floor changes) rather than
  * pulled.
  *
  * Only one `additionalContext` may be returned per hook, so the roster and the
@@ -146,14 +146,25 @@ test('rename rejects empty and unknown agents without changing the registry', as
   assert.equal(hive.registry().agents['jim-1'].name, 'Jim');
 });
 
-test('god gets the roster on SessionStart and on every prompt — nobody else does', async (t) => {
+test('god gets the roster on SessionStart and when the floor changes — nobody else does', async (t) => {
   const { hive, fire } = await floor(t);
   snapshot(hive);
 
   const start = await fire('god-1', 'SessionStart');
   assert.match(context(start), /LIVE ROSTER/);
   assert.equal(start.hookSpecificOutput.hookEventName, 'SessionStart');
-  assert.match(context(await fire('god-1', 'UserPromptSubmit')), /LIVE ROSTER/);
+  // Unchanged floor: not repeated on every prompt (it only grew god's transcript).
+  assert.doesNotMatch(context(await fire('god-1', 'UserPromptSubmit')), /LIVE ROSTER/);
+  // Only ages and spend moved: still nothing god routes on.
+  const fleetPath = path.join(hive.root(), 'fleet.json');
+  const bump = (fn) => { const f = JSON.parse(fs.readFileSync(fleetPath, 'utf8')); fn(f); fs.writeFileSync(fleetPath, JSON.stringify(f)); };
+  bump((f) => { f.agents[1].tokens += 50_000; f.agents[1].usd += 0.4; f.agents[1].lastActiveSecAgo = 3; });
+  assert.doesNotMatch(context(await fire('god-1', 'UserPromptSubmit')), /LIVE ROSTER/);
+  // A routing signal changed: sent again.
+  bump((f) => { f.agents[1].inboxBacklog = 3; });
+  assert.match(context(await fire('god-1', 'UserPromptSubmit')), /inbox 3/);
+  // A new session (restart, /clear) gets it on its first prompt.
+  assert.match(context(await fire('god-1', 'UserPromptSubmit', { session_id: 's2' })), /LIVE ROSTER/);
 
   assert.doesNotMatch(context(await fire('jim-1', 'SessionStart')), /LIVE ROSTER/);
   assert.doesNotMatch(context(await fire('jim-1', 'UserPromptSubmit')), /LIVE ROSTER/);

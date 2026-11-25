@@ -13,6 +13,8 @@ Connectors let agents on your floor work inside other apps.
 | **Fireflies.ai** | Read meeting notes: transcripts, summaries, action items. Can also rename, share or move meetings | Fireflies API key | Fireflies → Settings → Developer Settings ([MCP setup](https://docs.fireflies.ai/getting-started/mcp-configuration)) |
 | **Systeme.io** | Read and change contacts, tags, newsletters, campaigns, funnels, products, courses and automations | systeme.io MCP key (not the public API key) | systeme.io → Settings → MCP & API keys → MCP keys ([docs](https://developer.systeme.io/docs/mcp-server)); keys last up to 90 days |
 | **GoHighLevel** | Read and change a sub-account: contacts, conversations, opportunities, calendars, payments, within the token's scopes | HighLevel Private Integration token (`pit-…`); the sub-account's Location ID is an optional plain field | Sub-account → Settings → Private Integrations ([MCP docs](https://marketplace.gohighlevel.com/docs/other/mcp)) |
+| **Meta Ads** | Read and change Facebook and Instagram ad accounts: campaigns, ad sets, ads, audiences, insights. Can create, pause and launch ads that spend money | Meta user access token with `ads_mcp_management` plus `ads_read` (or `ads_management` to make changes) | [Graph API Explorer](https://developers.facebook.com/tools/explorer/); tokens expire |
+| **Metricool** | Read social analytics for your brands and competitors; read or schedule posts in the planner | Metricool API key (needs a plan with API access) | Metricool → Account Settings → API ([MCP docs](https://help.metricool.com/en/article/how-to-connect-metricools-mcp-1364s63/)) |
 | **Webcake Landing** | Design, edit and publish landing pages in your Webcake account | Webcake token | Webcake → Settings → Access code → Generate API keys ([guide](https://docs.pancake.biz/landing/st-f7/st-p3?lang=en)) |
 | **Obsidian** | Save notes, learnings and decisions (frontmatter, tags, [[links]]), append to today's daily note, search and read notes | No key: you pick the vault folder | Any folder; ideally one Obsidian has opened as a vault |
 | **Discord** | Post messages to channels, read recent messages, list servers and channels | Discord bot token | [Discord Developer Portal](https://discord.com/developers/applications) → your app → Bot → Reset Token |
@@ -31,6 +33,15 @@ The npm-based defaults (Sequential Thinking, Context7, Agent Browser) are pinned
 4. **Start a new agent.** Running agents keep the connectors they started with.
 
 If a connector is on but has no key, the agent starts without it and Settings says so.
+
+### Your own MCP servers
+
+Settings → Connections → **Your own MCP servers** adds any server:
+
+- **Remote URL:** https, or http on this computer only. The key is a bearer token, a named header, or none. With a key, the server goes through the local proxy like the built-in hosted connectors; without one, the agent calls the URL directly.
+- **Local command:** a program and its arguments, one per line, plus an optional environment variable that receives the key. It runs with your permissions, so only add programs you trust.
+
+Each one starts switched off. After adding it, save its key in its row and switch it on. Up to 20; removing one also deletes its key. Saved in `config.customMcpServers` and re-checked on every read (`sanitizeCustomMcp` in `src/shared/mcpCatalog.ts`).
 
 ### Obsidian
 
@@ -69,10 +80,10 @@ Containment, plainly: `file://` is off (agent-browser's default) and MCP tool ar
 
 | Connector type | How the key reaches it |
 |---|---|
-| **Hosted by the vendor** (Pancake POS) | The agent never receives the key. It talks to a local proxy (`127.0.0.1`) using a per-agent token. The proxy adds the key on the way out, and the token dies with the agent. |
+| **Hosted by the vendor** (Pancake POS, Metricool and the others) | The agent never receives the key. It talks to a local proxy (`127.0.0.1`) using a per-agent token. The proxy adds the key on the way out, only to that connector's own MCP endpoint, and the token dies with the agent. |
 | **Bundled, calling a vendor API** (Discord) | Same as above: the bundled server only gets the proxy URL and the per-agent token; the proxy adds `Authorization: Bot <token>` on the way to `discord.com/api/v10` and can't be pointed anywhere else. |
 | **Bundled, no key** (Obsidian) | Nothing to protect: the server only gets the vault path. |
-| **Runs on your computer** (Webcake, GitHub and others) | The key goes into that agent's private `mcp.json` (owner-only file permissions) as the server's environment variable. The agent's own tools could technically read that file, so only enable connectors for agents you trust with that account. |
+| **Runs on your computer** (Webcake, GitHub and others) | The key goes into that agent's `mcp.json` in `hive-internal`, as the server's environment variable. Claude agents are blocked from reading that folder, but on Windows there is no sandbox, so an agent's shell could still read it: only enable these connectors for agents you trust with that account. |
 
 Keys never leave the app's main process except to the connector itself. Without an OS keychain (some Linux setups), keys can't be saved at all; the app refuses rather than storing them in plain text.
 
@@ -95,4 +106,4 @@ Add an entry to `MCP_CATALOG` in `src/shared/mcpCatalog.ts`:
 
 ## On hold
 
-**Meta Ads MCP** and **Meta's platform MCP servers** (WhatsApp Business Tools, Devtools) will be added after the other roadmap features. They need an OAuth sign-in flow and spending guardrails.
+**Meta's platform MCP servers** (WhatsApp Business Tools, Devtools) need an OAuth sign-in flow.

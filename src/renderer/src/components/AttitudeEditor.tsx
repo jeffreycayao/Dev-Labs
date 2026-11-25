@@ -51,7 +51,7 @@ export function AttitudeEditor({ enabled }: { enabled: boolean }) {
         spellCheck={false}
         style={{
           width: '100%', resize: 'vertical', padding: 8, fontSize: 12, lineHeight: '17px',
-          fontFamily: 'var(--cth-font-mono)', color: 'var(--cth-ink-900)', background: 'var(--cth-paper-50, #fff)',
+          fontFamily: 'var(--cth-font-mono)', color: 'var(--cth-ink-900)', background: 'var(--cth-paper-100)',
           border: 'none', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)'
         }}
       />

@@ -277,6 +277,10 @@ Press **theme** on the floor bar (bottom right):
 - **undo import** puts the previous layout (and seats) back. One backup is kept per floor.
 - **Ask an AI to design one:** press **copy prompt**, paste it into any AI chat (it contains the rules, the JSON schema and your current layout), save the answer as a `.json` file and import it. **copy schema** gives only the schema.
 
+Themes are not limited to office furniture. They can add nature and decor (trees, bushes, hedges, flowers, mushrooms, rocks, ponds, paths, fences, lanterns, gifts, snowmen, butterflies, birds) and restyle the floor itself with an optional `scene` block: ground pattern and colour, wall style (hedge, stone, wood, low or hidden) and colour, sky colour, light colour and brightness, fireflies, petals or snow. `"hideDefaults": true` shows only the theme's objects, so the standard rooms (ping-pong, jukebox, kanban, gym and the rest) are not added back. **copy prompt** explains all of this to the AI.
+
+**Built-in themes:** the panel also offers **Default** (the standard office), **Fairy Glade** and **Christmas Season**. Pick one to see the same preview, then **apply**; **undo import** goes back. Agents keep their desks when the theme leaves those desks where they were (Default and Christmas Season do).
+
 Seats in a theme are matched by agent **name**, so a theme from another computer seats your agents when the names match and simply skips the rest. The feature has a switch in **Settings → General → Features**.
 
 ---
@@ -383,6 +387,8 @@ Connectors let agents work **inside other apps you use**. Set them up in **Setti
 | **Fireflies.ai** | read your meeting notes: transcripts, summaries and action items |
 | **Systeme.io** | read and change contacts, tags, newsletters, campaigns, funnels, products, courses and automations (paste an **MCP key** from Settings → MCP & API keys; it expires after up to 90 days) |
 | **GoHighLevel** | read and change your HighLevel sub-account: contacts, conversations, opportunities, calendars (paste a **Private Integration token**; the sub-account id is optional) |
+| **Meta Ads** | read and change your Facebook and Instagram ad accounts; can launch ads that spend money (paste a Meta user access token) |
+| **Metricool** | read social analytics for your brands and competitors, read or schedule posts (paste your API key from Account Settings → API) |
 | **Webcake Landing** | design, edit and publish landing pages |
 | **Obsidian** | save notes, lessons and decisions in your Obsidian vault, keep a daily note, search and read notes |
 | **Discord** | post in your channels, read recent messages, list channels |
@@ -390,6 +396,8 @@ Connectors let agents work **inside other apps you use**. Set them up in **Setti
 | GitHub, Database, Email & Calendar, Web Search | as described in Settings |
 
 Each connector has a **How to set up** link in Settings with the exact steps.
+
+**Your own MCP servers:** at the bottom of Settings → Connections, add any MCP server by name, either a remote URL (with a token, a header key or no key) or a command that runs on this computer. It starts switched off; save its key in its row if it needs one, then switch it on. Only add commands you trust: they run with your permissions.
 
 **Obsidian** needs no key: press **choose folder**, pick your vault, switch it on. Agents only work inside that folder, never touch Obsidian's own settings, and never overwrite or delete a note. Saving to an existing title adds an update at the end.
 
@@ -407,6 +415,8 @@ Ramon's **triggers** tab lets work start without you typing it:
 
 - **Schedules:** repeat a request on a timetable ("every Monday at 9am, summarise last week's sales").
 - **Slack / webhooks / Discord:** a message from outside starts a request for Ramon.
+
+**Slack:** in **Settings → Connections → Slack**, list the member IDs of the people who may give agents work under **Allowed Slack users** (in Slack: open a profile → ⋮ → **Copy member ID**). Messages from anyone else are ignored.
 
 **Discord example:** open **Triggers → Discord**, paste the IDs of the channels to watch (in Discord: Settings → Advanced → turn on Developer Mode, then right-click a channel → **Copy Channel ID**), and switch it on. Only you (the bot's owner) can start work, unless you add other people's user IDs under **Who can start work**. Messages from anyone else are ignored, because these requests run without asking. @-mention the bot in a watched channel: it replies "Received", Ramon picks it up, and the answer is posted back in the channel. Keep the Discord connector on so agents can post the answer.
 

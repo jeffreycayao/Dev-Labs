@@ -12,7 +12,7 @@ import {
   finishCurrentHire,
   type HireReviewQueue
 } from '@shared/hireQueue';
-import { DEFAULT_ORG_TRIGGER, type OrgTriggerConfig, type WebhookTrigger } from '@shared/triggers';
+import { type WebhookTrigger } from '@shared/triggers';
 import { isCompactionCommand } from '@shared/providerAutomation';
 import { preferredAgentRole } from '@shared/agentRole';
 import { isInboxNudge } from '@shared/hiveNudge';
@@ -149,7 +149,11 @@ export interface QueuedMessage {
    *  the agent can drain its whole inbox in the same turn the nudge was queued
    *  from, and delivering it afterwards costs a full turn to discover nothing is
    *  there. Declarative (a string, not a closure) so it survives persistQueues. */
-  precondition?: 'inbox-nonempty';
+  /** 'handoff-saved': the clear and read-back of a context handoff. Sent only
+   *  if memory.md gained a `## Handoff` section since the handoff began
+   *  (`handoffBase` = its newest one then), so a failed handoff never clears. */
+  precondition?: 'inbox-nonempty' | 'handoff-saved';
+  handoffBase?: string;
     /** Token count captured when a /compact was enqueued for this agent, carried
    *  through to the point of successful delivery so the "already compacted at
    *  N tokens" latch (see useHive) can be written there instead of at enqueue
@@ -289,16 +293,10 @@ interface State {
    *  localStorage or the roster file, never logged, masked in every surface. */
   webhookTriggers: WebhookTrigger[];
   setWebhookTriggers: (list: WebhookTrigger[]) => void;
-  /** Mirror of config.orgTrigger (peer messaging between teammates' clone nodes).
-   *  Same two-way contract as `webhookTriggers`, and the same handling for
-   *  `apiKey` — in memory for the two surfaces that display it masked, nowhere
-   *  else. Configuration only for now: no transport reads the key yet. */
-  orgTrigger: OrgTriggerConfig;
-  setOrgTrigger: (cfg: OrgTriggerConfig) => void;
   /** Park a message for an agent. Returns nothing; the flush loop delivers it.
    *  `meta.instruction`, when set, is what gets typed into the PTY instead of
    *  `text` (UI/card surfaces still show `text`). */
-    enqueueMessage: (agentId: string, text: string, meta?: { slack?: { channel: string; thread_ts: string }; instruction?: string; precondition?: QueuedMessage['precondition']; compactUsed?: number }) => void;
+    enqueueMessage: (agentId: string, text: string, meta?: { slack?: { channel: string; thread_ts: string }; instruction?: string; precondition?: QueuedMessage['precondition']; handoffBase?: string; compactUsed?: number }) => void;
   /** Drop a single queued message (user removed it, or it was just delivered). */
   removeQueuedMessage: (agentId: string, messageId: string) => void;
   /** "Send now" while floor auto-delivery is paused: marks the message manual
@@ -596,15 +594,19 @@ function loadPersistedRestorable(): Agent[] {
   }
 }
 
+/** Longest message the queue keeps (about 100 KB of text). */
+const MAX_QUEUED_CHARS = 100_000;
+
 function persistQueues(queues: Record<string, QueuedMessage[]>): void {
-  try {
-    // Only keep non-empty queues so the key stays small.
-    const slim: Record<string, QueuedMessage[]> = {};
-    for (const [id, q] of Object.entries(queues)) if (q.length) slim[id] = q;
-    window.localStorage.setItem(LS_QUEUES, JSON.stringify(slim));
-    rosterMirror.queues = slim;
-    scheduleRosterFlush();
-  } catch { /* noop */ }
+  // Only keep non-empty queues so the key stays small.
+  const slim: Record<string, QueuedMessage[]> = {};
+  for (const [id, q] of Object.entries(queues)) if (q.length) slim[id] = q;
+  // The roster file is updated even when localStorage is full (as persistAgents
+  // does): inside the same try, one quota error froze it, and the next launch
+  // replayed delivered messages and lost newer ones.
+  rosterMirror.queues = slim;
+  scheduleRosterFlush();
+  try { window.localStorage.setItem(LS_QUEUES, JSON.stringify(slim)); } catch { /* full: the roster file still has it */ }
 }
 
 function loadPersistedQueues(): Record<string, QueuedMessage[]> {
@@ -828,7 +830,8 @@ export const useStore = create<State>((set, get) => ({
       // A live (re)spawn also consumes any restorable entry for the same id.
       const restorableAgents = s.restorableAgents.filter((a) => a.id !== agent.id);
       persistAgents(agents, agent.id);
-      persistArchived(archivedAgents);
+      // Only when it changed: this re-serialised every archived card on each spawn.
+      if (archivedAgents.length !== s.archivedAgents.length) persistArchived(archivedAgents);
       if (restorableAgents.length !== s.restorableAgents.length) persistRestorable(restorableAgents);
       return {
         agents,
@@ -957,14 +960,10 @@ export const useStore = create<State>((set, get) => ({
   setHasGoogleKey: (has) => set({ hasGoogleKey: has }),
   webhookTriggers: [],
   setWebhookTriggers: (list) => set({ webhookTriggers: list }),
-  // A copy, not the shared DEFAULT_ORG_TRIGGER instance — main takes the same
-  // care (withTriggerDefaults), and handing the module-level default out is how
-  // one careless mutation rewrites the default for everyone.
-  orgTrigger: { ...DEFAULT_ORG_TRIGGER },
-  setOrgTrigger: (cfg) => set({ orgTrigger: cfg }),
   enqueueMessage: (agentId, text, meta) =>
     set((s) => {
-      const trimmed = text.trim();
+      // Capped: one pasted multi-MB log filled localStorage for every agent.
+      const trimmed = text.trim().slice(0, MAX_QUEUED_CHARS);
       if (!trimmed) return s;
       // ONE PENDING COMPACT PER AGENT. Compaction is idempotent in the worst way:
       // the first `/compact` does the work and every one behind it answers
@@ -998,6 +997,7 @@ export const useStore = create<State>((set, get) => ({
         ...(meta?.slack ? { slack: meta.slack } : {}),
         ...(meta?.instruction ? { instruction: meta.instruction } : {}),
         ...(meta?.precondition ? { precondition: meta.precondition } : {}),
+        ...(meta?.handoffBase !== undefined ? { handoffBase: meta.handoffBase } : {}),
         ...(meta?.compactUsed !== undefined ? { compactUsed: meta.compactUsed } : {})
       };
       const messageQueues = { ...s.messageQueues, [agentId]: [...(s.messageQueues[agentId] ?? []), msg] };
@@ -1097,9 +1097,7 @@ export function selectedAgent(s: State): Agent | undefined {
 }
 
 /** Whether the Command Center's Trigger History tab has anything to be about
- *  yet: an organisation key is set, or at least one webhook exists. Derived from
- *  the two mirrors rather than stored beside them, so it cannot fall out of step
- *  with the thing it describes. Use as `useStore(triggerHistoryVisible)`. */
+ *  yet: at least one webhook exists. Use as `useStore(triggerHistoryVisible)`. */
 export function triggerHistoryVisible(s: State): boolean {
-  return s.webhookTriggers.length > 0 || s.orgTrigger.apiKey.trim() !== '';
+  return s.webhookTriggers.length > 0;
 }

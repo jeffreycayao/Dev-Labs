@@ -4,6 +4,51 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+### New
+
+- **Any OpenRouter model per agent, free or paid.** Add Agent (OpenCode, Crush, Pi) lists OpenRouter's tool-capable models with a Free / Paid switch, search and the price per million input tokens.
+- **Connectors: Metricool and Meta Ads.** Metricool reads social analytics and reads or schedules posts; Meta Ads works with Facebook and Instagram ad accounts and can launch ads that spend money. Both are off by default, and keys go through DevLabs so agents never see them.
+- **Add your own MCP servers** in Settings → Connections: a remote URL (bearer token, header key or no key) or a local command. Each starts switched off.
+- **Context handoff** (Triggers → Context → Compact → Method): instead of `/compact`, the agent writes a handoff to its `memory.md`, its session is cleared, and it reads the handoff back. The clear only happens once the handoff is saved.
+- **Office themes can build whole scenes**: trees, flowers, water, paths, fences, birds and more; the ground, walls, sky and light; and the standard rooms can be hidden.
+- Each agent card in Command Center shows its prompt-cache hit rate, in red when it is low.
+- Ramon gets the live agent list only when something he routes on changes, on a new session or every 15 minutes, instead of with every message.
+
+### Changed
+
+- **Slack has an allowed-users list** (Settings → Connections → Slack). Only those people can give agents work. **If you use Slack, add your member ID or the bot stops responding.**
+- A worker spawn request only accepts `--model`, `--max-turns`, `--output-format`, `--verbose`, `--permission-mode` and the engine's own auto-mode flags.
+- Deliveries open in their default app only for formats without macros; old Office files, `rtf` and ODF open in their folder.
+- The quit warning counts only agents that are working.
+- Removed the organisation trigger settings: nothing ever read its key.
+
+### Security
+
+- Agents can no longer read each other's connector keys: `mcp.json` and `settings.json` moved to `hive-internal`, which Claude agents are blocked from reading.
+- Agents can no longer pose as Ramon or hijack closing time through `registry.json`, plant a session id that reaches a command line, or add hooks or servers through a spawn request.
+- Agents can't switch off spending limits with negative cost reports, crash the app by flooding the key broker, or reach a connector vendor's API outside its MCP endpoint.
+- Codex logins only copy from you to the worker; Codex hook settings moved out of agents' reach.
+- Voice: a confirm counts only when your microphone hears it, only your latest words count, "no, don't confirm" never confirms, and your original request can't confirm itself. Voice hires can't pick the program to run.
+- Planted links, pipes and `..` names can no longer make the app write outside the hive, freeze it or export other files (memory indexer, deliveries, the editor's save).
+- On Windows, `git` and `gh` always run from their installed path, never from an agent's folder.
+- Webhook junk from outsiders can't block real webhooks; the Meta Ads report skill escapes `<`.
+
+### Fixed
+
+- Memory condensing no longer erases notes written while it runs, keeps pinned text as written, and keeps its backups in `hive-internal`.
+- The built-in editor refuses to save over a file an agent changed after you opened it.
+- Costs: lifetime totals no longer count a session twice after `/clear`; idle agents stop adding cost rows; one agent can't push its spend onto another; one huge transcript line no longer stalls tracking.
+- A full browser storage no longer loses or replays queued messages; a queued message is capped at about 100 KB.
+- Your compaction threshold is respected (an old 60% default no longer fires too).
+- Codex logins on Windows without Developer Mode stay in sync.
+- Folder names show correctly on Windows in Add Agent and floor spawns.
+- Other fixes: attached files no longer carry over to the next agent; cancelling voice while it connects no longer opens the mic; the "no progress" check resets after idle time; Reset everything stops agent proxy processes on Windows; the Git panel no longer shows a fake file after a rename; a broken `~/.gemini` hooks file is left alone; text fields in Settings → Connections are readable in dark mode.
+
+### Performance
+
+- The message log is no longer committed to the hive's git repo every few seconds (it could grow the repo to gigabytes and freeze the app); git timeouts pause commits instead of retrying.
+- Cost tracking reads only the session's own transcript, in slices; hooks, routing and the Deliveries badge no longer re-read files on every event; long-running floors stop accumulating memory; the message queue makes far fewer calls while delivery is held.
+
 ## v4.8.3 — 2026-11-25
 
 - **Codex workers stay signed in on Windows without Developer Mode.** There, each worker got a copy of the Codex login, and once any copy refreshed, the others held a revoked token ("refresh token was revoked"). Each spawn now folds a newer same-account copy back into your login and re-syncs the worker from it. A copy for another account never overwrites yours.

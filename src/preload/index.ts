@@ -36,10 +36,10 @@ import type { CatalogSkill } from '../main/skillsCatalog';
 export type { LocalSkill } from '../main/skills';
 export type { CatalogSkill } from '../main/skillsCatalog';
 import type {
-  ContextRule, ContextTriggerConfig, OrgTriggerConfig, TriggerHistoryEntry, WebhookTrigger
+  ContextRule, ContextTriggerConfig, TriggerHistoryEntry, WebhookTrigger
 } from '../shared/triggers';
 export type {
-  ContextRule, ContextTriggerConfig, OrgTriggerConfig, TriggerHistoryEntry, WebhookTrigger
+  ContextRule, ContextTriggerConfig, TriggerHistoryEntry, WebhookTrigger
 } from '../shared/triggers';
 
 /** Renderer-visible integration record: the secretRef handle is redacted to a
@@ -337,11 +337,14 @@ export interface HarnessConfig {
   slackSigningSecret?: string;
   slackBotToken?: string;
   slackChannelId?: string;
+  slackAllowedUserIds?: string[];
   slackPort?: number;
   slackProactivePosting?: boolean;
   obsidianVault?: string;
   /** Plain connector values (e.g. a HighLevel location id). */
   mcpVars?: Record<string, string>;
+  /** MCP servers the user added by hand (src/shared/mcpCatalog.ts). */
+  customMcpServers?: import('../shared/mcpCatalog').CustomMcpServer[];
   /** Owner feature switches (src/shared/features.ts). */
   features?: Partial<import('../shared/features').FeatureFlags>;
   webhookEnabled?: boolean;
@@ -707,9 +710,11 @@ const api = {
     { ok: true; bytes: Uint8Array<ArrayBuffer>; mime: string; path: string; size: number }
     | { ok: false; error: string }
   > => ipcRenderer.invoke('fs:readBinary', root, rel),
-  writeFile: (root: string, rel: string, content: string): Promise<
+  /** `expected`: the text the editor loaded. The save is refused if the file
+   *  changed on disk since (an agent edited it), instead of overwriting it. */
+  writeFile: (root: string, rel: string, content: string, expected?: string): Promise<
     { ok: true; path: string } | { ok: false; error: string }
-  > => ipcRenderer.invoke('fs:writeFile', root, rel, content),
+  > => ipcRenderer.invoke('fs:writeFile', root, rel, content, expected),
   /** v0.3.4: existence check for an absolute path (expands ~) — backs the
    *  terminal ⌘-click markdown flow. Metadata only, never contents. */
   statAbs: (p: string): Promise<{ exists: boolean; isFile: boolean; path: string }> =>
@@ -820,6 +825,9 @@ const api = {
   }> => ipcRenderer.invoke('models:catalog', force),
   /** Models the installed agent CLIs report (e.g. `opencode models`), per provider. */
   modelsLive: (force?: boolean): Promise<Record<string, CatalogModel[]>> => ipcRenderer.invoke('models:live', force),
+  /** OpenRouter's tool-capable models with price (public list, cached). */
+  modelsOpenRouter: (force?: boolean): Promise<{ id: string; label: string; free: boolean; inPerM: number; ctx: number }[]> =>
+    ipcRenderer.invoke('models:openrouter', force),
   /** Skills already installed for the coding agents on this machine. */
   skillsLocal: (cwd?: string): Promise<LocalSkill[]> => ipcRenderer.invoke('skills:local', cwd),
   /** The browsable skills catalog (cached; `force` re-fetches). */
@@ -908,14 +916,6 @@ const api = {
     const listener = (_e: IpcRendererEvent, payload: HiveRouteEvent) => cb(payload);
     ipcRenderer.on('hive:message', listener);
     return () => ipcRenderer.removeListener('hive:message', listener);
-  },
-  /** Register a listener for hive tasks routed to non-Claude agents (e.g.
-   *  Codex). Main emits this instead of bouncing; the renderer enqueues the
-   *  raw text so the drain effect types it into the agent's REPL when idle. */
-  onHiveEnqueue: (cb: (e: { targetId: string; text: string }) => void): (() => void) => {
-    const listener = (_e: IpcRendererEvent, payload: { targetId: string; text: string }) => cb(payload);
-    ipcRenderer.on('hive:enqueueToAgent', listener);
-    return () => ipcRenderer.removeListener('hive:enqueueToAgent', listener);
   },
   /** A MAIN-initiated agent spawn (e.g. a voice hire via rt-5) — the renderer adds
    *  the floor card from this descriptor since it didn't initiate the hire itself. */
@@ -1134,13 +1134,6 @@ const api = {
     ipcRenderer.on('missions:updated', listener);
     return () => ipcRenderer.removeListener('missions:updated', listener);
   },
-  /** Fires when an autoCompact mission ticks — the renderer queues a /compact
-   *  per agent (deduped) and delivers it when each agent is idle. */
-  onAutoCompact: (cb: () => void): (() => void) => {
-    const listener = (): void => cb();
-    ipcRenderer.on('mission:autoCompact', listener);
-    return () => ipcRenderer.removeListener('mission:autoCompact', listener);
-  },
 
   // ─── Full-text search across hive files (board, tasks, memory) ─────────────
   textSearch: (q: string): Promise<{ ok: boolean; results: Array<{ source: string; excerpt: string }> }> =>
@@ -1198,7 +1191,7 @@ const api = {
   /** Persist Slack settings (and stop the server if disabled / secret cleared). */
   slackSetConfig: (patch: {
     signingSecret?: string; botToken?: string; channelId?: string; port?: number; enabled?: boolean;
-    proactivePosting?: boolean;
+    proactivePosting?: boolean; allowedUserIds?: string;
   }): Promise<{ ok: boolean }> =>
     ipcRenderer.invoke('slack:setConfig', patch),
 
@@ -1264,9 +1257,6 @@ const api = {
   // ─── Triggers: organisation (clone-node peer messaging) ─────────────────────
   /** PERSISTENCE ONLY — the peer transport does not exist yet, so setting this
    *  stores the key and mode and starts nothing. */
-  getOrgTrigger: (): Promise<OrgTriggerConfig> => ipcRenderer.invoke('org:getTrigger'),
-  setOrgTrigger: (cfg: OrgTriggerConfig): Promise<OrgTriggerConfig> =>
-    ipcRenderer.invoke('org:setTrigger', cfg),
 
   // ─── Triggers: history ledger + approval gate ───────────────────────────────
   /** The whole ledger, newest first (both directions, both sources). */
@@ -1365,7 +1355,7 @@ const api = {
   ): Promise<{ ok: boolean; spoken: string; needsConfirm?: boolean }> =>
     ipcRenderer.invoke('realtime:action', payload),
   realtimeActionConfirm: (
-    req: { phrase: string }
+    req: { phrase: string; heard: { at: number; text: string }[] }
   ): Promise<{ ok: boolean; spoken: string; needsConfirm?: boolean }> =>
     ipcRenderer.invoke('realtime:action:confirm', req),
   realtimeActionCancel: (): Promise<{ ok: boolean; spoken: string; needsConfirm?: boolean }> =>

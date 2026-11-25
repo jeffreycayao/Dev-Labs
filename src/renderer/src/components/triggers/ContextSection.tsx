@@ -67,6 +67,7 @@ export function ContextSection({ onSummary }: { onSummary?: (s: string) => void 
         messageLabel={t('contextSection.extraFocus')}
         messageHint={t('contextSection.extraFocusHint')}
         messagePlaceholder={t('contextSection.extraFocusPlaceholder')}
+        showMethod
         onPatch={(fields) => patch('compact', fields)}
       />
 
@@ -84,7 +85,7 @@ export function ContextSection({ onSummary }: { onSummary?: (s: string) => void 
   );
 }
 
-function RuleCard({ title, blurb, rule, messageLabel, messageHint, messagePlaceholder, caution, onPatch }: {
+function RuleCard({ title, blurb, rule, messageLabel, messageHint, messagePlaceholder, caution, showMethod, onPatch }: {
   title: string;
   blurb: string;
   rule: ContextRule;
@@ -92,6 +93,8 @@ function RuleCard({ title, blurb, rule, messageLabel, messageHint, messagePlaceh
   messageHint: string;
   messagePlaceholder: string;
   caution?: ReactNode;
+  /** Compact only: plain compaction vs a memory.md handoff + clear. */
+  showMethod?: boolean;
   onPatch: (fields: Partial<ContextRule>) => void;
 }) {
   const { t } = useTranslation();
@@ -141,6 +144,17 @@ function RuleCard({ title, blurb, rule, messageLabel, messageHint, messagePlaceh
             />
             <Hint>{t('contextSection.bigWindowsHint')}</Hint>
           </Field>
+          {showMethod && (
+            <Field label={t('contextSection.method')}>
+              <Toggle
+                on={rule.method === 'handoff'}
+                onClick={() => onPatch({ method: rule.method === 'handoff' ? 'compact' : 'handoff' })}
+                onLabel={t('contextSection.methodHandoff')}
+                offLabel={t('contextSection.methodCompact')}
+              />
+              <Hint>{t('contextSection.methodHint')}</Hint>
+            </Field>
+          )}
           <Field label={messageLabel}>
             <textarea
               dir={rtl ? 'auto' : undefined}

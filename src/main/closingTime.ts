@@ -88,7 +88,9 @@ export class ClosingTimeController {
       return { ok: true };
     }
     const reg = this.hive.registry();
-    this.godId = reg.godId ?? 'god';
+    // Not reg.godId: agents can write registry.json, and a worker naming itself
+    // god (or marking everyone else god) would empty the list of workers to wait for.
+    this.godId = this.hive.godAgentId();
     const live = new Set(this.getLiveAgentIds());
     if (!reg.agents[this.godId] || !live.has(this.godId)) {
       return { ok: false, error: 'No orchestrator is running — closing time needs the god agent to collect the reports.' };
@@ -99,7 +101,7 @@ export class ClosingTimeController {
     this.workers = new Set(
       [...live].filter((id) => {
         const a = reg.agents[id];
-        return id !== this.godId && !!a && !a.isGod;
+        return id !== this.godId && !!a;
       })
     );
     this.acked = new Set();

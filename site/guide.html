@@ -386,6 +386,8 @@
       <tbody>
         <tr><td><strong>Pancake POS</strong></td><td>read and change orders, products, stock and sales</td></tr>
         <tr><td><strong>Fireflies.ai</strong></td><td>read your meeting notes: transcripts, summaries and action items</td></tr>
+        <tr><td><strong>Meta Ads</strong></td><td>read and change your Facebook and Instagram ad accounts; can launch ads that spend money (paste a Meta user access token)</td></tr>
+        <tr><td><strong>Metricool</strong></td><td>read social analytics for your brands and competitors, read or schedule posts (paste your API key from Account Settings → API)</td></tr>
         <tr><td><strong>Webcake Landing</strong></td><td>design, edit and publish landing pages</td></tr>
         <tr><td><strong>Obsidian</strong></td><td>save notes, lessons and decisions in your Obsidian vault, keep a daily note, search and read notes</td></tr>
         <tr><td><strong>Discord</strong></td><td>post in your channels, read recent messages, list channels</td></tr>
@@ -393,6 +395,7 @@
       </tbody>
     </table></div>
     <p>Each connector has a <strong>How to set up</strong> link in Settings with the exact steps.</p>
+    <p><strong>Your own MCP servers:</strong> at the bottom of Settings → Connections, add any MCP server by name, either a remote URL (with a token, a header key or no key) or a command that runs on this computer. It starts switched off; save its key in its row if it needs one, then switch it on. Only add commands you trust: they run with your permissions.</p>
     <p><strong>Obsidian</strong> needs no key: press <strong>choose folder</strong>, pick your vault, switch it on. Agents only work inside that folder, never touch Obsidian's own settings, and never overwrite or delete a note. Saving to an existing title adds an update at the end.</p>
     <p><strong>Discord</strong> needs a bot of your own: create an application at discord.com/developers/applications, copy the bot token into Settings, turn on <em>Message Content Intent</em>, and invite the bot to your server with View Channels, Send Messages and Read Message History.</p>
     <p class="note"><strong>Connectors change real data</strong> in those apps. Use keys with only the access you need. Today connectors work with <strong>Claude Code</strong> agents only.</p>
@@ -403,6 +406,7 @@
       <li><strong>Schedules:</strong> repeat a request on a timetable ("every Monday at 9am, summarise last week's sales").</li>
       <li><strong>Slack / webhooks / Discord:</strong> a message from outside starts a request for Ramon.</li>
     </ul>
+    <p><strong>Slack:</strong> in <strong>Settings → Connections → Slack</strong>, list the member IDs of the people who may give agents work under <strong>Allowed Slack users</strong> (in Slack: open a profile → ⋮ → <strong>Copy member ID</strong>). Messages from anyone else are ignored.</p>
     <p><strong>Discord example:</strong> open <strong>Triggers → Discord</strong>, paste the IDs of the channels to watch (in Discord: Settings → Advanced → turn on Developer Mode, then right-click a channel → <strong>Copy Channel ID</strong>), and switch it on. Only you (the bot's owner) can start work, unless you add other people's user IDs under <strong>Who can start work</strong>. Messages from anyone else are ignored, because these requests run without asking. @-mention the bot in a watched channel: it replies "Received", Ramon picks it up, and the answer is posted back in the channel. Keep the Discord connector on so agents can post the answer.</p>
 
     <h2 id="15-extras-looks-personality-voice-music">15. Extras: looks, personality, voice, music</h2>

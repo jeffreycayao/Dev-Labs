@@ -12,7 +12,8 @@ import {
   diffOfficeThemes, officeThemeFromFurniture, officeThemeJsonSchema, officeThemePrompt, validateOfficeTheme,
   type OfficeTheme, type OfficeThemeDiff
 } from '@shared/officeTheme';
-import { applyTheme, hasBackup, readFurniture, revertTheme, type StoredFurniture } from './themeStore';
+import { applyTheme, hasBackup, readFurniture, readScene, revertTheme, type StoredFurniture } from './themeStore';
+import { OFFICE_THEME_PRESETS, buildOfficeThemePreset, type OfficeThemePresetId } from './themePresets';
 
 export interface OfficeThemePanelProps {
   /** The floor's storage namespace (`levelNamespace(level)`). */
@@ -63,7 +64,7 @@ export function OfficeThemePanel({ namespace, desks, agents, onApplied, onClose 
       const who = agentName(agentId);
       if (item?.id && who) seats[item.id] = who;
     }
-    return officeThemeFromFurniture(items, { name: name || t('office.theme.defaultName') }, seats);
+    return officeThemeFromFurniture(items, { name: name || t('office.theme.defaultName') }, seats, readScene(localStorage, namespace));
   };
 
   const doExport = async () => {
@@ -85,8 +86,19 @@ export function OfficeThemePanel({ namespace, desks, agents, onApplied, onClose 
     setPending({ theme: v.theme, diff: diffOfficeThemes(current, v.theme.items), path: r.path });
   };
 
+  const previewPreset = (id: OfficeThemePresetId) => {
+    setNote(null);
+    try {
+      const theme = buildOfficeThemePreset(id);
+      setPending({ theme, diff: diffOfficeThemes(current, theme.items), path: '' });
+    } catch (e) {
+      setNote({ text: e instanceof Error ? e.message : String(e), error: true });
+    }
+  };
+
   const doApply = () => {
     if (!pending) return;
+    const before = current;
     const stored: StoredFurniture[] = applyTheme(localStorage, namespace, pending.theme);
     // Seats: theme desk id → new uid → agent matched by NAME (ids differ between installs).
     const seats: Record<string, string> = {};
@@ -94,6 +106,14 @@ export function OfficeThemePanel({ namespace, desks, agents, onApplied, onClose 
       const item = stored.find((it) => it.id === deskId);
       const agent = agents.find((a) => a.name === who);
       if (item && agent) seats[item._uid] = agent.id;
+    }
+    // A theme without seats keeps everyone at a desk that is still in the same spot.
+    if (!pending.theme.desks) {
+      for (const [uid, agentId] of Object.entries(desks)) {
+        const old = before.find((it) => it._uid === uid);
+        const same = old && stored.find((it) => it.type === old.type && it.x === old.x && it.y === old.y);
+        if (same) seats[same._uid] = agentId;
+      }
     }
     setPending(null);
     setCanUndo(true);
@@ -137,6 +157,16 @@ export function OfficeThemePanel({ namespace, desks, agents, onApplied, onClose 
         <button type="button" onClick={doUndo} disabled={!canUndo} style={{ ...btn, opacity: canUndo ? 1 : 0.45, cursor: canUndo ? 'pointer' : 'not-allowed' }}>{t('office.theme.undo')}</button>
       </div>
 
+      {/* Built-in themes */}
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ ...muted, marginBottom: 4 }}>{t('office.theme.presetsTitle')}</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {OFFICE_THEME_PRESETS.map((id) => (
+            <button key={id} type="button" onClick={() => previewPreset(id)} style={btn}>{t(`office.theme.preset.${id}`)}</button>
+          ))}
+        </div>
+      </div>
+
       {pending && (
         <div style={{ padding: 10, borderRadius: 8, background: 'rgba(255,255,255,0.04)', marginBottom: 10 }}>
           <div style={{ marginBottom: 6 }}><strong>{pending.theme.name}</strong>{pending.theme.author ? ` · ${pending.theme.author}` : ''}</div>
@@ -146,6 +176,7 @@ export function OfficeThemePanel({ namespace, desks, agents, onApplied, onClose 
             {Object.keys(pending.diff.added).length > 0 && <div>+ {counts(pending.diff.added)}</div>}
             {Object.keys(pending.diff.removed).length > 0 && <div>− {counts(pending.diff.removed)}</div>}
             {pending.diff.changed > 0 && <div>{t('office.theme.diffMoved', { n: pending.diff.changed })}</div>}
+            {pending.theme.scene && <div>{t('office.theme.diffScene', { list: Object.entries(pending.theme.scene).map(([k, v]) => `${k} ${String(v)}`).join(', ') })}</div>}
             {pending.theme.desks && <div>{t('office.theme.diffSeats', { n: Object.keys(pending.theme.desks).length })}</div>}
           </div>
           <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>

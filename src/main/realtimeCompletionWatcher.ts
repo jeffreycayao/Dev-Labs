@@ -432,9 +432,8 @@ function safeRead<T>(reader: () => T[]): T[] {
 
 // --- shared singleton (rt-12 contract lock with Kevin) ------------------------------------
 // ONE watcher instance across the whole main process: one pending map, one queue. index.ts
-// initializes it with the real hive-backed readers; realtimeActions.ts (and any other core
-// caller) get that SAME instance via getCompletionWatcher(). This avoids a per-call watcher
-// where track() and onCompletion() would land on different objects.
+// initializes it with the real hive-backed readers and passes that SAME instance on. This
+// avoids a per-call watcher where track() and onCompletion() would land on different objects.
 
 let _instance: RealtimeCompletionWatcher | null = null;
 
@@ -445,18 +444,5 @@ let _instance: RealtimeCompletionWatcher | null = null;
  */
 export function initCompletionWatcher(deps: CompletionWatcherDeps): RealtimeCompletionWatcher {
   if (!_instance) _instance = new RealtimeCompletionWatcher(deps);
-  return _instance;
-}
-
-/**
- * Get the shared completion-watcher singleton. Throws if not yet initialized — index.ts must
- * call {@link initCompletionWatcher} first. Use from realtimeActions.ts for track()/waitFor().
- */
-export function getCompletionWatcher(): RealtimeCompletionWatcher {
-  if (!_instance) {
-    throw new Error(
-      'completion watcher not initialized — call initCompletionWatcher(deps) from index.ts first'
-    );
-  }
   return _instance;
 }

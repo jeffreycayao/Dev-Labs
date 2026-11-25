@@ -1,3 +1,4 @@
+import { errMsg, extractError } from './netUtil';
 /**
  * Free Flow — Groq Whisper speech-to-text, run from the Electron MAIN process.
  *
@@ -108,15 +109,6 @@ export async function transcribeWithGroq(opts: TranscribeOptions): Promise<Trans
 }
 
 /** Pull a human-readable message out of Groq's JSON error envelope, if present. */
-function extractError(raw: string): string {
-  try {
-    const j = JSON.parse(raw) as { error?: { message?: string } | string };
-    if (typeof j.error === 'string') return j.error;
-    if (j.error && typeof j.error.message === 'string') return j.error.message;
-  } catch { /* not json */ }
-  return '';
-}
-
 function toUint8Array(audio: ArrayBuffer | Uint8Array | Buffer): Uint8Array {
   if (audio instanceof Uint8Array) return audio; // Buffer is a Uint8Array subclass
   return new Uint8Array(audio);
@@ -127,6 +119,3 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }
 
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}

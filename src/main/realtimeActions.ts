@@ -35,6 +35,7 @@
  * module stays decoupled from index.ts wiring.
  */
 import { ipcMain } from 'electron';
+import { basename } from 'node:path';
 import type { HiveMessage, HiveTask, Registry } from './hive';
 import type { ScheduledMission } from './config';
 import { inferAgentProvider } from '../shared/agentProvider';
@@ -244,9 +245,11 @@ function confirmAccepted(phrase: string, confirmWord: string): boolean {
   const p = norm(phrase);
   if (!p) return false;
   if (BARE_AFFIRMATIONS.has(p)) return false;
-  if (/\bconfirm(ed|s)?\b/.test(p)) return true;
-  if (new RegExp(`\\b${escapeRegExp(confirmWord)}\\b`).test(p)) return true;
-  return false;
+  const hit = /\bconfirm(ed|s)?\b/.exec(p) ?? new RegExp(`\\b${escapeRegExp(confirmWord)}\\b`).exec(p);
+  if (!hit) return false;
+  // A negation BEFORE the word flips it ("no, don't confirm that"); one after it
+  // does not ("confirm, no problem").
+  return !/\b(no|not|nope|never|don t|dont|do not|cancel|stop|wait|hold on)\b/.test(p.slice(0, hit.index));
 }
 
 // ─── pending (single-slot two-phase confirm) ────────────────────────────────
@@ -662,7 +665,9 @@ function proposeDestructive(deps: RealtimeActionDeps, verb: string, a: Record<st
     const cwd =
       str(a.cwd) || godCwd || Object.values(reg.agents).find((m) => m.cwd)?.cwd || '';
     if (!cwd) return { ok: false, spoken: 'I need a working directory to hire into — none is configured.' };
-    const command = str(a.command) || PROVIDER_COMMAND[provider] || 'claude';
+    // Never take a command from the model: it reads agent-written text, and the
+    // read-back below would not mention it. The provider picks the binary.
+    const command = PROVIDER_COMMAND[provider] || 'claude';
     const id = `${slug(name)}-${shortId()}`;
     const spec2: RealtimeSpawnSpec = { id, cwd, command, provider, hive: { id, name, provider, role: role || undefined, cwd } };
     pending = { verb, confirmWord: 'spawn', targetLabel: name, createdAt: Date.now(), commit: buildSpawn(deps, spec2, `${name} on ${provider}`) };
@@ -671,7 +676,7 @@ function proposeDestructive(deps: RealtimeActionDeps, verb: string, a: Record<st
       needsConfirm: true,
       // Spawn/hire is gated behind a verbal echo-back confirm. No cost is quoted —
       // the orchestrator persona does not surface money to the user.
-      spoken: `You want to hire a new ${provider} agent${role ? ` as ${role}` : ''}, named ${name}. To hire, say "confirm" or "spawn". Say "cancel" to stop.`
+      spoken: `You want to hire a new ${provider} agent${role ? ` as ${role}` : ''}, named ${name}, working in ${basename(cwd) || cwd}. To hire, say "confirm" or "spawn". Say "cancel" to stop.`
     };
   }
 
@@ -869,7 +874,17 @@ export function registerRealtimeActionIpc(deps: RealtimeActionDeps): void {
     const p = (payload ?? {}) as Record<string, unknown>;
     const cur = pendingFresh();
     if (!cur) return { ok: false, spoken: 'There\'s nothing waiting to confirm.' } satisfies ActionResult;
-    const phrase = str(p.phrase) || str(p.confirm) || str(p.text);
+    // Only what the microphone heard AFTER the action was staged counts. The
+    // model's own `phrase` is not trusted: it reads agent-written messages, tasks
+    // and memory, so an agent could tell it to call confirm_action itself.
+    const heard = Array.isArray(p.heard) ? p.heard : [];
+    // Judged on the LATEST utterance alone: joining everything said since the
+    // action was staged let an earlier "confirm" count after a later "no".
+    const fresh = heard
+      .filter((h): h is { at: number; text: string } => !!h && typeof (h as { at?: unknown }).at === 'number'
+        && typeof (h as { text?: unknown }).text === 'string' && (h as { at: number }).at >= cur.createdAt)
+      .sort((a, b) => a.at - b.at);
+    const phrase = fresh.length ? fresh[fresh.length - 1].text : '';
     if (!confirmAccepted(phrase, cur.confirmWord)) {
       return {
         ok: false,

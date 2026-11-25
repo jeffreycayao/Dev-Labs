@@ -117,6 +117,9 @@ export interface McpCatalogEntry {
    *  this entry to exist at all: hidden in Settings and never written to an
    *  agent's config while off, whatever the consent says. */
   feature?: keyof FeatureFlags;
+  /** Bundled skill folder (resources/skills/<skill>) that teaches agents how to
+   *  use this connector; copied to agents only while the connector is on. */
+  skill?: string;
 }
 
 export interface McpNpmPackage {
@@ -290,6 +293,35 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     defaultEnabled: false
   },
   {
+    // Meta's own hosted Ads MCP server (Streamable HTTP). Its OAuth metadata
+    // (/.well-known/oauth-protected-resource/ads) lists `bearer_methods_supported:
+    // header`, so a pasted user access token rides as "Authorization: Bearer <token>";
+    // the broker cannot drive the Facebook Login sign-in itself. It can spend money
+    // and pause or edit live campaigns, so it stays off until the owner opts in.
+    id: 'meta-ads',
+    label: 'Meta Ads',
+    description: 'Your Meta (Facebook and Instagram) ad accounts: campaigns, ad sets, ads, audiences and insights. Can also create, edit, pause and launch ads that spend money, within the token\'s permissions.',
+    spec: { transport: 'http', url: 'https://mcp.facebook.com/ads', authType: 'bearer' },
+    secret: { kind: 'header', name: 'Authorization', label: 'Meta user access token (ads_mcp_management + ads_read or ads_management)', helpUrl: 'https://developers.facebook.com/tools/explorer/' },
+    tier: 'secret',
+    defaultEnabled: false,
+    // Branded HTML performance report (Chart.js, Save as PDF, opened in the browser).
+    skill: 'meta-ads-report'
+  },
+  {
+    // Metricool's own hosted MCP server. Clients that cannot run its OAuth sign-in
+    // send the API key in the "X-Mc-Auth" header (help.metricool.com, n8n and
+    // Claude Desktop setup), which is what the broker does. The API key needs a
+    // Metricool plan with API access.
+    id: 'metricool',
+    label: 'Metricool',
+    description: 'Your Metricool brands: social media analytics, competitors and the content planner. Can also schedule posts, within the key\'s permissions.',
+    spec: { transport: 'http', url: 'https://ai.metricool.com/mcp' },
+    secret: { kind: 'header', name: 'X-Mc-Auth', label: 'Metricool API key (Account Settings → API)', helpUrl: 'https://help.metricool.com/en/article/how-to-connect-metricools-mcp-1364s63/' },
+    tier: 'secret',
+    defaultEnabled: false
+  },
+  {
     // The server Webcake's docs point to (docs.pancake.biz/landing/st-f7/st-p3).
     // Published on npm by a single developer, so the version is PINNED: an update
     // is a reviewed change here, never a silent `latest`. Its writes are dry-run
@@ -362,6 +394,110 @@ export function mcpCatalogFor(features: Partial<FeatureFlags> | undefined | null
   return catalog.filter((e) => !e.feature || featureOn(features, e.feature));
 }
 
+/**
+ * An MCP server the user added by hand in Settings → Connections (stored in
+ * `config.customMcpServers`). It becomes an ordinary catalog entry: off until
+ * switched on, its key (if any) in the encrypted store under `mcp:<id>`, and a
+ * remote one with a key goes through the broker so agents never see the key.
+ */
+export interface CustomMcpServer {
+  /** `custom-<slug>`. */
+  id: string;
+  label: string;
+  transport: 'http' | 'stdio';
+  /** http: the server's MCP endpoint (https, or http on localhost). */
+  url?: string;
+  /** http: how the key is sent. 'none' = no key, the agent calls the URL itself. */
+  auth?: 'none' | 'header' | 'bearer';
+  /** http + 'header': the header the key goes in (e.g. X-Api-Key). */
+  headerName?: string;
+  /** stdio: the program and its arguments. */
+  command?: string;
+  args?: string[];
+  /** stdio: env var that receives the key; absent = no key. */
+  envName?: string;
+}
+
+const CONTROL = /[\u0000-\u001f\u007f]/;
+/** Headers the broker or HTTP itself owns; a key may not ride in them. */
+const RESERVED_HEADERS = new Set(['host', 'cookie', 'content-length', 'content-type', 'transfer-encoding', 'connection', 'x-md-broker-token']);
+/** Env vars that would change how the server process itself starts. */
+const RESERVED_ENV = new Set(['PATH', 'NODE_OPTIONS', 'LD_PRELOAD', 'DYLD_INSERT_LIBRARIES', 'PYTHONPATH', 'ELECTRON_RUN_AS_NODE', 'HOME', 'USERPROFILE']);
+export const CUSTOM_MCP_MAX = 20;
+
+/** https anywhere, or plain http to this machine only. */
+function customMcpUrl(raw: unknown): string | null {
+  if (typeof raw !== 'string' || raw.length > 500 || CONTROL.test(raw)) return null;
+  try {
+    const u = new URL(raw.trim());
+    if (u.username || u.password) return null;
+    const local = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || u.hostname === '[::1]';
+    if (u.protocol !== 'https:' && !(u.protocol === 'http:' && local)) return null;
+    return u.href;
+  } catch { return null; }
+}
+
+/** Keep only well-formed custom servers (config.json can be edited by hand).
+ *  Bad rows are dropped, ids are unique, at most CUSTOM_MCP_MAX. */
+export function sanitizeCustomMcp(raw: unknown): CustomMcpServer[] {
+  if (!Array.isArray(raw)) return [];
+  const out: CustomMcpServer[] = [];
+  const seen = new Set(MCP_CATALOG.map((e) => e.id));
+  for (const r of raw as Record<string, unknown>[]) {
+    if (out.length >= CUSTOM_MCP_MAX) break;
+    if (!r || typeof r !== 'object') continue;
+    const id = typeof r.id === 'string' && /^custom-[a-z0-9][a-z0-9-]{0,39}$/.test(r.id) ? r.id : null;
+    const label = typeof r.label === 'string' ? r.label.trim().slice(0, 60) : '';
+    if (!id || seen.has(id) || !label || CONTROL.test(label)) continue;
+    if (r.transport === 'http') {
+      const url = customMcpUrl(r.url);
+      const auth = r.auth === 'header' || r.auth === 'bearer' ? r.auth : 'none';
+      const headerName = typeof r.headerName === 'string' ? r.headerName.trim() : '';
+      if (!url) continue;
+      if (auth === 'header' && (!/^[A-Za-z0-9-]{1,64}$/.test(headerName) || RESERVED_HEADERS.has(headerName.toLowerCase()) || headerName.toLowerCase() === 'authorization')) continue;
+      out.push({ id, label, transport: 'http', url, auth, ...(auth === 'header' ? { headerName } : {}) });
+    } else if (r.transport === 'stdio') {
+      const command = typeof r.command === 'string' ? r.command.trim() : '';
+      const args = Array.isArray(r.args) ? r.args.filter((a): a is string => typeof a === 'string') : [];
+      const envName = typeof r.envName === 'string' ? r.envName.trim() : '';
+      if (!command || command.length > 300 || CONTROL.test(command)) continue;
+      if (args.length > 30 || args.some((a) => a.length > 500 || CONTROL.test(a))) continue;
+      if (envName && (!/^[A-Za-z_][A-Za-z0-9_]{0,63}$/.test(envName) || RESERVED_ENV.has(envName.toUpperCase()))) continue;
+      out.push({ id, label, transport: 'stdio', command, args, ...(envName ? { envName } : {}) });
+    } else continue;
+    seen.add(id);
+  }
+  return out;
+}
+
+/** A custom server as a catalog entry. Always tier 'secret' and off by default:
+ *  it can do anything the server allows, so the user switches it on explicitly. */
+export function customMcpEntry(c: CustomMcpServer): McpCatalogEntry {
+  const base = { id: c.id, label: c.label, tier: 'secret' as const, defaultEnabled: false };
+  if (c.transport === 'http') {
+    const secret: McpSecret | undefined = c.auth === 'bearer'
+      ? { kind: 'header', name: 'Authorization', label: `${c.label} token` }
+      : c.auth === 'header' ? { kind: 'header', name: c.headerName!, label: `${c.label} key (${c.headerName})` } : undefined;
+    return {
+      ...base,
+      description: `Your own MCP server at ${new URL(c.url!).host}.`,
+      spec: { transport: 'http', url: c.url!, ...(c.auth === 'bearer' ? { authType: 'bearer' as const } : {}) },
+      ...(secret ? { secret } : {})
+    };
+  }
+  return {
+    ...base,
+    description: `Your own MCP server: ${c.command}${c.args?.length ? ` ${c.args.join(' ')}` : ''}`.slice(0, 200),
+    spec: { command: c.command!, args: c.args ?? [] },
+    ...(c.envName ? { secret: { kind: 'env' as const, name: c.envName, label: `${c.label} key (${c.envName})` } } : {})
+  };
+}
+
+/** The built-in catalog plus the user's own servers. */
+export function fullMcpCatalog(custom: unknown): McpCatalogEntry[] {
+  return [...MCP_CATALOG, ...sanitizeCustomMcp(custom).map(customMcpEntry)];
+}
+
 /** Encrypted-store handle for an entry's credential. */
 export function mcpSecretRef(id: string): string {
   return `mcp:${id}`;
@@ -376,16 +512,19 @@ export function isHttpSpec(spec: McpSpec): spec is McpHttpSpec {
   return (spec as McpHttpSpec).transport === 'http';
 }
 
-/** Split a remote entry's URL into the broker's (origin) base and the path the
- *  agent requests under it. */
+/** Split a remote entry's URL into the broker's base and the path the agent
+ *  requests under it. The base is the MCP endpoint itself, not the vendor's
+ *  origin: with only the origin, the connector's token could call any REST path
+ *  on that host (e.g. delete GoHighLevel contacts), skipping the MCP tools. */
 export function mcpUpstream(spec: McpHttpSpec): { baseUrl: string; path: string } {
   const u = new URL(spec.url);
-  return { baseUrl: u.origin, path: `${u.pathname.replace(/^\/+/, '')}${u.search}` };
+  return { baseUrl: `${u.origin}${u.pathname}`, path: u.search };
 }
 
 /** True when the broker carries this entry's traffic (http, or stdio with `upstream`). */
 export function isBrokered(e: McpCatalogEntry): boolean {
-  return isHttpSpec(e.spec) || !!e.spec.upstream;
+  // A keyless remote server (a user's own, with auth 'none') is called directly.
+  return isHttpSpec(e.spec) ? !!e.secret : !!e.spec.upstream;
 }
 
 /** Where the broker forwards a brokered entry, and how it adds the key. */
@@ -458,11 +597,18 @@ export function buildMcpServers(input: BuildMcpServersInput): {
     const key = `atmt-${e.id}`;
     const vars: Record<string, string> = { ...input.vars, cwd: input.cwd };
     let missing = false;
-    const fill = (s: string): string => s.replace(/<([a-z-]+)>/g, (m, name: string) => {
+    // A user's own server is passed exactly as typed: `<name>` in its arguments
+    // is the user's text, not one of the app's placeholders.
+    const fill = (s: string): string => e.id.startsWith('custom-') ? s : s.replace(/<([a-z-]+)>/g, (m, name: string) => {
       if (vars[name]) return vars[name];
       missing = true;
       return m;
     });
+    if (isHttpSpec(e.spec) && !e.secret) {
+      // No key to protect (a user's own keyless server): the agent calls it directly.
+      servers[key] = { type: 'http', url: e.spec.url, headers: {} };
+      continue;
+    }
     if (isHttpSpec(e.spec)) {
       if (!input.broker) { skipped.push({ id: e.id, reason: 'broker_offline' }); continue; }
       const { path } = mcpUpstream(e.spec);
@@ -509,6 +655,14 @@ export function buildMcpServers(input: BuildMcpServersInput): {
 /** Brokered entries the given consent map enables (for the broker grant). */
 export function enabledBrokeredEntries(consent: BuildMcpServersInput['consent'], catalog: readonly McpCatalogEntry[] = MCP_CATALOG): McpCatalogEntry[] {
   return catalog.filter((e) => isBrokered(e) && consent?.[e.id]?.enabled === true);
+}
+
+/** Connector skills to leave out of an agent: those whose connector is off
+ *  (same rule as `buildMcpServers`: a default-off entry needs explicit consent). */
+export function disabledConnectorSkills(consent: BuildMcpServersInput['consent'], catalog: readonly McpCatalogEntry[] = MCP_CATALOG): string[] {
+  return catalog
+    .filter((e) => e.skill && !(e.defaultEnabled ? consent?.[e.id]?.enabled !== false : consent?.[e.id]?.enabled === true))
+    .map((e) => e.skill!);
 }
 
 /** Look up a catalog entry by id. */

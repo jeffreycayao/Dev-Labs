@@ -49,8 +49,8 @@ import {
 } from './webhook';
 import {
   classifyInboundKind, isAutoAllowed,
-  DEFAULT_CONTEXT_TRIGGER, DEFAULT_ORG_TRIGGER, DEFAULT_TRIGGER_MODE, DEFAULT_WEBHOOK_SCHEMA,
-  type ContextRule, type ContextTriggerConfig, type InboundKind, type OrgTriggerConfig,
+  DEFAULT_CONTEXT_TRIGGER, DEFAULT_TRIGGER_MODE, DEFAULT_WEBHOOK_SCHEMA,
+  type ContextRule, type ContextTriggerConfig, type InboundKind,
   type TriggerHistoryEntry, type TriggerMode, type WebhookTrigger
 } from '../shared/triggers';
 import {
@@ -76,7 +76,10 @@ import { analytics, isRendererMessageSurface } from './analytics';
 import type { SpawnFailReason } from './analytics';
 import { IntegrationBroker } from './integrationBroker';
 import * as integrations from './integrations';
-import { MCP_CATALOG, mcpCatalogEntry, mcpSecretRef, mcpBrokerId, mcpBrokerTarget, enabledBrokeredEntries } from '../shared/mcpCatalog';
+import { mcpSecretRef, mcpBrokerId, mcpBrokerTarget, enabledBrokeredEntries, disabledConnectorSkills, fullMcpCatalog, sanitizeCustomMcp } from '../shared/mcpCatalog';
+
+/** Built-in connectors plus the user's own servers, validated from config. */
+const mcpCatalogNow = () => fullMcpCatalog(readConfig().customMcpServers);
 import { DiscordPoller, postDiscordMessage } from './discord';
 import { normalizeDiscordTrigger, DEFAULT_DISCORD_TRIGGER, type DiscordTriggerConfig } from '../shared/discord';
 import type { IntegrationRecord } from '../shared/integrations';
@@ -86,7 +89,7 @@ import { firedStillOnFloor, parseFireRequest } from '../shared/fireRequest';
 import { verifyFireRequest, verifySpawnRequest } from './fireAuth';
 import { prepareProjectFloorSelections, settingsForFloorSwitch } from './projectFloor';
 import { createFloorBackup, restoreStagedFloor, stageFloorData } from './floorBackup';
-import { buildWorkerLaunch, isAllowedWorkerBin } from './workerLaunch';
+import { buildWorkerLaunch, disallowedWorkerFlag, isAllowedWorkerBin } from './workerLaunch';
 import { isEphemeralSpawnRequest } from '../shared/workerLifecycle';
 import { ControlRegistry } from './control';
 import { WorkerWakeWatchdog, type WorkerWakeFacts } from './workerWake';
@@ -120,7 +123,7 @@ import { listLocalSkills, uninstallSkill, type LocalSkill } from './skills';
 import { loadSkillCatalog, installCatalogSkill, prepareCatalogSkillUninstall } from './skillsCatalog';
 import { loadHero } from './hero';
 import { loadModelCatalog } from './modelCatalog';
-import { listLiveModels } from './cliModels';
+import { listLiveModels, listOpenRouterModels } from './cliModels';
 import {
   CODEX_REMOTE_SOCKET_RELATIVE,
   codexRemoteAliasPath,
@@ -293,7 +296,7 @@ const telemetry = new TelemetryCollector({
   resolveAgent: (token) => hive.hookAgent(undefined, token)
 });
 // Usage provider (Seam 1) — the INTEGRATION swap: Oscar's telemetry collector (#7)
-// IS the provider, replacing Lane A's interim StubUsageProvider. Same
+// IS the provider (it replaced Lane A's interim transcript stub). Same
 // getAgentUsage(agentId) pull seam, so the breaker + cost ledger consumers are
 // untouched; telemetry has a transcript fallback built in, so it works before any
 // live OTel arrives.
@@ -303,7 +306,7 @@ const usageProvider: UsageProvider = telemetry;
 // session id is real, so the liveness gate below cannot filter that — this
 // does, by admitting a row only when the numbers move. Claude's live OTel path
 // does not consult it.
-const grokLedgerGate = new CumulativeSampleGate();
+const ledgerGate = new CumulativeSampleGate();
 // Circuit breaker (Lane A #6.6b) — the REAL policy (replaces Lane C's interim
 // glue). POLICY only; the heartbeat beat feeds it signals (via usageProvider) +
 // enforces its decisions. Config read live so a settings change applies next beat.
@@ -442,7 +445,7 @@ const integrationBroker = new IntegrationBroker({
  */
 function mcpBrokerRecord(brokerId: string): IntegrationRecord | undefined {
   if (!brokerId.startsWith('mcp-')) return undefined;
-  const entry = MCP_CATALOG.find((e) => mcpBrokerId(e.id) === brokerId);
+  const entry = mcpCatalogNow().find((e) => mcpBrokerId(e.id) === brokerId);
   const target = entry && mcpBrokerTarget(entry);
   if (!entry || !target) return undefined;
   const now = Date.now();
@@ -547,9 +550,10 @@ function teardownPty(id: string, notifyOffline = false): void {
     try { breaker.forget(agentId); } catch { /* best-effort */ }
     // A replacement using this id needs a new usage counter, not the dead PTY's.
     try { telemetry.forgetAgent(agentId); } catch { /* best-effort */ }
+    try { hookServer.forget(agentId); } catch { /* best-effort */ }
     // Same reason, for the Grok ledger gate: a respawned agent's first sample
     // must be admitted rather than matched against the dead one's last row.
-    try { grokLedgerGate.forget(agentId); } catch { /* best-effort */ }
+    try { ledgerGate.forget(agentId); } catch { /* best-effort */ }
     // W1 — kill this agent's proxy-bridge sidecar (qwen), if any, so a dead
     // PTY never leaves an orphan loopback listener. No-op for non-proxy agents.
     try { hive.stopProxyBridge(agentId); } catch (e) { console.error('[hive] stopProxyBridge failed:', e); }
@@ -944,12 +948,6 @@ function clearContextTimers(): void {
  *  to the renderer for each action. */
 function emitContextTrigger(action: 'compact' | 'clear', rule: ContextRule): void {
   try { liveWebContents()?.send('trigger:context', { action, rule }); } catch { /* window gone */ }
-  // TRANSITIONAL ALIAS: the renderer still carries the pre-Triggers
-  // `mission:autoCompact` listener as a fallback. Both fire for compact until
-  // every consumer has moved to `trigger:context`; then this line goes.
-  if (action === 'compact') {
-    try { liveWebContents()?.send('mission:autoCompact'); } catch { /* window gone */ }
-  }
 }
 
 /** (Re)arm both context timers from persisted config. Clear-then-arm, so calling
@@ -990,7 +988,7 @@ function stopOrphanedAgents(): void {
     const reg = hive.registry();
     for (const [id, a] of Object.entries(reg.agents)) {
       if (a.archived) continue;
-      if (id === reg.godId) continue;        // god is never archived
+      if (hive.isGod(id)) continue;        // god is never archived
       if (ptyForAgent(id)) continue;         // has a live PTY → genuinely active
       hive.setStopped(id);
       console.log('[startup] stopped orphaned agent (no live PTY):', id);
@@ -1197,7 +1195,7 @@ function looksStuck(windowMs: number): boolean {
   const reg = hive.registry();
   const now = Date.now();
   for (const [id, a] of Object.entries(reg.agents)) {
-    if (a.archived || a.status === 'gone' || id === reg.godId) continue;
+    if (a.archived || a.status === 'gone' || hive.isGod(id)) continue;
     const ptyId = ptyForAgent(id);
     if (!ptyId) continue;
     const idle = ptyManager.idleFor(ptyId) ?? Infinity;
@@ -1210,7 +1208,7 @@ function looksStuck(windowMs: number): boolean {
  *  #6.2). A few hundred tokens at most. */
 function buildHeartbeatDigest(quietMs: number, actionable = 0): string {
   const reg = hive.registry();
-  const active = Object.entries(reg.agents).filter(([id, a]) => !a.archived && a.status !== 'gone' && id !== reg.godId);
+  const active = Object.entries(reg.agents).filter(([id, a]) => !a.archived && a.status !== 'gone' && !hive.isGod(id));
   const names = active.map(([, a]) => a.name).join(', ') || '—';
   const boardHead = hive.board().split('\n').slice(0, 10).join('\n').trim();
   const log = hive.logTail(8).map((e) => { try { return JSON.stringify(e); } catch { return ''; } }).filter(Boolean).join('\n');
@@ -1293,7 +1291,7 @@ function runBreakerBeat(progressWindowMs: number): void {
     // below) so its ledger row is unaffected. Live real agents always own a PTY
     // (ptyToAgent is set at spawn), so their breaker behavior is unchanged.
     if (a.isAssistant) continue;
-    if (id !== reg.godId && !ptyForAgent(id)) continue;
+    if (!hive.isGod(id) && !ptyForAgent(id)) continue;
     const sample = usageProvider.getAgentUsage(id);
     // #56: only append a ledger row for a LIVE session sample. A dead/orphaned
     // agent with a frozen transcript still yields a sample via the transcript
@@ -1303,12 +1301,14 @@ function runBreakerBeat(progressWindowMs: number): void {
     // (aggregateLive picks the most-recent live session id), so this gates on
     // "is there a live session" without changing any live-agent behavior.
     if (sample?.sessionId) {
-      // A Grok sample's session id is always truthy, so for that provider #56's
-      // duplicate-row risk moves from "is there a live session" to "did anything
-      // change". Short-circuits before the gate for everyone else, leaving the
-      // live-OTel path exactly as it was.
-      const moved = a.provider !== 'grok' || grokLedgerGate.admits(sample);
-      if (moved) hive.appendCostLedger(sample); // ledger covers everyone incl. god
+      // One row per live OTel session with that session's own totals (Grok has no
+      // OTel sessions, so its single file sample stands). Appended only when the
+      // numbers moved: an idle live agent otherwise writes the same row every
+      // beat — #56 again, ~10 MB/day for a floor of idle agents.
+      const live = telemetry.liveSessionSamples(id);
+      for (const row of live.length ? live : [sample]) {
+        if (ledgerGate.admits(row)) hive.appendCostLedger(row); // ledger covers everyone incl. god
+      }
     }
     // Second source for the resume key. recordSession() is otherwise reachable
     // ONLY from the hook shim, so any window where hooks don't land leaves the
@@ -1321,7 +1321,7 @@ function runBreakerBeat(progressWindowMs: number): void {
     // God spends from the same floor budget, so its tokens/dollars count toward
     // the cap; `exempt` keeps the breaker from ever acting on the orchestrator.
     const usage = withLedgerUsage(sample, sample?.sessionId ? costTotals.sessionUsage(id, sample.sessionId) : null);
-    if (id === reg.godId) { inputs.push({ agentId: id, sample: usage, progressing: true, exempt: true }); continue; }
+    if (hive.isGod(id)) { inputs.push({ agentId: id, sample: usage, progressing: true, exempt: true }); continue; }
     // Progress = fresh coordination files OR a recent OTel tool span. The span
     // leg closes the background-work blind spot: subagent/Workflow tool calls
     // never reach the parent session's PostToolUse hook (so the breaker's own
@@ -1864,6 +1864,9 @@ async function startSlackServer(): Promise<{ ok: boolean; url?: string; error?: 
     port: cfg.slackPort && cfg.slackPort > 0 ? cfg.slackPort : 3847,
     signingSecret: cfg.slackSigningSecret,
     channelId: cfg.slackChannelId,
+    // Read live, so a Settings change applies without restarting the server
+    // (a restart would change the tunnel URL pasted into Slack).
+    isAllowedUser: (id) => !!id && (readConfig().slackAllowedUserIds ?? []).includes(id),
     // Fires from the HTTP server's event loop (not the IPC thread); route through
     // liveWebContents() so a message arriving during window teardown can't throw.
     // Downloads any file attachments (bot token stays in main; local paths go to IPC).
@@ -3191,7 +3194,7 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
           // revoked with the rest in teardownPty).
           mcpSecret: (id) => integrations.getSecret(mcpSecretRef(id)),
           mcpBroker: (() => {
-            const remote = enabledBrokeredEntries(readConfig().mcpDefaults);
+            const remote = enabledBrokeredEntries(readConfig().mcpDefaults, mcpCatalogNow());
             if (!remote.length || !integrationBroker.running()) return undefined;
             const token = integrationBroker.extend(opts.id, remote.map((e) => mcpBrokerId(e.id)));
             return { url: integrationBroker.url(), token };
@@ -3207,6 +3210,7 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
           },
           // Run pinned npx servers from the one-time install (mcpPackages.ts); the
           // first spawns while it is still installing simply use npx.
+          mcpCatalog: mcpCatalogNow(),
           mcpLocalPackage: (() => { void ensureMcpPackages(readConfig().mcpDefaults, readConfig().features); return localMcpPackage; })(),
           onMcpSkipped: (skipped) => {
             for (const s of skipped) console.warn(`[mcp] ${s.id} not attached to ${opts.id}: ${s.reason}`);
@@ -3215,7 +3219,7 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
           // Owner switches (Settings → General → Features): drop the skills whose
           // switch is off (DevLabs-written set, agent-browser); hide the connectors
           // behind an off switch; inject ATTITUDE.md only when on AND it has text.
-          skillsExclude: excludedSkillIds(readConfig().features),
+          skillsExclude: [...excludedSkillIds(readConfig().features), ...disabledConnectorSkills(readConfig().mcpDefaults)],
           features: readConfig().features,
           attitude: featureOn(readConfig().features, 'attitudeFile') ? readAttitude() : '',
           // The shared palace is mutated by the agent's own `mempalace` calls, so
@@ -3429,6 +3433,7 @@ async function spawnAgentCore(opts: AgentSpawnOptions, owner: Electron.WebConten
         autoMode: !!cfg.autoMode,
         baseUrl: cfg.providerBaseUrls?.opencode,
         localModel: prefix === 'local' ? modelSlug.slice(6) : undefined,
+        model: modelSlug,
         byok
       });
       extra.OPENCODE_CONFIG_CONTENT = JSON.stringify(oc);
@@ -3634,7 +3639,7 @@ ipcMain.handle('providerKey:clear', (_evt, backend: unknown) => {
 // and ASK which connectors have one — never read it back. Only catalog entries
 // that declare a `secret` are accepted, so this can't write arbitrary refs.
 const secretEntry = (id: unknown) =>
-  typeof id === 'string' ? (mcpCatalogEntry(id)?.secret ? mcpCatalogEntry(id) : undefined) : undefined;
+  typeof id === 'string' ? mcpCatalogNow().find((e) => e.id === id && e.secret) : undefined;
 ipcMain.handle('mcpSecret:set', (_evt, payload: unknown) => {
   const p = (payload ?? {}) as { id?: unknown; secret?: unknown };
   const entry = secretEntry(p.id);
@@ -3650,7 +3655,7 @@ ipcMain.handle('mcpSecret:clear', (_evt, id: unknown) => {
 });
 ipcMain.handle('mcpSecret:status', () => {
   const out: Record<string, boolean> = {};
-  for (const e of MCP_CATALOG) if (e.secret) out[e.id] = integrations.hasSecret(mcpSecretRef(e.id));
+  for (const e of mcpCatalogNow()) if (e.secret) out[e.id] = integrations.hasSecret(mcpSecretRef(e.id));
   return out;
 });
 // Probe an integration's reachability through the broker's own auth path (admin-only;
@@ -3706,6 +3711,22 @@ ipcMain.handle('config:update', (_evt, raw: Partial<HarnessConfig>) => {
   // changeHome() has always handled this by relaunching; onboarding does not
   // relaunch, so bootstrap here on the null → set transition. Gated on the
   // transition so ordinary config writes never re-enter it.
+  // Custom MCP servers: keep only valid rows; a removed one loses its key and
+  // its on/off state, so re-adding the same name starts clean.
+  if ('customMcpServers' in patch) {
+    const before = sanitizeCustomMcp(readConfig().customMcpServers);
+    patch.customMcpServers = sanitizeCustomMcp(patch.customMcpServers);
+    const kept = new Set(patch.customMcpServers.map((c) => c.id));
+    const gone = before.filter((c) => !kept.has(c.id));
+    if (gone.length) {
+      const mcpDefaults = { ...(patch.mcpDefaults ?? readConfig().mcpDefaults ?? {}) };
+      for (const c of gone) {
+        delete mcpDefaults[c.id];
+        try { integrations.deleteSecret(mcpSecretRef(c.id)); } catch { /* none stored */ }
+      }
+      patch.mcpDefaults = mcpDefaults;
+    }
+  }
   const hiveWasEnabled = hive.enabled();
   const wasOnboarded = readConfig().onboardingComplete;
   const next = writeConfig(patch);
@@ -3886,11 +3907,11 @@ ipcMain.handle('fs:readBinary', (_evt, root: unknown, rel: unknown) => {
   if (typeof root !== 'string' || typeof rel !== 'string') return { ok: false, error: 'invalid args' };
   return readFileBinary(root, rel);
 });
-ipcMain.handle('fs:writeFile', (_evt, root: unknown, rel: unknown, content: unknown) => {
+ipcMain.handle('fs:writeFile', (_evt, root: unknown, rel: unknown, content: unknown, expected: unknown) => {
   if (typeof root !== 'string' || typeof rel !== 'string' || typeof content !== 'string') {
     return { ok: false, error: 'invalid args' };
   }
-  return writeFileText(root, rel, content);
+  return writeFileText(root, rel, content, typeof expected === 'string' ? expected : undefined);
 });
 // v0.3.4: existence check for the terminal ⌘-click markdown flow (metadata only).
 ipcMain.handle('fs:statAbs', (_evt, p: unknown) => {
@@ -4018,7 +4039,6 @@ ipcMain.handle('git:checkout', async (_evt, cwd: unknown, ref: unknown, detach: 
 // (`roster` itself is constructed earlier so HookServer can read standing goals.)
 ipcMain.on('roster:readSync', (evt) => { evt.returnValue = roster.read(); });
 ipcMain.on('config:homeSync', (evt) => { evt.returnValue = readConfig().harnessHome ?? null; });
-ipcMain.handle('roster:read', () => roster.read());
 let floorResetInProgress = false;
 ipcMain.handle('roster:write', (_evt, snap: unknown) =>
   floorResetInProgress ? { ok: false, error: 'floor reset in progress' } : roster.write(snap));
@@ -4175,6 +4195,7 @@ ipcMain.handle('models:catalog', async (_evt, force: unknown) =>
   loadModelCatalog(MODEL_CATALOG_CACHE(), { force: force === true }));
 /** Models the installed CLIs report for the user's own credentials (see cliModels). */
 ipcMain.handle('models:live', async (_evt, force: unknown) => listLiveModels(force === true));
+ipcMain.handle('models:openrouter', async (_evt, force: unknown) => listOpenRouterModels(force === true));
 
 // ─── IPC: skills (installed locally, and the browsable catalog) ─────────────
 /** Skills the CLIs on this machine can already use. Scans the registered repos
@@ -4428,6 +4449,10 @@ ipcMain.handle('app:resetAll', () => {
   try { telemetry.stop(); } catch (e) { console.error('[reset] telemetry.stop:', e); }
   try { stopSlackServer(); } catch (e) { console.error('[reset] slack.stop:', e); }
   try { stopDiscordTrigger(); } catch (e) { console.error('[reset] discord.stop:', e); }
+  try { stopWebhookServer(); } catch (e) { console.error('[reset] webhook.stop:', e); }
+  // Windows does not kill children with the parent: a live proxy would outlive
+  // the relaunch and hold hive files open, so the rm below fails part-way.
+  try { hive.stopAllProxyBridges(); } catch (e) { console.error('[reset] proxy.stop:', e); }
   try { memory.stop(); } catch (e) { console.error('[reset] memory.stop:', e); }
   try { reflector.stop(); } catch (e) { console.error('[reset] reflector.stop:', e); }
   try { persist.close(); } catch (e) { console.error('[reset] persist.close:', e); }
@@ -4791,7 +4816,7 @@ ipcMain.handle('slack:reply', (_evt, arg: unknown) => {
 ipcMain.handle('slack:setConfig', (_evt, patch: unknown) => {
   const p = (patch ?? {}) as {
     signingSecret?: unknown; botToken?: unknown; channelId?: unknown; port?: unknown; enabled?: unknown;
-    proactivePosting?: unknown;
+    proactivePosting?: unknown; allowedUserIds?: unknown;
   };
   const next: Partial<HarnessConfig> = {};
   // Trim string fields; an emptied field clears back to undefined.
@@ -4801,7 +4826,12 @@ ipcMain.handle('slack:setConfig', (_evt, patch: unknown) => {
   if (typeof p.port === 'number' && Number.isFinite(p.port)) next.slackPort = p.port;
   if (typeof p.enabled === 'boolean') next.slackEnabled = p.enabled;
   if (typeof p.proactivePosting === 'boolean') next.slackProactivePosting = p.proactivePosting;
+  // Comma/space separated Slack member ids (U… or W…); anything else is dropped.
+  if (typeof p.allowedUserIds === 'string') {
+    next.slackAllowedUserIds = [...new Set(p.allowedUserIds.split(/[\s,]+/).map((s) => s.trim().toUpperCase()).filter((s) => /^[UW][A-Z0-9]{2,20}$/.test(s)))].slice(0, 50);
+  }
   writeConfig(next);
+
   // Reconcile the running server: disabling (or clearing the secret) stops it. We
   // deliberately do NOT auto-(re)start here — the user presses Start in Settings
   // to fetch the fresh (ephemeral) tunnel URL.
@@ -4874,7 +4904,8 @@ function sanitizeContextRule(patch: Partial<ContextRule> | undefined, current: C
     everyMs: num(p.everyMs, current.everyMs, 60_000, 86_400_000),
     minContextPct: num(p.minContextPct, current.minContextPct, 0, 100),
     minContextPctLargeWindow: num(p.minContextPctLargeWindow, current.minContextPctLargeWindow, 0, 100),
-    message: typeof p.message === 'string' ? p.message : current.message
+    message: typeof p.message === 'string' ? p.message : current.message,
+    method: p.method === 'handoff' || p.method === 'compact' ? p.method : (current.method ?? 'compact')
   };
 }
 
@@ -4944,23 +4975,6 @@ function sanitizeWebhookTrigger(raw: unknown, existing: WebhookTrigger[]): Webho
 function isTriggerMode(v: unknown): v is TriggerMode {
   return v === 'strict' || v === 'allow-all' || v === 'communication-only';
 }
-
-// ─── IPC: Triggers — organisation (persistence only; no transport yet) ──────
-ipcMain.handle('org:getTrigger', () => readConfig().orgTrigger ?? DEFAULT_ORG_TRIGGER);
-ipcMain.handle('org:setTrigger', (_evt, arg: unknown) => {
-  const current = readConfig().orgTrigger ?? DEFAULT_ORG_TRIGGER;
-  const p = (arg ?? {}) as Partial<OrgTriggerConfig>;
-  // PERSIST ONLY — the peer messaging service does not exist yet, so nothing
-  // reads `apiKey` beyond the settings surface that shows it. Deliberately no
-  // start/stop, no network, no side effect of any kind.
-  const next: OrgTriggerConfig = {
-    apiKey: typeof p.apiKey === 'string' ? p.apiKey.trim() : current.apiKey,
-    enabled: typeof p.enabled === 'boolean' ? p.enabled : current.enabled,
-    mode: isTriggerMode(p.mode) ? p.mode : current.mode
-  };
-  writeConfig({ orgTrigger: next });
-  return next;
-});
 
 // ─── IPC: Triggers — history ledger + the approval gate ─────────────────────
 ipcMain.handle('triggerHistory:list', () => listTriggerHistory());
@@ -5481,6 +5495,14 @@ async function processSpawnRequest(filePath: string): Promise<void> {
     fail(`refusing spawn: "${bin}" is not a known agent CLI (claude, codex, gemini, cursor-agent, …)`);
     return;
   }
+  // Its flags too: `--settings`, `--mcp-config`, `-c` and the like load hooks or
+  // servers that run outside the sandbox. This line is also saved as the card's
+  // restore recipe, so only a vetted one may reach it.
+  const badFlag = launch.fromRequest ? disallowedWorkerFlag(launch.args) : null;
+  if (badFlag) {
+    fail(`refusing spawn: flag "${badFlag}" is not allowed in a spawn request (allowed: --model, --max-turns, --output-format, --verbose, --permission-mode and the engine's own auto-mode flags)`);
+    return;
+  }
   // Missing-CLI → FAIL FAST. A headless worker has no human to watch an installer,
   // so we never run the cc49e1e install banner here — we reject and tell god.
   if (!ptyManager.isCommandAvailable(bin)) { fail(`engine CLI "${bin}" is not installed`); return; }
@@ -5932,13 +5954,13 @@ function runWorkerWakeBeat(): void {
   const now = Date.now();
   const facts: WorkerWakeFacts[] = [];
   for (const [agentId, a] of Object.entries(reg.agents)) {
-    if (agentId === reg.godId || a?.archived) continue;
+    if (hive.isGod(agentId) || a?.archived) continue;
     const ptyId = ptyForAgent(agentId);
     if (!ptyId) continue;
     const snap = control.snapshot(agentId);
     facts.push({
       agentId,
-      isGod: agentId === reg.godId,
+      isGod: hive.isGod(agentId),
       ptyId,
       lastOutputAt: ptyManager.lastOutputAt(ptyId) ?? 0,
       inboxIds: hive.inboxIds(agentId),

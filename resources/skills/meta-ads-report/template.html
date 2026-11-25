@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meta Ads Performance Report</title>
+<!-- DevLabs meta-ads-report template. Agents: edit ONLY the JSON in #report-data. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.2/dist/chart.umd.min.js" integrity="sha384-wFIO1nJgUOP2XDesMi2Xqyej8+jLnzOfBrJbdvz7Pp+UI88xOiL08fKFupi2KqR0" crossorigin="anonymous"></script>
+<style>
+:root{
+  --bg:#0B0C07;--bg-2:#111209;--bg-3:#17180F;
+  --ink:#E1E5E5;--ink-2:#B9BEBE;--mute:#7C8080;
+  --line:rgba(225,229,229,.12);--line-2:rgba(225,229,229,.22);
+  --volt:#C8FF3D;--volt-ink:#0B0C07;--volt-tint:rgba(200,255,61,.06);
+  --danger:#FF6B5B;--danger-tint:rgba(255,107,91,.06);
+  --glass:linear-gradient(rgba(225,229,229,.03),rgba(225,229,229,.008));
+  --r-sm:10px;--r:14px;--r-pill:999px;
+  --shadow-sm:0 20px 40px -10px rgba(0,0,0,.6);
+  --max:1320px;--pad:clamp(14px,3vw,40px);
+  --f-sans:"Inter Tight",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box}
+html{background:var(--bg);color:var(--ink);font-family:var(--f-sans);-webkit-font-smoothing:antialiased;color-scheme:dark}
+body{margin:0;font-size:14px;line-height:1.5;color:var(--ink-2)}
+::selection{background:var(--volt);color:var(--volt-ink)}
+.wrap{max-width:var(--max);margin-inline:auto;padding-inline:var(--pad)}
+.mono{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.grid{display:grid;gap:12px}
+.grid>*{min-width:0}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.g-21{grid-template-columns:2fr 1fr}
+.g-3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--bg-3);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;transition:border-color .5s var(--ease)}
+.card:hover{border-color:var(--line-2)}
+.row{margin-top:12px}
+
+/* header */
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;padding-block:22px 16px;border-bottom:1px solid var(--line)}
+h1{font-size:clamp(28px,3.4vw,44px);line-height:1;font-weight:500;letter-spacing:-.04em;color:var(--ink);margin:6px 0 0}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:var(--r-pill);border:1px solid var(--line-2);
+  background:var(--volt-tint);font:400 10px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--volt)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--volt);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(200,255,61,.6)}100%{box-shadow:0 0 0 8px rgba(200,255,61,0)}}
+.actions{display:flex;align-items:center;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border-radius:var(--r-pill);border:0;cursor:pointer;
+  font:600 13px/1 var(--f-sans);transition:box-shadow .25s ease}
+.btn-primary{background:var(--volt);color:var(--volt-ink)}
+.btn-primary:hover{box-shadow:0 0 24px rgba(200,255,61,.35)}
+.btn:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
+.summary{margin:14px 0 4px;font-size:15px;color:var(--ink-2);max-width:90ch}
+
+/* section label */
+.sec{display:flex;align-items:baseline;gap:10px;margin:22px 0 10px}
+.sec h2{font-size:15px;line-height:1;font-weight:600;letter-spacing:-.01em;text-transform:uppercase;color:var(--ink);margin:0}
+
+/* KPIs */
+.kpi .num{font-size:26px;line-height:1;font-weight:500;letter-spacing:-.03em;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:8px}
+.kpi .delta{font-family:var(--f-mono);font-size:11px;margin-top:6px;color:var(--mute)}
+.kpi .delta.up{color:var(--volt)} .kpi .delta.down{color:var(--danger)}
+.kpi.key{background:var(--glass),var(--bg-3);border-color:var(--line-2)}
+
+/* charts */
+.chart-title{font-size:14px;font-weight:500;color:var(--ink);margin:0 0 10px}
+.chart-box{position:relative;height:220px}
+.no-chart{display:none;color:var(--mute);font-size:12px;margin:0}
+.charts-off .chart-box{display:none} .charts-off .no-chart{display:block}
+
+/* insights */
+.ins h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:14px;font-weight:600;color:var(--ink)}
+.ins h3 .n{font:400 10px/1 var(--f-mono);color:var(--mute)}
+.ins ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.ins li{padding:10px 12px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--bg-2);font-size:13px}
+.ins li b{display:block;color:var(--ink);font-weight:500;margin-bottom:2px}
+.ins li .metric{font-family:var(--f-mono);font-size:11px;color:var(--mute);margin-top:4px}
+.ins.find li{border-left:2px solid var(--volt)}
+.ins.reco li{border-left:2px solid var(--ink-2)}
+.sev{display:inline-block;font:400 9px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;padding:3px 6px;border-radius:var(--r-pill);margin-left:6px;vertical-align:2px}
+.sev.high{color:var(--danger);border:1px solid rgba(255,107,91,.4);background:var(--danger-tint)}
+.sev.medium{color:var(--ink);border:1px solid var(--line-2)}
+.sev.low{color:var(--mute);border:1px solid var(--line)}
+.ins.issue li.high{border-left:2px solid var(--danger)}
+.ins.issue li.medium{border-left:2px solid var(--ink-2)}
+.ins.issue li.low{border-left:2px solid var(--line-2)}
+.empty{color:var(--mute);font-size:12px}
+
+/* table */
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.tab{height:30px;padding:0 12px;border-radius:var(--r-pill);border:1px solid var(--line);background:transparent;color:var(--ink-2);cursor:pointer;
+  font:400 10px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;transition:color .3s ease,border-color .5s var(--ease),background .25s ease}
+.tab:hover{color:var(--ink);border-color:var(--line-2)}
+.tab[aria-selected="true"]{color:var(--ink);border-color:var(--line-2);background:var(--volt-tint)}
+.tab .c{color:var(--mute);margin-left:4px}
+.tab:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
+.pane-title{display:none;font-size:13px;font-weight:600;color:var(--ink);margin:4px 0 6px}
+.table-scroll{overflow:auto;max-height:340px}
+thead th{position:sticky;top:0;background:var(--bg-3);z-index:1}
+td.parent{color:var(--mute);font-size:12px;white-space:normal;text-align:left;min-width:120px}
+th.parent{text-align:left}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font:400 10px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-align:right;padding:10px 8px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);text-align:right;color:var(--ink-2);font-size:13px;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td:first-child{color:var(--ink);font-weight:500;white-space:normal;min-width:160px}
+tr.best td{background:var(--volt-tint)}
+tbody tr:last-child td{border-bottom:0}
+.status{font:400 10px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.status.on{color:var(--volt)}
+
+footer{border-top:1px solid var(--line);padding-block:16px 28px;margin-top:22px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+footer .brand{color:var(--ink-2);font-size:12px}
+footer .brand b{color:var(--volt);font-weight:600}
+
+/* entrance: content stays visible without JS */
+.js .rv{opacity:0;transform:translateY(16px);transition:opacity .9s var(--ease),transform .9s var(--ease);transition-delay:var(--d,0s)}
+.js .rv.in{opacity:1;transform:none}
+
+@media (max-width:960px){.g-21,.g-3{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.js .rv{opacity:1;transform:none}}
+@page{size:A4 landscape;margin:10mm}
+@media print{
+  html,body{background:var(--bg)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .no-print{display:none!important}
+  .js .rv{opacity:1!important;transform:none!important}
+  .card,.ins li,tr{break-inside:avoid}
+  .wrap{max-width:none;padding-inline:0}
+  .chart-box{height:200px}
+  .pane{display:block!important;margin-bottom:12px}
+  .pane-title{display:block}
+  .table-scroll{max-height:none;overflow:visible}
+}
+</style>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <span class="mono">Meta Ads · Performance report</span>
+      <h1 id="title"></h1>
+    </div>
+    <div class="actions">
+      <span class="chip"><span class="dot"></span><span id="range"></span></span>
+      <button class="btn btn-primary no-print" id="save-pdf" type="button">Save as PDF <span aria-hidden="true">→</span></button>
+    </div>
+  </header>
+  <p class="summary rv" id="summary"></p>
+
+  <div class="sec"><span class="mono">01</span><h2>Key numbers</h2></div>
+  <div class="grid g-kpi" id="kpis"></div>
+
+  <div class="sec"><span class="mono">02</span><h2>Findings, issues and next steps</h2></div>
+  <div class="grid g-3">
+    <div class="card ins find rv"><h3>Findings <span class="n" id="n-find"></span></h3><ul id="findings"></ul></div>
+    <div class="card ins issue rv" style="--d:.08s"><h3>Issues <span class="n" id="n-issue"></span></h3><ul id="issues"></ul></div>
+    <div class="card ins reco rv" style="--d:.16s"><h3>Recommendations <span class="n" id="n-reco"></span></h3><ul id="recommendations"></ul></div>
+  </div>
+
+  <div class="sec"><span class="mono">03</span><h2>Trends</h2></div>
+  <div class="grid g-21">
+    <div class="card rv"><div class="chart-title">Daily spend and results</div><div class="chart-box"><canvas id="c-daily" role="img" aria-label="Daily spend and results"></canvas></div><p class="no-chart">Charts need an internet connection. The numbers are in the tables.</p></div>
+    <div class="card rv" style="--d:.08s"><div class="chart-title">Spend share by campaign</div><div class="chart-box"><canvas id="c-share" role="img" aria-label="Spend share by campaign"></canvas></div><p class="no-chart">Charts need an internet connection.</p></div>
+  </div>
+  <div class="grid g-21 row">
+    <div class="card rv tables">
+      <div class="tabs no-print" role="tablist" aria-label="Breakdown level" id="tabs"></div>
+      <div id="panes"></div>
+    </div>
+    <div class="card rv" style="--d:.08s"><div class="chart-title" id="cpr-title">Cost per result</div><div class="chart-box"><canvas id="c-cpr" role="img" aria-label="Cost per result by campaign"></canvas></div><p class="no-chart">Charts need an internet connection.</p></div>
+  </div>
+
+  <footer>
+    <span class="brand">Report generated by <b>DevLabs</b></span>
+    <span class="mono" id="generated"></span>
+  </footer>
+</div>
+
+<noscript><p class="wrap">This report needs JavaScript to draw its numbers and charts.</p></noscript>
+
+<!-- ===== REPORT DATA: the only part an agent edits. Plain JSON; write any "<" in text as <. ===== -->
+<script id="report-data" type="application/json">
+{
+  "account": "Example Ad Account",
+  "currency": "USD",
+  "dateRange": { "since": "2026-11-18", "until": "2026-11-24" },
+  "resultLabel": "Purchases",
+  "summary": "Replace with 1–3 plain sentences: the headline result, what changed, and the biggest lever.",
+  "kpis": [
+    { "label": "Amount spent", "value": 1234.56, "format": "money", "delta": 0.12, "key": true },
+    { "label": "Purchases", "value": 87, "format": "int", "delta": 0.08 },
+    { "label": "Cost per result", "value": 14.19, "format": "money", "delta": 0.03, "lowerIsBetter": true },
+    { "label": "ROAS", "value": 3.2, "format": "x", "delta": -0.05 },
+    { "label": "Impressions", "value": 152340, "format": "int" },
+    { "label": "Reach", "value": 61200, "format": "int" },
+    { "label": "CTR (link)", "value": 0.0142, "format": "pct" },
+    { "label": "CPM", "value": 8.1, "format": "money", "lowerIsBetter": true }
+  ],
+  "daily": [
+    { "date": "2026-11-18", "spend": 160.2, "results": 10 },
+    { "date": "2026-11-19", "spend": 171.0, "results": 12 },
+    { "date": "2026-11-20", "spend": 182.4, "results": 14 },
+    { "date": "2026-11-21", "spend": 175.9, "results": 11 },
+    { "date": "2026-11-22", "spend": 190.3, "results": 15 },
+    { "date": "2026-11-23", "spend": 178.1, "results": 13 },
+    { "date": "2026-11-24", "spend": 176.66, "results": 12 }
+  ],
+  "campaigns": [
+    { "name": "Campaign A", "status": "ACTIVE", "spend": 700.1, "impressions": 90000, "clicks": 1300, "ctr": 0.0144, "cpc": 0.54, "results": 55, "costPerResult": 12.73, "roas": 3.6 },
+    { "name": "Campaign B", "status": "PAUSED", "spend": 534.46, "impressions": 62340, "clicks": 860, "ctr": 0.0138, "cpc": 0.62, "results": 32, "costPerResult": 16.7, "roas": 2.5 }
+  ],
+  "adsets": [
+    { "name": "Ad set A1 · Lookalike 1%", "campaign": "Campaign A", "status": "ACTIVE", "spend": 420.0, "impressions": 52000, "frequency": 1.8, "clicks": 820, "ctr": 0.0158, "cpc": 0.51, "results": 36, "costPerResult": 11.67, "roas": 3.9 },
+    { "name": "Ad set A2 · Broad", "campaign": "Campaign A", "status": "ACTIVE", "spend": 280.1, "impressions": 38000, "frequency": 2.4, "clicks": 480, "ctr": 0.0126, "cpc": 0.58, "results": 19, "costPerResult": 14.74, "roas": 3.1 },
+    { "name": "Ad set B1 · Retargeting", "campaign": "Campaign B", "status": "PAUSED", "spend": 534.46, "impressions": 62340, "frequency": 4.6, "clicks": 860, "ctr": 0.0138, "cpc": 0.62, "results": 32, "costPerResult": 16.7, "roas": 2.5 }
+  ],
+  "ads": [
+    { "name": "Video · Unboxing 15s", "adset": "Ad set A1 · Lookalike 1%", "status": "ACTIVE", "spend": 260.0, "impressions": 31000, "frequency": 1.7, "clicks": 540, "ctr": 0.0174, "cpc": 0.48, "results": 24, "costPerResult": 10.83, "roas": 4.2 },
+    { "name": "Carousel · Best sellers", "adset": "Ad set A1 · Lookalike 1%", "status": "ACTIVE", "spend": 160.0, "impressions": 21000, "frequency": 1.9, "clicks": 280, "ctr": 0.0133, "cpc": 0.57, "results": 12, "costPerResult": 13.33, "roas": 3.4 },
+    { "name": "Static · Discount 20%", "adset": "Ad set B1 · Retargeting", "status": "PAUSED", "spend": 534.46, "impressions": 62340, "frequency": 4.6, "clicks": 860, "ctr": 0.0138, "cpc": 0.62, "results": 32, "costPerResult": 16.7, "roas": 2.5 }
+  ],
+  "findings": [
+    { "title": "Replace: what is working", "text": "One sentence, backed by numbers from the data.", "metric": "CPR $12.73 vs $14.19 avg" }
+  ],
+  "issues": [
+    { "title": "Replace: what is wrong or at risk", "text": "One sentence on the problem and its cost.", "severity": "high", "metric": "ROAS −5% vs previous" }
+  ],
+  "recommendations": [
+    { "title": "Replace: the action to take", "text": "Concrete step with the expected effect.", "metric": "Est. +8 purchases/week" }
+  ],
+  "generatedAt": "2026-11-25T09:00:00Z"
+}
+</script>
+
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById('report-data').textContent);
+  var cur = D.currency || 'USD';
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var nf = function (o) { return new Intl.NumberFormat(undefined, o); };
+  var fmt = {
+    money: function (v) { return nf({ style: 'currency', currency: cur, maximumFractionDigits: v >= 1000 ? 0 : 2 }).format(v); },
+    int: function (v) { return nf({ maximumFractionDigits: 0 }).format(v); },
+    pct: function (v) { return nf({ style: 'percent', maximumFractionDigits: 2 }).format(v); },
+    x: function (v) { return nf({ maximumFractionDigits: 2 }).format(v) + '×'; },
+    num: function (v) { return nf({ maximumFractionDigits: 2 }).format(v); }
+  };
+  var f = function (kind, v) { return v == null || v === '' || isNaN(v) ? '—' : (fmt[kind] || fmt.num)(Number(v)); };
+  // Every value from the data goes in through textContent, never as markup: ad names are untrusted text.
+  var el = function (tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+
+  document.title = 'Meta Ads report · ' + (D.account || '');
+  document.getElementById('title').textContent = D.account || 'Meta Ads';
+  document.getElementById('range').textContent = (D.dateRange && (D.dateRange.since + ' → ' + D.dateRange.until)) || '';
+  document.getElementById('summary').textContent = D.summary || '';
+  var gen = D.generatedAt ? new Date(D.generatedAt) : new Date();
+  document.getElementById('generated').textContent = 'Generated ' + gen.toLocaleString();
+
+  // KPI cards; numbers count up from 0 on load.
+  var kp = document.getElementById('kpis');
+  (D.kpis || []).forEach(function (k, i) {
+    var c = el('div', 'card kpi rv' + (k.key ? ' key' : ''));
+    c.style.setProperty('--d', (i * 0.04) + 's');
+    c.appendChild(el('span', 'mono', k.label));
+    var num = el('div', 'num', f(k.format, k.value));
+    c.appendChild(num);
+    if (typeof k.value === 'number' && !reduce) {
+      var t0 = null;
+      var step = function (t) {
+        if (t0 === null) t0 = t;
+        var p = Math.min(1, (t - t0) / 1100), e = 1 - Math.pow(1 - p, 3);
+        num.textContent = f(k.format, k.value * e);
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+    if (typeof k.delta === 'number') {
+      var good = k.lowerIsBetter ? k.delta < 0 : k.delta > 0;
+      c.appendChild(el('div', 'delta ' + (k.delta === 0 ? '' : good ? 'up' : 'down'), (k.delta > 0 ? '+' : '') + fmt.pct(k.delta) + ' vs prev.'));
+    }
+    kp.appendChild(c);
+  });
+
+  // Findings / issues / recommendations.
+  var order = { high: 0, medium: 1, low: 2 };
+  [['findings', 'n-find'], ['issues', 'n-issue'], ['recommendations', 'n-reco']].forEach(function (s) {
+    var list = (D[s[0]] || []).slice();
+    if (s[0] === 'issues') list.sort(function (a, b) { return (order[a.severity] ?? 1) - (order[b.severity] ?? 1); });
+    var ul = document.getElementById(s[0]);
+    document.getElementById(s[1]).textContent = list.length ? String(list.length) : '';
+    if (!list.length) { ul.appendChild(el('li', 'empty', s[0] === 'issues' ? 'No issues found in this period.' : 'Nothing to report.')); return; }
+    list.forEach(function (it) {
+      var sev = s[0] === 'issues' && order[it.severity] !== undefined ? it.severity : '';
+      var li = el('li', sev);
+      var b = el('b', null, it.title || '');
+      if (sev) b.appendChild(el('span', 'sev ' + sev, sev));
+      li.appendChild(b);
+      li.appendChild(document.createTextNode(it.text || ''));
+      if (it.metric) li.appendChild(el('div', 'metric', it.metric));
+      ul.appendChild(li);
+    });
+  });
+
+  // Breakdown tables: campaigns, ad sets, ads (a level with no rows gets no tab).
+  var camps = D.campaigns || [];
+  var LEVELS = [
+    { key: 'campaigns', label: 'Campaigns', one: 'Campaign' },
+    { key: 'adsets', label: 'Ad sets', one: 'Ad set', parent: ['campaign', 'Campaign'] },
+    { key: 'ads', label: 'Ads', one: 'Ad', parent: ['adset', 'Ad set'] }
+  ].filter(function (l) { return (D[l.key] || []).length; });
+  var cheapest = function (rows) {
+    return rows.filter(function (c) { return c.costPerResult > 0; }).sort(function (a, b) { return a.costPerResult - b.costPerResult; })[0];
+  };
+  var tabsEl = document.getElementById('tabs'), panesEl = document.getElementById('panes');
+  var tabs = [], panes = [];
+  var drawCpr = function () {};
+  var select = function (i) {
+    tabs.forEach(function (t, j) { t.setAttribute('aria-selected', String(i === j)); t.tabIndex = i === j ? 0 : -1; });
+    panes.forEach(function (p, j) { p.hidden = i !== j; });
+    drawCpr(LEVELS[i]);
+  };
+  LEVELS.forEach(function (lv, i) {
+    var rows = (D[lv.key] || []).slice().sort(function (a, b) { return (b.spend || 0) - (a.spend || 0); });
+    var hasFreq = rows.some(function (r) { return r.frequency != null; });
+    var cols = [[lv.one, 'name']]
+      .concat(lv.parent ? [[lv.parent[1], lv.parent[0], null, 'parent']] : [])
+      .concat([['Status', 'status'], ['Spend', 'spend', 'money'], ['Impr.', 'impressions', 'int']])
+      .concat(hasFreq ? [['Freq.', 'frequency', 'num']] : [])
+      .concat([['Clicks', 'clicks', 'int'], ['CTR', 'ctr', 'pct'], ['CPC', 'cpc', 'money'],
+        [D.resultLabel || 'Results', 'results', 'int'], ['Cost/result', 'costPerResult', 'money'], ['ROAS', 'roas', 'x']]);
+    var best = cheapest(rows);
+    var pane = el('div', 'pane');
+    pane.id = 'pane-' + lv.key;
+    pane.setAttribute('role', 'tabpanel');
+    pane.appendChild(el('div', 'pane-title', lv.label));
+    var scroll = el('div', 'table-scroll');
+    var table = el('table'), thead = el('thead'), tbody = el('tbody'), hr = el('tr');
+    cols.forEach(function (c) { hr.appendChild(el('th', c[3] || null, c[0])); });
+    thead.appendChild(hr);
+    rows.forEach(function (c) {
+      var r = el('tr', c === best ? 'best' : '');
+      cols.forEach(function (col) {
+        if (col[1] === 'status') { r.appendChild(el('td', null)).appendChild(el('span', 'status' + (c.status === 'ACTIVE' ? ' on' : ''), c.status || '—')); return; }
+        r.appendChild(el('td', col[3] || null, col[2] ? f(col[2], c[col[1]]) : (c[col[1]] || '—')));
+      });
+      tbody.appendChild(r);
+    });
+    table.appendChild(thead); table.appendChild(tbody); scroll.appendChild(table); pane.appendChild(scroll);
+    panesEl.appendChild(pane); panes.push(pane);
+    var t = el('button', 'tab', lv.label);
+    t.type = 'button';
+    t.setAttribute('role', 'tab');
+    t.setAttribute('aria-controls', pane.id);
+    t.appendChild(el('span', 'c', String(rows.length)));
+    t.addEventListener('click', function () { select(i); });
+    t.addEventListener('keydown', function (e) {
+      var n = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (n) { var k = (i + n + tabs.length) % tabs.length; select(k); tabs[k].focus(); }
+    });
+    tabsEl.appendChild(t); tabs.push(t);
+  });
+  if (tabs.length < 2) tabsEl.hidden = true;
+
+  document.getElementById('save-pdf').addEventListener('click', function () { window.print(); });
+
+  // Scroll-in reveal (once).
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: .08, rootMargin: '0px 0px -8% 0px' }) : null;
+  document.querySelectorAll('.rv').forEach(function (n) { io ? io.observe(n) : n.classList.add('in'); });
+
+  if (!window.Chart) { document.body.classList.add('charts-off'); if (LEVELS.length) select(0); return; }
+  var css = getComputedStyle(document.documentElement);
+  var v = function (n) { return css.getPropertyValue(n).trim(); };
+  var VOLT = v('--volt'), INK2 = v('--ink-2'), MUTE = v('--mute'), LINE = v('--line');
+  Chart.defaults.color = MUTE;
+  Chart.defaults.borderColor = LINE;
+  Chart.defaults.font.family = v('--f-mono');
+  Chart.defaults.font.size = 10;
+  Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.plugins.tooltip.backgroundColor = v('--bg-2');
+  Chart.defaults.plugins.tooltip.borderColor = v('--line-2');
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.titleColor = v('--ink');
+  Chart.defaults.plugins.tooltip.bodyColor = INK2;
+  Chart.defaults.maintainAspectRatio = false;
+  // Animations: expo-out growth, staggered per point; off for reduced motion.
+  Chart.defaults.animation = reduce ? false : { duration: 1200, easing: 'easeOutQuart' };
+  var stagger = function (ms) {
+    return reduce ? false : { duration: 1000, easing: 'easeOutQuart',
+      delay: function (ctx) { return ctx.type === 'data' && ctx.mode === 'default' ? ctx.dataIndex * ms + ctx.datasetIndex * 120 : 0; } };
+  };
+  var charts = [];
+  var pending = [];
+  // Draw each chart only when it scrolls into view, so its animation is seen.
+  var lazy = function (id, cfg) {
+    var cv = document.getElementById(id);
+    var done = false;
+    var make = function () { if (done) return; done = true; o && o.disconnect(); charts.push(new Chart(cv, cfg)); };
+    if (!io || reduce) return make();
+    var o = new IntersectionObserver(function (es) { if (es[0].isIntersecting) make(); }, { threshold: .2 });
+    o.observe(cv);
+    pending.push(function () { cfg.options = Object.assign({}, cfg.options, { animation: false }); make(); });
+  };
+  var daily = D.daily || [];
+
+  lazy('c-daily', {
+    data: {
+      labels: daily.map(function (d) { return d.date.slice(5); }),
+      datasets: [
+        { type: 'bar', label: 'Spend', data: daily.map(function (d) { return d.spend; }), backgroundColor: 'rgba(185,190,190,.22)', hoverBackgroundColor: 'rgba(185,190,190,.4)', borderRadius: 4, yAxisID: 'y' },
+        { type: 'line', label: D.resultLabel || 'Results', data: daily.map(function (d) { return d.results; }), borderColor: VOLT, backgroundColor: 'rgba(200,255,61,.08)',
+          fill: true, tension: .35, pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: VOLT, borderWidth: 2, yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      animation: stagger(60),
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { display: false } },
+        y: { position: 'left', ticks: { callback: function (t) { return f('money', t); } } },
+        y1: { position: 'right', grid: { display: false } }
+      },
+      plugins: { tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + (c.dataset.yAxisID === 'y' ? f('money', c.raw) : f('int', c.raw)); } } } }
+    }
+  });
+
+  // One accent: the biggest slice is volt, the rest are steps of the neutral ink ramp.
+  var bySpend = camps.slice().sort(function (a, b) { return b.spend - a.spend; });
+  var shades = function (n) { return Array.from({ length: n }, function (_, i) { return i === 0 ? VOLT : 'rgba(185,190,190,' + Math.max(.12, .6 - i * .1).toFixed(2) + ')'; }); };
+  lazy('c-share', {
+    type: 'doughnut',
+    data: { labels: bySpend.map(function (c) { return c.name; }), datasets: [{ data: bySpend.map(function (c) { return c.spend; }), backgroundColor: shades(bySpend.length), borderColor: v('--bg-3'), borderWidth: 2, hoverOffset: 6 }] },
+    options: { cutout: '68%', animation: reduce ? false : { animateRotate: true, animateScale: true, duration: 1300, easing: 'easeOutQuart' },
+      plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: function (c) { return c.label + ': ' + f('money', c.raw); } } } } }
+  });
+
+  // Cost per result follows the selected tab: the 8 cheapest at that level, best in volt.
+  var cprData = function (lv) {
+    var rows = (D[lv.key] || []).filter(function (c) { return c.costPerResult > 0; })
+      .sort(function (a, b) { return a.costPerResult - b.costPerResult; }).slice(0, 8);
+    return { labels: rows.map(function (c) { return c.name.length > 28 ? c.name.slice(0, 27) + '…' : c.name; }),
+      datasets: [{ label: 'Cost per result', data: rows.map(function (c) { return c.costPerResult; }),
+        backgroundColor: rows.map(function (_, i) { return i === 0 ? VOLT : 'rgba(185,190,190,.28)'; }), borderRadius: 6 }] };
+  };
+  var cprCfg = {
+    type: 'bar',
+    data: LEVELS.length ? cprData(LEVELS[0]) : { labels: [], datasets: [] },
+    options: { indexAxis: 'y', animation: stagger(120), plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return f('money', c.raw); } } } },
+      scales: { x: { ticks: { callback: function (t) { return f('money', t); } } }, y: { grid: { display: false }, ticks: { color: INK2, font: { family: v('--f-sans'), size: 11 } } } } }
+  };
+  lazy('c-cpr', cprCfg);
+  drawCpr = function (lv) {
+    document.getElementById('cpr-title').textContent = 'Cost per result · ' + lv.label.toLowerCase();
+    var ch = Chart.getChart('c-cpr');
+    if (ch) { ch.data = cprData(lv); ch.update(); } else cprCfg.data = cprData(lv);
+  };
+  if (LEVELS.length) select(0);
+
+  // Printing: draw any chart not yet in view, show every card, and size charts to the page.
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('.rv').forEach(function (n) { n.classList.add('in'); });
+    pending.forEach(function (p) { p(); });
+    charts.forEach(function (c) { c.resize(); });
+  });
+  window.addEventListener('afterprint', function () { charts.forEach(function (c) { c.resize(); }); });
+})();
+</script>
+</body>
+</html>

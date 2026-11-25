@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CommitGraph } from '@/components/git/CommitGraph';
 import { Icon } from '@/components/Icon';
+import { statusColor } from '@/lib/uiHelpers';
 
 // Local mirrors of the main-side git shapes (renderer-local by convention —
 // importing the preload module would drag electron into the bundle).
@@ -16,14 +17,6 @@ interface GitCommitRow {
   subject: string; author: string; time: number; refs: string[];
 }
 interface GitFileChange { path: string; status: string; oldPath?: string }
-
-function statusColor(code: string): string {
-  if (code === 'M') return 'var(--cth-lemon)';
-  if (code === 'A') return 'var(--cth-mint)';
-  if (code === 'D') return 'var(--cth-coral)';
-  if (code === 'R' || code === 'C') return 'var(--cth-lilac)';
-  return 'var(--cth-ink-500)';
-}
 
 const rowStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 6, padding: '2px 12px',

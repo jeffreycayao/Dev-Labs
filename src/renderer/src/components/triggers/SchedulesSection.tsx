@@ -10,6 +10,7 @@ import {
 } from './ui';
 import { formatWeekly, nextWeeklyFireMs } from '@shared/weeklySchedule';
 import { useRtl } from '@/i18n/useDirection';
+import { relTime as relTimeIn } from '@/lib/uiHelpers';
 
 /**
  * SCHEDULES — recurring auto-dispatched missions. The oldest trigger type, and
@@ -42,15 +43,6 @@ const DEFAULT_INTERVAL_MS = 3_600_000;
 
 /** Relative-time label. Needs the translator because the qualifiers ("ago",
  *  "in", "just now") are UI copy, not data. */
-function relTime(ms: number, t: TFunction): string {
-  const past = ms >= 0;
-  const a = Math.abs(ms);
-  if (a < 45_000) return t('schedulesSection.justNow');
-  const mins = Math.round(a / 60_000);
-  const unit = mins < 60 ? `${mins}m` : mins < 1440 ? `${Math.round(mins / 60)}h` : `${Math.round(mins / 1440)}d`;
-  return past ? t('schedulesSection.ago', { unit }) : t('schedulesSection.in', { unit });
-}
-
 export function SchedulesSection({ onSummary }: { onSummary?: (s: string) => void }) {
   const { t } = useTranslation();
   const rtl = useRtl();
@@ -225,7 +217,7 @@ function MissionRow({ mission, targetName, agents, onPatch, onDelete }: {
   const whenIsUsable = !weekly || weeklyIsUsable(weekly);
 
   const fired = mission.lastFiredAt
-    ? t('schedulesSection.fired', { time: relTime(Date.now() - mission.lastFiredAt, t) })
+    ? t('schedulesSection.fired', { time: relTimeIn(Date.now() - mission.lastFiredAt, t, 'schedulesSection') })
     : t('schedulesSection.notFired');
   // A weekly mission's next run comes from the calendar, not from lastFiredAt +
   // interval — and unlike the interval case it is knowable before the first run,
@@ -234,7 +226,7 @@ function MissionRow({ mission, targetName, agents, onPatch, onDelete }: {
     ? nextWeeklyFireMs(storedWeekly, Date.now())
     : mission.lastFiredAt ? mission.lastFiredAt + mission.intervalMs : null;
   const next = mission.enabled && nextAt !== null
-    ? ` · ${t('schedulesSection.next', { time: relTime(Date.now() - nextAt, t) })}`
+    ? ` · ${t('schedulesSection.next', { time: relTimeIn(Date.now() - nextAt, t, 'schedulesSection') })}`
     : '';
 
   const save = () => {

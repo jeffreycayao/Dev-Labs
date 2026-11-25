@@ -336,7 +336,9 @@
       "orgKeyDesc": "队友的安装如何找到你的实例。",
       "apiKey": "API 密钥",
       "orgKeyPlaceholder": "粘贴你的组织密钥",
-      "orgConfigOnly": "目前仅限配置。组织消息服务尚不存在，所以这里的密钥不会启动任何传输——它会被保存、显示在触发器标签页中，然后等待。"
+      "orgConfigOnly": "目前仅限配置。组织消息服务尚不存在，所以这里的密钥不会启动任何传输——它会被保存、显示在触发器标签页中，然后等待。",
+      "allowedUsers": "允许的 Slack 用户",
+      "allowedUsersHint": "可以给代理分配工作的成员 ID，用逗号分隔。只有他们能触发机器人，其他人的消息会被忽略。在 Slack 中查找 ID：打开个人资料 → ⋮ → Copy member ID。"
     },
     "voice": {
       "freeFlow": "自由输入",
@@ -517,6 +519,8 @@
     "saveLimit": "保存上限",
     "fleetTokens": "Σ {{value}} tok",
     "fleetInputs": "输入 {{value}}（缓存 {{pct}}%）",
+    "cacheHit": "缓存 {{pct}}%",
+    "cacheHitTitle": "该代理的输入中从提示缓存读取的比例，缓存读取的费用约为新输入的 10%。比例低说明其上下文开头经常变化（切换模型、压缩或空闲超过一小时）。",
     "fleetRate": "{{value}} tok/分",
     "telemetryNote": "来自每个智能体 OpenTelemetry 的实时数据 · 条状图显示已用令牌与各自上限的对比，否则为 {{cap}} 楼层预算",
     "defaultBudgetNote": "（默认——请在设置中设置楼层令牌预算）",
@@ -583,6 +587,14 @@
     "ossByok": "通过 OSS 提供商 · BYOK",
     "ossLocalTitle": "{{slug}} · 约需 {{ram}} 内存——拉取：ollama pull {{tag}}",
     "ossByokTitle": "{{slug}} · 在设置 → AI 引擎中设置 {{keyEnv}}",
+    "orAll": "全部 OpenRouter 模型",
+    "orFree": "免费",
+    "orPaid": "付费",
+    "orSearch": "搜索模型…",
+    "orLoading": "正在加载 OpenRouter 模型…",
+    "orNone": "没有匹配的模型。",
+    "orFreeNote": "免费模型有每日请求限额，部分提供商会记录提示词或用其训练。",
+    "orMore": "还有 {{n}} 个——请细化搜索",
     "byokNote": "该引擎的 BYOK 密钥和本地端点位于 设置 → AI 引擎。本地模型新手？请阅读 在开源模型上运行 或 在 Mac Mini 上配置。端到端实测仍在等待真实模型调用（请在设备上验证）。",
     "runOnOpenModels": "在开源模型上运行",
     "setUpMacMini": "在 Mac Mini 上配置",
@@ -1511,6 +1523,13 @@
       "diffTotals": "现在 {{before}} 个物件 → 导入后 {{after}} 个",
       "diffMoved": "{{n}} 个移动、转向或改色",
       "diffSeats": "将按代理名称分配 {{n}} 个座位",
+      "diffScene": "场景外观：{{list}}",
+      "presetsTitle": "内置主题",
+      "preset": {
+        "default": "默认",
+        "fairy": "仙境林地",
+        "christmas": "圣诞季"
+      },
       "backupNote": "应用会替换这层的布局。当前布局会备份，“撤销导入”可以恢复。",
       "aiTitle": "让 AI 设计一个",
       "aiDesc": "复制提示词（包含规则、JSON 模式和你当前的布局），粘贴到任意 AI，把它的回答保存为 .json 文件，再在这里导入。导入前会先按模式检查。",
@@ -1626,6 +1645,21 @@
         "把令牌粘贴到上面的输入框并点击保存。它会加密保存，并由 DevLabs 转交给 HighLevel，代理永远看不到它。",
         "可选：把子账户的 Location ID（Settings → Business Profile）粘贴到“子账户”输入框并保存。令牌本身已绑定一个子账户，大多数情况下不填也能用。",
         "打开 GoHighLevel 开关，然后启动一个新代理。"
+      ],
+      "meta-ads": [
+        "注意：持有此令牌的代理可以创建、修改、暂停和投放广告，会花费真实的钱。如果只需要报表，请使用只有 ads_read 权限的令牌。",
+        "打开 developers.facebook.com/tools/explorer，选择你的 Meta 应用，添加 ads_mcp_management 权限，再加上 ads_read（只读）或 ads_management（可修改）。点击 Generate Access Token 并允许。",
+        "复制令牌，粘贴到上面的输入框并点击保存。它会加密保存，并由 DevLabs 转交给 Meta，代理永远看不到它。",
+        "打开 Meta Ads 开关，然后启动一个新代理。只有 Claude Code 代理会获得连接器。",
+        "询问广告表现时，代理会生成带 DevLabs 品牌和图表的 HTML 报告，在浏览器中打开并放入“交付”。在报告中点击 Save as PDF 即可保存为 PDF。",
+        "令牌会过期（短期令牌大约一小时）：当代理报告 401 时，重新生成令牌并再次粘贴。"
+      ],
+      "metricool": [
+        "在 Metricool 中打开 Account Settings → API，复制你的 API 密钥。使用 API 需要包含该功能的 Metricool 套餐。",
+        "把密钥粘贴到上面的输入框并点击保存。它会加密存储，并经由 DevLabs 发送给 Metricool，代理永远看不到它。",
+        "打开 Metricool，然后启动一个新代理。只有 Claude Code 代理会获得连接器。",
+        "代理可以读取你的品牌和竞争对手的数据分析，并在内容规划器中读取或排期帖子，权限以你的账户允许为准。",
+        "如果代理报告 401 或 403，请在 Account Settings → API 中检查密钥并重新粘贴。"
       ]
     },
     "vault": {
@@ -1642,6 +1676,29 @@
       "save": "保存",
       "savedNote": "已保存{{label}}。新启动的代理将使用它。",
       "clearedNote": "已清除{{label}}。"
+    },
+    "custom": {
+      "title": "你自己的 MCP 服务器",
+      "note": "可添加任意 MCP 服务器。添加后默认关闭，且只有 Claude Code 代理会获得它。远程服务器的密钥在添加后于下方对应行中保存，加密存储，代理永远看不到。本地命令会以你的权限在这台电脑上运行，请只添加你信任的程序。",
+      "name": "名称，例如 Notion",
+      "remote": "远程 URL",
+      "local": "本地命令",
+      "url": "服务器 URL",
+      "auth": "密钥：",
+      "authBearer": "Bearer 令牌",
+      "authHeader": "请求头",
+      "authNone": "无密钥",
+      "headerName": "请求头名称",
+      "command": "命令",
+      "args": "参数",
+      "argsPlaceholder": "每行一个参数，例如\n-y\n@notionhq/notion-mcp-server",
+      "envName": "用于密钥的环境变量（可选），例如 NOTION_TOKEN",
+      "add": "添加服务器",
+      "remove": "移除",
+      "added": "已添加 {{label}}。请在下方打开它，如需密钥请保存。",
+      "removed": "服务器及其密钥已移除。",
+      "invalid": "请检查服务器：https URL（或 localhost 上的 http）、仅含字母数字和连字符的请求头名称，或不含换行的命令。",
+      "tooMany": "最多 {{max}} 个服务器。"
     }
   },
   "devicePicker": {
@@ -1721,6 +1778,10 @@
     "intro": "规则只有在两半都满足时才触发：距离上次运行的时间已过，且该智能体的上下文至少达到指示条的量。指示条为 0% 意味着只看时钟。",
     "compact": "压缩",
     "compactBlurb": "对上下文做摘要，让对话继续下去。",
+    "method": "方式",
+    "methodCompact": "/compact",
+    "methodHandoff": "交接",
+    "methodHint": "交接：代理把简短的交接说明写入 memory.md，清空会话，再读回交接说明。新上下文比压缩摘要更小，后续提示更省，交接说明也保存在磁盘上。CLI 没有清空命令的代理仍使用 /compact。",
     "clear": "清空",
     "clearBlurb": "丢弃上下文。不做任何摘要。",
     "clearCaution": "清空会把上下文扔掉——它不是压缩的缩小版。正在执行任务的智能体会忘记自己在做什么。除非你以其他方式保留上下文，否则请保持关闭。",

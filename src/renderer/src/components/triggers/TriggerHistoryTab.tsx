@@ -5,6 +5,7 @@ import { PixelButton } from '../PixelButton';
 import { useStore } from '@/store/store';
 import type { TriggerHistoryEntry } from '@shared/triggers';
 import { useRtl } from '@/i18n/useDirection';
+import { relTime as relTimeIn } from '@/lib/uiHelpers';
 
 /**
  * TRIGGER HISTORY — the ledger of everything an outside party said to this hive
@@ -105,16 +106,6 @@ function buildExchanges(rows: TriggerHistoryEntry[]): Exchange[] {
 }
 
 /* ──────────────────────────────── helpers ────────────────────────────────── */
-
-// Copied, not imported: SchedulesTab.tsx is being deleted.
-function relTime(ms: number, t: TFunction): string {
-  const past = ms >= 0;
-  const a = Math.abs(ms);
-  if (a < 45_000) return t('triggerHistory.justNow');
-  const mins = Math.round(a / 60_000);
-  const unit = mins < 60 ? `${mins}m` : mins < 1440 ? `${Math.round(mins / 60)}h` : `${Math.round(mins / 1440)}d`;
-  return past ? t('triggerHistory.ago', { unit }) : t('triggerHistory.in', { unit });
-}
 
 const CLAMP_CHARS = 320;
 const CLAMP_LINES = 8;
@@ -219,7 +210,7 @@ function MessageBlock({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, justifyContent: 'space-between' }}>
         <span style={tinyCaps}>{label}</span>
-        <span style={{ ...tinyCaps, flexShrink: 0 }}>{relTime(Date.now() - msg.at, t)}</span>
+        <span style={{ ...tinyCaps, flexShrink: 0 }}>{relTimeIn(Date.now() - msg.at, t, 'triggerHistory')}</span>
       </div>
       <div style={bodyBox} dir={rtl ? 'auto' : undefined}>{body.trim() ? (expanded ? body : text) : t('triggerHistory.emptyMessage')}</div>
       {clipped && (
@@ -278,7 +269,7 @@ function ExchangeCard({
           <span style={{ ...uiText, ...ellipsis, minWidth: 0 }} title={head.sourceName}>
             {head.sourceName || t('triggerHistory.unnamedSource')}
           </span>
-          <span style={{ ...tinyCaps, flexShrink: 0 }}>{relTime(Date.now() - ex.latestAt, t)}</span>
+          <span style={{ ...tinyCaps, flexShrink: 0 }}>{relTimeIn(Date.now() - ex.latestAt, t, 'triggerHistory')}</span>
         </div>
         <div style={{ ...muted, ...ellipsis, fontSize: 11 }} title={head.peer}>
           {hasInbound ? t('triggerHistory.from') : t('triggerHistory.to')} {head.peer || t('triggerHistory.unknown')}

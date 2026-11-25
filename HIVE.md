@@ -72,7 +72,7 @@ hive/
   registry.json          # roster: every agent, role, capabilities, status, seat
   board.md               # shared blackboard / co-authored plans
   tasks.json             # task ledger (id, assignee, spec, status, result ref)
-  log.jsonl              # append-only event feed (drives the UI activity stream)
+  log.jsonl              # append-only event feed (drives the UI activity stream; not versioned)
   agents/<agentId>/
     identity.md          # who am I, my role, my capabilities  (read at start)
     memory.md            # my long-term memory  (I read at start, append as I learn)

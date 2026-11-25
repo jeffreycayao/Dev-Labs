@@ -36,6 +36,7 @@ import {
 } from '@/store/config';
 import { useRtl } from '@/i18n/useDirection';
 import type { FloorImportPayload } from './FloorModals';
+import { basename } from '@/lib/uiHelpers';
 
 const ACCENTS: AccentColorName[] = ['coral', 'mint', 'sky', 'lemon', 'lilac', 'peach'];
 
@@ -131,10 +132,6 @@ const SECTIONS: { key: SectionKey; labelKey: string; hintKey: string }[] = [
   { key: 'engine',    labelKey: 'addAgent.sections.engine.label',    hintKey: 'addAgent.sections.engine.hint' },
   { key: 'briefing',  labelKey: 'addAgent.sections.briefing.label',  hintKey: 'addAgent.sections.briefing.hint' }
 ];
-
-function basename(path: string): string {
-  return path.split('/').filter(Boolean).pop() ?? path;
-}
 
 function uniqueId(name: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36)}`;
@@ -262,6 +259,24 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
   const [busy, setBusy] = useState(false);
   // Which config section the left sidebar index is showing.
   const [section, setSection] = useState<SectionKey>('identity');
+  // Full OpenRouter list (fetched by main, cached there) for the free/paid picker.
+  const [orModels, setOrModels] = useState<Awaited<ReturnType<typeof window.cth.modelsOpenRouter>> | null>(null);
+  const [orTier, setOrTier] = useState<'free' | 'paid'>('free');
+  const [orQuery, setOrQuery] = useState('');
+  const showOss = hasOssQuickPicks(provider) && section === 'engine';
+  useEffect(() => {
+    // Main answers [] when the fetch failed: leaving the Engine section resets an
+    // empty list, so coming back tries again instead of "no models" for good.
+    if (!showOss) { if (orModels && !orModels.length) setOrModels(null); return; }
+    if (orModels) return;
+    let live = true;
+    window.cth.modelsOpenRouter().then((m) => { if (live) setOrModels(m); }, () => { if (live) setOrModels([]); });
+    return () => { live = false; };
+  }, [showOss, orModels]);
+  const OR_SHOWN = 30;
+  const orMatches = (orModels ?? []).filter((m) =>
+    m.free === (orTier === 'free') &&
+    (!orQuery.trim() || `${m.label} ${m.id}`.toLowerCase().includes(orQuery.trim().toLowerCase())));
   // "Generate a hire with AI" helper — reveals a copy-paste prompt (item 7).
   const [showHirePrompt, setShowHirePrompt] = useState(false);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
@@ -1019,6 +1034,49 @@ export function AddAgentModal({ onClose, config, onConfigChange, onImportFloor, 
                                 );
                               })}
                             </div>
+                          </div>
+                          <div>
+                            <div style={ossGroupHead}>{tr('addAgent.orAll')}</div>
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+                              {(['free', 'paid'] as const).map((tier) => (
+                                <button key={tier} onClick={() => setOrTier(tier)} style={ossChip(orTier === tier, accent)}>
+                                  {tr(tier === 'free' ? 'addAgent.orFree' : 'addAgent.orPaid')}
+                                </button>
+                              ))}
+                              <input
+                                value={orQuery}
+                                onChange={(e) => setOrQuery(e.target.value)}
+                                placeholder={tr('addAgent.orSearch')}
+                                aria-label={tr('addAgent.orSearch')}
+                                style={{ ...inputStyle, flex: 1, padding: '3px 8px', fontSize: 12 }}
+                              />
+                            </div>
+                            {orModels === null ? (
+                              <div style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}>{tr('addAgent.orLoading')}</div>
+                            ) : orMatches.length === 0 ? (
+                              <div style={{ fontSize: 12, color: 'var(--cth-ink-500)' }}>{tr('addAgent.orNone')}</div>
+                            ) : (
+                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                {orMatches.slice(0, OR_SHOWN).map((m) => (
+                                  <button
+                                    key={m.id}
+                                    onClick={() => pickModel(m.id)}
+                                    title={`${m.id} · ${Math.round(m.ctx / 1000)}k ctx · ${tr('addAgent.ossByokTitle', { slug: m.id, keyEnv: 'OPENROUTER_API_KEY' })}`}
+                                    style={ossChip((model ?? '') === m.id, accent)}
+                                  >
+                                    {m.label}{m.free ? '' : ` · $${m.inPerM.toFixed(2)}/M`}
+                                  </button>
+                                ))}
+                                {orMatches.length > OR_SHOWN && (
+                                  <span style={{ fontSize: 12, color: 'var(--cth-ink-500)', alignSelf: 'center' }}>
+                                    {tr('addAgent.orMore', { n: orMatches.length - OR_SHOWN })}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            {orTier === 'free' && (
+                              <div style={{ fontSize: 11, color: 'var(--cth-ink-500)', marginTop: 4 }}>{tr('addAgent.orFreeNote')}</div>
+                            )}
                           </div>
                         </div>
                       </Row>

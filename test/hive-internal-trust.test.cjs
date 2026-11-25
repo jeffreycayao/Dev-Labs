@@ -63,9 +63,15 @@ const ran = (markers) => fs.readdirSync(markers);
 test('nothing main runs or commits through sits under a dir the agent may write', async (t) => {
   const { home, root, hive } = setup(t);
   await hive.ensureAgent({ id: 'w1', name: 'W', provider: 'claude', cwd: path.join(home, 'proj') }, {});
-  const settings = JSON.parse(fs.readFileSync(path.join(root, 'agents', 'w1', 'settings.json'), 'utf8'));
+  // The settings file itself (hooks, sandbox) lives where no agent can rewrite it.
+  const settingsPath = path.join(home, 'hive-internal', 'agents', 'w1', 'settings.json');
+  assert.equal(fs.existsSync(path.join(root, 'agents', 'w1', 'settings.json')), false);
+  const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
   const writable = settings.sandbox.filesystem.allowWrite;
   assert.ok(writable.includes(root), 'the protocol still needs the hive root writable');
+  for (const w of writable) assert.ok(!inside(w, settingsPath), `settings.json is agent-writable via ${w}`);
+  // Other agents' mcp.json (broker tokens, connector keys) are unreadable.
+  assert.deepEqual(settings.sandbox.filesystem.denyRead, [path.join(home, 'hive-internal', 'agents')]);
 
   const trusted = [
     hive.shimPath(), hive.runtimeBinDir(), hive.nodeCommand(),
@@ -88,7 +94,7 @@ test('an edited shim in the hive root is never what a hook runs', async (t) => {
   plantScript(path.join(root, 'bin', 'cth-hook.cjs'), markers, 'shim');
   plantScript(path.join(root, 'bin', 'hive-node'), markers, 'launcher');
   await hive.ensureAgent({ id: 'w1', name: 'W', provider: 'claude', cwd: path.join(home, 'proj') }, {});
-  const settings = fs.readFileSync(path.join(root, 'agents', 'w1', 'settings.json'), 'utf8');
+  const settings = fs.readFileSync(path.join(home, 'hive-internal', 'agents', 'w1', 'settings.json'), 'utf8');
   assert.ok(!settings.includes(JSON.stringify(path.join(root, 'bin')).slice(1, -1)), 'no hook refers to <root>/bin');
   assert.equal(fs.readFileSync(hive.shimPath(), 'utf8').includes('echo ran'), false);
 });

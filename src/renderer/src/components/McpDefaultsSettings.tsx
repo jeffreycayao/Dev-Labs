@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { HarnessConfig } from '@/store/config';
-import { MCP_CATALOG, mcpCatalogFor, type McpCatalogEntry, type McpTier } from '@shared/mcpCatalog';
+import { fullMcpCatalog, mcpCatalogFor, sanitizeCustomMcp, CUSTOM_MCP_MAX, type CustomMcpServer, type McpCatalogEntry, type McpTier } from '@shared/mcpCatalog';
 
 export interface McpDefaultsSettingsProps {
   config: HarnessConfig;
@@ -198,10 +198,84 @@ function ConnectorVar({ name, label, config, onChanged }: { name: string; label:
         style={{
           flex: '1 1 180px', minWidth: 0, padding: '3px 6px', fontSize: 12,
           fontFamily: 'var(--cth-font-mono)', border: 'none',
-          boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', background: 'var(--cth-paper-50, #fff)', color: 'var(--cth-ink-900)'
+          boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', background: 'var(--cth-paper-100)', color: 'var(--cth-ink-900)'
         }}
       />
       <button type="button" onClick={() => { void save(); }} style={smallButton}>{t('mcpDefaults.vars.save')}</button>
+    </div>
+  );
+}
+
+// No flex basis here: in a column it would set the HEIGHT (a 180px-tall input).
+const fieldStyle: React.CSSProperties = {
+  minWidth: 0, padding: '3px 6px', fontSize: 12,
+  fontFamily: 'var(--cth-font-mono)', border: 'none',
+  boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)', background: 'var(--cth-paper-100)', color: 'var(--cth-ink-900)'
+};
+
+/** Add an MCP server by hand: a remote URL (with or without a key) or a local
+ *  command. Saved in config.customMcpServers; main re-validates every row, and
+ *  the key, if any, is saved afterwards in the row's own key field. */
+function CustomMcpForm({ config, onChanged }: { config: HarnessConfig; onChanged: (msg: string) => void }) {
+  const { t } = useTranslation();
+  const [name, setName] = useState('');
+  const [transport, setTransport] = useState<'http' | 'stdio'>('http');
+  const [url, setUrl] = useState('');
+  const [auth, setAuth] = useState<'none' | 'bearer' | 'header'>('bearer');
+  const [headerName, setHeaderName] = useState('');
+  const [command, setCommand] = useState('');
+  const [args, setArgs] = useState('');
+  const [envName, setEnvName] = useState('');
+  const existing = sanitizeCustomMcp(config.customMcpServers);
+  const add = async () => {
+    const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'server';
+    let id = `custom-${slug}`;
+    for (let n = 2; existing.some((c) => c.id === id); n++) id = `custom-${slug}-${n}`;
+    const row: CustomMcpServer = transport === 'http'
+      ? { id, label: name.trim(), transport, url: url.trim(), auth, ...(auth === 'header' ? { headerName: headerName.trim() } : {}) }
+      : { id, label: name.trim(), transport, command: command.trim(), args: args.split(/\r?\n/).map((a) => a.trim()).filter(Boolean), ...(envName.trim() ? { envName: envName.trim() } : {}) };
+    // The same check main applies: refuse here with a reason instead of silently dropping.
+    if (!sanitizeCustomMcp([row]).length) { onChanged(t('mcpDefaults.custom.invalid')); return; }
+    if (existing.length >= CUSTOM_MCP_MAX) { onChanged(t('mcpDefaults.custom.tooMany', { max: CUSTOM_MCP_MAX })); return; }
+    try {
+      await window.cth.updateConfig({ customMcpServers: [...existing, row] });
+      setName(''); setUrl(''); setHeaderName(''); setCommand(''); setArgs(''); setEnvName('');
+      onChanged(t('mcpDefaults.custom.added', { label: row.label }));
+    } catch { onChanged(t('mcpDefaults.couldNotSave')); }
+  };
+  const line: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' };
+  const pick = (on: boolean): React.CSSProperties => ({ ...smallButton, background: on ? 'var(--cth-lemon)' : 'var(--cth-cream-200)' });
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', background: 'var(--cth-paper-100)', boxShadow: 'inset 0 0 0 1px var(--cth-ink-300)' }}>
+      <span style={{ fontSize: 11, lineHeight: '15px', color: 'var(--cth-ink-500)' }}>{t('mcpDefaults.custom.note')}</span>
+      <div style={line}>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('mcpDefaults.custom.name')} aria-label={t('mcpDefaults.custom.name')} style={{ ...fieldStyle, flex: '1 1 180px' }} maxLength={60} />
+        <button type="button" onClick={() => setTransport('http')} style={pick(transport === 'http')}>{t('mcpDefaults.custom.remote')}</button>
+        <button type="button" onClick={() => setTransport('stdio')} style={pick(transport === 'stdio')}>{t('mcpDefaults.custom.local')}</button>
+      </div>
+      {transport === 'http' ? (
+        <>
+          <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com/mcp" aria-label={t('mcpDefaults.custom.url')} style={fieldStyle} />
+          <div style={line}>
+            <span style={{ fontSize: 11, color: 'var(--cth-ink-500)' }}>{t('mcpDefaults.custom.auth')}</span>
+            <button type="button" onClick={() => setAuth('bearer')} style={pick(auth === 'bearer')}>{t('mcpDefaults.custom.authBearer')}</button>
+            <button type="button" onClick={() => setAuth('header')} style={pick(auth === 'header')}>{t('mcpDefaults.custom.authHeader')}</button>
+            <button type="button" onClick={() => setAuth('none')} style={pick(auth === 'none')}>{t('mcpDefaults.custom.authNone')}</button>
+            {auth === 'header' && (
+              <input value={headerName} onChange={(e) => setHeaderName(e.target.value)} placeholder="X-Api-Key" aria-label={t('mcpDefaults.custom.headerName')} style={{ ...fieldStyle, flex: '0 1 160px' }} />
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <input value={command} onChange={(e) => setCommand(e.target.value)} placeholder="npx" aria-label={t('mcpDefaults.custom.command')} style={fieldStyle} />
+          <textarea value={args} onChange={(e) => setArgs(e.target.value)} rows={3} placeholder={t('mcpDefaults.custom.argsPlaceholder')} aria-label={t('mcpDefaults.custom.args')} style={{ ...fieldStyle, resize: 'vertical' }} />
+          <input value={envName} onChange={(e) => setEnvName(e.target.value)} placeholder={t('mcpDefaults.custom.envName')} aria-label={t('mcpDefaults.custom.envName')} style={fieldStyle} />
+        </>
+      )}
+      <div style={line}>
+        <button type="button" disabled={!name.trim()} onClick={() => { void add(); }} style={smallButton}>{t('mcpDefaults.custom.add')}</button>
+      </div>
     </div>
   );
 }
@@ -214,14 +288,25 @@ export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
     void window.cth.mcpSecretStatus?.().then(setKeys).catch(() => { /* older main */ });
   }, []);
   useEffect(() => { refreshKeys(); }, [refreshKeys]);
+  // One timer: an older message's timer must not clear a newer message.
+  const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flash = (msg: string) => {
     setNote(msg);
     refreshKeys();
-    setTimeout(() => setNote(''), 2400);
+    if (noteTimer.current) clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(() => setNote(''), 2400);
   };
 
+  // Built-in connectors plus the user's own servers (config.customMcpServers).
+  const catalog = fullMcpCatalog(config.customMcpServers);
   const enabledFor = (id: string): boolean =>
-    config.mcpDefaults?.[id]?.enabled ?? MCP_CATALOG.find((e) => e.id === id)?.defaultEnabled ?? false;
+    config.mcpDefaults?.[id]?.enabled ?? catalog.find((e) => e.id === id)?.defaultEnabled ?? false;
+  const removeCustom = async (id: string) => {
+    try {
+      await window.cth.updateConfig({ customMcpServers: sanitizeCustomMcp(config.customMcpServers).filter((c) => c.id !== id) });
+      flash(t('mcpDefaults.custom.removed'));
+    } catch { flash(t('mcpDefaults.couldNotSave')); }
+  };
 
   const toggle = async (id: string) => {
     const next = !enabledFor(id);
@@ -238,7 +323,7 @@ export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
   };
 
   // An entry behind a switched-off feature (Settings → General → Features) is not shown.
-  const byTier = (tier: McpTier) => mcpCatalogFor(config.features).filter((e) => e.tier === tier);
+  const byTier = (tier: McpTier) => mcpCatalogFor(config.features, catalog).filter((e) => e.tier === tier);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -309,6 +394,10 @@ export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
                         <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--cth-coral)' }}>{t('mcpDefaults.vault.needsVault')}</span>
                       )}
                       <SetupSteps id={entry.id} />
+                      {entry.id.startsWith('custom-') && (
+                        <button type="button" onClick={() => { void removeCustom(entry.id); }}
+                          style={{ ...smallButton, alignSelf: 'flex-start', marginTop: 4 }}>{t('mcpDefaults.custom.remove')}</button>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -338,6 +427,13 @@ export function McpDefaultsSettings({ config }: McpDefaultsSettingsProps) {
           </div>
         );
       })}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span style={{ fontFamily: 'var(--cth-font-display)', fontSize: 8, lineHeight: '12px', color: '#6E1423', textTransform: 'uppercase' }}>
+          {t('mcpDefaults.custom.title')}
+        </span>
+        <CustomMcpForm config={config} onChanged={flash} />
+      </div>
 
       {note && (
         <span style={{ fontSize: 12, color: 'var(--cth-mint)' }}>{note}</span>

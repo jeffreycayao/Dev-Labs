@@ -1,3 +1,4 @@
-- Codex workers stay signed in on Windows without Developer Mode.
-- Signing in to Codex again now reaches every worker.
-- A worker can never replace your Codex login with another account.
+- Pick any OpenRouter model, free or paid, per agent.
+- New connectors: Metricool and Meta Ads, plus your own MCP servers.
+- Slack only takes work from people on your allowed list.
+- Many security, memory and speed fixes.

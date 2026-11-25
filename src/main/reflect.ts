@@ -21,10 +21,11 @@
  * Runs in the Electron main process.
  */
 import {
-  existsSync, statSync, readdirSync, readFileSync, writeFileSync,
+  existsSync, lstatSync, statSync, readdirSync, readFileSync, writeFileSync,
   mkdirSync, copyFileSync, renameSync, openSync, fsyncSync, closeSync
 } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { PLAIN_READ_CAP, readPlain } from './hive';
 import { runHiddenClaude } from './hiddenClaude';
 
 /** Total memory.md budget — mirrors the janitor's CONTEXT_BUDGET_BYTES (128 KB). */
@@ -153,17 +154,19 @@ export class MemoryReflector {
     try {
       for (const id of ids) {
         const mem = join(agentsDir, id, 'memory.md');
-        if (!existsSync(mem)) continue;
-        let bytes = 0;
-        let text = '';
+        // Agents own this file: never follow a link, never open a FIFO, and skip
+        // one too big to hold whole (readPlain keeps only the newest 4 MB).
+        let st: { size: number; mtimeMs: number };
         try {
-          bytes = statSync(mem).size;
-          // A manual single-agent call condenses on demand (skips the trigger);
-          // the autonomous loop honors the threshold.
-          if (!onlyId && !this.shouldCondense(bytes, mem, settings)) continue;
-          text = readFileSync(mem, 'utf8');
+          const l = lstatSync(mem);
+          if (!l.isFile() || l.size > PLAIN_READ_CAP) continue;
+          st = { size: l.size, mtimeMs: l.mtimeMs };
         } catch { continue; }
-        results.push(await this.condense(home, id, mem, text, settings));
+        const text = readPlain(mem);
+        // A manual single-agent call condenses on demand (skips the trigger);
+        // the autonomous loop honors the threshold.
+        if (!onlyId && !this.shouldCondense(st.size, text, settings)) continue;
+        results.push(await this.condense(home, id, mem, text, settings, st));
       }
     } finally {
       this.reflecting = false;
@@ -174,20 +177,25 @@ export class MemoryReflector {
   /** The dual trigger (DECIDED): bytes > pct% of budget, OR many-section sprawl
    *  above the byte floor. The floor doubles as the "never burn an LLM call on a
    *  tiny file" guard, so it gates BOTH paths. */
-  private shouldCondense(bytes: number, mem: string, s: ReflectSettings): boolean {
+  private shouldCondense(bytes: number, text: string, s: ReflectSettings): boolean {
     if (bytes < s.minBytes) return false;
     if (bytes > (BUDGET_BYTES * s.byteTriggerPct) / 100) return true;
-    let sections = 0;
-    try { sections = countSections(readFileSync(mem, 'utf8')); } catch { return false; }
-    return sections > s.sectionTrigger;
+    return countSections(text) > s.sectionTrigger;
   }
 
   // — condense one file —
 
   private async condense(
-    home: string, id: string, mem: string, text: string, s: ReflectSettings
+    home: string, id: string, mem: string, text: string, s: ReflectSettings,
+    read?: { size: number; mtimeMs: number }
   ): Promise<ReflectResult> {
     const oldBytes = Buffer.byteLength(text, 'utf8');
+    // parseMemory keeps only the LAST pinned / condensed block, so a file with two
+    // would silently lose the first. Leave such a file alone.
+    if ((text.match(/^## 📌/gm) ?? []).length > 1 || (text.match(/^## 🗜/gm) ?? []).length > 1) {
+      this.logAbort(id, 'multiple-pinned-or-condensed');
+      return { id, condensed: false, reason: 'multiple-pinned-or-condensed', oldBytes };
+    }
     const parsed = parseMemory(text);
     // Split recent into KEEP (newest K, verbatim) and EVICT (older — summarized).
     const keepCount = Math.max(1, s.recentKeep);
@@ -199,10 +207,12 @@ export class MemoryReflector {
 
     // 1) BACK UP first — a lossless cold copy makes every later step recoverable.
     const stamp = utcStamp();
-    const backup = join(home, 'hive', 'backups', stamp, id, 'memory.md');
+    // In hive-internal: agents can write (and delete) everything under hive/.
+    const backup = join(home, 'hive-internal', 'backups', stamp, id, 'memory.md');
     try {
       mkdirSync(dirname(backup), { recursive: true });
-      copyFileSync(mem, backup);
+      // The text we read, not a fresh copy of the path (it may be a link by now).
+      writeFileSync(backup, text, { encoding: 'utf8', flag: 'wx' });
     } catch (e) {
       this.logAbort(id, 'backup-failed', String(e));
       return { id, condensed: false, reason: 'backup-failed', oldBytes };
@@ -220,7 +230,11 @@ export class MemoryReflector {
     // 3) REBUILD into the 3-region shape.
     const oldPinnedLines = pinnedLines(parsed.pinned);
     const mergedPinned = mergePinned(oldPinnedLines, summary.hoist);
-    const rebuilt = rebuild(parsed.header, mergedPinned, summary.condensed, keep);
+    // The pinned block is kept exactly as written (indentation, blank lines,
+    // code); only the newly hoisted lines are appended.
+    const hoisted = mergedPinned.slice(oldPinnedLines.length);
+    const pinnedText = [parsed.pinned?.replace(/\s+$/, '') ?? '', ...hoisted].filter(Boolean).join('\n');
+    const rebuilt = rebuild(parsed.header, pinnedText ? [pinnedText] : [], summary.condensed, keep);
     const newBytes = Buffer.byteLength(rebuilt, 'utf8');
 
     // 4) VERIFY-DON'T-TRUST — reject the rewrite unless every check holds.
@@ -233,7 +247,22 @@ export class MemoryReflector {
       return { id, condensed: false, reason: verdict.reason, oldBytes, newBytes };
     }
 
-    // 5) ATOMIC SWAP — write a temp sibling, fsync, rename over the original.
+    // 5) The summary call can take minutes, and agents keep appending (closing
+    //    time is exactly that): if the file changed since it was read, the rewrite
+    //    would erase the new notes. Skip this round instead.
+    if (read) {
+      try {
+        const now = lstatSync(mem);
+        if (!now.isFile() || now.size !== read.size || now.mtimeMs !== read.mtimeMs) {
+          this.logAbort(id, 'changed-during-condense', undefined, { oldBytes, newBytes });
+          return { id, condensed: false, reason: 'changed-during-condense', oldBytes, newBytes };
+        }
+      } catch {
+        return { id, condensed: false, reason: 'changed-during-condense', oldBytes, newBytes };
+      }
+    }
+
+    // 6) ATOMIC SWAP — write a temp sibling, fsync, rename over the original.
     try {
       atomicWrite(mem, rebuilt);
     } catch (e) {

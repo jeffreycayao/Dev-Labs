@@ -26,7 +26,7 @@
 import { useSyncExternalStore } from 'react';
 import { RealtimeAgent, RealtimeSession, OpenAIRealtimeWebRTC } from '@openai/agents-realtime';
 import { realtimeReadTools, realtimeSessionSummary } from './tools';
-import { realtimeActionTools } from './actions';
+import { realtimeActionTools, noteHeard } from './actions';
 import { resetRealtimeCost, recordRealtimeUsage, endRealtimeCost, isRealtimeIdle, getRealtimeCostSnapshot, markRealtimeActivity } from './costStore';
 import { openGeminiLive, type GeminiLiveHandle } from './geminiLive';
 import { GEMINI_LIVE_VOICE, resolveVoiceProvider, type VoiceProvider } from '@shared/geminiLive';
@@ -193,6 +193,17 @@ function setState(patch: Partial<RealtimeMichaelState>): void {
 
 /** Wire the session lifecycle events onto our state machine. */
 function wire(s: RealtimeSession): void {
+  // When each user utterance STARTED (VAD), so a confirm said before the action
+  // was staged can't count, however late its transcript arrives.
+  const speechStart = new Map<string, number>();
+  s.on('transport_event', (ev) => {
+    const e = ev as { type?: string; item_id?: string; transcript?: string };
+    if (e.type === 'input_audio_buffer.speech_started' && e.item_id) speechStart.set(e.item_id, Date.now());
+    else if (e.type === 'conversation.item.input_audio_transcription.completed') {
+      noteHeard((e.item_id && speechStart.get(e.item_id)) || Date.now(), String(e.transcript ?? ''));
+      if (e.item_id) speechStart.delete(e.item_id);
+    }
+  });
   // Model started / stopped speaking audio back to the user.
   s.on('audio_start', () => {
     if (state.status !== 'working') setState({ status: 'responding' });
@@ -325,15 +336,24 @@ async function applyOutputSink(el: HTMLAudioElement, deviceId: string | null): P
  * WebRTC RealtimeSession with semantic-VAD turn-taking, and start listening.
  * Idempotent — a no-op if already connecting/connected.
  */
+/** Bumped by every disconnect(). A connect() whose number is stale was cancelled
+ *  mid-flight (the user clicked Talk again while connecting): it must stop at its
+ *  next await instead of opening the mic and greeting someone who said stop. */
+let connectGen = 0;
+const CANCELLED = 'voice connect cancelled';
+
 export async function connect(): Promise<void> {
   if (connecting || ((session || gemini) && state.status !== 'off')) return;
   connecting = true;
+  const gen = connectGen;
+  const check = (): void => { if (gen !== connectGen) throw new Error(CANCELLED); };
   setState({ status: 'connecting', error: null });
   try {
     const provider = await pickVoiceProvider();
     const mint = provider === 'google'
       ? await window.cth.geminiLiveMintToken()
       : await window.cth.realtimeMintToken();
+    check();
     if (!mint.ok) {
       setState({ status: 'off', error: mint.error });
       return;
@@ -344,6 +364,7 @@ export async function connect(): Promise<void> {
     // is synchronous, so `realtimeVoiceEnabled` must already be true when the mic opens;
     // we close it again on teardown/error.
     await setMicGate(true);
+    check();
 
     // Mic with echo-cancellation + noise-suppression + auto-gain, honoring the device
     // the user picked (Oscar's rt-8 picker). getUserMedia surfaces permission denials.
@@ -354,6 +375,7 @@ export async function connect(): Promise<void> {
     };
     if (state.deviceId) audioConstraints.deviceId = { exact: state.deviceId };
     stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+    check();
 
     // Our own <audio> sink for Ramon's voice, routed to the chosen speaker (rt-8).
     audioEl = new Audio();
@@ -374,6 +396,7 @@ export async function connect(): Promise<void> {
     } catch {
       /* warm-start catch-up is best-effort */
     }
+    check();
     // v0.3.4: the snapshot is NOT baked into instructions any more — a byte-stable
     // persona+tools prefix stays fully prompt-cached across turns and sessions
     // (cached input is ~99% cheaper). The snapshot goes in as the FIRST
@@ -400,6 +423,7 @@ export async function connect(): Promise<void> {
         onActivity: () => markRealtimeActivity(Date.now()),
         onUsage: (u) => recordRealtimeUsage(u as Parameters<typeof recordRealtimeUsage>[0], Date.now(), 'google'),
         onError: (msg) => setState({ error: msg }),
+        onHeard: noteHeard,
         onClosed: (reason) => {
           if (gemini !== g) return;
           disconnect('error');
@@ -407,6 +431,7 @@ export async function connect(): Promise<void> {
         }
       });
       gemini = g;
+      check();
       injectSilent = (text) => { try { g.injectSilent(text); } catch { /* best-effort */ } };
       speak = (text) => g.speak(text);
     } else {
@@ -421,6 +446,8 @@ export async function connect(): Promise<void> {
           audio: {
             input: {
               // Natural turn boundaries + automatic barge-in (truncate on interrupt).
+              // Transcribe the user's own speech: a voice confirm is judged on it.
+              transcription: { model: 'gpt-4o-mini-transcribe' },
               turnDetection: {
                 type: 'semantic_vad',
                 eagerness: 'medium',
@@ -433,12 +460,13 @@ export async function connect(): Promise<void> {
         }
       });
       wire(s);
+      // Held before connecting, so a cancel during the handshake closes it.
+      session = s;
 
       // The ephemeral client secret is the apiKey for this connect; the real OpenAI key
       // never reaches the renderer.
       await s.connect({ apiKey: mint.token, model });
-
-      session = s;
+      check();
       // v0.3.4: SILENT context injection — a raw conversation.item.create with no
       // response.create, so the model absorbs the item without speaking. (This SDK
       // version's sendMessage always triggers a response, so we go one level down
@@ -491,6 +519,7 @@ export async function connect(): Promise<void> {
     // user-configurable (config.realtimeIdleDisconnectMs; default 3 min; 0 = never — the
     // cost cap stays the runaway guard). disconnect() clears this timer + tears down.
     const idleCfg = (await window.cth.getConfig()).realtimeIdleDisconnectMs;
+    check();
     const idleMs = typeof idleCfg === 'number' ? idleCfg : DEFAULT_IDLE_DISCONNECT_MS;
     costGuardTimer = setInterval(() => {
       if (!session && !gemini) return;
@@ -518,19 +547,12 @@ export async function connect(): Promise<void> {
       /* greeting is best-effort — never block a successful connect */
     }
   } catch (e) {
-    // Mic permission denied, WebRTC handshake failure, network, etc.
-    console.log('[realtime] voice session disconnect (error)');
-    try {
-      session?.close();
-    } catch {
-      /* best-effort teardown */
-    }
-    session = null;
-    closeGemini();
-    teardownMedia();
-    await setMicGate(false);
-    const msg = e instanceof Error ? e.message : String(e);
-    setState({ status: 'off', error: micFriendly(msg), muted: false });
+    // Mic permission denied, WebRTC handshake failure, network, or a cancel.
+    // disconnect() undoes everything a partial connect set up (subscriptions,
+    // timer, live flag, mic gate), not only the session.
+    const cancelled = gen !== connectGen;
+    disconnect(cancelled ? 'cancelled' : 'error');
+    if (!cancelled) setState({ error: micFriendly(e instanceof Error ? e.message : String(e)) });
   } finally {
     connecting = false;
   }
@@ -541,6 +563,7 @@ export async function connect(): Promise<void> {
  *  told apart from a spend-cap stop or a user toggle. */
 export function disconnect(reason: string = 'user'): void {
   console.log(`[realtime] voice session disconnect (${reason})`);
+  connectGen++;
   try {
     session?.close();
   } catch {

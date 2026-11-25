@@ -16,6 +16,7 @@ import {
   tokenizeCommand,
   inferAgentProvider
 } from '@/store/config';
+import { basename } from '@/lib/uiHelpers';
 
 const ACCENTS: AccentColorName[] = ['coral', 'mint', 'sky', 'lemon', 'lilac', 'peach'];
 
@@ -24,10 +25,6 @@ function characterFor(m: HireManifest): OfficeCharacterName {
   const q = m.name.trim().toLowerCase();
   const hit = OFFICE_CAST.find(c => c.displayName.toLowerCase() === q || c.name === q);
   return hit ? hit.name : DEFAULT_CHARACTER;
-}
-
-function basename(path: string): string {
-  return path.split('/').filter(Boolean).pop() ?? path;
 }
 
 export function floorHireCommand(config: HarnessConfig, m: HireManifest): { command: string; provider: AgentProvider } {

@@ -85,7 +85,7 @@ async function checkLive() {
   if (problems.length) {
     console.error(`\n✗ release links are wrong (${problems.length}):`);
     for (const p of problems) console.error(`  - ${p}`);
-    console.error('\nFix RELEASE.md / docs/index.html / docs/llms.txt to match package.json before releasing.');
+    console.error('\nFix RELEASE.md / src/shared/brand.ts to match package.json before releasing.');
     process.exit(1);
   }
   console.log(`✓ release links consistent at v${version}`);

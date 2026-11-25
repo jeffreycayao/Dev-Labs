@@ -114,6 +114,10 @@ export function validateIntegrationRecord(
   if (!INTEGRATION_SLUG_RE.test(id)) {
     return { ok: false, error: 'id must be a lowercase slug (2–40 chars, a–z 0–9 -, no leading/trailing hyphen)' };
   }
+  // `mcp-…` is the broker route of MCP connectors (built-in and the user's own),
+  // which the broker looks up first: an integration with such an id would be
+  // shadowed by a connector of the same name.
+  if (id.startsWith('mcp-')) return { ok: false, error: 'id may not start with "mcp-" (reserved for MCP connectors)' };
   const label = typeof r.label === 'string' ? r.label.trim() : '';
   if (!label || label.length > 60) return { ok: false, error: 'label is required and must be <= 60 chars' };
 
@@ -225,7 +229,9 @@ export function resolveUpstreamUrl(baseUrl: string, pathAndQuery: string): URL |
   const rel = pathAndQuery.replace(/^\/+/, '');
   let resolved: URL;
   try {
-    resolved = new URL(basePath + rel, base.origin);
+    // An empty path (query at most) means the base itself, as written: a remote
+    // MCP endpoint like `/mcp` must not turn into `/mcp/`.
+    resolved = new URL((rel.split(/[?#]/)[0] ? basePath : base.pathname) + rel, base.origin);
   } catch {
     return null;
   }
@@ -261,7 +267,6 @@ export const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
   },
 
   // ─── First-wave YC tools (Dwight, P2) ───────────────────────────────────────
-  // Per-tool auth model + high-value endpoint catalog: hive/docs/integration-templates.md.
   // Gmail / Google Calendar / Salesforce are intentionally NOT registered yet: they
   // authenticate via OAuth, and IntegrationAuthType has no `oauth2` (OAuth refresh is a
   // v1 non-goal — spec §8). They are documented under "Pending: OAuth broker".

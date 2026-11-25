@@ -207,6 +207,13 @@ import {
   WallPictures as SceneWallPictures,
 } from "@/features/retro-office/scene/environment";
 import {
+  AmbientParticles,
+  NATURE_TYPES,
+  NatureModel,
+  wallLook,
+} from "@/features/retro-office/objects/nature";
+import { readScene } from "@/scene/office3d/themeStore";
+import {
   CAMERA_PRESETS as CAMERA_PRESET_MAP,
   CameraAnimator as CameraPresetAnimator,
   FollowCamController as FollowCamSystem,
@@ -1913,7 +1920,10 @@ const buildInitialFurnitureLayout = (
   storageNamespace: string,
   layoutPreset: OfficeLayoutPreset,
 ): FurnitureItem[] =>
-  ensureOfficeCafeteria(ensureOfficeKanbanBoard(
+  // DevLabs: a theme with scene.hideDefaults owns the floor; don't re-add the standard rooms.
+  readScene(localStorage, storageNamespace)?.hideDefaults
+    ? (loadFurniture(storageNamespace) ?? [])
+    : ensureOfficeCafeteria(ensureOfficeKanbanBoard(
     ensureOfficeJukebox(
       ensureOfficeQaLab(
         ensureOfficeGymRoom(
@@ -2164,6 +2174,10 @@ export const RetroOffice3D = memo(function RetroOffice3D({
     setGhostPos(null);
     setWallDrawStart(null);
   }, [layoutPreset, storageNamespace]);
+  // DevLabs: the floor's theme look; the host remounts the scene after an import.
+  const sceneStyle = useMemo(() => readScene(localStorage, storageNamespace), [storageNamespace]);
+  const themedWalls = useMemo(() => wallLook(sceneStyle), [sceneStyle]);
+  const lightScale = sceneStyle?.lightIntensity ?? 1;
   const [editMode, setEditMode] = useState(false);
   const [selectedUid, setSelectedUid] = useState<string | null>(null);
   const [hoverUid, setHoverUid] = useState<string | null>(null);
@@ -4964,12 +4978,13 @@ export const RetroOffice3D = memo(function RetroOffice3D({
 
             {/* Static lighting: a sky/ground wash so walls and floor shade softly,
                 a warm key that casts the (rarely redrawn) shadows, a cool fill. */}
-            <hemisphereLight intensity={0.5} color="#f3f0e6" groundColor="#2A3128" />
-            <ambientLight intensity={0.34} color="#e6ecdd" />
+            {sceneStyle?.sky ? <color attach="background" args={[sceneStyle.sky]} /> : null}
+            <hemisphereLight intensity={0.5 * lightScale} color={sceneStyle?.lightColor ?? "#f3f0e6"} groundColor="#2A3128" />
+            <ambientLight intensity={0.34 * lightScale} color={sceneStyle?.lightColor ?? "#e6ecdd"} />
             <directionalLight
               position={[8, 14, 6]}
-              intensity={1.15}
-              color="#fff3df"
+              intensity={1.15 * lightScale}
+              color={sceneStyle?.lightColor ?? "#fff3df"}
               castShadow
               shadow-mapSize={[1024, 1024]}
               shadow-bias={-0.0002}
@@ -4977,12 +4992,15 @@ export const RetroOffice3D = memo(function RetroOffice3D({
             />
             <directionalLight
               position={[-5, 8, -4]}
-              intensity={0.3}
+              intensity={0.3 * lightScale}
               color="#9fb4ff"
             />
+            {sceneStyle?.ambient && sceneStyle.ambient !== "none" ? (
+              <AmbientParticles kind={sceneStyle.ambient} />
+            ) : null}
 
             {/* Floor + walls — always visible, no async loading. */}
-            <SceneFloorAndWalls />
+            <SceneFloorAndWalls scene={sceneStyle} />
             <SceneFloorHighlights
               hoveredAgentId={hoveredAgentId}
               selectedAgentId={selectedAgentId}
@@ -4991,7 +5009,7 @@ export const RetroOffice3D = memo(function RetroOffice3D({
             />
 
             {/* Wall pictures — procedural, no async loading. */}
-            <SceneWallPictures />
+            {sceneStyle?.hideDefaults ? null : <SceneWallPictures />}
 
             {/* Environment lighting — async, wrapped in its own Suspense so floor stays visible. */}
             <Suspense fallback={null}>
@@ -5006,7 +5024,11 @@ export const RetroOffice3D = memo(function RetroOffice3D({
             {/* Furniture models — each loads its GLB asynchronously. */}
             <Suspense fallback={null}>
               {!editMode ? (
-                <PrimitiveInstancedWallSegmentsModel items={wallItems} />
+                <PrimitiveInstancedWallSegmentsModel
+                  items={wallItems}
+                  defaultColor={themedWalls.color}
+                  height={themedWalls.height}
+                />
               ) : null}
               {!editMode ? (
                 <InstancedFurnitureItemsModel
@@ -5047,6 +5069,17 @@ export const RetroOffice3D = memo(function RetroOffice3D({
                       onPointerOut={handleFurniturePointerOut}
                     />
                   ) : null
+                ) : NATURE_TYPES.has(item.type) ? (
+                  <NatureModel
+                    key={item._uid}
+                    item={item}
+                    isSelected={item._uid === selectedUid}
+                    isHovered={item._uid === hoverUid}
+                    editMode={editMode}
+                    onPointerDown={handleFurniturePointerDown}
+                    onPointerOver={handleFurniturePointerOver}
+                    onPointerOut={handleFurniturePointerOut}
+                  />
                 ) : item.type === "desk_cubicle" ? (
                   editMode ? (
                     <GenericFurnitureModel

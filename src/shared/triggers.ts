@@ -105,6 +105,13 @@ export interface ContextRule {
    * Empty string = send the provider's bare command.
    */
   message: string;
+  /**
+   * `compact` only. 'compact' (default) types the provider's compaction command.
+   * 'handoff' asks the agent to write a short handoff to its memory.md, clears
+   * the session, then has it read the handoff back: a smaller fresh context than
+   * a compaction summary, and the handoff stays on disk.
+   */
+  method?: 'compact' | 'handoff';
 }
 
 export interface ContextTriggerConfig {
@@ -191,33 +198,6 @@ export const DEFAULT_WEBHOOK_SCHEMA_OBJECT = {
 } as const;
 
 export const DEFAULT_WEBHOOK_SCHEMA = JSON.stringify(DEFAULT_WEBHOOK_SCHEMA_OBJECT, null, 2);
-
-/* ────────────────────────── organisation trigger ─────────────────────────── */
-
-/**
- * Peer-to-peer messaging between teammates' installs. Each teammate runs their own
- * DevLabs; setting an org key lets their instance address yours.
- *
- * UI + persistence only for now — the transport service does not exist yet, so
- * nothing reads `apiKey` beyond the settings surfaces that display it.
- */
-export interface OrgTriggerConfig {
-  apiKey: string;
-  enabled: boolean;
-  mode: TriggerMode;
-}
-
-export const DEFAULT_ORG_TRIGGER: OrgTriggerConfig = {
-  apiKey: '',
-  enabled: false,
-  mode: DEFAULT_TRIGGER_MODE
-};
-
-/** Copy shown under the org key field. Kept here so Settings and Triggers agree. */
-export const CLONE_NODE_BLURB =
-  'Set an organisation key and your teammates can message your clone node — the copy of '
-  + 'DevLabs running on your machine. Each teammate runs their own, so an org key '
-  + 'is how two installs find each other.';
 
 /* ──────────────────────────── trigger history ────────────────────────────── */
 

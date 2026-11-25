@@ -81,12 +81,19 @@ export function deliveryKind(name: string): DeliveryKind {
   return EXT_KIND[extensionOf(name)] ?? 'other';
 }
 
-/** Kinds the app may hand to the OS default app. Everything else is only ever
- *  revealed in the file browser: an agent-supplied `.exe`, `.dmg`, `.sh`,
- *  `.command` or `.desktop` must never be one click from running (the same rule
- *  as fs:revealPath). */
+/** Extensions the app may hand to the OS default app. Everything else is only
+ *  ever revealed in the file browser: an agent-supplied file must never be one
+ *  click from running code. That rules out executables (`.exe`, `.sh`, …) and
+ *  also formats that carry macros — legacy Office (`doc`/`xls`/`ppt`), `rtf`,
+ *  ODF, Keynote. Agent files are written locally, so Office never shows its
+ *  stricter downloaded-file block. html/svg open in the browser's sandbox. */
+const SYSTEM_OPEN_EXT = new Set([
+  'html', 'htm', 'svg', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'avif',
+  'md', 'markdown', 'txt', 'csv', 'tsv', 'json', 'log', 'yml', 'yaml',
+  'docx', 'xlsx', 'pptx'
+]);
 export function canOpenWithSystemApp(name: string): boolean {
-  return deliveryKind(name) !== 'other';
+  return SYSTEM_OPEN_EXT.has(extensionOf(name));
 }
 
 export const MIME_BY_EXT: Record<string, string> = {

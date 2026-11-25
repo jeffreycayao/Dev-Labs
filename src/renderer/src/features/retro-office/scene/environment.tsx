@@ -20,6 +20,8 @@ import {
 import { toWorld } from "@/features/retro-office/core/geometry";
 import { Text } from "@react-three/drei";
 import { NEO_MANILA, NeoManilaAccents, useBanigTexture, useMachucaTexture } from "@/features/retro-office/scene/filipino";
+import { groundLook, useGroundTexture, wallLook } from "@/features/retro-office/objects/nature";
+import type { OfficeThemeScene } from "@shared/officeTheme";
 
 function FramedPicture({
   position,
@@ -153,7 +155,12 @@ function OfficeFlagPole({
   );
 }
 
-export const FloorAndWalls = memo(function FloorAndWalls() {
+export const FloorAndWalls = memo(function FloorAndWalls({
+  scene,
+}: {
+  /** DevLabs: an imported theme's ground / wall look (null = office default). */
+  scene?: OfficeThemeScene | null;
+}) {
   const localOfficeWidth = LOCAL_OFFICE_CANVAS_WIDTH * SCALE;
   const localOfficeHeight = LOCAL_OFFICE_CANVAS_HEIGHT * SCALE;
   const [localOfficeCenterX, , localOfficeCenterZ] = toWorld(
@@ -193,6 +200,11 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
   const localEastWallX = localOfficeCenterX + localOfficeWidth / 2;
   // DevLabs Neo-Manila: woven banig floor, about two world units per tile.
   const banig = useBanigTexture(localOfficeWidth / 2, localOfficeHeight / 2);
+  const ground = groundLook(scene);
+  const groundTex = useGroundTexture(ground?.style, ground?.color ?? "#ffffff", localOfficeWidth / 2, localOfficeHeight / 2);
+  const walls = wallLook(scene);
+  // A themed ground or "hideDefaults" drops the room floors, lines and sign painted over it.
+  const plainZones = !!ground || !!scene?.hideDefaults;
 
   return (
     <group>
@@ -220,10 +232,15 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
         receiveShadow
       >
         <planeGeometry args={[localOfficeWidth, localOfficeHeight, 22, 14]} />
-        <meshLambertMaterial color={banig ? "#ffffff" : "#c8a97e"} map={banig ?? undefined} />
+        {ground ? (
+          <meshLambertMaterial key={ground.style} color={groundTex ? "#ffffff" : ground.color} map={groundTex ?? undefined} />
+        ) : (
+          <meshLambertMaterial color={banig ? "#ffffff" : "#c8a97e"} map={banig ?? undefined} />
+        )}
       </mesh>
 
       {/* Kapihan: machuca tiles and a neon sign above the coffee bar. */}
+      {plainZones ? null : (<>
       <mesh
         position={[cafeZoneCenterX, 0.001, cafeZoneCenterZ]}
         rotation={[-Math.PI / 2, 0, 0]}
@@ -241,8 +258,9 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
           KAPIHAN
         </Text>
       </group>
+      </>)}
 
-      {gymZoneFloorWidth > 0 && gymZoneFloorHeight > 0 ? (
+      {!plainZones && gymZoneFloorWidth > 0 && gymZoneFloorHeight > 0 ? (
         <>
           <mesh
             position={[gymZoneCenterX, 0.002, gymZoneCenterZ]}
@@ -259,7 +277,7 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
         </>
       ) : null}
 
-      {qaZoneFloorWidth > 0 && roomZoneFloorHeight > 0 ? (
+      {!plainZones && qaZoneFloorWidth > 0 && roomZoneFloorHeight > 0 ? (
         <>
           <mesh
             position={[qaZoneCenterX, 0.003, roomZoneCenterZ]}
@@ -326,7 +344,7 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
         </>
       ) : null}
 
-      {Array.from({ length: 18 }).map((_, index) => {
+      {plainZones ? null : Array.from({ length: 18 }).map((_, index) => {
         const z =
           localOfficeCenterZ - localOfficeHeight / 2 + (index + 1) * (localOfficeHeight / 18);
         return (
@@ -342,14 +360,14 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
         );
       })}
 
-      {(() => {
-        const wallColor = NEO_MANILA.narra;
-        const wallEmissive = NEO_MANILA.narraGlow;
+      {walls.shell ? (() => {
+        const wallColor = walls.color ?? NEO_MANILA.narra;
+        const wallEmissive = walls.color ? "#000000" : NEO_MANILA.narraGlow;
 
         return (
           <>
-            <mesh position={[localOfficeCenterX, 0.5, localNorthWallZ]} receiveShadow>
-              <boxGeometry args={[localOfficeWidth, 1, 0.12]} />
+            <mesh position={[localOfficeCenterX, walls.height / 2, localNorthWallZ]} receiveShadow>
+              <boxGeometry args={[localOfficeWidth, walls.height, 0.12]} />
               <meshStandardMaterial
                 color={wallColor}
                 emissive={wallEmissive}
@@ -357,8 +375,8 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
                 roughness={0.9}
               />
             </mesh>
-            <mesh position={[localOfficeCenterX, 0.5, localSouthWallZ]} receiveShadow>
-              <boxGeometry args={[localOfficeWidth, 1, 0.12]} />
+            <mesh position={[localOfficeCenterX, walls.height / 2, localSouthWallZ]} receiveShadow>
+              <boxGeometry args={[localOfficeWidth, walls.height, 0.12]} />
               <meshStandardMaterial
                 color={wallColor}
                 emissive={wallEmissive}
@@ -366,8 +384,8 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
                 roughness={0.9}
               />
             </mesh>
-            <mesh position={[localWestWallX, 0.5, localOfficeCenterZ]} receiveShadow>
-              <boxGeometry args={[0.12, 1, localOfficeHeight]} />
+            <mesh position={[localWestWallX, walls.height / 2, localOfficeCenterZ]} receiveShadow>
+              <boxGeometry args={[0.12, walls.height, localOfficeHeight]} />
               <meshStandardMaterial
                 color={wallColor}
                 emissive={wallEmissive}
@@ -375,8 +393,8 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
                 roughness={0.9}
               />
             </mesh>
-            <mesh position={[localEastWallX, 0.5, localOfficeCenterZ]} receiveShadow>
-              <boxGeometry args={[0.12, 1, localOfficeHeight]} />
+            <mesh position={[localEastWallX, walls.height / 2, localOfficeCenterZ]} receiveShadow>
+              <boxGeometry args={[0.12, walls.height, localOfficeHeight]} />
               <meshStandardMaterial
                 color={wallColor}
                 emissive={wallEmissive}
@@ -386,8 +404,9 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
             </mesh>
           </>
         );
-      })()}
+      })() : null}
 
+      {walls.shell ? (<>
       <mesh position={[localOfficeCenterX, 0.03, localNorthWallZ + 0.04]}>
         <boxGeometry args={[localOfficeWidth, 0.06, 0.04]} />
         <meshLambertMaterial color="#0c0c10" />
@@ -404,6 +423,7 @@ export const FloorAndWalls = memo(function FloorAndWalls() {
         <boxGeometry args={[0.04, 0.06, localOfficeHeight]} />
         <meshLambertMaterial color="#0c0c10" />
       </mesh>
+      </>) : null}
     </group>
   );
 });

@@ -26,15 +26,29 @@ const OPENCODE_SDK_SUFFIX: Record<ByokBackend, string> = {
   anthropic: '/v1', openai: '/v1', google: '/v1beta', openrouter: '/v1', groq: '/v1'
 };
 
-export function buildOpenCodeConfig(opts: { autoMode: boolean; baseUrl?: string; localModel?: string; byok?: ByokGrant }): Record<string, unknown> {
+export function buildOpenCodeConfig(opts: { autoMode: boolean; baseUrl?: string; localModel?: string; model?: string; byok?: ByokGrant }): Record<string, unknown> {
   const oc: Record<string, unknown> = { autoupdate: false };
   if (opts.autoMode) oc.permission = { ...OPENCODE_AUTO_PERMISSION };
   const provider: Record<string, unknown> = {};
   // BYOK through the broker: the provider's key env var holds the agent's token
   // (byokEnv), and its documented `options.baseURL` points at the broker route.
-  // OpenCode's provider ids match the backend names.
+  // OpenCode's provider ids match the backend names. The selected model is
+  // registered too, so one OpenCode's bundled list lacks (a new `:free` model
+  // picked from the live OpenRouter list) still resolves.
+  const slash = opts.model?.indexOf('/') ?? -1;
   for (const b of opts.byok?.backends ?? []) {
-    provider[b] = { options: { baseURL: providerRoute(opts.byok!.url, b) + OPENCODE_SDK_SUFFIX[b] } };
+    const entry: Record<string, unknown> = { options: { baseURL: providerRoute(opts.byok!.url, b) + OPENCODE_SDK_SUFFIX[b] } };
+    if (slash > 0 && opts.model!.slice(0, slash) === b) {
+      const id = opts.model!.slice(slash + 1);
+      entry.models = { [id]: { name: id } };
+    }
+    provider[b] = entry;
+  }
+  // Same for a user who set OPENROUTER_API_KEY in OpenCode itself (no broker
+  // backend): the picked model must still resolve.
+  if (slash > 0 && opts.model!.slice(0, slash) === 'openrouter' && !provider.openrouter) {
+    const id = opts.model!.slice(slash + 1);
+    provider.openrouter = { models: { [id]: { name: id } } };
   }
   if (opts.baseUrl) {
     // Register the model id the user actually selects (the part after 'local/')

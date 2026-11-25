@@ -130,10 +130,8 @@ const resolveFurnitureTemplate = (params: {
   const cached = furnitureTemplateCache.get(cacheKey);
   if (cached) return cached;
 
-  const rawTint =
-    params.itemType === "beanbag"
-      ? (params.itemColor ?? null)
-      : FURNITURE_TINT[params.itemType];
+  // DevLabs: an item's own colour (themes) wins over the type's stock tint.
+  const rawTint = params.itemColor ?? FURNITURE_TINT[params.itemType];
   const tintColor = rawTint ? new THREE.Color(rawTint) : null;
   const template = params.scene.clone(true);
   const castShadow = SHADOW_CASTING_FURNITURE_TYPES.has(params.itemType);

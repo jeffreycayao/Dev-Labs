@@ -2,9 +2,8 @@
 
 /**
  * Where symlinks need privilege (Windows without Developer Mode) a Codex worker gets
- * a COPY of the user's auth.json. Codex rotates refresh tokens, so a stale copy holds
- * a revoked token. syncCodexAuth must fold a newer same-account copy back into the
- * user's file, refresh a stale copy, and never let a foreign login overwrite theirs.
+ * a COPY of the user's auth.json. syncCodexAuth must refresh a stale copy at every
+ * spawn, and never let the (agent-writable) copy flow back into the user's login.
  */
 
 const test = require('node:test');
@@ -26,13 +25,13 @@ function setup(t) {
 }
 const token = (p) => JSON.parse(fs.readFileSync(p, 'utf8')).tokens.refresh_token;
 
-test('a newer same-account copy is folded back into the user login', (t) => {
+test('a worker copy never flows back into the user login, even claiming the same account', (t) => {
   const { src, dest } = setup(t);
-  fs.writeFileSync(src, auth('acct', '2026-11-01T00:00:00Z', 'old'));
-  fs.writeFileSync(dest, auth('acct', '2026-11-20T00:00:00Z', 'new'));
+  fs.writeFileSync(src, auth('acct', '2026-11-01T00:00:00Z', 'mine'));
+  fs.writeFileSync(dest, auth('acct', '2099-01-01T00:00:00Z', 'planted'));
   syncCodexAuth(src, dest);
-  assert.equal(token(src), 'new');
-  assert.equal(token(dest), 'new');
+  assert.equal(token(src), 'mine');
+  assert.equal(token(dest), 'mine');
 });
 
 test('a stale copy is replaced by the user login', (t) => {

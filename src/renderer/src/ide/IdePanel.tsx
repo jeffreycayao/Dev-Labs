@@ -10,6 +10,7 @@ import { MarkdownPreview } from '@/markdown/MarkdownPreview';
 import { HistoryPane, ComparePane } from './GitPanes';
 import { isImagePath, isSvgPath } from '@shared/imageTypes';
 import { ideBarStyle, ideIconBtn as iconBtn, ideTextBtn as textBtn } from './chrome';
+import { statusColor } from '@/lib/uiHelpers';
 
 // v0.3.4 markdown preview: per-md-tab view mode, defaulted from the last choice.
 type MdView = 'code' | 'split' | 'preview';
@@ -53,15 +54,6 @@ interface DiffData {
 
 const tabKey = (mode: TabMode, rel: string) => `${mode}::${rel}`;
 const basename = (rel: string) => rel.split('/').pop() || rel;
-
-function statusColor(code: string): string {
-  if (code === 'M') return 'var(--cth-lemon)';
-  if (code === 'A') return 'var(--cth-mint)';
-  if (code === 'D') return 'var(--cth-coral)';
-  if (code === 'R') return 'var(--cth-lilac)';
-  if (code === '?') return 'var(--cth-ink-300)';
-  return 'var(--cth-ink-500)';
-}
 
 /** Which agent's workspace the IDE is showing, and how confidently we know it. */
 interface IdeTarget {
@@ -269,7 +261,7 @@ export function IdePanel() {
     const buf = editBuffersRef.current[rel];
     if (!buf || buf.status !== 'ready' || buf.content === buf.original || buf.saveState === 'saving') return;
     setEditBuffers((p) => ({ ...p, [rel]: { ...p[rel], saveState: 'saving' } }));
-    const res = await window.cth.writeFile(root, rel, buf.content);
+    const res = await window.cth.writeFile(root, rel, buf.content, buf.original);
     if (res.ok) {
       // original ← the exact snapshot written (buf.content captured at save-start), NOT p[rel].content:
       // if the user typed during the in-flight write, those keystrokes stay in content and remain dirty

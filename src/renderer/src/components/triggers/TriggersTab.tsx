@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { SchedulesSection } from './SchedulesSection';
 import { ContextSection } from './ContextSection';
 import { WebhooksSection } from './WebhooksSection';
-import { OrgSection } from './OrgSection';
 import { DiscordSection } from './DiscordSection';
 import { Muted, Scroll, TriggerCard } from './ui';
 
@@ -23,7 +22,6 @@ export function TriggersTab() {
   const [schedulesSummary, setSchedulesSummary] = useState('');
   const [contextSummary, setContextSummary] = useState('');
   const [webhooksSummary, setWebhooksSummary] = useState('');
-  const [orgSummary, setOrgSummary] = useState('');
   const [discordSummary, setDiscordSummary] = useState('');
 
   return (
@@ -64,13 +62,6 @@ export function TriggersTab() {
         <DiscordSection onSummary={setDiscordSummary} />
       </TriggerCard>
 
-      <TriggerCard
-        title={t('triggersTab.organisation')}
-        blurb={t('triggersTab.organisationBlurb')}
-        summary={orgSummary}
-      >
-        <OrgSection onSummary={setOrgSummary} />
-      </TriggerCard>
     </Scroll>
   );
 }

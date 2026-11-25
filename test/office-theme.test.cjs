@@ -123,3 +123,87 @@ test('a corrupt backup never replaces the layout', () => {
   assert.equal(store.revertTheme(ls, 'x'), null);
   assert.equal(JSON.parse(ls.getItem(store.furnitureKey('x')))[0].type, 'plant');
 });
+
+// ── nature types + scene look (still devlabs/office-theme@1) ──────────────────
+
+test('nature items and a scene block validate; old @1 files without them still do', () => {
+  const t = good();
+  t.items.push(
+    { type: 'tree', x: 40, y: 40, w: 80, h: 80, color: '#2E7D32' },
+    { type: 'pond', x: 400, y: 300, w: 160, h: 100 },
+    { type: 'butterfly', x: 500, y: 200 }
+  );
+  t.scene = { ground: 'grass', groundColor: '#6AA84F', walls: 'hedge', sky: '#0b1d3a', lightColor: '#ffe0f0', lightIntensity: 9, ambient: 'fireflies', hideDefaults: true };
+  const r = ot.validateOfficeTheme(t);
+  assert.ok(r.ok, r.errors.join('; '));
+  assert.equal(r.theme.items[3].color, '#2e7d32');
+  assert.equal(r.theme.scene.groundColor, '#6aa84f', 'scene colours are lower-cased');
+  assert.equal(r.theme.scene.lightIntensity, ot.OFFICE_LIGHT_INTENSITY.max, 'light intensity is clamped, not refused');
+  assert.equal(r.theme.scene.hideDefaults, true);
+  assert.equal(ot.validateOfficeTheme(good()).theme.scene, undefined, 'no scene block → none added');
+  for (const type of ot.OFFICE_NATURE_TYPES) assert.ok(ot.OFFICE_FURNITURE_TYPES.includes(type), `${type} is allowlisted`);
+  const schema = ot.officeThemeJsonSchema();
+  assert.deepEqual(schema.properties.scene.properties.ground.enum, [...ot.OFFICE_GROUND_STYLES]);
+  assert.ok(ot.officeThemePrompt().includes('hideDefaults'));
+});
+
+test('the scene block refuses anything off the allowlists', () => {
+  const bad = (scene, re) => {
+    const t = good(); t.scene = scene;
+    const r = ot.validateOfficeTheme(t);
+    assert.equal(r.ok, false);
+    assert.match(r.errors.join('\n'), re);
+  };
+  bad('grass', /"scene" must be an object/);
+  bad({ ground: 'lava' }, /scene\.ground must be one of/);
+  bad({ walls: 'url(x)' }, /scene\.walls must be one of/);
+  bad({ sky: 'red' }, /scene\.sky must be #rrggbb/);
+  bad({ groundColor: '#12345' }, /scene\.groundColor/);
+  bad({ lightIntensity: 'bright' }, /lightIntensity must be a number/);
+  bad({ lightIntensity: Infinity }, /lightIntensity must be a number/);
+  bad({ hideDefaults: 'yes' }, /hideDefaults must be true or false/);
+  bad({ texture: 'file:///etc/passwd' }, /scene: unknown field "texture"/);
+});
+
+test('the scene look is stored with the layout, re-validated on read, and undone with it', () => {
+  const ls = memStorage();
+  const ns = 'level-3';
+  ls.setItem(store.furnitureKey(ns), JSON.stringify([{ _uid: 'a', type: 'plant', x: 0, y: 0 }]));
+  const t = good(); t.scene = { ground: 'grass', walls: 'hidden' };
+  store.applyTheme(ls, ns, ot.validateOfficeTheme(t).theme);
+  assert.deepEqual(store.readScene(ls, ns), { ground: 'grass', walls: 'hidden' });
+
+  // A second import without a scene clears the look; undo brings the first one back.
+  store.applyTheme(ls, ns, ot.validateOfficeTheme(good()).theme);
+  assert.equal(store.readScene(ls, ns), null);
+  store.revertTheme(ls, ns);
+  assert.deepEqual(store.readScene(ls, ns), { ground: 'grass', walls: 'hidden' });
+
+  ls.setItem(store.sceneKey(ns), JSON.stringify({ ground: 'grass', sky: 'javascript:alert(1)' }));
+  assert.equal(store.readScene(ls, ns), null, 'a tampered stored scene is ignored');
+});
+
+test('the bundled theme files validate', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const dir = path.join(__dirname, '..', 'src', 'renderer', 'src', 'scene', 'office3d', 'presets');
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+  assert.ok(files.length > 0);
+  for (const f of files) {
+    const r = ot.validateOfficeTheme(fs.readFileSync(path.join(dir, f), 'utf8'));
+    assert.ok(r.ok, `${f}: ${r.errors.join('; ')}`);
+  }
+});
+
+test('every built-in theme in the panel validates; Default and Christmas keep the stock desks', () => {
+  const presets = loadTs('src/renderer/src/scene/office3d/themePresets.ts');
+  const byId = {};
+  for (const id of presets.OFFICE_THEME_PRESETS) byId[id] = presets.buildOfficeThemePreset(id);
+  assert.deepEqual(Object.keys(byId), ['default', 'fairy', 'christmas']);
+  assert.equal(byId.default.scene, undefined, 'default clears any scene look');
+  const desks = (t) => t.items.filter((i) => i.type === 'desk_cubicle').map((i) => `${i.x},${i.y}`);
+  assert.deepEqual(desks(byId.christmas), desks(byId.default), 'seats survive switching between them');
+  assert.equal(byId.christmas.scene.ambient, 'snow');
+  for (const type of ['gift', 'snowman', 'pine_tree']) assert.ok(byId.christmas.items.some((i) => i.type === type), type);
+  assert.equal(byId.fairy.scene.hideDefaults, true);
+});

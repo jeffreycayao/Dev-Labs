@@ -32,6 +32,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { readAgentUsage } from './transcript';
 import { normalizeModel } from './pricing';
+import { errMsg } from './netUtil';
 
 // ─── The locked cross-lane contract (do not change without re-agreeing) ───────
 
@@ -133,6 +134,8 @@ export interface TelemetryCollectorOptions {
   resolveAgent?: (token: string) => string | undefined;
 }
 
+const sessionKey = (agentId: string, sessionId: string): string => `${agentId}\0${sessionId}`;
+
 export class TelemetryCollector {
   private server: Server | null = null;
   private boundPort: number | null = null;
@@ -143,14 +146,14 @@ export class TelemetryCollector {
   private readonly resolveSessionId?: (agentId: string) => string | undefined;
   private readonly resolveAgent?: (token: string) => string | undefined;
 
-  /** sessionId → running accumulation. */
+  /** (agentId, sessionId) → running accumulation. Keyed by BOTH: session ids are
+   *  readable by every agent, so a sessionId-only key let agent A report its
+   *  spend into B's total (and B's teardown then wiped it). */
   private readonly sessions = new Map<string, SessionAccum>();
   /** agentId → its sessionIds (lets getAgentUsage aggregate across --resume). */
   private readonly agentSessions = new Map<string, Set<string>>();
   /** agentId → ring buffer of recent tool spans. */
   private readonly spans = new Map<string, ToolSpan[]>();
-  /** Push subscribers (Lane A breaker + dashboard). */
-  private readonly usageSubs = new Set<(s: AgentUsageSample) => void>();
   /** api_error subscribers — feeds Lane A's breaker error-storm trip (#6), which
    *  has no input source of its own (hook payloads don't expose api errors). */
   private readonly apiErrorSubs = new Set<(agentId: string) => void>();
@@ -205,12 +208,6 @@ export class TelemetryCollector {
     return this.grokFallback(agentId) ?? this.transcriptFallback(agentId);
   }
 
-  /** Push (additive, OTel-only). Fires the agent's fresh aggregate whenever new
-   *  telemetry lands. Returns an unsubscribe fn. */
-  onAgentUsage(cb: (s: AgentUsageSample) => void): () => void {
-    this.usageSubs.add(cb);
-    return () => this.usageSubs.delete(cb);
-  }
 
   /** In-process api_error feed for Lane A's breaker (#6). At integration:
    *  `telemetry.onApiError((agentId) => breaker.recordError(agentId))`. Returns
@@ -233,7 +230,7 @@ export class TelemetryCollector {
   forgetAgent(agentId: string): void {
     const sessionIds = this.agentSessions.get(agentId);
     if (sessionIds) {
-      for (const sessionId of sessionIds) this.sessions.delete(sessionId);
+      for (const sessionId of sessionIds) this.sessions.delete(sessionKey(agentId, sessionId));
     }
     this.agentSessions.delete(agentId);
     this.spans.delete(agentId);
@@ -396,10 +393,10 @@ export class TelemetryCollector {
   // ─── Accumulation helpers ──────────────────────────────────────────────────
 
   private session(agentId: string, sessionId: string): SessionAccum {
-    let accum = this.sessions.get(sessionId);
+    let accum = this.sessions.get(sessionKey(agentId, sessionId));
     if (!accum) {
       accum = { agentId, model: '', ts: Date.now(), input: 0, output: 0, cacheRead: 0, cacheCreation: 0, usd: 0 };
-      this.sessions.set(sessionId, accum);
+      this.sessions.set(sessionKey(agentId, sessionId), accum);
     }
     let set = this.agentSessions.get(agentId);
     if (!set) { set = new Set(); this.agentSessions.set(agentId, set); }
@@ -414,6 +411,20 @@ export class TelemetryCollector {
     if (ring.length > SPAN_RING_CAP) ring.splice(0, ring.length - SPAN_RING_CAP);
   }
 
+  /** One cumulative sample PER live session — what the cost ledger records. The
+   *  ledger folds per (agent, session), so writing the agent's summed total under
+   *  the newest id counted the older sessions twice after a /clear. */
+  liveSessionSamples(agentId: string): AgentUsageSample[] {
+    const out: AgentUsageSample[] = [];
+    for (const sid of this.agentSessions.get(agentId) ?? []) {
+      const a = this.sessions.get(sessionKey(agentId, sid));
+      if (!a) continue;
+      out.push({ agentId, sessionId: sid, ts: a.ts, input: a.input, output: a.output,
+        cacheRead: a.cacheRead, cacheCreation: a.cacheCreation, model: a.model, usd: a.usd });
+    }
+    return out;
+  }
+
   /** Sum an agent's live sessions into one cumulative sample (sessionId/model =
    *  the most recently active session). Null if the agent has no live data. */
   private aggregateLive(agentId: string): AgentUsageSample | null {
@@ -423,7 +434,7 @@ export class TelemetryCollector {
       agentId, sessionId: '', ts: 0, input: 0, output: 0, cacheRead: 0, cacheCreation: 0, model: '', usd: 0
     };
     for (const sid of set) {
-      const a = this.sessions.get(sid);
+      const a = this.sessions.get(sessionKey(agentId, sid));
       if (!a) continue;
       out.input += a.input;
       out.output += a.output;
@@ -533,7 +544,6 @@ export class TelemetryCollector {
   private publishUsage(agentId: string): void {
     const sample = this.aggregateLive(agentId);
     if (!sample) return;
-    for (const cb of this.usageSubs) { try { cb(sample); } catch { /* subscriber threw */ } }
     this.emit?.('telemetry:event', { kind: 'usage', sample } satisfies TelemetryEvent);
   }
 }
@@ -579,9 +589,10 @@ function flattenAttrs(attrs: OtelKV[] | undefined): Record<string, string | numb
 
 /** A metric data point's numeric value (int counters arrive as strings in JSON). */
 function pointValue(dp: OtelDataPoint): number {
-  if (dp.asInt !== undefined) return Number(dp.asInt) || 0;
-  if (typeof dp.asDouble === 'number') return dp.asDouble;
-  return 0;
+  // Agents post these themselves: a negative or non-finite value would let one
+  // pull the floor total down and keep every cost cap from tripping.
+  const v = dp.asInt !== undefined ? Number(dp.asInt) : typeof dp.asDouble === 'number' ? dp.asDouble : 0;
+  return Number.isFinite(v) && v > 0 ? v : 0;
 }
 
 function str(v: unknown): string {
@@ -593,7 +604,4 @@ function numAttr(v: unknown): number {
 }
 function truthy(v: unknown): boolean {
   return v === true || v === 'true' || v === 1 || v === '1';
-}
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
 }

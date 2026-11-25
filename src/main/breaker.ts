@@ -416,7 +416,13 @@ export class CircuitBreaker {
         } else {
           s.noProgressBeats = 0;
         }
+      } else {
+        // An idle beat breaks the run: "consecutive" means back-to-back bursts,
+        // not one burst, an hour of quiet, then another.
+        s.noProgressBeats = 0;
       }
+    } else {
+      s.noProgressBeats = 0;
     }
     return { tripping: false, reason: '' };
   }

@@ -9,7 +9,7 @@ import {
   providerPreset,
   type AgentProvider
 } from '../shared/agentProvider';
-import { MCP_CATALOG, defaultMcpDefaults } from '../shared/mcpCatalog';
+import { MCP_CATALOG, defaultMcpDefaults, type CustomMcpServer } from '../shared/mcpCatalog';
 import { MAX_AGENT_TOKEN_CAP } from '../shared/tokenCaps';
 import { expandTilde, normalizeHiveHome } from './fs';
 import type { IntegrationRecord } from '../shared/integrations';
@@ -17,11 +17,9 @@ import type { DiscordTriggerConfig } from '../shared/discord';
 import type { FeatureFlags } from '../shared/features';
 import {
   DEFAULT_CONTEXT_TRIGGER,
-  DEFAULT_ORG_TRIGGER,
   DEFAULT_TRIGGER_MODE,
   DEFAULT_WEBHOOK_SCHEMA,
   type ContextTriggerConfig,
-  type OrgTriggerConfig,
   type WebhookTrigger
 } from '../shared/triggers';
 
@@ -351,6 +349,8 @@ export interface HarnessConfig {
   slackBotToken?: string;
   /** Restrict ingestion to one channel id; empty/undefined = any channel. */
   slackChannelId?: string;
+  /** Slack user ids (U…/W…) allowed to trigger work. Empty = nobody. */
+  slackAllowedUserIds?: string[];
   /** Local HTTP port the webhook server binds to (default 3847). */
   slackPort?: number;
   /** Opt-in: allow APP/VOICE-INITIATED proactive posting into Slack (e.g. the
@@ -365,6 +365,9 @@ export interface HarnessConfig {
   /** Plain (non-secret) connector values typed in Settings → Connections, keyed
    *  by the catalog `vars` name (e.g. `ghl-location-id`). Keys never go here. */
   mcpVars?: Record<string, string>;
+  /** MCP servers the user added by hand (Settings → Connections). Re-validated
+   *  on every read with sanitizeCustomMcp; keys never go here. */
+  customMcpServers?: CustomMcpServer[];
   /** Owner feature switches (Settings → General → Features). A missing key is
    *  its default in `FEATURE_DEFAULTS` (src/shared/features.ts). */
   features?: Partial<FeatureFlags>;
@@ -429,9 +432,6 @@ export interface HarnessConfig {
   /** Inbound HTTP endpoints, one entry per caller. Replaces the legacy single
    *  webhook above; several coexist on one port, told apart by `id` in the path. */
   webhookTriggers?: WebhookTrigger[];
-  /** Peer messaging between teammates' clone nodes. Persistence + UI only today —
-   *  no transport service reads `apiKey` yet. */
-  orgTrigger?: OrgTriggerConfig;
   /** One-time guard for `migrateTriggersV1` (legacy webhook → webhookTriggers,
    *  1h → 2h compact cadence). Set once the migration has run to completion. */
   triggersMigratedV1?: boolean;
@@ -504,7 +504,6 @@ const DEFAULTS: HarnessConfig = {
   // `withTriggerDefaults` re-copies them on every read — see the note there.
   contextTrigger: DEFAULT_CONTEXT_TRIGGER,
   webhookTriggers: [],
-  orgTrigger: DEFAULT_ORG_TRIGGER,
   triggersMigratedV1: false,
   // Memory reflection — preventive; nobody is over threshold today, so it sits
   // dark until an agent's memory crosses one of these (the verify gate is the
@@ -548,7 +547,6 @@ function withTriggerDefaults(cfg: HarnessConfig): HarnessConfig {
       compact: { ...DEFAULT_CONTEXT_TRIGGER.compact, ...cfg.contextTrigger?.compact },
       clear: { ...DEFAULT_CONTEXT_TRIGGER.clear, ...cfg.contextTrigger?.clear }
     },
-    orgTrigger: { ...DEFAULT_ORG_TRIGGER, ...cfg.orgTrigger },
     webhookTriggers: Array.isArray(cfg.webhookTriggers)
       ? cfg.webhookTriggers.map((t) => ({ ...t }))
       : []
@@ -687,7 +685,8 @@ const webhookRef = (id: string) => `config:webhook:${id}`;
 
 function hasPlaintextSecrets(stored: Partial<HarnessConfig>): boolean {
   return PLAIN_SECRETS.some((k) => !!stored[k])
-    || !!stored.orgTrigger?.apiKey
+    // The removed org trigger kept a key here: still rewrite (and so drop) it.
+    || !!(stored as { orgTrigger?: { apiKey?: string } }).orgTrigger?.apiKey
     || (stored.webhookTriggers ?? []).some((t) => !!t?.secret);
 }
 
@@ -696,9 +695,6 @@ function openSecrets(cfg: HarnessConfig): HarnessConfig {
   const store = secretStore;
   if (!store) return cfg;
   for (const k of PLAIN_SECRETS) if (!cfg[k]) cfg[k] = store.get(`config:${k}`);
-  if (cfg.orgTrigger && !cfg.orgTrigger.apiKey) {
-    cfg.orgTrigger = { ...cfg.orgTrigger, apiKey: store.get('config:orgTrigger') ?? '' };
-  }
   if (cfg.webhookTriggers) {
     cfg.webhookTriggers = cfg.webhookTriggers.map((t) => (t.secret ? t : { ...t, secret: store.get(webhookRef(t.id)) ?? '' }));
   }
@@ -719,9 +715,8 @@ function sealSecrets(cfg: HarnessConfig, explicit: Partial<HarnessConfig>): Harn
     return true;
   };
   for (const k of PLAIN_SECRETS) if (seal(`config:${k}`, cfg[k], k in explicit)) delete disk[k];
-  if (cfg.orgTrigger && seal('config:orgTrigger', cfg.orgTrigger.apiKey, 'orgTrigger' in explicit)) {
-    disk.orgTrigger = { ...cfg.orgTrigger, apiKey: '' };
-  }
+  // The org trigger was removed (nothing ever read its key): drop any old copy.
+  if ('orgTrigger' in disk) { delete (disk as Record<string, unknown>).orgTrigger; store.del('config:orgTrigger'); }
   if (cfg.webhookTriggers) {
     disk.webhookTriggers = cfg.webhookTriggers.map((t) =>
       seal(webhookRef(t.id), t.secret, 'webhookTriggers' in explicit) ? { ...t, secret: '' } : t);

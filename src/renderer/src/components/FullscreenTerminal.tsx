@@ -23,6 +23,7 @@ import { fireAgent } from './fireAgent';
 import { useAppTheme, toggleAppTheme } from '@/design/theme';
 import type { HarnessConfig } from '@/store/config';
 import { useRtl } from '@/i18n/useDirection';
+import { basename } from '@/lib/uiHelpers';
 
 /** Roster rail width. A fixed 232px is right on a 14" laptop but reads as a
  *  sliver on a 27" display, where names truncate for no reason — so it tracks
@@ -54,13 +55,6 @@ function rosterScale(zoom: number) {
     portraitScale,
     portrait: Math.round(PORTRAIT_W * portraitScale)
   };
-}
-
-function basename(path: string): string {
-  // Split on BOTH separators: `git:mainRepo` hands back whatever the platform
-  // uses, and a Windows `C:\work\repo` contains no '/' at all — so a '/'-only
-  // split returned the whole absolute path as the group's "name".
-  return path.split(/[\\/]/).filter(Boolean).pop() ?? path;
 }
 
 /** cwd → main-repo basename, resolved once per path and shared by every mount.
@@ -590,7 +584,7 @@ export function FullscreenTerminal({ config }: FullscreenTerminalProps) {
                     fullscreen
                   />
                 </div>
-                <MessageQueueComposer agent={agent} />
+                <MessageQueueComposer key={agent.id} agent={agent} />
               </div>
             </>
           )}

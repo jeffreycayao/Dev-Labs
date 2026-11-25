@@ -11,10 +11,13 @@ import {
 import {
   clearCommandForProvider,
   compactionCommandForProvider,
+  handoffStepsForProvider,
+  HANDOFF_TAG,
+  isCompactionCommand,
   remoteControlCommandForProvider,
   terminalReadyToReceive
 } from '../../../shared/providerAutomation';
-import { DEFAULT_CONTEXT_TRIGGER, type ContextRule } from '../../../shared/triggers';
+import { type ContextRule } from '../../../shared/triggers';
 import type { AgentProvider } from '../../../shared/agentProvider';
 import { bridgeOf, providerPreset } from '../../../shared/agentProvider';
 import { isDurableRole, preferredAgentRole, roleForHiveSpawn } from '../../../shared/agentRole';
@@ -22,7 +25,7 @@ import { inboxNudgeText } from '../../../shared/hiveNudge';
 import { resolveGodName } from '../../../shared/godIdentity';
 import { acquireTerminal, armTerminalStartupGuard, disposeTerminal, resetTerminal, isTerminalAutomationSafe } from '@/components/terminalPool';
 import { spawnAndObservePty } from '@/components/ptyStartup';
-import { canDeliverToAgent, deliverWithAcknowledgement, checkPrecondition } from './queueDelivery';
+import { canDeliverToAgent, deliverWithAcknowledgement, checkPrecondition, lastHandoff } from './queueDelivery';
 import { OFFICE_CAST, DEFAULT_CHARACTER } from '@/scene/office/cast';
 
 const GOD_ID = 'god';
@@ -284,6 +287,15 @@ function passesContextPressure(a: Agent, rule: ContextRule): boolean {
  *   3. wakes idle agents that have unread inbox messages so collaboration
  *      doesn't stall while an agent sits at its prompt.
  */
+/** Keep an "already handled" id set bounded over days of mail: a Set keeps
+ *  insertion order, so the oldest ids go first. Ids that old never come back. */
+const SEEN_MAX = 2000;
+function trimSeen(set: Set<string>): void {
+  if (set.size <= SEEN_MAX) return;
+  let drop = set.size - SEEN_MAX / 2;
+  for (const id of set) { if (drop-- <= 0) break; set.delete(id); }
+}
+
 export function useHive(config: HarnessConfig | null): void {
   // Per-agent dedup for the inbox-wake nudge: every inbox message id we have
   // already nudged this agent about. A SET, not a high-water mark.
@@ -315,6 +327,8 @@ export function useHive(config: HarnessConfig | null): void {
   // 'working' (there's a short window where it still reads 'idle' right after we
   // type into it). One message per cooldown keeps delivery strictly one-by-one.
   const lastFlush = useRef<Record<string, number>>({});
+  /** Last auto-delivery pause flag read from main, per agent (see dispatch). */
+  const pauseCache = useRef<Record<string, { at: number; paused: boolean }>>({});
   // In-flight spawn guard so a re-render / StrictMode double-mount can't spawn
   // Ramon twice (the window between the listPtys check and spawnPty is racy).
   const godSpawning = useRef(false);
@@ -658,10 +672,12 @@ export function useHive(config: HarnessConfig | null): void {
         const marker = `Message: ${msg.id}`;
         if ((messageQueues[target.id] ?? []).some((queued) => queued.text.includes(marker))) return;
         seenTerminalHandoffs.current.add(msg.id);
+        trimSeen(seenTerminalHandoffs.current);
         enqueueMessage(target.id, terminalWorkOrderPrompt(msg));
         return;
       }
       seenTerminalHandoffs.current.add(msg.id);
+      trimSeen(seenTerminalHandoffs.current);
       enqueueMessage(
         GOD_ID,
         [
@@ -737,6 +753,7 @@ export function useHive(config: HarnessConfig | null): void {
       if (!fresh.length) return;
       useStore.getState().enqueueMessage(agentId, inboxNudgeText(fresh), { precondition: 'inbox-nonempty' });
       for (const id of fresh) seen.add(id);
+      trimSeen(seen);
       void window.cth.hiveNoteNudged(agentId, fresh).catch(() => {});
     };
     const offWake = window.cth.onHiveWakeNudge(({ agentId, ids }) => queueNudge(agentId, ids));
@@ -870,24 +887,31 @@ export function useHive(config: HarnessConfig | null): void {
       // Hold queued messages until the target finishes its boot sequence.
       if ((bootGraceUntil.current[target.id] ?? 0) >= now) return { sent: false };
       if (now - (lastFlush.current[target.id] ?? 0) < FLUSH_COOLDOWN_MS) return { sent: false };
-      const control = await window.cth.controlSnapshot(target.id);
-      // The pause gate holds everything EXCEPT messages the user explicitly
-      // released with "send now" (m.manual) — otherwise a paused floor leaves
-      // the queue with no escape hatch at all. Idle/draft/picker safety below
-      // still applies to manual messages; only the pause is bypassed.
-      if (control?.autoDeliveryPaused && !next.manual) return { sent: false };
       // The user owns the prompt: a draft they are writing, or a menu they
       // opened, holds delivery. Both blocks expire after half an hour, and when
       // one does we simply type after whatever is there — automation never
-      // erases the user's text and never closes the user's menu.
+      // erases the user's text and never closes the user's menu. Checked before
+      // the IPC below: this is synchronous, and while a draft holds delivery
+      // every store change used to cost each queued agent a round trip to main.
       if (!isTerminalAutomationSafe(target.ptyId, now, inferAgentProvider(target.command, target.provider))) return { sent: false };
+      // The pause flag, read from main at most once a second per agent.
+      const cached = pauseCache.current[target.id];
+      const paused = cached && now - cached.at < 1000
+        ? cached.paused
+        : !!(await window.cth.controlSnapshot(target.id))?.autoDeliveryPaused;
+      if (!cached || now - cached.at >= 1000) pauseCache.current[target.id] = { at: now, paused };
+      // The pause gate holds everything EXCEPT messages the user explicitly
+      // released with "send now" (m.manual) — otherwise a paused floor leaves
+      // the queue with no escape hatch at all. Idle/draft/picker safety
+      // still applies to manual messages; only the pause is bypassed.
+      if (paused && !next.manual) return { sent: false };
       // Last gate before we type: re-check the message's delivery-time
       // precondition. A queue item is decided at enqueue time and delivered an
       // arbitrary interval later, and the inbox nudge is only worth sending if
       // there is still something in the inbox — the agent routinely drains it in
       // the very turn the nudge was queued from. Stale ones are DROPPED, not
       // deferred, so they cannot park at the queue head and starve the rest.
-      if (await checkPrecondition(next, () => window.cth.hiveInboxIds(srcId)) === 'drop') {
+      if (await checkPrecondition(next, () => window.cth.hiveInboxIds(srcId), () => window.cth.hiveMemory(srcId)) === 'drop') {
         removeQueuedMessage(srcId, next.id);
         return { sent: false };
       }
@@ -1083,19 +1107,6 @@ export function useHive(config: HarnessConfig | null): void {
     });
   }, [config?.onboardingComplete]);
 
-  // 5b) Pipe hive tasks addressed to non-Claude agents (e.g. Codex) into their
-  //     terminal queues. When main routes a message to a non-claude provider it
-  //     emits 'hive:enqueueToAgent' instead of bouncing; we enqueue the raw
-  //     task text here so effect #4 types it into the REPL when the agent idles.
-  //     No inbox nudge, no /compact — just the verbatim subject+body text.
-  useEffect(() => {
-    if (!config?.onboardingComplete) return;
-    return window.cth.onHiveEnqueue?.((msg) => {
-      if (!msg?.targetId || !msg?.text?.trim()) return;
-      useStore.getState().enqueueMessage(msg.targetId, msg.text.trim());
-    });
-  }, [config?.onboardingComplete]);
-
   // 5b) MAIN-initiated roster changes (rt-5 voice spawn/kill). The renderer store is
   //     only mutated by renderer-initiated hires (AddAgentModal); a voice hire/kill
   //     runs in MAIN (spawnAgentCore / teardownPty, owner=null) and would otherwise
@@ -1229,6 +1240,31 @@ export function useHive(config: HarnessConfig | null): void {
         // command is never queued in a state the drain would refuse to deliver.
         if (!canDeliverToAgent(a.status, ptyQuietMs(a.ptyId, now), QUIESCE_IDLE_MS)) continue;
         const provider = inferAgentProvider(a.command, a.provider);
+        // Handoff instead of compaction (opt-in): memory.md, clear, read back.
+        // Falls through to plain compaction for a CLI with no clear command.
+        const handoff = action === 'compact' && rule.method === 'handoff'
+          ? handoffStepsForProvider(provider, rule.message)
+          : null;
+        if (handoff) {
+          if (!passesContextPressure(a, rule)) continue;
+          const queued = messageQueues[a.id] ?? [];
+          if (queued.some((m) => m.text.startsWith(HANDOFF_TAG) || isCompactionCommand(m.text))) continue;
+          const used = a.contextTokens ?? 0;
+          if (lastCompactUsed.current[a.id] === used) continue;
+          // The clear and read-back only go out if a new `## Handoff` section
+          // appears in memory.md (checked at delivery), so a turn that failed
+          // (API error, usage limit) never wipes an unsaved context.
+          const agentId = a.id;
+          void window.cth.hiveMemory(agentId).then((mem) => {
+            const base = lastHandoff(mem);
+            const st = useStore.getState();
+            if ((st.messageQueues[agentId] ?? []).some((m) => m.text.startsWith(HANDOFF_TAG))) return;
+            st.enqueueMessage(agentId, handoff[0], { compactUsed: used });
+            st.enqueueMessage(agentId, handoff[1], { precondition: 'handoff-saved', handoffBase: base });
+            st.enqueueMessage(agentId, handoff[2], { precondition: 'handoff-saved', handoffBase: base });
+          }, () => { /* memory unreadable: skip this cycle */ });
+          continue;
+        }
         const command = action === 'clear'
           ? clearCommandForProvider(provider, rule.message)
           : compactionCommandForProvider(provider, rule.message);
@@ -1269,26 +1305,12 @@ export function useHive(config: HarnessConfig | null): void {
       }
     };
 
-    // The typed `onContextTrigger` arrives with the main-process/preload change
-    // that emits it; access it defensively so this lands independently of that.
-    const off = (window.cth as unknown as {
-      onContextTrigger?: (
-        cb: (p: { action: 'compact' | 'clear'; rule: ContextRule }) => void
-      ) => () => void;
-    }).onContextTrigger?.((p) => {
+    const off = window.cth.onContextTrigger((p) => {
       if (!p?.rule) return;
       fire(p.action === 'clear' ? 'clear' : 'compact', p.rule);
     });
 
-    // LEGACY fallback: main still emits the old parameterless auto-compact until
-    // it switches over. Treat it as the default compact rule so behaviour is
-    // continuous across that landing. Harmless if both fire — the dedupe above
-    // drops the duplicate.
-    const offLegacy = window.cth.onAutoCompact(
-      () => fire('compact', DEFAULT_CONTEXT_TRIGGER.compact)
-    );
-
-    return () => { off?.(); offLegacy?.(); };
+    return () => { off(); };
   }, [config?.onboardingComplete]);
 
   // 7) Auto-revive wedged PTYs after the Mac sleeps/locks. Kevin's main-process

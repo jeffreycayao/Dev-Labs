@@ -163,6 +163,26 @@ export function compactionCommandForProvider(
   return compactTakesFocus && focus ? `${compact} ${focus}` : compact;
 }
 
+/** Marks the first message of a handoff, so a queued one is never doubled. */
+export const HANDOFF_TAG = '[context handoff]';
+
+/**
+ * The three queued messages of a handoff: write the handoff to memory.md, clear
+ * the session, read it back. Null when this provider has no clear command (then
+ * the caller falls back to compaction). The queue delivers each one only once the
+ * agent is idle again, so the clear never lands while the handoff is being written.
+ */
+export function handoffStepsForProvider(provider: AgentProvider, focus: string = DEFAULT_COMPACTION_FOCUS): string[] | null {
+  const clear = contextCommandsForProvider(provider).clear;
+  if (!clear) return null;
+  const keep = focus.trim() || DEFAULT_COMPACTION_FOCUS;
+  return [
+    `${HANDOFF_TAG} Your session is about to be cleared to free context. Append a section "## Handoff <date and time>" to your memory.md with what the next session needs: ${keep} Include the exact next step. Keep it under 40 lines. Do not start new work; reply "handoff saved" when it is written.`,
+    clear,
+    `${HANDOFF_TAG} Your session was just cleared. Read the latest "## Handoff" section of your memory.md and your inbox, then continue from its next step.`
+  ];
+}
+
 /** Every distinct compaction verb this harness can type, across all providers.
  *  Derived from CONTEXT_COMMANDS rather than hand-listed, so a provider added to
  *  that table is covered here without a second edit anyone could forget. */

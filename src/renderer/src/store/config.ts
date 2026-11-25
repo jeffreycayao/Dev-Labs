@@ -11,7 +11,6 @@ import {
 } from '@shared/agentProvider';
 import type {
   ContextTriggerConfig,
-  OrgTriggerConfig,
   WebhookTrigger
 } from '@shared/triggers';
 import { isNewer } from '@shared/updateState';
@@ -104,6 +103,7 @@ export interface HarnessConfig {
   slackSigningSecret?: string;
   slackBotToken?: string;
   slackChannelId?: string;
+  slackAllowedUserIds?: string[];
   slackPort?: number;
   /** Opt-in app/voice-initiated proactive Slack posting (default OFF). Mirrors
    *  src/main/config.ts; the Slack-origin done-reply round-trip is never gated. */
@@ -112,6 +112,8 @@ export interface HarnessConfig {
   obsidianVault?: string;
   /** Plain connector values (e.g. a HighLevel location id); mirrors src/main/config.ts. */
   mcpVars?: Record<string, string>;
+  /** MCP servers the user added by hand (see src/shared/mcpCatalog.ts). */
+  customMcpServers?: import('@shared/mcpCatalog').CustomMcpServer[];
   /** Owner feature switches; a missing key is its default (src/shared/features.ts). */
   features?: Partial<FeatureFlags>;
   /** Free Flow voice dictation (mirrors src/main/config.ts). */
@@ -163,7 +165,6 @@ export interface HarnessConfig {
   /** Inbound HTTP endpoints, one per caller — replaces the legacy trio above. */
   webhookTriggers?: WebhookTrigger[];
   /** Peer messaging between teammates' clone nodes (persistence + UI only). */
-  orgTrigger?: OrgTriggerConfig;
   /** One-time guard for the main-process triggers migration; read-only here. */
   triggersMigratedV1?: boolean;
 }

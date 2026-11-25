@@ -23,6 +23,7 @@ import { request as httpsRequest } from 'node:https';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { errMsg, isLoopback } from './netUtil';
 // NOTE: `tunnelmole` is an ESM-only package. The Electron main process is bundled
 // as CommonJS, so a static `import` gets externalized into `require('tunnelmole')`
 // and throws ERR_REQUIRE_ESM at load. It is imported dynamically inside
@@ -77,6 +78,10 @@ export interface SlackWebhookServerOptions {
   signingSecret: string;
   /** Optional channel id filter — when set, events from other channels are dropped. */
   channelId?: string;
+  /** Slack user ids allowed to give the agents work. Empty = nobody, like the
+   *  Discord trigger: anyone in the workspace (guests, Slack Connect partners)
+   *  could otherwise direct the agents. */
+  isAllowedUser?: (userId: string) => boolean;
   /** Called once per accepted, de-mentioned message — with the Slack thread
    *  coordinates needed to reply back in the originating thread. May be async
    *  (e.g. to download file attachments before forwarding via IPC). */
@@ -113,10 +118,10 @@ const TUNNEL_START_TIMEOUT_MS = 10_000;
 
 export class SlackWebhookServer {
   private server: Server | null = null;
-  private tunnelUrl: string | null = null;
   private readonly port: number;
   private readonly signingSecret: string;
   private readonly channelId?: string;
+  private readonly isAllowedUser: (userId: string) => boolean;
   private readonly onMessage: (m: SlackInboundMessage) => void | Promise<void>;
   /** Bot's own Slack user id — learned from `authorizations[].user_id` on the
    *  first event_callback. Used to detect <@BOTID> text mentions. */
@@ -134,6 +139,7 @@ export class SlackWebhookServer {
     this.port = opts.port;
     this.signingSecret = opts.signingSecret;
     this.channelId = opts.channelId?.trim() || undefined;
+    this.isAllowedUser = opts.isAllowedUser ?? (() => false);
     this.onMessage = opts.onMessage;
   }
 
@@ -156,7 +162,6 @@ export class SlackWebhookServer {
     try {
       const url = await this.openTunnel();
       if (!url) throw new Error('tunnelmole returned empty URL');
-      this.tunnelUrl = url;
       // tunnelmole runs in the background; there is no close handle to wire here.
       return { ok: true, url };
     } catch (e) {
@@ -168,7 +173,6 @@ export class SlackWebhookServer {
   /** Close the HTTP server. Idempotent and best-effort.
    *  Note: tunnelmole has no documented close handle; teardown is best-effort. */
   stop(): void {
-    this.tunnelUrl = null;
     try { this.server?.close(); } catch { /* noop */ }
     this.server = null;
   }
@@ -254,7 +258,11 @@ export class SlackWebhookServer {
       const { trigger, text: rawText, files: rawFiles } = _shouldTrigger(
         ev, this.botUserId, this.channelId, this.activatedThreads
       );
-      if (trigger) {
+      const sender = typeof ev.user === 'string' ? ev.user : '';
+      if (trigger && !this.isAllowedUser(sender)) {
+        // Logged with the id so the owner can add a colleague in Settings.
+        console.warn(`[slack] ignored a message from ${sender || 'unknown user'}: not in the allowed Slack users list`);
+      } else if (trigger) {
         const text = stripLeadingMention(rawText);
         const channel = typeof ev.channel === 'string' ? ev.channel : '';
         const ts = typeof ev.ts === 'string' ? ev.ts : '';
@@ -322,6 +330,7 @@ interface SlackPayload {
     /** 'file_share' for file uploads; 'message_changed' / 'channel_join' etc. dropped. */
     subtype?: string;
     bot_id?: string;
+    user?: string;
     channel?: string;
     text?: string;
     /** Message timestamp — Slack's per-message id, used as the reply thread root. */
@@ -342,10 +351,6 @@ interface SlackPayload {
 /** Strip a single leading `<@BOTID>` app-mention so "@bot do X" enqueues "do X". */
 function stripLeadingMention(text: string): string {
   return text.replace(/^\s*<@[A-Z0-9]+>\s*/i, '').trim();
-}
-
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
 }
 
 /**
@@ -570,7 +575,3 @@ export class SlackReplyServer {
 }
 
 /** True for IPv4 loopback (127.0.0.0/8) and IPv6 ::1 (incl. v4-mapped form). */
-function isLoopback(addr: string): boolean {
-  const a = addr.replace(/^::ffff:/, '');
-  return a === '::1' || a.startsWith('127.');
-}

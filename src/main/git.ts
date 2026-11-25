@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openForRead, safeResolve } from './fs';
+import { trustedToolPath } from './shellEnv';
 
 /** Agents can write the folders the Git tab polls, including a worktree's
  *  `.git` file, which can point at a git config of their choosing. Git runs
@@ -88,7 +89,8 @@ function spawnGit(cwd: string, args: string[], env: Record<string, string>, time
   ok: true; stdout: string;
 } | { ok: false; error: string }> {
   return new Promise((resolve) => {
-    const proc = spawn('git', args, { cwd, env: { ...process.env, ...env } });
+    // Absolute path: cwd is a repo an agent can write (see trustedToolPath).
+    const proc = spawn(trustedToolPath('git'), args, { cwd, env: { ...process.env, ...env } });
     let stdout = '';
     let stderr = '';
     const timer = setTimeout(() => {
@@ -160,10 +162,14 @@ export async function getStatus(cwd: string, scopeToCwd = false): Promise<GitSta
   const entries: GitStatusEntry[] = [];
   const untracked: string[] = [];
   const tokens = res.stdout.split('\0').filter(Boolean);
-  for (const token of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
     if (token.length < 3) continue;
     const index = token[0];
     const worktree = token[1];
+    // A rename/copy is followed by its OLD path as a bare piece with no status
+    // letters; read as its own entry it showed up as a phantom file.
+    if ('RC'.includes(index) || 'RC'.includes(worktree)) i++;
     let path = token.slice(3);
     if (prefix) {
       if (!path.startsWith(prefix)) continue;

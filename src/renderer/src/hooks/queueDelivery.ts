@@ -66,7 +66,16 @@ export function canDeliverToAgent(
 /** The subset of a QueuedMessage this module needs. Kept structural so the
  *  gate is testable without dragging the store (and zustand) into the test. */
 export interface DeliveryGateMessage {
-  precondition?: 'inbox-nonempty';
+  precondition?: 'inbox-nonempty' | 'handoff-saved';
+  handoffBase?: string;
+}
+
+/** The newest `## Handoff …` heading in a memory.md, or ''. Compared, not
+ *  counted: main reads only the newest 4 MB, so on a big file an old heading can
+ *  scroll out of view as a new one is added and a count would never rise. */
+export function lastHandoff(memory: string): string {
+  const all = memory.match(/^## Handoff\b.*$/gm);
+  return all ? all[all.length - 1].trim() : '';
 }
 
 export type PreconditionVerdict = 'send' | 'drop';
@@ -89,8 +98,20 @@ export type PreconditionVerdict = 'send' | 'drop';
  *  indefinitely. */
 export async function checkPrecondition(
   message: DeliveryGateMessage,
-  readInbox: () => Promise<readonly unknown[]>
+  readInbox: () => Promise<readonly unknown[]>,
+  readMemory?: () => Promise<string>
 ): Promise<PreconditionVerdict> {
+  if (message.precondition === 'handoff-saved') {
+    // Fails CLOSED, unlike the inbox nudge: sending this clear without a saved
+    // handoff throws the agent's whole context away.
+    try {
+      if (!readMemory) return 'drop';
+      const now = lastHandoff(await readMemory());
+      return now && now !== (message.handoffBase ?? '') ? 'send' : 'drop';
+    } catch {
+      return 'drop';
+    }
+  }
   if (message.precondition !== 'inbox-nonempty') return 'send';
   try {
     return (await readInbox()).length > 0 ? 'send' : 'drop';

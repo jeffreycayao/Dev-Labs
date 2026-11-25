@@ -336,7 +336,9 @@
       "orgKeyDesc": "How a teammate's install addresses yours.",
       "apiKey": "API key",
       "orgKeyPlaceholder": "paste your organisation key",
-      "orgConfigOnly": "Configuration only for now. The organisation messaging service does not exist yet, so a key here starts no transport — it is saved, shown in the Triggers tab, and waits."
+      "orgConfigOnly": "Configuration only for now. The organisation messaging service does not exist yet, so a key here starts no transport — it is saved, shown in the Triggers tab, and waits.",
+      "allowedUsers": "Allowed Slack users",
+      "allowedUsersHint": "Member IDs of the people who may give agents work, separated by commas. Only they can trigger the bot; messages from anyone else are ignored. Find an ID in Slack: open the profile → ⋮ → Copy member ID."
     },
     "voice": {
       "freeFlow": "Free Flow",
@@ -517,6 +519,8 @@
     "saveLimit": "Save limit",
     "fleetTokens": "Σ {{value}} tok",
     "fleetInputs": "inputs {{value}} (cache {{pct}}%)",
+    "cacheHit": "cache {{pct}}%",
+    "cacheHitTitle": "Share of this agent's input read from the prompt cache, which costs about 10% of fresh input. Low means its context keeps changing at the start (model switch, compaction, or idle over an hour).",
     "fleetRate": "{{value}} tok/min",
     "telemetryNote": "live from each agent's OpenTelemetry · bars show tokens used vs each agent's limit, else the {{cap}} floor budget",
     "defaultBudgetNote": " (default — set a floor token budget in Settings)",
@@ -583,6 +587,14 @@
     "ossByok": "Via OSS provider · BYOK",
     "ossLocalTitle": "{{slug}} · needs ~{{ram}} RAM — pull with: ollama pull {{tag}}",
     "ossByokTitle": "{{slug}} · set {{keyEnv}} in Settings → AI Engines",
+    "orAll": "All OpenRouter models",
+    "orFree": "Free",
+    "orPaid": "Paid",
+    "orSearch": "Search models…",
+    "orLoading": "Loading OpenRouter models…",
+    "orNone": "No models match.",
+    "orFreeNote": "Free models have daily request limits, and some providers log or train on prompts.",
+    "orMore": "+{{n}} more — refine the search",
     "byokNote": "BYOK keys & local endpoints for this engine live in Settings → AI Engines. New to local models? Read run on open models or set up on a Mac Mini. Live end-to-end is pending real model calls (verify on-device).",
     "runOnOpenModels": "run on open models",
     "setUpMacMini": "set up on a Mac Mini",
@@ -1511,6 +1523,13 @@
       "diffTotals": "{{before}} objects now → {{after}} after import",
       "diffMoved": "{{n}} moved, turned or recoloured",
       "diffSeats": "{{n}} desk seats will be assigned by agent name",
+      "diffScene": "Scene look: {{list}}",
+      "presetsTitle": "Built-in themes",
+      "preset": {
+        "default": "Default",
+        "fairy": "Fairy Glade",
+        "christmas": "Christmas Season"
+      },
       "backupNote": "Applying replaces this floor's layout. The current one is backed up and undo import brings it back.",
       "aiTitle": "Ask an AI to design one",
       "aiDesc": "Copy the prompt (it includes the rules, the JSON schema and your current layout), paste it into any AI, save its answer as a .json file and import it here. Imports are checked against the schema first.",
@@ -1626,6 +1645,21 @@
         "Paste the token in the field above and press save. It is stored encrypted and goes to HighLevel through DevLabs, so agents never see it.",
         "Optional: paste the sub-account's Location ID (Settings → Business Profile) in the Sub-account field and press save. The token is already tied to one sub-account, so most setups work without it.",
         "Switch GoHighLevel on, then start a new agent."
+      ],
+      "meta-ads": [
+        "Careful: agents with this token can create, change, pause and launch ads that spend real money. Use a token with only ads_read if you just want reports.",
+        "Open developers.facebook.com/tools/explorer, pick your Meta app, and add the ads_mcp_management permission plus ads_read (read only) or ads_management (to make changes). Press Generate Access Token and allow it.",
+        "Copy the token, paste it in the field above and press save. It is stored encrypted and goes to Meta through DevLabs, so agents never see it.",
+        "Switch Meta Ads on, then start a new agent. Only Claude Code agents get connectors.",
+        "Ask about ad performance and the agent makes a DevLabs-branded HTML report with charts, opens it in your browser and puts it in Deliveries. Press Save as PDF on the report to keep a PDF.",
+        "Tokens expire (a short one lasts about an hour): when agents report a 401, make a new token and paste it again."
+      ],
+      "metricool": [
+        "In Metricool, open Account Settings → API and copy your API key. API access needs a Metricool plan that includes it.",
+        "Paste the key in the field above and press save. It is stored encrypted and goes to Metricool through DevLabs, so agents never see it.",
+        "Switch Metricool on, then start a new agent. Only Claude Code agents get connectors.",
+        "Agents can read analytics for your brands and competitors, and read or schedule posts in the planner, within what your account allows.",
+        "If agents report a 401 or 403, check the key under Account Settings → API and paste it again."
       ]
     },
     "vault": {
@@ -1642,6 +1676,29 @@
       "save": "save",
       "savedNote": "{{label}} saved. New agents will use it.",
       "clearedNote": "{{label}} cleared."
+    },
+    "custom": {
+      "title": "Your own MCP servers",
+      "note": "Add any MCP server. It starts switched off and only Claude Code agents get it. A remote server's key is saved in its row below after you add it, stored encrypted, and agents never see it. A local command runs on this computer with your permissions, so only add programs you trust.",
+      "name": "Name, e.g. Notion",
+      "remote": "Remote URL",
+      "local": "Local command",
+      "url": "Server URL",
+      "auth": "Key:",
+      "authBearer": "Bearer token",
+      "authHeader": "Header",
+      "authNone": "No key",
+      "headerName": "Header name",
+      "command": "Command",
+      "args": "Arguments",
+      "argsPlaceholder": "One argument per line, e.g.\n-y\n@notionhq/notion-mcp-server",
+      "envName": "Env var for the key (optional), e.g. NOTION_TOKEN",
+      "add": "add server",
+      "remove": "remove",
+      "added": "{{label}} added. Switch it on below, and save its key if it needs one.",
+      "removed": "Server removed, with its key.",
+      "invalid": "Check the server: an https URL (or http on localhost), a header name of letters, digits and dashes, or a command without line breaks.",
+      "tooMany": "At most {{max}} servers."
     }
   },
   "devicePicker": {
@@ -1721,6 +1778,10 @@
     "intro": "A rule fires only when both halves agree: the gap since its last run has passed, AND that agent's context is at least as full as the bar. A bar of 0% means the clock alone.",
     "compact": "Compact",
     "compactBlurb": "Summarises the context so the thread keeps going.",
+    "method": "METHOD",
+    "methodCompact": "/compact",
+    "methodHandoff": "Handoff",
+    "methodHint": "Handoff: the agent writes a short handoff to its memory.md, its session is cleared, then it reads the handoff back. The new context is smaller than a compaction summary, so later prompts cost less, and the handoff stays on disk. Agents whose CLI has no clear command keep using /compact.",
     "clear": "Clear",
     "clearBlurb": "Discards the context. Nothing is summarised.",
     "clearCaution": "Clearing throws context away — it is not a smaller version of compaction. An agent mid-task forgets what it was doing. Leave this off unless you keep context another way.",

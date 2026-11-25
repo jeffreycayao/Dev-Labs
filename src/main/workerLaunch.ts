@@ -3,7 +3,7 @@
  * pure function: this exact translation silently killed real workers for days
  * while reporting success, which is what earned it a unit test.
  */
-import { autoModeFlagForProvider, commandBinary, hasAutoModeStance, inferAgentProvider } from '../shared/agentProvider';
+import { AGENT_PROVIDER_PRESETS, autoModeFlagForProvider, commandBinary, hasAutoModeStance, inferAgentProvider } from '../shared/agentProvider';
 import { tokenizeCommand } from '../shared/commandLine';
 
 export interface WorkerLaunch {
@@ -63,6 +63,41 @@ export function buildWorkerLaunch(opts: {
     typeof opts.requestModel === 'string' && opts.requestModel.trim() ? opts.requestModel.trim() : '';
   const args = [...flags, ...(model && !flags.includes('--model') ? ['--model', model] : [])];
   return { bin, args, command, fromRequest };
+}
+
+/** Flags a spawn REQUEST may carry. A default-deny allowlist like the hire
+ *  manifest's: the request file is agent-reachable, and flags such as Claude's
+ *  `--settings` / `--mcp-config` / `--plugin-dir` or Codex's `-c` load hooks or
+ *  servers that run any program outside the sandbox. Each provider's own
+ *  auto-mode flags are included, since buildWorkerLaunch appends them. */
+const WORKER_FLAGS = new Set([
+  '--model', '-m', '--max-turns', '--output-format', '--verbose', '--permission-mode',
+  ...AGENT_PROVIDER_PRESETS.flatMap((p) => tokenizeCommand(p.autoModeFlag ?? '').filter((t) => t.startsWith('-')).map((t) => t.split('=')[0]))
+]);
+/** Flags whose value changes how sandboxed the agent is: only these values. */
+const WORKER_FLAG_VALUES: Record<string, ReadonlySet<string>> = {
+  '-s': new Set(['workspace-write', 'read-only']),          // codex sandbox (never danger-full-access)
+  '--sandbox': new Set(['workspace-write', 'read-only']),
+  '-a': new Set(['never', 'on-request', 'on-failure', 'untrusted'])
+};
+
+/** The first request flag that is not allowed, or null when all are. A plain
+ *  value (not starting with `-`) is accepted only right after an allowed flag. */
+export function disallowedWorkerFlag(args: readonly string[]): string | null {
+  let prev: string | null = null;
+  for (const tok of args) {
+    if (tok.startsWith('-')) {
+      const [name, inline] = [tok.split('=')[0], tok.includes('=') ? tok.slice(tok.indexOf('=') + 1) : null];
+      if (!WORKER_FLAGS.has(name)) return tok;
+      if (inline !== null && WORKER_FLAG_VALUES[name] && !WORKER_FLAG_VALUES[name].has(inline)) return tok;
+      prev = inline === null ? name : null;
+      continue;
+    }
+    if (!prev) return tok;
+    if (WORKER_FLAG_VALUES[prev] && !WORKER_FLAG_VALUES[prev].has(tok)) return `${prev} ${tok}`;
+    prev = null;
+  }
+  return null;
 }
 
 /** May a spawn-request start this executable? Only a known agent CLI

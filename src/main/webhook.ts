@@ -42,6 +42,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { validateAgainstSchema, type InboundKind } from '../shared/triggers';
+import { errMsg } from './netUtil';
 // NOTE: `tunnelmole` is an ESM-only package. The Electron main process is bundled
 // as CommonJS, so a static `import` gets externalized into `require('tunnelmole')`
 // and throws ERR_REQUIRE_ESM at load. It is imported dynamically inside
@@ -137,7 +138,8 @@ const RATE_WINDOW_MS = 60_000;
  *  parked under this id, so a caller already pointed at the old URL is unaffected. */
 export const LEGACY_ENDPOINT_ID = 'legacy';
 
-/** Rate-limit bucket shared by EVERY unknown id. One bucket, not one per id:
+/** Rate-limit bucket shared by EVERY request that did not prove an endpoint's
+ *  secret (unknown ids, wrong secrets, status polls). One bucket, not one per id:
  *  per-id buckets for ids we don't serve would let a prober both grow our memory
  *  unboundedly and — worse — observe that unknown ids never hit the per-endpoint
  *  limit while real ones do. Sharing one bucket makes the two indistinguishable. */
@@ -278,15 +280,23 @@ export class WebhookServer {
   }
 
   private handleRequest(req: IncomingMessage, res: ServerResponse): void {
-    // Rate limit first — cheapest possible rejection, ahead of any work.
-    if (!this.allowRequest('', RATE_LIMIT)) { json(res, 429, { ok: false, error: 'rate limited' }); return; }
     const id = readEndpointId(req);
     const endpoint = id !== null ? this.endpoints.get(id) ?? null : null;
-    // Per-endpoint budget, with every unknown id sharing one bucket (see UNKNOWN_BUCKET).
-    if (!this.allowRequest(endpoint ? endpoint.id : UNKNOWN_BUCKET, PER_ENDPOINT_RATE_LIMIT)) {
-      json(res, 429, { ok: false, error: 'rate limited' }); return;
-    }
     const method = req.method ?? '';
+    // Only a POST carrying its endpoint's secret (a header compare, no body read)
+    // spends the real budgets. Everything else — status polls, wrong secrets,
+    // unknown ids — shares one separate bucket, so someone who merely has the
+    // public URL can flood that bucket but never lock out real webhooks.
+    const trusted = method === 'POST' && this.verifySecret(req, endpoint);
+    // Status polls get their own budget per endpoint, apart from junk POSTs, so a
+    // flood of bad POSTs never blocks callers checking on their tasks. (A token
+    // can't be checked before limiting: an unknown one costs a full task scan.)
+    const ok = trusted
+      ? this.allowRequest('', RATE_LIMIT) && this.allowRequest(endpoint!.id, PER_ENDPOINT_RATE_LIMIT)
+      : method === 'GET' && endpoint
+        ? this.allowRequest(`status:${endpoint.id}`, RATE_LIMIT)
+        : this.allowRequest(UNKNOWN_BUCKET, RATE_LIMIT);
+    if (!ok) { json(res, 429, { ok: false, error: 'rate limited' }); return; }
     if (method === 'GET') { this.handleStatus(req, res, endpoint); return; }
     if (method === 'POST') { this.handleCreate(req, res, endpoint); return; }
     res.writeHead(405); res.end();
@@ -441,6 +451,3 @@ function json(res: ServerResponse, status: number, body: unknown): void {
   } catch { /* socket already gone */ }
 }
 
-function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}

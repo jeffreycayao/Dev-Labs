@@ -35,13 +35,11 @@ test('a config.json from before is sealed on read, and secrets never reach the f
 
   writeConfig({
     slackSigningSecret: 'sign-1',
-    orgTrigger: { ...cfg.orgTrigger, apiKey: 'org-key' },
     webhookTriggers: [{ id: 'w1', name: 'W', secret: 'hook-secret', enabled: true }]
   });
-  assert.doesNotMatch(onDisk(), /sign-1|org-key|hook-secret/);
+  assert.doesNotMatch(onDisk(), /sign-1|hook-secret/);
   const back = readConfig();
   assert.equal(back.slackSigningSecret, 'sign-1');
-  assert.equal(back.orgTrigger.apiKey, 'org-key');
   assert.equal(back.webhookTriggers[0].secret, 'hook-secret');
 
   // An unrelated save keeps every key; an explicit clear removes it.

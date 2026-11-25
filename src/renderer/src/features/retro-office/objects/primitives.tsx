@@ -22,8 +22,13 @@ type DoorModelProps = InteractiveFurnitureModelProps & {
 
 export function InstancedWallSegmentsModel({
   items,
+  defaultColor = "#787878",
+  height = 1,
 }: {
   items: FurnitureItem[];
+  /** DevLabs: theme wall look; an item's own `color` still wins. */
+  defaultColor?: string;
+  height?: number;
 }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const matrices = useMemo(() => {
@@ -35,32 +40,35 @@ export function InstancedWallSegmentsModel({
       const width = (item.w ?? 80) * SCALE;
       const depth = (item.h ?? WALL_THICKNESS) * SCALE;
       const rotY = getItemRotationRadians(item);
-      tempPosition.set(wx + width / 2, (item.elevation ?? 0) + 0.5, wz + depth / 2);
+      tempPosition.set(wx + width / 2, (item.elevation ?? 0) + height / 2, wz + depth / 2);
       tempQuaternion.setFromEuler(new THREE.Euler(0, rotY, 0));
-      tempScale.set(width, 1, depth);
+      tempScale.set(width, height, depth);
       return new THREE.Matrix4().compose(
         tempPosition.clone(),
         tempQuaternion.clone(),
         tempScale.clone(),
       );
     });
-  }, [items]);
+  }, [items, height]);
 
   useLayoutEffect(() => {
     if (!meshRef.current) return;
+    const tint = new THREE.Color();
     for (let index = 0; index < matrices.length; index += 1) {
       meshRef.current.setMatrixAt(index, matrices[index]);
+      meshRef.current.setColorAt(index, tint.set(items[index]?.color ?? defaultColor));
     }
     meshRef.current.instanceMatrix.needsUpdate = true;
+    if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
     meshRef.current.computeBoundingSphere();
-  }, [matrices]);
+  }, [matrices, items, defaultColor]);
 
   if (items.length === 0) return null;
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, items.length]} receiveShadow>
       <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#787878" roughness={0.92} />
+      <meshStandardMaterial color="#ffffff" roughness={0.92} />
     </instancedMesh>
   );
 }
@@ -110,7 +118,7 @@ export function RoundTableModel({
         <mesh position={[0, height, 0]} receiveShadow castShadow>
           <cylinderGeometry args={[radius, radius, topThickness, 64]} />
           <meshStandardMaterial
-            color="#9a6332"
+            color={item.color ?? "#9a6332"}
             roughness={0.6}
             metalness={0.1}
             emissive={highlightColor}

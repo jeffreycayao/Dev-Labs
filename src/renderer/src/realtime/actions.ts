@@ -25,6 +25,20 @@ const obj = (x: unknown): Record<string, unknown> =>
   x && typeof x === 'object' ? (x as Record<string, unknown>) : {};
 const str = (x: unknown): string => (typeof x === 'string' ? x : '');
 
+/** What the microphone actually heard: when each user utterance started, and its
+ *  transcript. A confirm is judged on this in main, never on the model's own
+ *  confirm_action phrase — the model reads agent-written text, so an agent could
+ *  tell it to "confirm" with nobody speaking. */
+const heard: { at: number; text: string }[] = [];
+export function noteHeard(at: number, text: string): void {
+  if (!text.trim()) return;
+  // The same utterance growing (Gemini passes it on chunk by chunk): replace it.
+  const last = heard[heard.length - 1];
+  if (last && last.at === at) { last.text = text; return; }
+  heard.push({ at, text });
+  if (heard.length > 20) heard.shift();
+}
+
 /** Forward a verb + args to the main action spine and return its spoken result.
  *  Instrumented for the rt-5 live-bug: any failure is logged to the (human-visible)
  *  renderer console with the verb + raw args so the next repro is self-diagnosing. */
@@ -390,7 +404,14 @@ export function realtimeActionTools(): ReturnType<typeof tool>[] {
           return 'Voice actions are not available in this build yet — try restarting the app.';
         }
         try {
-          const res = await window.cth.realtimeActionConfirm({ phrase: str(obj(input).phrase) });
+          // OpenAI's transcript of the spoken "confirm" can land just after the
+          // function call: give it up to 1.5s to arrive before judging.
+          // The transcript of the spoken "confirm" can land just after the call:
+          // always give it up to 1.5s (a new utterance, or the current one growing).
+          const snap = (): string => { const l = heard[heard.length - 1]; return l ? `${l.at}|${l.text}` : ''; };
+          const before = snap();
+          for (let i = 0; i < 15 && snap() === before; i++) await new Promise((r) => setTimeout(r, 100));
+          const res = await window.cth.realtimeActionConfirm({ phrase: str(obj(input).phrase), heard: heard.slice() });
           if (!res?.ok) console.warn('[realtime-action] confirm rejected: %s', res?.spoken, { input });
           return res?.spoken || 'Done.';
         } catch (e) {

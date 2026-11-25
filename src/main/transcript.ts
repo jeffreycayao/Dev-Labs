@@ -1,4 +1,4 @@
-import { closeSync, cpSync, existsSync, fstatSync, mkdirSync, openSync, readSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { closeSync, cpSync, existsSync, fstatSync, mkdirSync, openSync, readSync, readdirSync, readFileSync, statSync, constants as fsConstants } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { estimateCostUsd, normalizeModel } from './pricing';
@@ -190,6 +190,8 @@ const usageCache = new Map<string, FileUsageEntry>();
 /** Soft bound; when crossed, the oldest-inserted half is dropped (entries
  *  rebuild on demand). Real fleets have tens of transcripts, not thousands. */
 const USAGE_CACHE_MAX = 2048;
+/** Most new transcript bytes read per file per call (see readFileUsage). */
+const USAGE_SLICE_BYTES = 16 * 1024 * 1024;
 
 /** Parse complete JSONL lines, accumulating into BOTH `entry.all` (unfiltered)
  *  and the per-session bucket each record's OWN sessionId maps to.
@@ -285,7 +287,11 @@ function readFileUsage(dir: string, file: string): FileUsageEntry | null {
   try {
     const fd = openSync(full, 'r');
     try {
-      const len = st.size - entry.offset;
+      // At most USAGE_SLICE_BYTES per call: a GB transcript is caught up over a few
+      // beats instead of one giant synchronous read on the main thread. While
+      // behind, `size` stays unset so the next call keeps reading.
+      const len = Math.min(st.size - entry.offset, USAGE_SLICE_BYTES);
+      if (st.size - entry.offset > USAGE_SLICE_BYTES) entry.size = -1;
       if (len > 0) {
         const buf = Buffer.alloc(len);
         const read = readSync(fd, buf, 0, len, entry.offset);
@@ -298,6 +304,10 @@ function readFileUsage(dir: string, file: string): FileUsageEntry | null {
           const complete = text.slice(0, lastNl + 1);
           parseUsageLines(complete, entry);
           entry.offset += Buffer.byteLength(complete, 'utf8');
+        } else if (read === USAGE_SLICE_BYTES) {
+          // One line longer than a whole slice (a pasted image): it can never be
+          // completed in a slice, so skip it rather than re-read it every beat.
+          entry.offset += read;
         }
       }
     } finally { closeSync(fd); }
@@ -328,7 +338,12 @@ export function readAgentUsage(cwd: string, opts: ReadUsageOptions = {}): AgentU
   try {
     const dir = projectDir(cwd);
     if (!existsSync(dir)) return usage;
-    const files = readdirSync(dir).filter((f) => f.endsWith('.jsonl'));
+    // A known session lives in its own `<id>.jsonl`: read that file alone instead
+    // of every transcript of every agent sharing this project folder.
+    const own = opts.sessionId && /^[A-Za-z0-9_-]{1,200}$/.test(opts.sessionId) ? `${opts.sessionId}.jsonl` : null;
+    const files = own && existsSync(path.join(dir, own))
+      ? [own]
+      : readdirSync(dir).filter((f) => f.endsWith('.jsonl'));
     let lastModel: string | undefined;
     for (const file of files) {
       const entry = readFileUsage(dir, file);
@@ -364,9 +379,13 @@ const CONTEXT_TAIL_BYTES = 256 * 1024;
 export function readContextTokens(transcriptPath: string): number | null {
   try {
     if (!existsSync(transcriptPath)) return null;
-    const fd = openSync(transcriptPath, 'r');
+    // The path comes from the agent's own hook payload: NONBLOCK + isFile so a
+    // FIFO there can't hang the main thread on open or read.
+    const fd = openSync(transcriptPath, fsConstants.O_RDONLY | (fsConstants.O_NONBLOCK ?? 0));
     try {
-      const size = fstatSync(fd).size;
+      const st = fstatSync(fd);
+      if (!st.isFile()) return null;
+      const size = st.size;
       const len = Math.min(size, CONTEXT_TAIL_BYTES);
       if (len === 0) return null;
       const buf = Buffer.alloc(len);

@@ -96,17 +96,6 @@ test('protocol paths use native separators the agent can actually use', async (t
   }
 });
 
-test('the Stop-hook drain text uses native separators too', async (t) => {
-  const { hive, dir } = await floor(t);
-  hive.send({ to: 'god-1', act: 'request', subject: 'ping', body: 'hello' }, 'tester');
-  const { block, reason } = hive.drainForStop('god-1');
-  assert.equal(block, true);
-  assert.ok(reason.includes(path.join(dir, 'inbox')));
-  assert.ok(reason.includes(path.join(dir, 'inbox', '.done')));
-  assert.ok(!reason.includes('/inbox/ for full detail'), 'old mixed-separator form');
-  assert.ok(!reason.includes('inbox/.done/'), 'old mixed-separator form');
-});
-
 test('the injected prompt survives the Windows ARRAY argv path byte for byte', async (t) => {
   const { inj } = await floor(t);
   const prompt = promptOf(inj);

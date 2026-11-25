@@ -67,11 +67,15 @@ test('file links in an agent folder are replaced, never written through', async 
   const inj = await hive.ensureAgent(meta, opts);
   assert.equal(fs.readFileSync(path.join(victim, 'keep.txt'), 'utf8'), 'precious');
   untouched(victim);
-  for (const name of ['identity.md', 'mcp.json', 'settings.json', '.gitignore']) {
+  for (const name of ['identity.md', '.gitignore']) {
     assert.equal(isLink(path.join(dir, name)), false, name);
   }
-  assert.ok(fs.readFileSync(path.join(dir, 'mcp.json'), 'utf8').includes(secret), 'key written to the real mcp.json');
-  assert.equal(inj.args[inj.args.indexOf('--mcp-config') + 1], path.join(dir, 'mcp.json'));
+  // mcp.json and settings.json moved to hive-internal: the planted links in the
+  // agent folder are removed, never written through.
+  for (const name of ['mcp.json', 'settings.json']) assert.equal(fs.existsSync(path.join(dir, name)), false, name);
+  const mcpPath = path.join(hive.internalDir(), 'agents', 'eve-1', 'mcp.json');
+  assert.ok(fs.readFileSync(mcpPath, 'utf8').includes(secret), 'key written to the real mcp.json');
+  assert.equal(inj.args[inj.args.indexOf('--mcp-config') + 1], mcpPath);
 });
 
 test('a linked agent folder is rebuilt as a real folder before anything is written', async (t) => {
@@ -120,11 +124,15 @@ test('a linked provider config folder gets no hive config written into it', asyn
   const { hive, victim, root } = setup(t);
   const meta = { id: 'cody-1', name: 'Cody', provider: 'codex', cwd: victim };
   await hive.ensureAgent(meta, {});
-  const codexHome = path.join(root, 'agents', 'cody-1', '.codex');
-  fs.rmSync(codexHome, { recursive: true, force: true });
-  dirLink(victim, codexHome);
-  await hive.ensureAgent(meta, {});
+  // The old agent-writable home, planted as a link: never written through.
+  const legacyHome = path.join(root, 'agents', 'cody-1', '.codex');
+  fs.rmSync(legacyHome, { recursive: true, force: true });
+  dirLink(victim, legacyHome);
+  const inj = await hive.ensureAgent(meta, {});
   untouched(victim);
+  // CODEX_HOME (with its hook config) lives in hive-internal, out of agents' reach.
+  const codexHome = inj.env.CODEX_HOME;
+  assert.ok(codexHome.startsWith(hive.internalDir() + path.sep), codexHome);
   assert.equal(isLink(codexHome), false);
   assert.ok(fs.existsSync(path.join(codexHome, 'config.toml')));
 });

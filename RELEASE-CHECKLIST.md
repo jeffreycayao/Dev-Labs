@@ -9,7 +9,7 @@ successful release never touches.
 ## Before the tag: mechanical gates (run these first)
 
 - [ ] **`npm run check:links` passes.** Every download link in `RELEASE.md` and every advertised
-  version in `docs/index.html` / `docs/llms.txt` must match `package.json`. electron-builder bakes
+  version in `src/shared/brand.ts` must match `package.json`. electron-builder bakes
   the version into each artifact name, so a version left behind here turns the release page's
   download buttons into 404s the moment the tag ships. This is also enforced in CI on `release/**`,
   but run it locally before you tag. After publishing, `npm run check:links -- --live` HEADs every

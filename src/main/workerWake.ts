@@ -115,6 +115,13 @@ export class WorkerWakeWatchdog {
     this.lastNudgeAt.set(agentId, at);
   }
 
+  /** The agent's session compacted or restarted (PostCompact / SessionStart).
+   *  A nudge typed before that may have been swallowed, so its still-undrained
+   *  ids become eligible again. Cooldown, boot grace and HITL state are kept. */
+  noteCompacted(agentId: string): void {
+    if (agentId) this.announcedInboxIds.delete(agentId);
+  }
+
   /** Forget per-agent state (e.g. the agent's PTY was closed). */
   forget(agentId: string, ptyId?: string): void {
     this.lastNudgeAt.delete(agentId);

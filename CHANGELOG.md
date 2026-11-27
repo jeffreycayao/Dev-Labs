@@ -4,6 +4,8 @@ All notable changes to DevLabs (formerly Jepoy Floor AI). App versions rise befo
 
 ## Unreleased
 
+- **New: Gemini 4 models for Antigravity.** Hiring or editing an Antigravity agent now offers Gemini 4 Neon, Gemini 4 Hydrogen, and Gemini 4 Carbon. Neon and Hydrogen include Low, Medium, High, and XHigh. Carbon includes Low, Medium, and High. These are the names the Antigravity CLI accepts. The Gemini CLI list is unchanged (Auto, Pro, Flash, Flash Lite), because that CLI does not offer these models yet.
+
 ## v4.8.4 — 2026-11-25
 
 ### New
